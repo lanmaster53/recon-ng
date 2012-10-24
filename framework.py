@@ -12,7 +12,6 @@ class Shell(cmd.Cmd):
     def __init__(self):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
         self.prompt = '%s > ' % (self.name)
-        self.intro = banner
         self.nohelp = '[!] No help on %s'
         cmd.Cmd.__init__(self)
         self.loadmodules()
@@ -76,4 +75,4 @@ _/    _/  _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/
 """
     readline.parse_and_bind("bind ^I rl_complete")
     x = Shell()
-    x.cmdloop(x.intro)
+    x.cmdloop(banner)
