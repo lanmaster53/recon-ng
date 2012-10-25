@@ -40,11 +40,15 @@ class base_cmd(cmd.Cmd):
         return True
 
     def do_set(self, params):
-        name = params.split()[0]
-        if name in self.options.keys():
-            value = params.split()[1]
-            self.options[name] = self.autoconvert(value)
-        else: self.default('Invalid option.')
+        options = params.split()
+        if len(options) < 2: self.help_set()
+        else:
+            name = options[0]
+            if name in self.options.keys():
+                value = options[1]
+                print '%s = %s' % (name, value)
+                self.options[name] = self.autoconvert(value)
+            else: self.default('Invalid option.')
 
     def help_set(self):
         print 'Usage: set <option> <value>'

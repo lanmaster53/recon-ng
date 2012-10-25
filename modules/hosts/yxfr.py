@@ -24,15 +24,16 @@ class Module(_cmd.base_cmd):
         domain = self.options['domain']
         verbose = self.options['verbose']
         user_agent = self.options['user_agent']
-        base_url = 'http://www.bing.com'
+        base_url = 'http://search.yahoo.com'
         base_uri = '/search?'
         base_query = 'site:' + domain
-        pattern = '"sb_tlst"><h3><a href="\w+://(\S+?)\.%s' % (domain)
+        pattern = 'url>(?:<b>)*(\S+?)\.(?:<b>)*%s</b>' % (domain)
+        #pattern = '\*\*http%%3a//(\S*)\.%s/' % (domain)
         subs = []
         # control variables
         new = True
         page = 0
-        nr = 50
+        nr = 100
         # execute search engine queries and scrape results storing subdomains in a list
         # loop until no new subdomains are found
         while new == True:
@@ -42,16 +43,16 @@ class Module(_cmd.base_cmd):
             for sub in subs:
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
-            start_param = 'first=%s' % (str(page*nr))
-            query_param = 'q=%s' % (urllib.quote_plus(full_query))
-            params = '%s&%s' % (query_param, start_param)
+            num_param = 'n=%d' % (nr)
+            start_param = 'b=%s' % (str(page*nr))
+            query_param = 'p=%s' % (urllib.quote_plus(full_query))
+            params = '%s&%s&%s' % (num_param, query_param, start_param)
             full_url = base_url + base_uri + params
             # note: typical URI max length is 2048 (starts after top level domain)
             if verbose: print '[URL] %s' % full_url
             # build and send request
             request = urllib2.Request(full_url)
             request.add_header('User-Agent', user_agent)
-            request.add_header('Cookie', 'SRCHHPGUSR=NEWWND=0&NRSLT=%d&SRCHLANG=&AS=1;' % (nr))
             requestor = urllib2.build_opener()
             # send query to search engine
             try: content = requestor.open(request)
@@ -65,6 +66,9 @@ class Module(_cmd.base_cmd):
             new = False
             # add subdomain to list if not already exists
             for site in sites:
+                # remove left over bold tags remaining after regex
+                site = site.replace('<b>', '')
+                site = site.replace('</b>', '')
                 if site not in subs:
                     subs.append(site)
                     new = True
@@ -78,7 +82,7 @@ class Module(_cmd.base_cmd):
             # start going through all pages if query size is maxed out
             if not new:
                 # exit if all subdomains have been found
-                if not '>Next</a>' in content:
+                if not 'Next &gt;</a>' in content:
                     # curl to stdin breaks pdb
                     break
                 else:
