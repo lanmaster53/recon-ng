@@ -5,6 +5,7 @@ import urllib2
 import re
 import time
 import random
+import socket
 
 class Module(_cmd.base_cmd):
 
@@ -65,9 +66,14 @@ class Module(_cmd.base_cmd):
             # add subdomain to list if not already exists
             for site in sites:
                 if site not in subs:
-                    print '[Host] %s.%s' % (site, domain)
                     subs.append(site)
                     new = True
+                    host = '%s.%s' % (site, domain)
+                    try: addresses = list(set([item[4][0] for item in socket.getaddrinfo(host, 80)]))
+                    except socket.gaierror: addresses = ['no entry']
+                    for address in addresses:
+                        print '[Host] %s %s' % (host, address)
+                        self.add_host(host, address)
             # exit if maximum number of queries has been made
             # start going through all pages if query size is maxed out
             if not new:

@@ -12,3 +12,4 @@ Thumbs.db
 # Project specific items #
 ##########################
 *.pyc
+*.db

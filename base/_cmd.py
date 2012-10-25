@@ -1,10 +1,13 @@
 import cmd
+import sqlite3
+import __builtin__
 
 class base_cmd(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
         self.prompt = (params)
         self.options = {}
+        self.dbfilename = __builtin__.dbfilename
 
     def default(self, line):
         print '[!] Unknown syntax: %s' % (line)
@@ -18,6 +21,20 @@ class base_cmd(cmd.Cmd):
             except ValueError: pass
             except KeyError: pass
         return s
+
+    def add_host(self, host, address=''):
+        conn = sqlite3.connect(self.dbfilename)
+        c = conn.cursor()
+        c.execute('INSERT INTO hosts VALUES (?, ?)', (host, address))
+        conn.commit()
+        conn.close()
+
+    def add_contact(self, fname, lname, title, email=''):
+        conn = sqlite3.connect(self.dbfilename)
+        c = conn.cursor()
+        c.execute('INSERT INTO contacts VALUES (?, ?, ?, ?)', (fname, lname, email, title))
+        conn.commit()
+        conn.close()
 
     def do_exit(self, params):
         return True
