@@ -1,9 +1,9 @@
 import _cmd
+import __builtin__
 # unique to module
 import urllib
 import urllib2
 import re
-import socket
 import time
 import random
 
@@ -12,7 +12,7 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'domain': '',
+                        'domain': __builtin__.domain,
                         'verbose': False,
                         'user_agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)'
                         }
@@ -69,11 +69,8 @@ class Module(_cmd.base_cmd):
                     subs.append(site)
                     new = True
                     host = '%s.%s' % (site, domain)
-                    try: addresses = list(set([item[4][0] for item in socket.getaddrinfo(host, 80)]))
-                    except socket.gaierror: addresses = ['no entry']
-                    for address in addresses:
-                        print '[Host] %s %s' % (host, address)
-                        self.add_host(host, address)
+                    print '[Host] %s' % (host)
+                    self.add_host(host)
             # exit if maximum number of queries has been made
             # start going through all pages if query size is maxed out
             if not new:

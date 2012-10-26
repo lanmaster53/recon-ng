@@ -1,5 +1,7 @@
 import cmd
 import sqlite3
+import os
+import sys
 import __builtin__
 
 class base_cmd(cmd.Cmd):
@@ -8,6 +10,7 @@ class base_cmd(cmd.Cmd):
         self.prompt = (params)
         self.options = {}
         self.dbfilename = __builtin__.dbfilename
+        self.keyfile = __builtin__.keyfilename
 
     def default(self, line):
         print '[!] Unknown syntax: %s' % (line)
@@ -25,7 +28,9 @@ class base_cmd(cmd.Cmd):
     def add_host(self, host, address=''):
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
-        c.execute('INSERT INTO hosts VALUES (?, ?)', (host, address))
+        hosts = [h[0] for h in c.execute('SELECT host from hosts ORDER BY host').fetchall()]
+        if not host in hosts:
+            c.execute('INSERT INTO hosts VALUES (?, ?)', (host, address))
         conn.commit()
         conn.close()
 
@@ -35,6 +40,44 @@ class base_cmd(cmd.Cmd):
         c.execute('INSERT INTO contacts VALUES (?, ?, ?, ?)', (fname, lname, email, title))
         conn.commit()
         conn.close()
+
+    def get_key(self, key_name, key_text='API Key'):
+        if os.path.exists(self.keyfile):
+            for line in open(self.keyfile):
+                key, value = line.split('::')[0], line.split('::')[1]
+                if key == key_name:
+                    return value.strip()
+        try: key = raw_input("Enter %s (blank to skip): " % (key_text))
+        except KeyboardInterrupt:
+            sys.stdout.write('\n')
+            key = ''
+        if key:
+            file = open(self.keyfile, 'a')
+            file.write('%s::%s\n' % (key_name, key))
+            file.close()
+        return key
+    
+    def get_token(self, key_name):
+        if os.path.exists(self.keyfile):
+            for line in open(self.keyfile):
+                key, value = line.split('::')[0], line.split('::')[1]
+                if key == key_name:
+                    return value.strip()
+        return ''
+    
+    def add_token(self, key_name, key_value):
+        keys = []
+        if os.path.exists(self.keyfile):
+            # remove the old key if duplicate
+            for line in open(self.keyfile):
+                key = line.split('::')[0]
+                if key != key_name:
+                    keys.append(line)
+        keys = ''.join(keys)
+        file = open(self.keyfile, 'w')
+        file.write(keys)
+        file.write('%s::%s\n' % (key_name, key_value))
+        file.close()
 
     def do_exit(self, params):
         return True

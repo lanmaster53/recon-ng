@@ -23,24 +23,10 @@ import __builtin__
 # rendering of command history
 # native
 __builtin__.N  = "\033[m"
-# white
-__builtin__.W  = "\033[0m"
-# black
-__builtin__.BK = "\033[30m"
-# red
-__builtin__.R  = "\033[31m"
-# green
-__builtin__.G  = "\033[32m"
 # orange
 __builtin__.O  = "\033[33m"
 # blue
 __builtin__.B  = "\033[34m"
-# purple
-__builtin__.P  = "\033[35m"
-# cyan
-__builtin__.C  = "\033[36m"
-# gray
-__builtin__.GR = "\033[37m"
 
 #parser.parse_args(params.split())
 
@@ -122,7 +108,7 @@ class Shell(cmd.Cmd):
     def output(self, table, columns):
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
-        try: rows = c.execute('SELECT %s from %s' % (columns, table))
+        try: rows = c.execute('SELECT %s from %s ORDER BY %s' % (columns, table, '1'))
         except sqlite3.OperationalError:
             self.default('Invalid column name.')
             rows = []
@@ -184,7 +170,10 @@ class Shell(cmd.Cmd):
         print 'Usage: load <module>'
 
 if __name__ == '__main__':
-    __builtin__.dbfilename = './data.db'
+    __builtin__.dbfilename = './data/data.db'
+    __builtin__.keyfilename = './data/api.keys'
+    __builtin__.domain = 'secureideas.net'
+    __builtin__.company = 'Secure Ideas'
     readline.parse_and_bind("bind ^I rl_complete")
     x = Shell()
     try: x.cmdloop()

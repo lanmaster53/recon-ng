@@ -18,21 +18,21 @@ class Module(_cmd.base_cmd):
                         }
 
     def do_info(self, params):
-        print 'YXFR module information.'
+        print 'GXFR module information.'
 
     def do_run(self, params):
         domain = self.options['domain']
         verbose = self.options['verbose']
         user_agent = self.options['user_agent']
-        base_url = 'http://search.yahoo.com'
+        base_url = 'https://www.google.com'
         base_uri = '/search?'
         base_query = 'site:' + domain
-        pattern = 'url>(?:<b>)*(\S+?)\.(?:<b>)*%s</b>' % (domain)
+        pattern = '<a\shref="\w+://(\S+?)\.%s\S+?"\sclass=l'  % (domain)
         subs = []
         # control variables
         new = True
         page = 0
-        nr = 100
+        nr = 10
         # execute search engine queries and scrape results storing subdomains in a list
         # loop until no new subdomains are found
         while new == True:
@@ -42,11 +42,16 @@ class Module(_cmd.base_cmd):
             for sub in subs:
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
-            num_param = 'n=%d' % (nr)
-            start_param = 'b=%s' % (str(page*nr))
-            query_param = 'p=%s' % (urllib.quote_plus(full_query))
-            params = '%s&%s&%s' % (num_param, query_param, start_param)
+            start_param = 'start=%d' % (page*nr)
+            query_param = 'q=%s' % (urllib.quote_plus(full_query))
+            if len(base_uri) + len(query_param) + 1 + len(start_param) < 2048:
+                last_query_param = query_param
+                params = '%s&%s' % (query_param, start_param)
+            else:
+                params = last_query_param[:2047-len(start_param)-len(base_uri)] + start_param
             full_url = base_url + base_uri + params
+            # note: query character limit is passive in mobile, but seems to be ~794
+            # note: query character limit seems to be 852 for desktop queries
             # note: typical URI max length is 2048 (starts after top level domain)
             if verbose: print '[URL] %s' % full_url
             # build and send request
@@ -56,19 +61,20 @@ class Module(_cmd.base_cmd):
             # send query to search engine
             try: content = requestor.open(request)
             except KeyboardInterrupt: pass
-            except Exception as e: print '[!] %s. Returning Previously Harvested Results.' % str(e)
+            except Exception as e:
+                if '503' in str(e):
+                    print '[!] Possible Shun: Use --proxy or find something else to do for 24 hours. ;_;'
+                elif verbose:
+                    print '[!] %s. Returning Previously Harvested Results.' % str(e)
             if not content: break
             content = content.read()
             sites = re.findall(pattern, content)
-            # create a uniq list
+            # create a unique list
             sites = list(set(sites))
             new = False
             # add subdomain to list if not already exists
             for site in sites:
-                # remove left over bold tags remaining after regex
-                site = site.replace('<b>', '')
-                site = site.replace('</b>', '')
-                if site not in subs:
+               if site not in subs:
                     subs.append(site)
                     new = True
                     host = '%s.%s' % (site, domain)
@@ -78,8 +84,7 @@ class Module(_cmd.base_cmd):
             # start going through all pages if query size is maxed out
             if not new:
                 # exit if all subdomains have been found
-                if not 'Next &gt;</a>' in content:
-                    # curl to stdin breaks pdb
+                if not '>Next</span>' in content:
                     break
                 else:
                     page += 1
