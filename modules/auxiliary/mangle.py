@@ -9,7 +9,7 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'domain': __builtin__.domain,
+                        'domain': __builtin__.goptions['domain'],
                         'pattern': '<fn>.<ln>',
                         'verbose': False,
                         }
@@ -45,7 +45,7 @@ class Module(_cmd.base_cmd):
                 email = email.replace('<ln>', ln)
                 email = email.replace('<li>', li)
             except:
-                print '[!] Invalid Mutation Pattern \'%s\'.' % (type)
+                self.error('Invalid Mutation Pattern \'%s\'.' % (type))
                 break
             print '[Mutation] %s %s => %s' % (fname, lname, email)
             c.execute('UPDATE contacts SET email=? WHERE rowid=?', (email, row))

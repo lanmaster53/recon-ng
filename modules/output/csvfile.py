@@ -8,33 +8,43 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'items': 'hosts',
+                        'datatype': 'all',
                         'file': './data/results.csv',
                         'verbose': False,
                         }
 
     def do_info(self, params):
         print ''
-        print 'Creates a CSV file containing the specified harvested items.'
+        print 'Creates a CSV file containing the specified harvested data types.'
+        print ''
+        print 'Datatype options: hosts,contacts,all'
         print ''
 
     def do_run(self, params):
         self.append_to_csv()
     
     def append_to_csv(self):
-        outfile = open(self.options['file'], 'ab')
+        try: outfile = open(self.options['file'], 'ab')
+        except:
+            self.error('Invalid path or filename.')
+            return
         verbose = self.options['verbose']
+        datatype = self.options['datatype']
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
-        if self.options['items'] == 'hosts': rows = c.execute('SELECT * FROM hosts ORDER BY host').fetchall()
-        elif self.options['items'] == 'contacts': rows = c.execute('SELECT * FROM contacts ORDER BY fname').fetchall()
+        rows = []
+        if datatype == 'hosts': rows = c.execute('SELECT * FROM hosts ORDER BY host').fetchall()
+        elif datatype == 'contacts' : rows = c.execute('SELECT * FROM contacts ORDER BY fname').fetchall()
+        elif datatype == 'all':
+            rows.extend(c.execute('SELECT * FROM hosts ORDER BY host').fetchall())
+            rows.extend(c.execute('SELECT * FROM contacts ORDER BY fname').fetchall())
+            datatype = 'items'
         else:
-            self.default('Invalid output items.')
-            rows = []
+            self.error('Invalid output data type.')
         for row in rows:
             csvwriter = csv.writer(outfile, quoting=csv.QUOTE_ALL)
-            csvwriter.writerow(row)
+            csvwriter.writerow([unicode(s).encode("utf-8") for s in row])
         conn.commit()
         conn.close()
         outfile.close()
-        print '[*] %d %s Added to \'%s\'.' % (len(rows), self.options['items'], self.options['file'])
+        if len(rows) > 0: print '[*] %d %s added to \'%s\'.' % (len(rows), datatype, self.options['file'])

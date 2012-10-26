@@ -2,6 +2,7 @@ import _cmd
 import __builtin__
 # unique to module
 import urllib
+import sys
 import re
 
 class Module(_cmd.base_cmd):
@@ -9,8 +10,8 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'company': __builtin__.company,
-                        'key_words': '',
+                        'company': __builtin__.goptions['company'],
+                        'keywords': '',
                         'verbose': False
                         }
 
@@ -27,7 +28,7 @@ class Module(_cmd.base_cmd):
         company_name = self.options['company']
         all_companies = []
         page_cnt = 1
-        params = '%s %s' % (company_name, self.options['key_words'])
+        params = '%s %s' % (company_name, self.options['keywords'])
         base_url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml?opCode=search&freeText=%s' % (urllib.quote_plus(params))
         url = base_url
         while True:
@@ -55,20 +56,21 @@ class Module(_cmd.base_cmd):
             page_cnt += 1
             url = base_url + '&rpage=%d' % (page_cnt)
         if len(all_companies) == 0:
-            print '[!] No Company Matches Found.'
+            print '[*] No Company Matches Found.'
             return False
         else:
             for company in all_companies:
                 print '[Company] %s %s (%s contacts)' % (company[0], company[1], company[2])
             if len(all_companies) > 1:
-                try: company_id = raw_input('Enter Company ID from list [%s]: ' % (all_companies[0][0]))
+                try:
+                    company_id = raw_input('Enter Company ID from list [%s]: ' % (all_companies[0][0]))
+                    if not company_id: company_id = all_companies[0][0]
                 except KeyboardInterrupt:
                     sys.stdout.write('\n')
                     company_id = ''
-                if not company_id: company_id = all_companies[0][0]
             else:
                 company_id = all_companies[0][0]
-                print '[-] Unique Company Match Found: %s' % company_id
+                print '[*] Unique Company Match Found: %s' % company_id
             return company_id
 
     def get_contacts(self, company_id):

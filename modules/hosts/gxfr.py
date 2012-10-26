@@ -12,9 +12,9 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'domain': __builtin__.domain,
+                        'domain': __builtin__.goptions['domain'],
                         'verbose': False,
-                        'user_agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)'
+                        'user_agent': __builtin__.goptions['user-agent']
                         }
 
     def do_info(self, params):
@@ -68,9 +68,9 @@ class Module(_cmd.base_cmd):
             except KeyboardInterrupt: pass
             except Exception as e:
                 if '503' in str(e):
-                    print '[!] Possible Shun: Use --proxy or find something else to do for 24 hours. ;_;'
+                    self.error('Possible Shun: Use --proxy or find something else to do for 24 hours. ;_;')
                 elif verbose:
-                    print '[!] %s. Returning Previously Harvested Results.' % str(e)
+                    self.error('%s. Returning Previously Harvested Results.' % str(e))
             if not content: break
             content = content.read()
             sites = re.findall(pattern, content)
@@ -93,11 +93,10 @@ class Module(_cmd.base_cmd):
                     break
                 else:
                     page += 1
-                    if verbose: print '[-] No New Subdomains Found on the Current Page. Jumping to Result %d.' % ((page*nr)+1)
+                    if verbose: print '[*] No New Subdomains Found on the Current Page. Jumping to Result %d.' % ((page*nr)+1)
                     new = True
             # sleep script to avoid lock-out
-            if verbose: print '[-] Sleeping to Avoid Lock-out...'
+            if verbose: print '[*] Sleeping to Avoid Lock-out...'
             try: time.sleep(random.randint(5,15))
             except KeyboardInterrupt: break
-        # print list of subdomains
-        if verbose: print '[-] Final Query String: %s' % (full_url)
+        if verbose: print '[*] Final Query String: %s' % (full_url)

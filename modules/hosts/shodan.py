@@ -9,9 +9,9 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'domain': __builtin__.domain,
+                        'domain': __builtin__.goptions['domain'],
                         'verbose': False,
-                        'user_agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)'
+                        'user_agent': __builtin__.goptions['user-agent']
                         }
 
     def do_info(self, params):
@@ -27,10 +27,13 @@ class Module(_cmd.base_cmd):
         verbose = self.options['verbose']
         user_agent = self.options['user_agent']
         subs = []
-        key = self.get_key('shodan')
+        key = self.get_key_from_file('shodan')
         if not key:
-            self.default('No API Key.')
-            return
+            key = self.get_key_from_user()
+            if not key:
+                self.error('No API Key.')
+                return
+            self.add_key_to_file('shodan', key)
         base_url = 'http://www.shodanhq.com/api/search'
         params = 'q=hostname:%s&key=%s' % (domain, key)
         url = '%s?%s' % (base_url, params)
@@ -47,7 +50,7 @@ class Module(_cmd.base_cmd):
             try: content = requestor.open(request)
             except KeyboardInterrupt: pass
             except Exception as e:
-                print '[!] Error: %s.' % (str(e))
+                self.error('Error: %s.' % (str(e)))
             if not content: break
             content = content.read()
             jsonobj = json.loads(content)
