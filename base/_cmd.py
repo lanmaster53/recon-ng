@@ -28,7 +28,7 @@ class base_cmd(cmd.Cmd):
     def add_host(self, host, address=''):
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
-        hosts = [h[0] for h in c.execute('SELECT host from hosts ORDER BY host').fetchall()]
+        hosts = [x[0] for x in c.execute('SELECT host from hosts ORDER BY host').fetchall()]
         if not host in hosts:
             c.execute('INSERT INTO hosts VALUES (?, ?)', (host, address))
         conn.commit()
@@ -37,7 +37,9 @@ class base_cmd(cmd.Cmd):
     def add_contact(self, fname, lname, title, email=''):
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
-        c.execute('INSERT INTO contacts VALUES (?, ?, ?, ?)', (fname, lname, email, title))
+        contacts = c.execute('SELECT fname, lname, title from contacts ORDER BY fname').fetchall()
+        if not (fname, lname, title) in contacts:
+            c.execute('INSERT INTO contacts VALUES (?, ?, ?, ?)', (fname, lname, email, title))
         conn.commit()
         conn.close()
 
@@ -56,7 +58,17 @@ class base_cmd(cmd.Cmd):
             file.write('%s::%s\n' % (key_name, key))
             file.close()
         return key
+
+    def unescape(self, s):
+        import htmllib
+        p = htmllib.HTMLParser(None)
+        p.save_bgn()
+        p.feed(s)
+        return p.save_end()
     
+    def sanitize(self, s):
+        return ''.join([char for char in s if ord(char) >= 32 and ord(char) <= 126])
+
     def get_token(self, key_name):
         if os.path.exists(self.keyfile):
             for line in open(self.keyfile):
@@ -89,7 +101,7 @@ class base_cmd(cmd.Cmd):
             name = options[0]
             if name in self.options.keys():
                 value = options[1]
-                print '%s = %s' % (name, value)
+                print '%s => %s' % (name, value)
                 self.options[name] = self.autoconvert(value)
             else: self.default('Invalid option.')
 

@@ -6,7 +6,7 @@ __author__  = "Tim Tomes (@LaNMaSteR53)"
 __email__   = "tjt1980[at]gmail.com"
 __credits__ = ""
 __license__ = "GPL v2"
-__version__ = "0.03"
+__version__ = "0.06"
 
 import cmd
 import rlcompleter
@@ -73,7 +73,7 @@ class Shell(cmd.Cmd):
         print ''
         print '%s[%s v%s]%s' % (O, self.name, __version__, N)
         for module in self.loaded:
-            print '%s[%d %s modules]%s' % (B, module[1], module[0], N)
+            print '%s[%d] %s modules%s' % (B, module[1], module[0], N)
         print ''
 
     def init_db(self):
@@ -113,9 +113,8 @@ class Shell(cmd.Cmd):
             self.default('Invalid column name.')
             rows = []
         for row in rows:
-            for item in row:
-                sys.stdout.write('%s ' % item)
-            sys.stdout.write('\n')
+            row = filter(None, row)
+            print ' '.join(row)
         conn.close()
 
     def do_list(self, params):
@@ -162,7 +161,6 @@ class Shell(cmd.Cmd):
                     print '-'*60
                     traceback.print_exc(file=sys.stdout)
                     print '-'*60
-                    #import pdb;pdb.set_trace()
                     #self.default('%s: \'%s\'' % (type(e).__name__, e.message))
             except KeyError: self.default('Invalid module name.')
 

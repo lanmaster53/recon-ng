@@ -12,9 +12,14 @@ class Module(_cmd.base_cmd):
                         }
 
     def do_info(self, params):
-        print 'Resolve module information.'
+        print ''
+        print 'Resolves the IP address for all of the hosts stored in the database.'
+        print ''
 
     def do_run(self, params):
+        self.resolve_hosts()
+    
+    def resolve_hosts(self):
         verbose = self.options['verbose']
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
@@ -27,7 +32,7 @@ class Module(_cmd.base_cmd):
             #print '[Address] %s resolves to %s' % (host, ','.join(addresses))
             try: address = socket.gethostbyname(host)
             except socket.gaierror: address = 'no entry'
-            print '[Address] %s resolves to %s' % (host, address)
+            print '[Address] %s => %s' % (host, address)
             c.execute('UPDATE hosts SET address=? WHERE rowid=?', (address, row))
         conn.commit()
         conn.close()

@@ -1,11 +1,7 @@
 import _cmd
 import __builtin__
 # unique to module
-#import urllib
 import urllib2
-#import re
-#import time
-#import random
 import json
 
 class Module(_cmd.base_cmd):
@@ -19,9 +15,14 @@ class Module(_cmd.base_cmd):
                         }
 
     def do_info(self, params):
-        print 'GXFR module information.'
+        print ''
+        print 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator.'
+        print ''
 
     def do_run(self, params):
+        self.get_hosts()
+    
+    def get_hosts(self):
         domain = self.options['domain']
         verbose = self.options['verbose']
         user_agent = self.options['user_agent']

@@ -18,9 +18,14 @@ class Module(_cmd.base_cmd):
                         }
 
     def do_info(self, params):
-        print 'BXFR module information.'
+        print ''
+        print 'Harvests hosts from Bing.com by using the \'site\' search operator.'
+        print ''
 
     def do_run(self, params):
+        self.get_hosts()
+    
+    def get_hosts(self):
         domain = self.options['domain']
         verbose = self.options['verbose']
         user_agent = self.options['user_agent']
