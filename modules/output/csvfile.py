@@ -42,6 +42,7 @@ class Module(_cmd.base_cmd):
         else:
             self.error('Invalid output data type.')
         for row in rows:
+            row = filter(None, row)
             csvwriter = csv.writer(outfile, quoting=csv.QUOTE_ALL)
             csvwriter.writerow([unicode(s).encode("utf-8") for s in row])
         conn.commit()

@@ -4,9 +4,9 @@
 
 __author__  = "Tim Tomes (@LaNMaSteR53)"
 __email__   = "tjt1980[at]gmail.com"
-__credits__ = ""
+__credits__ = "Mark Baggett (@MarkBaggett)"
 __license__ = "GPL v2"
-__version__ = "0.06"
+__version__ = "0.07"
 
 import cmd
 import rlcompleter
