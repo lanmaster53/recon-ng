@@ -37,11 +37,9 @@ __builtin__.goptions = {
                         'dbfilename': './data/data.db',
                         'keyfilename': './data/api.keys',
                         'domain': 'sans.org',
-                        'company': 'Secure Ideas',
+                        'company': 'SANS',
                         'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)'
                         }
-
-#parser.parse_args(params.split())
 
 class Shell(cmd.Cmd):
     def __init__(self):
@@ -55,6 +53,27 @@ class Shell(cmd.Cmd):
         self.loadmodules()
         self.show_banner()
         self.init_db()
+
+    #==================================================
+    # OVERRIDE METHODS
+    #==================================================
+
+    def default(self, line):
+        print '%s[!] Unknown syntax: %s%s' % (R, line, N)
+
+    # make help menu more attractive
+    def print_topics(self, header, cmds, cmdlen, maxcol):
+        if cmds:
+            self.stdout.write("%s\n"%str(header))
+            if self.ruler:
+                self.stdout.write("%s\n"%str(self.ruler * len(header)))
+            for cmd in cmds:
+                self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
+            self.stdout.write("\n")
+
+    #==================================================
+    # SUPPORT METHODS
+    #==================================================
 
     def loadmodules(self):
         # add logic to NOT break when a module fails, but alert which module fails
@@ -96,11 +115,22 @@ class Shell(cmd.Cmd):
         conn.commit()
         conn.close()
 
-    def default(self, line):
-        print '%s[!] Unknown syntax: %s%s' % (R, line, N)
-
     def error(self, line):
         print '%s[!] %s%s' % (R, line, N)
+
+    def boolify(self, s):
+        return {'true': True, 'false': False}[s.lower()]
+    
+    def autoconvert(self, s):
+        for fn in (self.boolify, int, float):
+            try: return fn(s)
+            except ValueError: pass
+            except KeyError: pass
+        return s
+
+    #==================================================
+    # FRAMEWORK METHODS
+    #==================================================
 
     def do_reload(self, params):
         """Reloads all modules"""
@@ -117,16 +147,6 @@ class Shell(cmd.Cmd):
     def do_banner(self, params):
         """Displays the banner"""
         self.show_banner()
-
-    def boolify(self, s):
-        return {'true': True, 'false': False}[s.lower()]
-    
-    def autoconvert(self, s):
-        for fn in (self.boolify, int, float):
-            try: return fn(s)
-            except ValueError: pass
-            except KeyError: pass
-        return s
 
     def do_goptions(self, params):
         """Lists global options"""
@@ -162,21 +182,6 @@ class Shell(cmd.Cmd):
                 self.init_db()
             else: self.error('Invalid option.')
 
-    def help_setg(self):
-        print 'Usage: set <option> <value>'
-
-    def output(self, table, columns):
-        conn = sqlite3.connect(self.options['dbfilename'])
-        c = conn.cursor()
-        try: rows = c.execute('SELECT %s from %s ORDER BY %s' % (columns, table, '1'))
-        except sqlite3.OperationalError:
-            self.error('Invalid column name.')
-            rows = []
-        for row in rows:
-            row = filter(None, row)
-            print ' '.join(row)
-        conn.close()
-
     def do_list(self, params):
         """Lists framework items"""
         options = params.split()
@@ -198,24 +203,34 @@ class Shell(cmd.Cmd):
                             #print os.path.join(dir, filename.split('.')[0])
                         print '===================='
                 print ''
-            elif option.startswith('hosts') or option.startswith('contacts'):
+            elif option == 'hosts' or option == 'contacts':
                 columns = '*'
                 if len(options) > 1:
                     columns = options[1]
-                self.output(option, columns)
+                self.do_query('SELECT %s from %s ORDER BY 1' % (columns, option))
             else: self.error('Invalid option: %s' % (params))
 
-    def help_list(self):
-        print 'Usage: list <option> <column1,column2,...>'
-        print''
-        print 'Options:'
-        print '========'
-        print 'modules    Lists available modules.'
-        print 'hosts*     Lists harvested hosts from the database.    columns=[host,address]'
-        print 'contacts*  Lists harvested contacts from the database. columns=[fname,lname,email,title]'
-        print ''
-        print '* sorted by first column'
-        print ''
+    def do_query(self, params):
+        # based on the do_ouput method
+        """Queries the database"""
+        if not params:
+            self.help_query()
+            return
+        if not params.lower().startswith('select'):
+            self.error('SELECT statements only.')
+            return
+        conn = sqlite3.connect(self.options['dbfilename'])
+        c = conn.cursor()
+        try: rows = c.execute(params).fetchall()
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            conn.close()
+            return
+        for row in rows:
+            row = filter(None, row)
+            print ' '.join(row)
+        print '[*] %d rows listed.' % (len(rows))
+        conn.close()
 
     def do_load(self, params):
         """Loads selected module"""
@@ -236,18 +251,30 @@ class Shell(cmd.Cmd):
             except KeyError: self.error('Invalid module name.')
             except AttributeError: self.error('Invalid module name.')
 
+    #==================================================
+    # HELP METHODS
+    #==================================================
+
+    def help_setg(self):
+        print 'Usage: set <option> <value>'
+
+    def help_list(self):
+        print 'Usage: list <option> <column1,column2,...>'
+        print''
+        print 'Options:'
+        print '========'
+        print 'modules    Lists available modules.'
+        print 'hosts*     Lists harvested hosts from the database.    columns=[host,address]'
+        print 'contacts*  Lists harvested contacts from the database. columns=[fname,lname,email,title]'
+        print ''
+        print '* sorted by first column'
+        print ''
+
+    def help_query(self):
+        print 'Usage: query <sql>'
+
     def help_load(self):
         print 'Usage: load <module>'
-
-    # method override to make help menu more attractive
-    def print_topics(self, header, cmds, cmdlen, maxcol):
-        if cmds:
-            self.stdout.write("%s\n"%str(header))
-            if self.ruler:
-                self.stdout.write("%s\n"%str(self.ruler * len(header)))
-            for cmd in cmds:
-                self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
-            self.stdout.write("\n")
 
 if __name__ == '__main__':
     readline.parse_and_bind("bind ^I rl_complete")

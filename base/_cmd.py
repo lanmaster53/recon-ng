@@ -17,8 +17,26 @@ class base_cmd(cmd.Cmd):
         self.dbfilename = __builtin__.goptions['dbfilename']
         self.keyfile = __builtin__.goptions['keyfilename']
 
+    #==================================================
+    # OVERRIDE METHODS
+    #==================================================
+
     def default(self, line):
         print '%s[!] Unknown syntax: %s%s' % (R, line, N)
+
+    # make help menu more attractive
+    def print_topics(self, header, cmds, cmdlen, maxcol):
+        if cmds:
+            self.stdout.write("%s\n"%str(header))
+            if self.ruler:
+                self.stdout.write("%s\n"%str(self.ruler * len(header)))
+            for cmd in cmds:
+                self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
+            self.stdout.write("\n")
+
+    #==================================================
+    # SUPPORT METHODS
+    #==================================================
 
     def error(self, line):
         print '%s[!] %s%s' % (R, line, N)
@@ -33,9 +51,16 @@ class base_cmd(cmd.Cmd):
             except KeyError: pass
         return s
 
+    def sanitize(self, obj, encoding='utf-8'):
+        # checks if obj is unicode and converts if not
+        if isinstance(obj, basestring):
+            if not isinstance(obj, unicode):
+                obj = unicode(obj, encoding)
+        return obj
+
     def add_host(self, host, addr=''):
-        host = host.decode('utf-8')
-        addr = addr.decode('utf-8')
+        host = self.sanitize(host)
+        addr = self.sanitize(addr)
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
         hosts = [x[0] for x in c.execute('SELECT host from hosts ORDER BY host').fetchall()]
@@ -45,10 +70,10 @@ class base_cmd(cmd.Cmd):
         conn.close()
 
     def add_contact(self, fname, lname, title, email=''):
-        fname = fname.decode('utf-8')
-        lname = lname.decode('utf-8')
-        title = title.decode('utf-8')
-        email = email.decode('utf-8')
+        fname = self.sanitize(fname)
+        lname = self.sanitize(lname)
+        title = self.sanitize(title)
+        email = self.sanitize(email)
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
         contacts = c.execute('SELECT fname, lname, title from contacts ORDER BY fname').fetchall()
@@ -108,9 +133,10 @@ class base_cmd(cmd.Cmd):
         p.save_bgn()
         p.feed(s)
         return p.save_end()
-    
-    def sanitize(self, s):
-        return ''.join([char for char in s if ord(char) >= 32 and ord(char) <= 126])
+
+    #==================================================
+    # FRAMEWORK METHODS
+    #==================================================
 
     def do_exit(self, params):
         """Exits the module"""
@@ -140,15 +166,9 @@ class base_cmd(cmd.Cmd):
                 self.options[name] = self.autoconvert(value)
             else: self.error('Invalid option.')
 
+    #==================================================
+    # HELP METHODS
+    #==================================================
+
     def help_set(self):
         print 'Usage: set <option> <value>'
-
-    # method override to make help menu more attractive
-    def print_topics(self, header, cmds, cmdlen, maxcol):
-        if cmds:
-            self.stdout.write("%s\n"%str(header))
-            if self.ruler:
-                self.stdout.write("%s\n"%str(self.ruler * len(header)))
-            for cmd in cmds:
-                self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
-            self.stdout.write("\n")
