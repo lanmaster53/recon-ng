@@ -2,13 +2,28 @@
 
 """ Docstring """
 
-__author__  = "Tim Tomes (@LaNMaSteR53)"
-__email__   = "tjt1980[at]gmail.com"
-__credits__ = "Mark Baggett (@MarkBaggett)"
-__license__ = "GPL v2"
-__version__ = "0.07"
+__author__    = "Tim Tomes (@LaNMaSteR53)"
+__email__     = "tjt1980[at]gmail.com"
+__version__   = "0.08"
+__copyright__ = "Copyright (C) 2012, Tim Tomes"
+__license__   = "GPLv3"
+"""
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import cmd
+import datetime
 import rlcompleter
 import readline
 import os
@@ -102,7 +117,8 @@ class Shell(cmd.Cmd):
         print ' _/    _/  _/        _/        _/    _/  _/    _/_/              _/    _/_/  _/    _/      '
         print '_/    _/  _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/_/_/       '
         print ''
-        print '%s[%s v%s]%s' % (O, self.name, __version__, N)
+        print '%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N)
+        print ''
         for module in self.loaded:
             print '%s[%d] %s modules%s' % (B, module[1], module[0], N)
         print ''
