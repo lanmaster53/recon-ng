@@ -1,0 +1,21 @@
+--- __init__.py
++++ __init__.py
+@@ -828,7 +828,7 @@
+ 
+ and more.
+     """
+-    def __init__(self, cache=None, timeout=None, proxy_info=None):
++    def __init__(self, cache=None, timeout=None, proxy_info=None, tries=2):
+         """
+         The value of proxy_info is a ProxyInfo instance.
+ 
+@@ -840,6 +840,9 @@
+         then Python's default timeout for sockets will be used. See
+         for example the docs of socket.setdefaulttimeout():
+         http://docs.python.org/library/socket.html#socket.setdefaulttimeout
++
++        A request will be tried `tries` times if it fails.
++        
+         """
+         self.proxy_info = proxy_info
+         # Map domain name to an httplib connection

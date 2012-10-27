@@ -13,10 +13,13 @@ import rlcompleter
 import readline
 import os
 import sys
-import imp
 import sqlite3
 import traceback
 import __builtin__
+sys.path.append('./base/')
+import _cmd
+# prep python path for supporting modules
+sys.path.append('./libs/')
 
 # define colors for output
 # note: color in prompt effects
@@ -34,7 +37,7 @@ __builtin__.goptions = {
                         'dbfilename': './data/data.db',
                         'keyfilename': './data/api.keys',
                         'domain': 'sans.org',
-                        'company': 'SANS',
+                        'company': 'Secure Ideas',
                         'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)'
                         }
 
@@ -46,6 +49,8 @@ class Shell(cmd.Cmd):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
         self.prompt = '%s > ' % (self.name)
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
+        self.do_help.__func__.__doc__ = """Displays this menu"""
+        self.doc_header = 'Commands (type help <topic>):'
         self.options = __builtin__.goptions
         self.loadmodules()
         self.show_banner()
@@ -54,16 +59,13 @@ class Shell(cmd.Cmd):
     def loadmodules(self):
         # add logic to NOT break when a module fails, but alert which module fails
         self.loaded = []
-        imp.load_source('_cmd', './base/_cmd.py', open('./base/_cmd.py', 'rb'))
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
+                sys.path.append(dirpath)
                 cnt = 0
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     modulename = filename.split('.')[0]
-                    modulepath = os.path.join(dirpath, filename)
-                    ModuleFile = open(modulepath, 'rb')
                     try:
-                        imp.load_source(modulename, modulepath, ModuleFile)
                         __import__(modulename)
                         cnt += 1
                     except:
@@ -101,18 +103,19 @@ class Shell(cmd.Cmd):
         print '%s[!] %s%s' % (R, line, N)
 
     def do_reload(self, params):
-        """Reloads all modules."""
+        """Reloads all modules"""
         self.loadmodules()
 
     def do_exit(self, params):
-        """Exits the framework."""
+        """Exits the framework"""
         return True
 
     def do_info(self, params):
+        """Displays framework information"""
         print 'Framework information.'
 
     def do_banner(self, params):
-        """Displays the banner."""
+        """Displays the banner"""
         self.show_banner()
 
     def boolify(self, s):
@@ -126,7 +129,7 @@ class Shell(cmd.Cmd):
         return s
 
     def do_goptions(self, params):
-        """Lists global options."""
+        """Lists global options"""
         print ''
         print 'Global Options:'
         print '==============='
@@ -136,6 +139,7 @@ class Shell(cmd.Cmd):
         print ''
 
     def do_setg(self, params):
+        """Sets global options"""
         options = params.split()
         if len(options) < 2:
             self.help_setg()
@@ -174,6 +178,7 @@ class Shell(cmd.Cmd):
         conn.close()
 
     def do_list(self, params):
+        """Lists framework items"""
         options = params.split()
         if len(options) == 0: self.help_list()
         else:
@@ -185,9 +190,12 @@ class Shell(cmd.Cmd):
                 for dirpath, dirnames, filenames in os.walk('./modules/'):
                     if len(filenames) > 0:
                         dir = dirpath.split('/')[-1]
+                        print '%s/' % (dir)
                         #print '{:=^25}'.format(' %s ' % (dir))
                         for filename in [f for f in filenames if f.endswith('.py')]:
-                            print os.path.join(dir, filename.split('.')[0])
+                            module = filename.split('.')[0]
+                            print '    -%s' % (module)
+                            #print os.path.join(dir, filename.split('.')[0])
                         print '===================='
                 print ''
             elif option.startswith('hosts') or option.startswith('contacts'):
@@ -210,6 +218,7 @@ class Shell(cmd.Cmd):
         print ''
 
     def do_load(self, params):
+        """Loads selected module"""
         options = params.split()
         if len(options) == 0:
             self.help_load()
@@ -229,6 +238,16 @@ class Shell(cmd.Cmd):
 
     def help_load(self):
         print 'Usage: load <module>'
+
+    # method override to make help menu more attractive
+    def print_topics(self, header, cmds, cmdlen, maxcol):
+        if cmds:
+            self.stdout.write("%s\n"%str(header))
+            if self.ruler:
+                self.stdout.write("%s\n"%str(self.ruler * len(header)))
+            for cmd in cmds:
+                self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
+            self.stdout.write("\n")
 
 if __name__ == '__main__':
     readline.parse_and_bind("bind ^I rl_complete")

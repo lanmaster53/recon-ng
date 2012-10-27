@@ -9,6 +9,10 @@ class base_cmd(cmd.Cmd):
         cmd.Cmd.__init__(self)
         self.prompt = (params)
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
+        self.do_help.__func__.__doc__ = """Displays this menu"""
+        self.do_info.__func__.__doc__ = """Displays module info"""
+        self.do_run.__func__.__doc__ = """Runs the module"""
+        self.doc_header = 'Commands (type help <topic>):'
         self.options = {}
         self.dbfilename = __builtin__.goptions['dbfilename']
         self.keyfile = __builtin__.goptions['keyfilename']
@@ -52,6 +56,16 @@ class base_cmd(cmd.Cmd):
             c.execute('INSERT INTO contacts VALUES (?, ?, ?, ?)', (fname, lname, email, title))
         conn.commit()
         conn.close()
+
+    def manage_key(self, key_name, key_text=''):
+        key = self.get_key_from_file(key_name)
+        if not key:
+            key = self.get_key_from_user(key_text)
+            if not key:
+                self.error('No API Key.')
+                return
+            self.add_key_to_file(key_name, key)
+        return key
 
     def get_key_from_file(self, key_name):
         if os.path.exists(self.keyfile):
@@ -99,11 +113,11 @@ class base_cmd(cmd.Cmd):
         return ''.join([char for char in s if ord(char) >= 32 and ord(char) <= 126])
 
     def do_exit(self, params):
-        """Exits the module."""
+        """Exits the module"""
         return True
 
     def do_options(self, params):
-        """Lists available options."""
+        """Lists module options"""
         print ''
         print 'Options:'
         print '========'
@@ -113,6 +127,7 @@ class base_cmd(cmd.Cmd):
         print ''
 
     def do_set(self, params):
+        """Sets module options"""
         options = params.split()
         if len(options) < 2:
             self.help_set()
@@ -127,3 +142,13 @@ class base_cmd(cmd.Cmd):
 
     def help_set(self):
         print 'Usage: set <option> <value>'
+
+    # method override to make help menu more attractive
+    def print_topics(self, header, cmds, cmdlen, maxcol):
+        if cmds:
+            self.stdout.write("%s\n"%str(header))
+            if self.ruler:
+                self.stdout.write("%s\n"%str(self.ruler * len(header)))
+            for cmd in cmds:
+                self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
+            self.stdout.write("\n")

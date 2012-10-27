@@ -27,13 +27,7 @@ class Module(_cmd.base_cmd):
         verbose = self.options['verbose']
         user_agent = self.options['user_agent']
         subs = []
-        key = self.get_key_from_file('shodan')
-        if not key:
-            key = self.get_key_from_user()
-            if not key:
-                self.error('No API Key.')
-                return
-            self.add_key_to_file('shodan', key)
+        key = self.manage_key('shodan')
         base_url = 'http://www.shodanhq.com/api/search'
         params = 'q=hostname:%s&key=%s' % (domain, key)
         url = '%s?%s' % (base_url, params)
