@@ -12,8 +12,8 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'domain': __builtin__.goptions['domain'],
-                        'user-agent': __builtin__.goptions['user-agent'],
+                        'domain': self.goptions['domain'],
+                        'user-agent': self.goptions['user-agent'],
                         'verbose': False
                         }
 

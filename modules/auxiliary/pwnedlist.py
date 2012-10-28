@@ -34,9 +34,10 @@ class Module(_cmd.base_cmd):
         verbose = self.options['verbose']
         user_agent = self.options['user-agent']
         source = self.options['source']
+
         # handle sources
         if source == 'db':
-            conn = sqlite3.connect(self.dbfilename)
+            conn = sqlite3.connect(self.goptions['dbfilename'])
             c = conn.cursor()
             emails = [x[0] for x in c.execute('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email').fetchall()]
             conn.close()
@@ -48,7 +49,8 @@ class Module(_cmd.base_cmd):
         else:
             self.error('Invalid source: %s' % (source))
             return
-        
+
+        # retrieve status
         pattern = "class='query_result_footer'>... we found your email in our database a total of (\d+?) times. It was last seen on ([\d-]+?). Please read on. <div"
         i, pwned = 0, 0
         while i < len(emails):
@@ -87,11 +89,11 @@ class Module(_cmd.base_cmd):
             else:
                 self.error('Response not understood.')
                 return
-            if status and source == 'db':
-                conn = sqlite3.connect(self.dbfilename)
-                c = conn.cursor()
-                c.execute('UPDATE contacts SET status=? WHERE email=?', (status, email))
-                conn.commit()
-                conn.close()
+            #if status and source == 'db':
+            conn = sqlite3.connect(self.goptions['dbfilename'])
+            c = conn.cursor()
+            c.execute('UPDATE contacts SET status=? WHERE email=?', (status, email))
+            conn.commit()
+            conn.close()
             i += 1
         print '[*] %d/%d targets pwned.' % (pwned, i)

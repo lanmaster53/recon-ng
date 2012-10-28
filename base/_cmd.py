@@ -15,9 +15,8 @@ class base_cmd(cmd.Cmd):
         self.do_info.__func__.__doc__ = """Displays module info"""
         self.do_run.__func__.__doc__ = """Runs the module"""
         self.doc_header = 'Commands (type help <topic>):'
+        self.goptions = __builtin__.goptions
         self.options = {}
-        self.dbfilename = __builtin__.goptions['dbfilename']
-        self.keyfile = __builtin__.goptions['keyfilename']
 
     #==================================================
     # OVERRIDE METHODS
@@ -63,7 +62,7 @@ class base_cmd(cmd.Cmd):
     def add_host(self, host, addr=''):
         host = self.sanitize(host)
         addr = self.sanitize(addr)
-        conn = sqlite3.connect(self.dbfilename)
+        conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
         hosts = [x[0] for x in c.execute('SELECT host from hosts ORDER BY host').fetchall()]
         if not host in hosts:
@@ -77,7 +76,7 @@ class base_cmd(cmd.Cmd):
         title = self.sanitize(title)
         email = self.sanitize(email)
         status = self.sanitize(status)
-        conn = sqlite3.connect(self.dbfilename)
+        conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
         contacts = c.execute('SELECT fname, lname, title from contacts ORDER BY fname').fetchall()
         if not (fname, lname, title) in contacts:
@@ -96,8 +95,8 @@ class base_cmd(cmd.Cmd):
         return key
 
     def get_key_from_file(self, key_name):
-        if os.path.exists(self.keyfile):
-            for line in open(self.keyfile):
+        if os.path.exists(self.goptions['keyfilename']):
+            for line in open(self.goptions['keyfilename']):
                 key, value = line.split('::')[0], line.split('::')[1]
                 if key == key_name:
                     return value.strip()
@@ -114,19 +113,19 @@ class base_cmd(cmd.Cmd):
 
     def add_key_to_file(self, key_name, key_value):
         keys = []
-        if os.path.exists(self.keyfile):
+        if os.path.exists(self.goptions['keyfilename']):
             # remove the old key if duplicate
-            for line in open(self.keyfile):
+            for line in open(self.goptions['keyfilename']):
                 key = line.split('::')[0]
                 if key != key_name:
                     keys.append(line)
         keys = ''.join(keys)
         try:
-            file = open(self.keyfile, 'w')
+            file = open(self.goptions['keyfilename'], 'w')
             file.write(keys)
             file.write('%s::%s\n' % (key_name, key_value))
             file.close()
-            print '[*] \'%s\' key added to \'%s\'.' % (key_name, self.keyfile)
+            print '[*] \'%s\' key added to \'%s\'.' % (key_name, self.goptions['keyfilename'])
         except:
             self.error('Invalid keyfile path or name.')
 
@@ -139,8 +138,8 @@ class base_cmd(cmd.Cmd):
 
     # currently only works for http connections, not https
     def web_req(self, req):
-        if __builtin__.goptions['proxy']:
-            opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': __builtin__.goptions['proxyhost']}))
+        if self.goptions['proxy']:
+            opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': self.goptions['proxyhost']}))
             socket.setdefaulttimeout(8)
         else: opener = urllib2.build_opener(AvoidRedirectHandler)
         urllib2.install_opener(opener)

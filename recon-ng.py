@@ -248,17 +248,20 @@ class Shell(cmd.Cmd):
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             conn.close()
             return
+        results = []
         for row in rows:
             row = filter(None, row)
-            print ' '.join(row)
-        print '[*] %d rows listed.' % (len(rows))
+            if row:
+                print ' '.join(row)
+                results.append(row)
         conn.close()
+        print '[*] %d rows listed.' % (len(results))
 
-    def do_use(self, params):
+    def do_load(self, params):
         """Loads selected module"""
         options = params.split()
         if len(options) == 0:
-            self.help_use()
+            self.help_load()
             self.do_list('modules')
         else:
             try:
@@ -295,8 +298,8 @@ class Shell(cmd.Cmd):
     def help_query(self):
         print 'Usage: query <sql>'
 
-    def help_use(self):
-        print 'Usage: use <module>'
+    def help_load(self):
+        print 'Usage: load <module>'
 
 if __name__ == '__main__':
     readline.parse_and_bind("bind ^I rl_complete")

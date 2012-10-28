@@ -10,7 +10,7 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'company': __builtin__.goptions['company'],
+                        'company': self.goptions['company'],
                         'keywords': 'system',
                         'verbose': False
                         }

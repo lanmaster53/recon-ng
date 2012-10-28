@@ -21,7 +21,7 @@ class Module(_cmd.base_cmd):
     
     def resolve_hosts(self):
         verbose = self.options['verbose']
-        conn = sqlite3.connect(self.dbfilename)
+        conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
         hosts = c.execute('SELECT rowid, host FROM hosts ORDER BY host').fetchall()
         for host in hosts:

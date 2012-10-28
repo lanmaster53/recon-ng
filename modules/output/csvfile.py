@@ -30,7 +30,7 @@ class Module(_cmd.base_cmd):
             return
         verbose = self.options['verbose']
         datatype = self.options['datatype']
-        conn = sqlite3.connect(self.dbfilename)
+        conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
         rows = []
         if datatype == 'hosts': rows = c.execute('SELECT * FROM hosts ORDER BY host').fetchall()
