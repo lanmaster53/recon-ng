@@ -59,35 +59,16 @@ __builtin__.goptions = {
                         'proxyhost': '127.0.0.1:8080'
                         }
 
-class Shell(cmd.Cmd):
+class Shell(_cmd.base_cmd):
     def __init__(self):
-        cmd.Cmd.__init__(self)
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
-        self.prompt = '%s > ' % (self.name)
-        self.nohelp = '%s[!] No help on %%s%s' % (R, N)
-        self.do_help.__func__.__doc__ = """Displays this menu"""
-        self.doc_header = 'Commands (type help <topic>):'
-        self.options = __builtin__.goptions
+        prompt = '%s > ' % (self.name)
+        _cmd.base_cmd.__init__(self, prompt)
+        self.do_info.__func__.__doc__ = """Displays framework info"""
+        self.options = self.goptions
         self.loadmodules()
         self.show_banner()
         self.init_db()
-
-    #==================================================
-    # OVERRIDE METHODS
-    #==================================================
-
-    def default(self, line):
-        print '%s[!] Unknown syntax: %s%s' % (R, line, N)
-
-    # make help menu more attractive
-    def print_topics(self, header, cmds, cmdlen, maxcol):
-        if cmds:
-            self.stdout.write("%s\n"%str(header))
-            if self.ruler:
-                self.stdout.write("%s\n"%str(self.ruler * len(header)))
-            for cmd in cmds:
-                self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
-            self.stdout.write("\n")
 
     #==================================================
     # SUPPORT METHODS
@@ -137,19 +118,6 @@ class Shell(cmd.Cmd):
         conn.commit()
         conn.close()
 
-    def error(self, line):
-        print '%s[!] %s%s' % (R, line, N)
-
-    def boolify(self, s):
-        return {'true': True, 'false': False}[s.lower()]
-    
-    def autoconvert(self, s):
-        for fn in (self.boolify, int, float):
-            try: return fn(s)
-            except ValueError: pass
-            except KeyError: pass
-        return s
-
     #==================================================
     # FRAMEWORK METHODS
     #==================================================
@@ -157,10 +125,6 @@ class Shell(cmd.Cmd):
     def do_reload(self, params):
         """Reloads all modules"""
         self.loadmodules()
-
-    def do_exit(self, params):
-        """Exits the framework"""
-        return True
 
     def do_info(self, params):
         """Displays framework information"""
@@ -170,22 +134,10 @@ class Shell(cmd.Cmd):
         """Displays the banner"""
         self.show_banner()
 
-    def do_options(self, params):
-        """Lists global options"""
-        print ''
-        print 'Global Options:'
-        print '==============='
-        for key in sorted(self.options.keys()):
-            value = self.options[key]
-            print '%s %s %s' % (key.ljust(12), type(value).__name__.ljust(5), str(value))
-        print ''
-
-    def do_setg(self, params):
+    def do_set(self, params):
         """Sets global options"""
         options = params.split()
-        if len(options) < 2:
-            self.help_setg()
-            self.do_options(None)
+        if len(options) < 2: self.help_set()
         else:
             name = options[0]
             if name in self.options.keys():
@@ -232,37 +184,11 @@ class Shell(cmd.Cmd):
                 self.do_query('SELECT %s from %s ORDER BY 1' % (columns, option))
             else: self.error('Invalid option: %s' % (params))
 
-    def do_query(self, params):
-        # based on the do_ouput method
-        """Queries the database"""
-        if not params:
-            self.help_query()
-            return
-        if not params.lower().startswith('select'):
-            self.error('SELECT statements only.')
-            return
-        conn = sqlite3.connect(self.options['dbfilename'])
-        c = conn.cursor()
-        try: rows = c.execute(params).fetchall()
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            conn.close()
-            return
-        results = []
-        for row in rows:
-            row = filter(None, row)
-            if row:
-                print ' '.join(row)
-                results.append(row)
-        conn.close()
-        print '[*] %d rows listed.' % (len(results))
-
     def do_load(self, params):
         """Loads selected module"""
         options = params.split()
         if len(options) == 0:
             self.help_load()
-            self.do_list('modules')
         else:
             try:
                 y = sys.modules[params].Module('%s [%s] > ' % (self.name, params))
@@ -280,9 +206,6 @@ class Shell(cmd.Cmd):
     # HELP METHODS
     #==================================================
 
-    def help_setg(self):
-        print 'Usage: set <option> <value>'
-
     def help_list(self):
         print 'Usage: list <option> <column1,column2,...>'
         print''
@@ -295,11 +218,9 @@ class Shell(cmd.Cmd):
         print '* sorted by first column'
         print ''
 
-    def help_query(self):
-        print 'Usage: query <sql>'
-
     def help_load(self):
         print 'Usage: load <module>'
+        self.do_list('modules')
 
 if __name__ == '__main__':
     readline.parse_and_bind("bind ^I rl_complete")

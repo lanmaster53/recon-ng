@@ -22,9 +22,9 @@ class Module(_cmd.base_cmd):
         print ''
         print 'Leverages PwnedList.com to determine if email addresses are associated with breached credentials.'
         print ''
-        print 'Source options: db* | email@address | path/to/infile'
+        print 'Source options: db,email@address,path/to/infile'
         print ''
-        print '* db will be updated to reflect results'
+        print 'Note: db will be updated to reflect results'
         print ''
 
     def do_run(self, params):
@@ -37,10 +37,7 @@ class Module(_cmd.base_cmd):
 
         # handle sources
         if source == 'db':
-            conn = sqlite3.connect(self.goptions['dbfilename'])
-            c = conn.cursor()
-            emails = [x[0] for x in c.execute('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email').fetchall()]
-            conn.close()
+            emails = [x[0] for x in self.do_query('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email', True)]
             if len(emails) == 0:
                 self.error('No email addresses in the db.')
                 return
@@ -69,9 +66,11 @@ class Module(_cmd.base_cmd):
                 break
             except urllib2.HTTPError as e: response = e
             except Exception as e:
-                try: self.error('Error: %s.' % (e.reason))
-                except: self.error('Unknown Error.')
-                return
+                try: self.error('Error: %s. Retrying %s.' % (e.reason, email))
+                except:
+                    self.error('Unknown Error. Retrying %s.')
+                    return
+                continue
             the_page = response.read()
             if 'Gotcha!' in the_page:
                 self.error('Hm... Got a captcha.')

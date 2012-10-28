@@ -13,7 +13,8 @@ class base_cmd(cmd.Cmd):
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = """Displays this menu"""
         self.do_info.__func__.__doc__ = """Displays module info"""
-        self.do_run.__func__.__doc__ = """Runs the module"""
+        try: self.do_run.__func__.__doc__ = """Runs the module"""
+        except: pass
         self.doc_header = 'Commands (type help <topic>):'
         self.goptions = __builtin__.goptions
         self.options = {}
@@ -136,7 +137,7 @@ class base_cmd(cmd.Cmd):
         p.feed(s)
         return p.save_end()
 
-    # currently only works for http connections, not https
+    # proxy currently only works for http connections, not https
     def web_req(self, req):
         if self.goptions['proxy']:
             opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': self.goptions['proxyhost']}))
@@ -150,11 +151,11 @@ class base_cmd(cmd.Cmd):
     #==================================================
 
     def do_exit(self, params):
-        """Exits the module"""
+        """Exits current prompt level"""
         return True
 
     def do_options(self, params):
-        """Lists module options"""
+        """Lists options"""
         print ''
         print 'Options:'
         print '========'
@@ -166,9 +167,7 @@ class base_cmd(cmd.Cmd):
     def do_set(self, params):
         """Sets module options"""
         options = params.split()
-        if len(options) < 2:
-            self.help_set()
-            self.do_options(None)
+        if len(options) < 2: self.help_set()
         else:
             name = options[0]
             if name in self.options.keys():
@@ -177,12 +176,42 @@ class base_cmd(cmd.Cmd):
                 self.options[name] = self.autoconvert(value)
             else: self.error('Invalid option.')
 
+    def do_query(self, params, return_results=False):
+        # based on the do_ouput method
+        """Queries the database"""
+        if not params:
+            self.help_query()
+            return
+        if not params.lower().startswith('select'):
+            self.error('SELECT statements only.')
+            return
+        conn = sqlite3.connect(self.goptions['dbfilename'])
+        c = conn.cursor()
+        try: rows = c.execute(params).fetchall()
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            conn.close()
+            return
+        results = []
+        for row in rows:
+            row = filter(None, row)
+            if row:
+                if not return_results: print ' '.join(row)
+                results.append(row)
+        conn.close()
+        if return_results: return results
+        print '[*] %d rows listed.' % (len(results))
+
     #==================================================
     # HELP METHODS
     #==================================================
 
     def help_set(self):
         print 'Usage: set <option> <value>'
+        self.do_options(None)
+
+    def help_query(self):
+        print 'Usage: query <sql>'
 
 class AvoidRedirectHandler(urllib2.HTTPRedirectHandler):
     def http_error_302(self, req, fp, code, msg, headers):
