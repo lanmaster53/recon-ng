@@ -2,6 +2,8 @@ import cmd
 import sqlite3
 import os
 import sys
+import urllib2
+import socket
 import __builtin__
 
 class base_cmd(cmd.Cmd):
@@ -69,16 +71,17 @@ class base_cmd(cmd.Cmd):
         conn.commit()
         conn.close()
 
-    def add_contact(self, fname, lname, title, email=''):
+    def add_contact(self, fname, lname, title, email='', status=''):
         fname = self.sanitize(fname)
         lname = self.sanitize(lname)
         title = self.sanitize(title)
         email = self.sanitize(email)
+        status = self.sanitize(status)
         conn = sqlite3.connect(self.dbfilename)
         c = conn.cursor()
         contacts = c.execute('SELECT fname, lname, title from contacts ORDER BY fname').fetchall()
         if not (fname, lname, title) in contacts:
-            c.execute('INSERT INTO contacts VALUES (?, ?, ?, ?)', (fname, lname, email, title))
+            c.execute('INSERT INTO contacts VALUES (?, ?, ?, ?, ?)', (fname, lname, email, status, title))
         conn.commit()
         conn.close()
 
@@ -134,6 +137,15 @@ class base_cmd(cmd.Cmd):
         p.feed(s)
         return p.save_end()
 
+    # currently only works for http connections, not https
+    def web_req(self, req):
+        if __builtin__.goptions['proxy']:
+            opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': __builtin__.goptions['proxyhost']}))
+            socket.setdefaulttimeout(8)
+        else: opener = urllib2.build_opener(AvoidRedirectHandler)
+        urllib2.install_opener(opener)
+        return urllib2.urlopen(req)
+
     #==================================================
     # FRAMEWORK METHODS
     #==================================================
@@ -147,7 +159,7 @@ class base_cmd(cmd.Cmd):
         print ''
         print 'Options:'
         print '========'
-        for key in self.options.keys():
+        for key in sorted(self.options.keys()):
             value = self.options[key]
             print '%s %s %s' % (key.ljust(12), type(value).__name__.ljust(5), str(value))
         print ''
@@ -172,3 +184,8 @@ class base_cmd(cmd.Cmd):
 
     def help_set(self):
         print 'Usage: set <option> <value>'
+
+class AvoidRedirectHandler(urllib2.HTTPRedirectHandler):
+    def http_error_302(self, req, fp, code, msg, headers):
+        pass
+    http_error_301 = http_error_303 = http_error_307 = http_error_302

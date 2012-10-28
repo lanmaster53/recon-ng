@@ -4,7 +4,7 @@
 
 __author__    = "Tim Tomes (@LaNMaSteR53)"
 __email__     = "tjt1980[at]gmail.com"
-__version__   = "0.08"
+__version__   = "0.09"
 __copyright__ = "Copyright (C) 2012, Tim Tomes"
 __license__   = "GPLv3"
 """
@@ -28,6 +28,7 @@ import rlcompleter
 import readline
 import os
 import sys
+import imp
 import sqlite3
 import traceback
 import __builtin__
@@ -53,7 +54,9 @@ __builtin__.goptions = {
                         'keyfilename': './data/api.keys',
                         'domain': 'sans.org',
                         'company': 'SANS',
-                        'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)'
+                        'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
+                        'proxy': False,
+                        'proxyhost': '127.0.0.1:8080'
                         }
 
 class Shell(cmd.Cmd):
@@ -95,11 +98,14 @@ class Shell(cmd.Cmd):
         self.loaded = []
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
-                sys.path.append(dirpath)
                 cnt = 0
                 for filename in [f for f in filenames if f.endswith('.py')]:
+                    # this (as opposed to sys.path.append) allows for module reloading
                     modulename = filename.split('.')[0]
+                    modulepath = os.path.join(dirpath, filename)
+                    ModuleFile = open(modulepath, 'rb')
                     try:
+                        imp.load_source(modulename, modulepath, ModuleFile)
                         __import__(modulename)
                         cnt += 1
                     except:
@@ -127,7 +133,7 @@ class Shell(cmd.Cmd):
         conn = sqlite3.connect(self.options['dbfilename'])
         c = conn.cursor()
         c.execute('create table if not exists hosts (host text, address text)')
-        c.execute('create table if not exists contacts (fname text, lname text, email text, title text)')
+        c.execute('create table if not exists contacts (fname text, lname text, email text, status text, title text)')
         conn.commit()
         conn.close()
 
@@ -164,12 +170,12 @@ class Shell(cmd.Cmd):
         """Displays the banner"""
         self.show_banner()
 
-    def do_goptions(self, params):
+    def do_options(self, params):
         """Lists global options"""
         print ''
         print 'Global Options:'
         print '==============='
-        for key in self.options.keys():
+        for key in sorted(self.options.keys()):
             value = self.options[key]
             print '%s %s %s' % (key.ljust(12), type(value).__name__.ljust(5), str(value))
         print ''
@@ -179,7 +185,7 @@ class Shell(cmd.Cmd):
         options = params.split()
         if len(options) < 2:
             self.help_setg()
-            self.do_goptions(None)
+            self.do_options(None)
         else:
             name = options[0]
             if name in self.options.keys():
@@ -248,11 +254,11 @@ class Shell(cmd.Cmd):
         print '[*] %d rows listed.' % (len(rows))
         conn.close()
 
-    def do_load(self, params):
+    def do_use(self, params):
         """Loads selected module"""
         options = params.split()
         if len(options) == 0:
-            self.help_load()
+            self.help_use()
             self.do_list('modules')
         else:
             try:
@@ -289,8 +295,8 @@ class Shell(cmd.Cmd):
     def help_query(self):
         print 'Usage: query <sql>'
 
-    def help_load(self):
-        print 'Usage: load <module>'
+    def help_use(self):
+        print 'Usage: use <module>'
 
 if __name__ == '__main__':
     readline.parse_and_bind("bind ^I rl_complete")

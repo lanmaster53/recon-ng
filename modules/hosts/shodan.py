@@ -10,8 +10,8 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'domain': __builtin__.goptions['domain'],
-                        'verbose': False,
-                        'user_agent': __builtin__.goptions['user-agent']
+                        'user-agent': __builtin__.goptions['user-agent'],
+                        'verbose': False
                         }
 
     def do_info(self, params):
@@ -25,7 +25,7 @@ class Module(_cmd.base_cmd):
     def get_hosts(self):
         domain = self.options['domain']
         verbose = self.options['verbose']
-        user_agent = self.options['user_agent']
+        user_agent = self.options['user-agent']
         subs = []
         key = self.manage_key('shodan')
         base_url = 'http://www.shodanhq.com/api/search'

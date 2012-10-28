@@ -13,8 +13,8 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'domain': __builtin__.goptions['domain'],
-                        'verbose': False,
-                        'user_agent': __builtin__.goptions['user-agent']
+                        'user-agent': __builtin__.goptions['user-agent'],
+                        'verbose': False
                         }
 
     def do_info(self, params):
@@ -28,7 +28,7 @@ class Module(_cmd.base_cmd):
     def get_hosts(self):
         domain = self.options['domain']
         verbose = self.options['verbose']
-        user_agent = self.options['user_agent']
+        user_agent = self.options['user-agent']
         base_url = 'https://www.google.com'
         base_uri = '/search?'
         base_query = 'site:' + domain
