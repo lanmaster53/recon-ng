@@ -47,6 +47,8 @@ class base_cmd(cmd.Cmd):
         return {'true': True, 'false': False}[s.lower()]
     
     def autoconvert(self, s):
+        if s.lower() in ['none', "''", '""']:
+            return ''
         for fn in (self.boolify, int, float):
             try: return fn(s)
             except ValueError: pass
@@ -161,7 +163,7 @@ class base_cmd(cmd.Cmd):
         print '========'
         for key in sorted(self.options.keys()):
             value = self.options[key]
-            print '%s %s %s' % (key.ljust(12), type(value).__name__.ljust(5), str(value))
+            print '%s %s %s' % (key.ljust(12), type(value).__name__[:4].lower().ljust(5), str(value))
         print ''
 
     def do_set(self, params):
@@ -182,23 +184,22 @@ class base_cmd(cmd.Cmd):
         if not params:
             self.help_query()
             return
+        results = []
         if not params.lower().startswith('select'):
             self.error('SELECT statements only.')
-            return
-        conn = sqlite3.connect(self.goptions['dbfilename'])
-        c = conn.cursor()
-        try: rows = c.execute(params).fetchall()
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+        else:
+            conn = sqlite3.connect(self.goptions['dbfilename'])
+            c = conn.cursor()
+            try: rows = c.execute(params).fetchall()
+            except sqlite3.OperationalError as e:
+                self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+                rows = []
+            for row in rows:
+                row = filter(None, row)
+                if row:
+                    if not return_results: print ' '.join(row)
+                    results.append(row)
             conn.close()
-            return
-        results = []
-        for row in rows:
-            row = filter(None, row)
-            if row:
-                if not return_results: print ' '.join(row)
-                results.append(row)
-        conn.close()
         if return_results: return results
         print '[*] %d rows listed.' % (len(results))
 

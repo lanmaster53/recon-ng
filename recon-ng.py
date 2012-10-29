@@ -98,13 +98,13 @@ class Shell(_cmd.base_cmd):
 
     def show_banner(self):
         print ''
-        print '    _/_/_/    _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/_/_/   '
-        print '   _/    _/  _/        _/        _/    _/  _/_/    _/              _/_/    _/  _/          '
-        print '  _/_/_/    _/_/_/    _/        _/    _/  _/  _/  _/  _/_/_/_/_/  _/  _/  _/  _/  _/_/     '
-        print ' _/    _/  _/        _/        _/    _/  _/    _/_/              _/    _/_/  _/    _/      '
-        print '_/    _/  _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/_/_/       '
+        print '    _/_/_/    _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/_/_/'
+        print '   _/    _/  _/        _/        _/    _/  _/_/    _/              _/_/    _/  _/       '
+        print '  _/_/_/    _/_/_/    _/        _/    _/  _/  _/  _/  _/_/_/_/_/  _/  _/  _/  _/  _/_/  '
+        print ' _/    _/  _/        _/        _/    _/  _/    _/_/              _/    _/_/  _/    _/   '
+        print '_/    _/  _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/_/_/    '
         print ''
-        print '%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N)
+        print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), 96)
         print ''
         for module in self.loaded:
             print '%s[%d] %s modules%s' % (B, module[1], module[0], N)
