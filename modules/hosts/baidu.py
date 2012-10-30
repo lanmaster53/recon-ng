@@ -19,25 +19,25 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
-        print 'Harvests hosts from Bing.com by using the \'site\' search operator.'
+        print 'Harvests hosts from Google.com by using the \'site\' search operator.'
         print ''
 
     def do_run(self, params):
         self.get_hosts()
     
-    def get_hosts(self):
+    def get_hosts(self):#wd=site%3Asans.org+-site%3Awww.sans.org
         domain = self.options['domain']
         verbose = self.options['verbose']
         user_agent = self.options['user-agent']
-        base_url = 'http://www.bing.com'
-        base_uri = '/search?'
+        base_url = 'http://www.baidu.com'
+        base_uri = '/s?'
         base_query = 'site:' + domain
-        pattern = '"sb_tlst"><h3><a href="\w+://(\S+?)\.%s' % (domain)
+        pattern = '<span class="g">\s\s(\S*?)\.%s.*?</span>'  % (domain)
         subs = []
         # control variables
         new = True
         page = 0
-        nr = 50
+        nr = 10
         # execute search engine queries and scrape results storing subdomains in a list
         # loop until no new subdomains are found
         while new == True:
@@ -47,8 +47,10 @@ class Module(_cmd.base_cmd):
             for sub in subs:
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
-            start_param = 'first=%s' % (str(page*nr))
-            query_param = 'q=%s' % (urllib.quote_plus(full_query))
+            start_param = 'pn=%d' % (page*nr)
+            query_param = 'wd=%s' % (urllib.quote_plus(full_query))
+            #rn=10
+            #cl=3
             params = '%s&%s' % (query_param, start_param)
             full_url = base_url + base_uri + params
             # note: typical URI max length is 2048 (starts after top level domain)
@@ -56,20 +58,20 @@ class Module(_cmd.base_cmd):
             # build and send request
             request = urllib2.Request(full_url)
             request.add_header('User-Agent', user_agent)
-            request.add_header('Cookie', 'SRCHHPGUSR=NEWWND=0&NRSLT=%d&SRCHLANG=&AS=1;' % (nr))
             # send query to search engine
             try: content = self.web_req(request)
             except KeyboardInterrupt: pass
             except Exception as e: self.error('%s. Exiting.' % str(e))
             if not content: break
             content = content.read()
+            #import pdb;pdb.set_trace()
             sites = re.findall(pattern, content)
-            # create a uniq list
+            # create a unique list
             sites = list(set(sites))
             new = False
             # add subdomain to list if not already exists
             for site in sites:
-                if site not in subs:
+               if site not in subs:
                     subs.append(site)
                     new = True
                     host = '%s.%s' % (site, domain)
@@ -79,8 +81,7 @@ class Module(_cmd.base_cmd):
             # start going through all pages if query size is maxed out
             if not new:
                 # exit if all subdomains have been found
-                if not '>Next</a>' in content:
-                    # curl to stdin breaks pdb
+                if not u'>\u4e0b\u4e00\u9875&gt;<'.encode('utf-8') in content:
                     break
                 else:
                     page += 1

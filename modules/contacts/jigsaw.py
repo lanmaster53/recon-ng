@@ -2,6 +2,7 @@ import _cmd
 import __builtin__
 # unique to module
 import urllib
+import urllib2
 import sys
 import re
 
@@ -33,10 +34,8 @@ class Module(_cmd.base_cmd):
         url = base_url
         while True:
             if self.options['verbose']: print '[Query] %s' % url
-            try:
-                content = urllib.urlopen(url).read()
-            except KeyboardInterrupt:
-                break
+            try: content = self.web_req(urllib2.Request(url)).read()
+            except KeyboardInterrupt: break
             pattern = "href=./id(\d+?)/.+?>(.+?)<.+?\n.+?title='([\d,]+?)'"
             companies = re.findall(pattern, content)
             if not companies:
@@ -81,7 +80,7 @@ class Module(_cmd.base_cmd):
         while True:
             url = base_url + '&rpage=%d' % (page_cnt)
             if verbose: print '[Query] %s' % url
-            try: content = urllib.urlopen(url).read()
+            try: content = self.web_req(urllib2.Request(url)).read()
             except KeyboardInterrupt: break
             pattern = "<span.+?>(.+?)</span>.+?\n.+?href.+?\('(\d+?)'\)>(.+?)<"
             contacts = re.findall(pattern, content)
@@ -91,7 +90,7 @@ class Module(_cmd.base_cmd):
                 contact_id = contact[1]
                 if contact[2].find('...') != -1:
                     url = 'http://www.jigsaw.com/BC.xhtml?contactId=%s' % contact_id
-                    try: content = urllib.urlopen(url).read()
+                    try: content = self.web_req(urllib2.Request(url)).read()
                     except KeyboardInterrupt: break
                     pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
                     names = re.findall(pattern, content)

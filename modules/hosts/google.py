@@ -29,7 +29,7 @@ class Module(_cmd.base_cmd):
         domain = self.options['domain']
         verbose = self.options['verbose']
         user_agent = self.options['user-agent']
-        base_url = 'https://www.google.com'
+        base_url = 'http://www.google.com'
         base_uri = '/search?'
         base_query = 'site:' + domain
         pattern = '<a\shref="\w+://(\S+?)\.%s\S+?"\sclass=l'  % (domain)
@@ -62,15 +62,10 @@ class Module(_cmd.base_cmd):
             # build and send request
             request = urllib2.Request(full_url)
             request.add_header('User-Agent', user_agent)
-            requestor = urllib2.build_opener()
             # send query to search engine
-            try: content = requestor.open(request)
+            try: content = self.web_req(request)
             except KeyboardInterrupt: pass
-            except Exception as e:
-                if '503' in str(e):
-                    self.error('Possible Shun: Use --proxy or find something else to do for 24 hours. ;_;')
-                elif verbose:
-                    self.error('%s. Returning Previously Harvested Results.' % str(e))
+            except Exception as e: self.error('%s. Exiting.' % str(e))
             if not content: break
             content = content.read()
             sites = re.findall(pattern, content)

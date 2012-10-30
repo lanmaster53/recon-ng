@@ -57,9 +57,8 @@ class Module(_cmd.base_cmd):
             # build and send request
             request = urllib2.Request(full_url)
             request.add_header('User-Agent', user_agent)
-            requestor = urllib2.build_opener()
             # send query to search engine
-            try: content = requestor.open(request)
+            try: content = self.web_req(request)
             except KeyboardInterrupt: pass
             except Exception as e: self.error('%s. Returning Previously Harvested Results.' % str(e))
             if not content: break

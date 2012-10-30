@@ -11,12 +11,15 @@ class Module(_cmd.base_cmd):
         self.options = {
                         'domain': self.goptions['domain'],
                         'user-agent': self.goptions['user-agent'],
+                        'restrict': False,
                         'verbose': False
                         }
 
     def do_info(self, params):
         print ''
         print 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator.'
+        print ''
+        print 'Note: \'restrict\' option limits API requests to 1 in order to prevent API query exhaustion.'
         print ''
 
     def do_run(self, params):
@@ -39,12 +42,12 @@ class Module(_cmd.base_cmd):
             request = urllib2.Request(url)
             request.add_header('User-Agent', user_agent)
             #handler = urllib2.HTTPHandler(debuglevel=1)
-            requestor = urllib2.build_opener()
             content = None
-            try: content = requestor.open(request)
+            # uses API, so no need to proxy
+            #try: content = self.web_req(request)
+            try: content = urllib2.urlopen(request)
             except KeyboardInterrupt: pass
-            except Exception as e:
-                self.error('Error: %s.' % (str(e)))
+            except Exception as e: self.error('Error: %s.' % (str(e)))
             if not content: break
             content = content.read()
             jsonobj = json.loads(content)
@@ -60,7 +63,7 @@ class Module(_cmd.base_cmd):
                         host = '%s.%s' % (site, domain)
                         print '[Host] %s' % (host)
                         self.add_host(host)
-            #break # large results will exhaust API query pool. Use this to restrict to one page.
+            if self.options['restrict']: break
             if not new: break
             page += 1
             url = '%s?%s&page=%s' % (base_url, params, str(page))
