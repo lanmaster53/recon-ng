@@ -7,9 +7,7 @@ class Module(_cmd.base_cmd):
 
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
-        self.options = {
-                        'verbose': False,
-                        }
+        self.options = {}
 
     def do_info(self, params):
         print ''
@@ -20,7 +18,6 @@ class Module(_cmd.base_cmd):
         self.resolve_hosts()
     
     def resolve_hosts(self):
-        verbose = self.options['verbose']
         conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
         hosts = c.execute('SELECT rowid, host FROM hosts ORDER BY host').fetchall()

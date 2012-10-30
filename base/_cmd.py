@@ -4,6 +4,8 @@ import os
 import sys
 import urllib2
 import socket
+import datetime
+import subprocess
 import __builtin__
 
 class base_cmd(cmd.Cmd):
@@ -15,7 +17,7 @@ class base_cmd(cmd.Cmd):
         self.do_info.__func__.__doc__ = """Displays module info"""
         try: self.do_run.__func__.__doc__ = """Runs the module"""
         except: pass
-        self.doc_header = 'Commands (type help <topic>):'
+        self.doc_header = 'Commands (type [help|?] <topic>):'
         self.goptions = __builtin__.goptions
         self.options = {}
 
@@ -24,7 +26,14 @@ class base_cmd(cmd.Cmd):
     #==================================================
 
     def default(self, line):
-        print '%s[!] Unknown syntax: %s%s' % (R, line, N)
+        self.do_shell(line)
+        self.log('%s => Shell' % (line))
+        #self.log('Error: Unknown syntax: %s' % (line))
+        #print '%s[!] Unknown syntax: %s%s' % (R, line, N)
+
+    def precmd(self, line):
+        self.log('Command: %s' % (line))
+        return line
 
     # make help menu more attractive
     def print_topics(self, header, cmds, cmdlen, maxcol):
@@ -41,6 +50,7 @@ class base_cmd(cmd.Cmd):
     #==================================================
 
     def error(self, line):
+        self.log('Error: %s' % (line))
         print '%s[!] %s%s' % (R, line, N)
 
     def boolify(self, s):
@@ -140,13 +150,18 @@ class base_cmd(cmd.Cmd):
         return p.save_end()
 
     # proxy currently only works for http connections, not https
-    def web_req(self, req):
+    def urlopen(self, req):
         if self.goptions['proxy']:
             opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': self.goptions['proxyhost']}))
             socket.setdefaulttimeout(8)
         else: opener = urllib2.build_opener(AvoidRedirectHandler)
         urllib2.install_opener(opener)
         return urllib2.urlopen(req)
+
+    def log(self, str):
+        logfile = open(self.goptions['logfilename'], 'ab')
+        logfile.write('[%s] %s\n' % (datetime.datetime.now(), str))
+        logfile.close()
 
     #==================================================
     # FRAMEWORK METHODS
@@ -161,9 +176,12 @@ class base_cmd(cmd.Cmd):
         print ''
         print 'Options:'
         print '========'
-        for key in sorted(self.options.keys()):
-            value = self.options[key]
-            print '%s %s %s' % (key.ljust(12), type(value).__name__[:4].lower().ljust(5), str(value))
+        if self.options.keys():
+            for key in sorted(self.options.keys()):
+                value = self.options[key]
+                print '%s %s %s' % (key.ljust(12), type(value).__name__[:4].lower().ljust(5), str(value))
+        else:
+            print 'None'
         print ''
 
     def do_set(self, params):
@@ -203,6 +221,13 @@ class base_cmd(cmd.Cmd):
         if return_results: return results
         print '[*] %d rows listed.' % (len(results))
 
+    def do_shell(self, params):
+        """Executed shell commands"""
+        proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        result = proc.stdout.read() + proc.stderr.read()
+        print '[*] Command: %s' % (params)
+        sys.stdout.write(result)
+
     #==================================================
     # HELP METHODS
     #==================================================
@@ -213,6 +238,10 @@ class base_cmd(cmd.Cmd):
 
     def help_query(self):
         print 'Usage: query <sql>'
+
+    def help_shell(self):
+        print 'Usage: [shell|!] <command>'
+        print '...or just type a command at the prompt.'
 
 class AvoidRedirectHandler(urllib2.HTTPRedirectHandler):
     def http_error_302(self, req, fp, code, msg, headers):

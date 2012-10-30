@@ -9,8 +9,7 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'source': 'all',
-                        'file': './data/results.csv',
-                        'verbose': False,
+                        'file': './data/results.csv'
                         }
 
     def do_info(self, params):
@@ -29,7 +28,6 @@ class Module(_cmd.base_cmd):
         except:
             self.error('Invalid path or filename.')
             return
-        verbose = self.options['verbose']
         source = self.options['source']
         conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()

@@ -13,9 +13,7 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'source': 'db',
-                        'user-agent': __builtin__.goptions['user-agent'],
-                        'verbose': True,
+                        'source': 'db'
                         }
 
     def do_info(self, params):
@@ -31,8 +29,8 @@ class Module(_cmd.base_cmd):
         self.check_pwned()
 
     def check_pwned(self):
-        verbose = self.options['verbose']
-        user_agent = self.options['user-agent']
+        verbose = self.goptions['verbose']
+        user_agent = self.goptions['user-agent']
         source = self.options['source']
 
         # handle sources
@@ -60,7 +58,7 @@ class Module(_cmd.base_cmd):
             headers = { 'User-Agent' : user_agent }
             data = urllib.urlencode(values)
             req = urllib2.Request(url, data, headers)
-            try: response = self.web_req(req)
+            try: response = self.urlopen(req)
             except KeyboardInterrupt:
                 sys.stdout.write('\n')
                 break

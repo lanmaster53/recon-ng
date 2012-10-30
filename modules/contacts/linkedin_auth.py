@@ -16,8 +16,7 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'company': self.goptions['company'],
-                        'keywords': '',
-                        'verbose': False
+                        'keywords': ''
                         }
 
     def do_info(self, params):
@@ -39,7 +38,10 @@ class Module(_cmd.base_cmd):
     def get_access_tokens(self):
         client = oauth.Client(self.consumer)
         request_token_url = 'https://api.linkedin.com/uas/oauth/requestToken'
-        resp, content = client.request(request_token_url, "POST")
+        try: resp, content = client.request(request_token_url, "POST")
+        except KeyboardInterrupt:
+            sys.stdout.write('\n')
+            return None
         if resp['status'] != '200':
             raise Exception(self.error('Error: Invalid Response %s.' % resp['status']))
         request_token = dict(urlparse.parse_qsl(content))
@@ -57,7 +59,10 @@ class Module(_cmd.base_cmd):
         token = oauth.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
         token.set_verifier(oauth_verifier)
         client = oauth.Client(self.consumer, token)
-        resp, content = client.request(access_token_url, "POST")
+        try: resp, content = client.request(access_token_url, "POST")
+        except KeyboardInterrupt:
+            sys.stdout.write('\n')
+            return None
         self.access_token = dict(urlparse.parse_qsl(content))
         self.add_key_to_file('linkedin_token', self.access_token['oauth_token'])
         self.add_key_to_file('linkedin_token_secret', self.access_token['oauth_token_secret'])
@@ -72,9 +77,10 @@ class Module(_cmd.base_cmd):
         url = base_url
         page = 1
         while True:
-            # Make call to LinkedIn to retrieve your own profile
-            resp,content = client.request(url)
-            #import pdb;pdb.set_trace()
+            try: resp, content = client.request(url)
+            except KeyboardInterrupt:
+                sys.stdout.write('\n')
+                break
             try: jsonobj = json.loads(content)
             except ValueError as e:
                 self.error('Error: %s in %s' % (e, url))

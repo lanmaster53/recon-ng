@@ -10,8 +10,7 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'domain': self.goptions['domain'],
-                        'pattern': '<fn>.<ln>',
-                        'verbose': False,
+                        'pattern': '<fn>.<ln>'
                         }
 
     def do_info(self, params):
@@ -26,7 +25,6 @@ class Module(_cmd.base_cmd):
         self.mutate_contacts()
 
     def mutate_contacts(self):
-        verbose = self.options['verbose']
         conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
         contacts = c.execute('SELECT rowid, fname, lname FROM contacts ORDER BY fname').fetchall()

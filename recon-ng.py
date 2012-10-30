@@ -50,11 +50,13 @@ __builtin__.R  = "\033[31m"
 __builtin__.goptions = {
                         'dbfilename': './data/data.db',
                         'keyfilename': './data/api.keys',
+                        'logfilename': './data/cmd.log',
                         'domain': 'sans.org',
                         'company': 'SANS',
                         'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
                         'proxy': False,
-                        'proxyhost': '127.0.0.1:8080'
+                        'proxyhost': '127.0.0.1:8080',
+                        'verbose': False
                         }
 
 class Shell(_cmd.base_cmd):
@@ -72,7 +74,7 @@ class Shell(_cmd.base_cmd):
     # SUPPORT METHODS
     #==================================================
 
-    def loadmodules(self):
+    def loadmodules(self, reload=False):
         # add logic to NOT break when a module fails, but alert which module fails
         self.loaded = []
         for dirpath, dirnames, filenames in os.walk('./modules/'):
@@ -84,6 +86,7 @@ class Shell(_cmd.base_cmd):
                     modulepath = os.path.join(dirpath, filename)
                     ModuleFile = open(modulepath, 'rb')
                     try:
+                        if reload: print '[*] Reloading %s...' % (modulename)
                         imp.load_source(modulename, modulepath, ModuleFile)
                         __import__(modulename)
                         cnt += 1
@@ -92,7 +95,7 @@ class Shell(_cmd.base_cmd):
                         traceback.print_exc(file=sys.stdout)
                         print '-'*60
                         self.error('Unable to load module: %s' % (modulename))
-                self.loaded.append((dirpath.split('/')[-1], cnt))
+                self.loaded.append(('/'.join(dirpath.split('/')[2:]), cnt))
 
     def show_banner(self):
         print ''
@@ -122,7 +125,7 @@ class Shell(_cmd.base_cmd):
 
     def do_reload(self, params):
         """Reloads all modules"""
-        self.loadmodules()
+        self.loadmodules(True)
 
     def do_info(self, params):
         """Displays framework information"""

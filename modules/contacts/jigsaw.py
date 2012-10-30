@@ -12,8 +12,7 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'company': self.goptions['company'],
-                        'keywords': 'system',
-                        'verbose': False
+                        'keywords': 'system'
                         }
 
     def do_info(self, params):
@@ -33,8 +32,8 @@ class Module(_cmd.base_cmd):
         base_url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml?opCode=search&freeText=%s' % (urllib.quote_plus(params))
         url = base_url
         while True:
-            if self.options['verbose']: print '[Query] %s' % url
-            try: content = self.web_req(urllib2.Request(url)).read()
+            if self.goptions['verbose']: print '[Query] %s' % url
+            try: content = self.urlopen(urllib2.Request(url)).read()
             except KeyboardInterrupt: break
             pattern = "href=./id(\d+?)/.+?>(.+?)<.+?\n.+?title='([\d,]+?)'"
             companies = re.findall(pattern, content)
@@ -73,14 +72,13 @@ class Module(_cmd.base_cmd):
             return company_id
 
     def get_contacts(self, company_id):
-        verbose = self.options['verbose']
         page_cnt = 1
         base_url = 'http://www.jigsaw.com/SearchContact.xhtml?companyId=%s&opCode=showCompDir' % (company_id)
         url = base_url
         while True:
             url = base_url + '&rpage=%d' % (page_cnt)
-            if verbose: print '[Query] %s' % url
-            try: content = self.web_req(urllib2.Request(url)).read()
+            if self.goptions['verbose']: print '[Query] %s' % url
+            try: content = self.urlopen(urllib2.Request(url)).read()
             except KeyboardInterrupt: break
             pattern = "<span.+?>(.+?)</span>.+?\n.+?href.+?\('(\d+?)'\)>(.+?)<"
             contacts = re.findall(pattern, content)
@@ -90,7 +88,7 @@ class Module(_cmd.base_cmd):
                 contact_id = contact[1]
                 if contact[2].find('...') != -1:
                     url = 'http://www.jigsaw.com/BC.xhtml?contactId=%s' % contact_id
-                    try: content = self.web_req(urllib2.Request(url)).read()
+                    try: content = self.urlopen(urllib2.Request(url)).read()
                     except KeyboardInterrupt: break
                     pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
                     names = re.findall(pattern, content)

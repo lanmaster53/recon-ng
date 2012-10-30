@@ -10,9 +10,7 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'domain': self.goptions['domain'],
-                        'user-agent': self.goptions['user-agent'],
-                        'restrict': False,
-                        'verbose': False
+                        'restrict': False
                         }
 
     def do_info(self, params):
@@ -27,8 +25,7 @@ class Module(_cmd.base_cmd):
     
     def get_hosts(self):
         domain = self.options['domain']
-        verbose = self.options['verbose']
-        user_agent = self.options['user-agent']
+        user_agent = self.goptions['user-agent']
         subs = []
         key = self.manage_key('shodan')
         base_url = 'http://www.shodanhq.com/api/search'
@@ -43,11 +40,11 @@ class Module(_cmd.base_cmd):
             request.add_header('User-Agent', user_agent)
             #handler = urllib2.HTTPHandler(debuglevel=1)
             content = None
-            # uses API, so no need to proxy
-            #try: content = self.web_req(request)
-            try: content = urllib2.urlopen(request)
+            # uses API, so don't need to proxy
+            #try: content = urllib2.urlopen(request)
+            try: content = self.urlopen(request)
             except KeyboardInterrupt: pass
-            except Exception as e: self.error('Error: %s.' % (str(e)))
+            except Exception as e: self.error('%s. Exiting.' % (str(e)))
             if not content: break
             content = content.read()
             jsonobj = json.loads(content)

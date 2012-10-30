@@ -12,9 +12,7 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'domain': self.goptions['domain'],
-                        'user-agent': self.goptions['user-agent'],
-                        'verbose': False
+                        'domain': self.goptions['domain']
                         }
 
     def do_info(self, params):
@@ -27,8 +25,8 @@ class Module(_cmd.base_cmd):
     
     def get_hosts(self):#wd=site%3Asans.org+-site%3Awww.sans.org
         domain = self.options['domain']
-        verbose = self.options['verbose']
-        user_agent = self.options['user-agent']
+        verbose = self.goptions['verbose']
+        user_agent = self.goptions['user-agent']
         base_url = 'http://www.baidu.com'
         base_uri = '/s?'
         base_query = 'site:' + domain
@@ -59,10 +57,10 @@ class Module(_cmd.base_cmd):
             request = urllib2.Request(full_url)
             request.add_header('User-Agent', user_agent)
             # send query to search engine
-            try: content = self.web_req(request)
+            try: content = self.urlopen(request)
             except KeyboardInterrupt: pass
-            except Exception as e: self.error('%s. Exiting.' % str(e))
-            if not content: break
+            except Exception as e: self.error('%s. Exiting.' % (str(e)))
+            if not content: return
             content = content.read()
             #import pdb;pdb.set_trace()
             sites = re.findall(pattern, content)
