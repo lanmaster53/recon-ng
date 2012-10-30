@@ -24,8 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import cmd
 import datetime
-import rlcompleter
-import readline
 import os
 import sys
 import imp
@@ -223,7 +221,16 @@ class Shell(_cmd.base_cmd):
         self.do_list('modules')
 
 if __name__ == '__main__':
-    readline.parse_and_bind("bind ^I rl_complete")
+    try:
+        import readline
+    except ImportError:
+        print "[!] Module \'readline\' not available. Tab complete disabled."
+    else:
+        import rlcompleter
+        if 'libedit' in readline.__doc__:
+            readline.parse_and_bind("bind ^I rl_complete")
+        else:
+            readline.parse_and_bind("tab: complete")
     x = Shell()
     try: x.cmdloop()
     except KeyboardInterrupt: sys.stdout.write('\n')
