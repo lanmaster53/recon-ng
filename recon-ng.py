@@ -166,7 +166,7 @@ class Shell(_cmd.base_cmd):
                 print '===================='
                 for dirpath, dirnames, filenames in os.walk('./modules/'):
                     if len(filenames) > 0:
-                        dir = dirpath.split('/')[-1]
+                        dir = '/'.join(dirpath.split('/')[2:])
                         print '%s/' % (dir)
                         #print '{:=^25}'.format(' %s ' % (dir))
                         for filename in [f for f in filenames if f.endswith('.py')]:
