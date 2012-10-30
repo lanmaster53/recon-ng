@@ -224,9 +224,11 @@ class base_cmd(cmd.Cmd):
     def do_shell(self, params):
         """Executed shell commands"""
         proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        result = proc.stdout.read() + proc.stderr.read()
         print '[*] Command: %s' % (params)
-        sys.stdout.write(result)
+        stdout = proc.stdout.read()
+        stderr = proc.stderr.read()
+        if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))
+        if stderr: sys.stdout.write('%s%s%s' % (R, stderr, N))
 
     #==================================================
     # HELP METHODS

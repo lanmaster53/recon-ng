@@ -4,7 +4,7 @@
 
 __author__    = "Tim Tomes (@LaNMaSteR53)"
 __email__     = "tjt1980[at]gmail.com"
-__version__   = "0.09"
+__version__   = "0.10"
 __copyright__ = "Copyright (C) 2012, Tim Tomes"
 __license__   = "GPLv3"
 """
