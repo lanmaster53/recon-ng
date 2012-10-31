@@ -52,4 +52,4 @@ class Module(_cmd.base_cmd):
         conn.commit()
         conn.close()
         outfile.close()
-        print '[*] %d %s added to \'%s\'.' % (len(rows), source, self.options['file'])
+        self.output('%d %s added to \'%s\'.' % (len(rows), source, self.options['file']))

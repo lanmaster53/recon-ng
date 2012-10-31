@@ -28,10 +28,10 @@ class Module(_cmd.base_cmd):
             host = host[1]
             #try: addresses = list(set([item[4][0] for item in socket.getaddrinfo(host, 80)]))
             #except socket.gaierror: addresses = ['no entry']
-            #print '[Address] %s resolves to %s' % (host, ','.join(addresses))
+            #self.output('%s resolves to %s' % (host, ','.join(addresses)))
             try: address = socket.gethostbyname(host)
             except socket.gaierror: address = 'no entry'
-            print '[Address] %s => %s' % (host, address)
+            self.output('%s => %s' % (host, address))
             c.execute('UPDATE hosts SET address=? WHERE rowid=?', (address, row))
         conn.commit()
         conn.close()

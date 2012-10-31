@@ -47,7 +47,7 @@ class Module(_cmd.base_cmd):
             except:
                 self.error('Invalid Mutation Pattern \'%s\'.' % (type))
                 break
-            print '[Mutation] %s %s => %s' % (fname, lname, email)
+            self.output('%s %s => %s' % (fname, lname, email))
             c.execute('UPDATE contacts SET email=? WHERE rowid=?', (email, row))
         conn.commit()
         conn.close()

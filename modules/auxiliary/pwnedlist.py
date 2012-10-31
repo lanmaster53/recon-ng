@@ -74,13 +74,13 @@ class Module(_cmd.base_cmd):
                 return
             elif '>NOPE!<' in the_page:
                 status = 'safe'
-                if verbose: print '[*] %s seems %s.' % (email, status)
+                if verbose: self.output('%s seems %s.' % (email, status))
             elif '>YES<' in the_page:
                 status = 'pwned'
                 m = re.search(pattern, the_page)
                 qty = m.group(1)
                 last = m.group(2)
-                print '[!] %s has been compromised %s times and as recent as %s.' % (email, qty, last)
+                self.output('%s has been compromised %s times and as recent as %s.' % (email, qty, last))
                 pwned += 1
             else:
                 self.error('Response not understood.')
@@ -92,4 +92,4 @@ class Module(_cmd.base_cmd):
             conn.commit()
             conn.close()
             i += 1
-        print '[*] %d/%d targets pwned.' % (pwned, i)
+        self.output('%d/%d targets pwned.' % (pwned, i))

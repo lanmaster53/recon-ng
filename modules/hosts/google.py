@@ -58,7 +58,7 @@ class Module(_cmd.base_cmd):
             # note: query character limit is passive in mobile, but seems to be ~794
             # note: query character limit seems to be 852 for desktop queries
             # note: typical URI max length is 2048 (starts after top level domain)
-            if verbose: print '[URL] %s' % full_url
+            if verbose: self.output('URL: %s' % full_url)
             # build and send request
             request = urllib2.Request(full_url)
             # send query to search engine
@@ -79,7 +79,7 @@ class Module(_cmd.base_cmd):
                     subs.append(site)
                     new = True
                     host = '%s.%s' % (site, domain)
-                    print '[Host] %s' % (host)
+                    self.output('%s' % (host))
                     self.add_host(host)
             # exit if maximum number of queries has been made
             # start going through all pages if query size is maxed out
@@ -89,12 +89,12 @@ class Module(_cmd.base_cmd):
                     break
                 else:
                     page += 1
-                    if verbose: print '[*] No New Subdomains Found on the Current Page. Jumping to Result %d.' % ((page*nr)+1)
+                    if verbose: self.output('No New Subdomains Found on the Current Page. Jumping to Result %d.' % ((page*nr)+1))
                     new = True
             # sleep script to avoid lock-out
-            if verbose: print '[*] Sleeping to Avoid Lock-out...'
+            if verbose: self.output('Sleeping to Avoid Lock-out...')
             try: time.sleep(random.randint(5,15))
             except KeyboardInterrupt:
                 sys.stdout.write('\n')
                 break
-        if verbose: print '[*] Final Query String: %s' % (full_url)
+        if verbose: self.output('Final Query String: %s' % (full_url))

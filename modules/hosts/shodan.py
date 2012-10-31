@@ -61,7 +61,7 @@ class Module(_cmd.base_cmd):
                         subs.append(site)
                         new = True
                         host = '%s.%s' % (site, domain)
-                        print '[Host] %s' % (host)
+                        self.output('%s' % (host))
                         self.add_host(host)
             if self.options['restrict']: break
             if not new: break

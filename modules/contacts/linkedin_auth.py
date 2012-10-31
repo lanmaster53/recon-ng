@@ -49,8 +49,8 @@ class Module(_cmd.base_cmd):
         request_token = dict(urlparse.parse_qsl(content))
         base_authorize_url = 'https://api.linkedin.com/uas/oauth/authorize'
         authorize_url = "%s?oauth_token=%s" % (base_authorize_url, request_token['oauth_token'])
-        print "[*] Go to the following link in your browser and enter the pin below:" 
-        print authorize_url
+        self.output('Go to the following link in your browser and enter the pin below:') 
+        self.output(authorize_url)
         w = webbrowser.get()
         w.open(authorize_url)
         oauth_verifier = ''
@@ -101,7 +101,7 @@ class Module(_cmd.base_cmd):
                     title = self.unescape(contact['headline'])
                     fname = self.unescape(re.split('[\s]',contact['firstName'])[0])
                     lname = self.unescape(re.split('[,;]',contact['lastName'])[0])
-                    print '[Contact] %s %s - %s' % (fname, lname, title)
+                    self.output('%s %s - %s' % (fname, lname, title))
                     self.add_contact(fname, lname, title)
             if not '_start' in jsonobj['people']: break
             if jsonobj['people']['_start'] + jsonobj['people']['_count'] == jsonobj['people']['_total']: break

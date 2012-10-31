@@ -27,7 +27,7 @@ class base_cmd(cmd.Cmd):
 
     def default(self, line):
         self.do_shell(line)
-        self.log('%s => Shell' % (line))
+        self.log('Shell: %s' % (line))
         #self.log('Error: Unknown syntax: %s' % (line))
         #print '%s[!] Unknown syntax: %s%s' % (R, line, N)
 
@@ -52,6 +52,9 @@ class base_cmd(cmd.Cmd):
     def error(self, line):
         self.log('Error: %s' % (line))
         print '%s[!] %s%s' % (R, line, N)
+
+    def output(self, line):
+        print '%s[*]%s %s' % (B, N, line)
 
     def boolify(self, s):
         return {'true': True, 'false': False}[s.lower()]
@@ -138,7 +141,7 @@ class base_cmd(cmd.Cmd):
             file.write(keys)
             file.write('%s::%s\n' % (key_name, key_value))
             file.close()
-            print '[*] \'%s\' key added to \'%s\'.' % (key_name, self.goptions['keyfilename'])
+            self.output('\'%s\' key added to \'%s\'.' % (key_name, self.goptions['keyfilename']))
         except:
             self.error('Invalid keyfile path or name.')
 
@@ -185,7 +188,7 @@ class base_cmd(cmd.Cmd):
                 print pattern % (key.ljust(key_len), type(value).__name__[:4].lower().ljust(4), str(value))
             print ''
         else:
-            print '[*] No options available for this module.'
+            print 'No options available for this module.'
 
     def do_set(self, params):
         """Sets module options"""
@@ -228,12 +231,12 @@ class base_cmd(cmd.Cmd):
         print delim.join(['='*len(column) for column in columns])
         for row in results:
             print delim.join(row)
-        print '[*] %d rows listed.' % (len(results))
+        self.output('%d rows listed.' % (len(results)))
 
     def do_shell(self, params):
         """Executed shell commands"""
         proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        print '[*] Command: %s' % (params)
+        self.output('Command: %s' % (params))
         stdout = proc.stdout.read()
         stderr = proc.stderr.read()
         if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))

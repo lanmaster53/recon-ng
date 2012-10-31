@@ -86,7 +86,7 @@ class Shell(_cmd.base_cmd):
                     modulepath = os.path.join(dirpath, filename)
                     ModuleFile = open(modulepath, 'rb')
                     try:
-                        if reload: print '[*] Reloading %s...' % (modulename)
+                        if reload: self.output('Reloading %s...' % (modulename))
                         imp.load_source(modulename, modulepath, ModuleFile)
                         __import__(modulename)
                         cnt += 1
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     try:
         import readline
     except ImportError:
-        print "[!] Module \'readline\' not available. Tab complete disabled."
+        print "%s[!] Module \'readline\' not available. Tab complete disabled.%s" % (R, N)
     else:
         import rlcompleter
         if 'libedit' in readline.__doc__:

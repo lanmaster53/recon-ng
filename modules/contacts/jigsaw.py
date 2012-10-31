@@ -34,7 +34,7 @@ class Module(_cmd.base_cmd):
         base_url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml?opCode=search&freeText=%s' % (urllib.quote_plus(params))
         url = base_url
         while True:
-            if self.goptions['verbose']: print '[Query] %s' % url
+            if self.goptions['verbose']: self.output('Query: %s' % url)
             try: content = self.urlopen(urllib2.Request(url)).read()
             except KeyboardInterrupt:
                 sys.stdout.write('\n')
@@ -58,11 +58,11 @@ class Module(_cmd.base_cmd):
             page_cnt += 1
             url = base_url + '&rpage=%d' % (page_cnt)
         if len(all_companies) == 0:
-            print '[*] No Company Matches Found.'
+            self.output('No Company Matches Found.')
             return False
         else:
             for company in all_companies:
-                print '[Company] %s %s (%s contacts)' % (company[0], company[1], company[2])
+                self.output('%s %s (%s contacts)' % (company[0], company[1], company[2]))
             if len(all_companies) > 1:
                 try:
                     company_id = raw_input('Enter Company ID from list [%s]: ' % (all_companies[0][0]))
@@ -72,7 +72,7 @@ class Module(_cmd.base_cmd):
                     company_id = ''
             else:
                 company_id = all_companies[0][0]
-                print '[*] Unique Company Match Found: %s' % company_id
+                self.output('Unique Company Match Found: %s' % company_id)
             return company_id
 
     def get_contacts(self, company_id):
@@ -81,7 +81,7 @@ class Module(_cmd.base_cmd):
         url = base_url
         while True:
             url = base_url + '&rpage=%d' % (page_cnt)
-            if self.goptions['verbose']: print '[Query] %s' % url
+            if self.goptions['verbose']: self.output('Query: %s' % (url))
             try: content = self.urlopen(urllib2.Request(url)).read()
             except KeyboardInterrupt:
                 sys.stdout.write('\n')
@@ -105,6 +105,6 @@ class Module(_cmd.base_cmd):
                 else:
                     fname = self.unescape(contact[2].split(',')[1].strip())
                     lname = self.unescape(contact[2].split(',')[0].strip())
-                print '[Contact] %s %s - %s' % (fname, lname, title)
+                self.output('%s %s - %s' % (fname, lname, title))
                 self.add_contact(fname, lname, title)
             page_cnt += 1
