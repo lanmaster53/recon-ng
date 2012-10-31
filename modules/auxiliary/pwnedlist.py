@@ -18,11 +18,12 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
+        print 'Info:'
+        print '====='
         print 'Leverages PwnedList.com to determine if email addresses are associated with breached credentials.'
         print ''
         print 'Source options: db,email@address,path/to/infile'
-        print ''
-        print 'Note: db will be updated to reflect results'
+        print 'Note:           db will be updated to reflect results'
         print ''
 
     def do_run(self, params):
@@ -30,7 +31,6 @@ class Module(_cmd.base_cmd):
 
     def check_pwned(self):
         verbose = self.goptions['verbose']
-        user_agent = self.goptions['user-agent']
         source = self.options['source']
 
         # handle sources
@@ -55,9 +55,8 @@ class Module(_cmd.base_cmd):
             values = {'query_input' : email,
                       'query_input_hash' : 'empty',
                       'submit' : 'CHECK' }
-            headers = { 'User-Agent' : user_agent }
             data = urllib.urlencode(values)
-            req = urllib2.Request(url, data, headers)
+            req = urllib2.Request(url, data)
             try: response = self.urlopen(req)
             except KeyboardInterrupt:
                 sys.stdout.write('\n')
@@ -66,7 +65,7 @@ class Module(_cmd.base_cmd):
             except Exception as e:
                 try: self.error('Error: %s. Retrying %s.' % (e.reason, email))
                 except:
-                    self.error('Unknown Error. Retrying %s.')
+                    self.error('Unknown Error.')
                     return
                 continue
             the_page = response.read()

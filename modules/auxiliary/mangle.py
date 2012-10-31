@@ -15,10 +15,12 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
+        print 'Info:'
+        print '====='
         print 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses for each harvested contact.'
         print ''
         print 'Pattern options: <fi>,<fn>,<li>,<ln>'
-        print 'Example \'<fi>.<ln>\' => \'j.doe@domain.com\''
+        print 'Example:         <fi>.<ln> => j.doe@domain.com'
         print ''
 
     def do_run(self, params):

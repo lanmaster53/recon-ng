@@ -3,6 +3,7 @@ import __builtin__
 # unique to module
 import urllib
 import urllib2
+import sys
 import re
 import time
 import random
@@ -17,7 +18,9 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
-        print 'Harvests hosts from Google.com by using the \'site\' search operator.'
+        print 'Info:'
+        print '====='
+        print 'Harvests hosts from Baidu.com by using the \'site\' search operator.'
         print ''
 
     def do_run(self, params):
@@ -26,7 +29,6 @@ class Module(_cmd.base_cmd):
     def get_hosts(self):#wd=site%3Asans.org+-site%3Awww.sans.org
         domain = self.options['domain']
         verbose = self.goptions['verbose']
-        user_agent = self.goptions['user-agent']
         base_url = 'http://www.baidu.com'
         base_uri = '/s?'
         base_query = 'site:' + domain
@@ -55,11 +57,12 @@ class Module(_cmd.base_cmd):
             if verbose: print '[URL] %s' % full_url
             # build and send request
             request = urllib2.Request(full_url)
-            request.add_header('User-Agent', user_agent)
             # send query to search engine
             try: content = self.urlopen(request)
-            except KeyboardInterrupt: pass
-            except Exception as e: self.error('%s. Exiting.' % (str(e)))
+            except KeyboardInterrupt:
+                sys.stdout.write('\n')
+                pass
+            except Exception as e: self.error('%s.' % (str(e)))
             if not content: return
             content = content.read()
             #import pdb;pdb.set_trace()
@@ -88,5 +91,7 @@ class Module(_cmd.base_cmd):
             # sleep script to avoid lock-out
             if verbose: print '[*] Sleeping to Avoid Lock-out...'
             try: time.sleep(random.randint(5,15))
-            except KeyboardInterrupt: break
+            except KeyboardInterrupt:
+                sys.stdout.write('\n')
+                break
         if verbose: print '[*] Final Query String: %s' % (full_url)

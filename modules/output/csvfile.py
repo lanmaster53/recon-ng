@@ -14,10 +14,12 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
+        print 'Info:'
+        print '====='
         print 'Creates a CSV file containing the specified harvested data types.'
         print ''
         print 'Source options: hosts,contacts,all,<sql>'
-        print 'Only SELECT queries allowed.'
+        print 'Note:           Only SELECT queries allowed.'
         print ''
 
     def do_run(self, params):

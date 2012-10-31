@@ -21,6 +21,8 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
+        print 'Info:'
+        print '====='
         print 'Harvests contacts from Jigsaw.com.'
         print ''
 

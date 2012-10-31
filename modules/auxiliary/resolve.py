@@ -11,6 +11,8 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
+        print 'Info:'
+        print '====='
         print 'Resolves the IP address for all of the hosts stored in the database.'
         print ''
 

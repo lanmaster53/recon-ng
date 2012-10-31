@@ -17,6 +17,8 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
+        print 'Info:'
+        print '====='
         print 'Harvests contacts from Jigsaw.com.'
         print ''
 
@@ -34,7 +36,9 @@ class Module(_cmd.base_cmd):
         while True:
             if self.goptions['verbose']: print '[Query] %s' % url
             try: content = self.urlopen(urllib2.Request(url)).read()
-            except KeyboardInterrupt: break
+            except KeyboardInterrupt:
+                sys.stdout.write('\n')
+                break
             pattern = "href=./id(\d+?)/.+?>(.+?)<.+?\n.+?title='([\d,]+?)'"
             companies = re.findall(pattern, content)
             if not companies:
@@ -79,7 +83,9 @@ class Module(_cmd.base_cmd):
             url = base_url + '&rpage=%d' % (page_cnt)
             if self.goptions['verbose']: print '[Query] %s' % url
             try: content = self.urlopen(urllib2.Request(url)).read()
-            except KeyboardInterrupt: break
+            except KeyboardInterrupt:
+                sys.stdout.write('\n')
+                break
             pattern = "<span.+?>(.+?)</span>.+?\n.+?href.+?\('(\d+?)'\)>(.+?)<"
             contacts = re.findall(pattern, content)
             if not contacts: break
@@ -89,7 +95,9 @@ class Module(_cmd.base_cmd):
                 if contact[2].find('...') != -1:
                     url = 'http://www.jigsaw.com/BC.xhtml?contactId=%s' % contact_id
                     try: content = self.urlopen(urllib2.Request(url)).read()
-                    except KeyboardInterrupt: break
+                    except KeyboardInterrupt:
+                        sys.stdout.write('\n')
+                        break
                     pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
                     names = re.findall(pattern, content)
                     fname = self.unescape(names[0][0])

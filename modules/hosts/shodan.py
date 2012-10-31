@@ -2,6 +2,7 @@ import _cmd
 import __builtin__
 # unique to module
 import urllib2
+import sys
 import json
 
 class Module(_cmd.base_cmd):
@@ -15,6 +16,8 @@ class Module(_cmd.base_cmd):
 
     def do_info(self, params):
         print ''
+        print 'Info:'
+        print '====='
         print 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator.'
         print ''
         print 'Note: \'restrict\' option limits API requests to 1 in order to prevent API query exhaustion.'
@@ -25,7 +28,6 @@ class Module(_cmd.base_cmd):
     
     def get_hosts(self):
         domain = self.options['domain']
-        user_agent = self.goptions['user-agent']
         subs = []
         key = self.manage_key('shodan')
         base_url = 'http://www.shodanhq.com/api/search'
@@ -37,14 +39,15 @@ class Module(_cmd.base_cmd):
             new = False
             # build and send request
             request = urllib2.Request(url)
-            request.add_header('User-Agent', user_agent)
             #handler = urllib2.HTTPHandler(debuglevel=1)
             content = None
             # uses API, so don't need to proxy
             #try: content = urllib2.urlopen(request)
             try: content = self.urlopen(request)
-            except KeyboardInterrupt: pass
-            except Exception as e: self.error('%s. Exiting.' % (str(e)))
+            except KeyboardInterrupt:
+                sys.stdout.write('\n')
+                pass
+            except Exception as e: self.error('%s.' % (str(e)))
             if not content: break
             content = content.read()
             jsonobj = json.loads(content)

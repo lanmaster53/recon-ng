@@ -151,6 +151,7 @@ class base_cmd(cmd.Cmd):
 
     # proxy currently only works for http connections, not https
     def urlopen(self, req):
+        req.add_header('User-Agent', self.goptions['user-agent'])
         if self.goptions['proxy']:
             opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': self.goptions['proxyhost']}))
             socket.setdefaulttimeout(8)
