@@ -157,33 +157,36 @@ class Shell(_cmd.base_cmd):
                 self.init_db()
             else: self.error('Invalid option.')
 
-    def do_list(self, params):
-        """Lists framework items"""
-        options = params.split()
-        if len(options) == 0: self.help_list()
-        else:
-            option = options[0]
-            if option == 'modules':
-                print ''
-                print 'Modules:'
+    def do_modules(self, params):
+        """Lists available modules"""
+        print ''
+        print 'Modules:'
+        print '===================='
+        for dirpath, dirnames, filenames in os.walk('./modules/'):
+            if len(filenames) > 0:
+                dir = '/'.join(dirpath.split('/')[2:])
+                print '%s/' % (dir)
+                #print '{:=^25}'.format(' %s ' % (dir))
+                for filename in [f for f in filenames if f.endswith('.py')]:
+                    module = filename.split('.')[0]
+                    print '    -%s' % (module)
+                    #print os.path.join(dir, filename.split('.')[0])
                 print '===================='
-                for dirpath, dirnames, filenames in os.walk('./modules/'):
-                    if len(filenames) > 0:
-                        dir = '/'.join(dirpath.split('/')[2:])
-                        print '%s/' % (dir)
-                        #print '{:=^25}'.format(' %s ' % (dir))
-                        for filename in [f for f in filenames if f.endswith('.py')]:
-                            module = filename.split('.')[0]
-                            print '    -%s' % (module)
-                            #print os.path.join(dir, filename.split('.')[0])
-                        print '===================='
-                print ''
-            elif option == 'hosts' or option == 'contacts':
-                columns = '*'
-                if len(options) > 1:
-                    columns = options[1]
-                self.do_query('SELECT %s from %s ORDER BY 1' % (columns, option))
-            else: self.error('Invalid option: %s' % (params))
+        print ''
+
+    def do_hosts(self, params):
+        """Lists hosts from the database"""
+        columns = '*'
+        if params:
+            columns = ','.join(params.split())
+        self.do_query('SELECT %s from hosts ORDER BY 1' % (columns))
+
+    def do_contacts(self, params):
+        """Lists contacts from the database"""
+        columns = '*'
+        if params:
+            columns = ','.join(params.split())
+        self.do_query('SELECT %s from contacts ORDER BY 1' % (columns))
 
     def do_load(self, params):
         """Loads selected module"""
@@ -207,21 +210,29 @@ class Shell(_cmd.base_cmd):
     # HELP METHODS
     #==================================================
 
-    def help_list(self):
-        print 'Usage: list <option> <column1,column2,...>'
-        print''
-        print 'Options:'
-        print '========'
-        print 'modules    Lists available modules.'
-        print 'hosts*     Lists harvested hosts from the database.    columns=[host,address]'
-        print 'contacts*  Lists harvested contacts from the database. columns=[fname,lname,email,title]'
+    def help_hosts(self):
+        print 'Usage: hosts [<column1>,<column2>|<column1> <column2>]'
         print ''
-        print '* sorted by first column'
+        print 'Notes:'
+        print '======'
+        print 'Column options: host, address'
+        print 'If no column is given, \'*\' is implied.'
+        print 'Output is sorted by the first column.'
+        print ''
+
+    def help_contacts(self):
+        print 'Usage: contacts [<column1>,<column2>|<column1> <column2>]'
+        print ''
+        print 'Notes:'
+        print '======'
+        print 'Column options: fname, lname, email, status, title'
+        print 'If no column is given, \'*\' is implied.'
+        print 'Output is sorted by the first column.'
         print ''
 
     def help_load(self):
         print 'Usage: load <module>'
-        self.do_list('modules')
+        self.do_modules(None)
 
 if __name__ == '__main__':
     try:

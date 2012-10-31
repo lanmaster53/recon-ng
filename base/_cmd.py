@@ -174,16 +174,18 @@ class base_cmd(cmd.Cmd):
 
     def do_options(self, params):
         """Lists options"""
-        print ''
-        print 'Options:'
-        print '========'
         if self.options.keys():
+            pattern = '%s\t%s\t%s'
+            key_len = len(max(self.options.keys(), key=len))
+            print ''
+            print pattern % ('Name'.ljust(key_len), 'Type'.ljust(4), 'Current Value')
+            print pattern % ('='*key_len, '='*4, '='*13)
             for key in sorted(self.options.keys()):
                 value = self.options[key]
-                print '%s %s %s' % (key.ljust(12), type(value).__name__[:4].lower().ljust(5), str(value))
+                print pattern % (key.ljust(key_len), type(value).__name__[:4].lower().ljust(4), str(value))
+            print ''
         else:
-            print 'None'
-        print ''
+            print '[*] No options available for this module.'
 
     def do_set(self, params):
         """Sets module options"""
@@ -216,10 +218,16 @@ class base_cmd(cmd.Cmd):
             for row in rows:
                 row = filter(None, row)
                 if row:
-                    if not return_results: print ' '.join(row)
                     results.append(row)
             conn.close()
         if return_results: return results
+        # print columns with headers if results are not returned
+        delim = ' '
+        columns = [column[0] for column in c.description]
+        print delim.join(columns)
+        print delim.join(['='*len(column) for column in columns])
+        for row in results:
+            print delim.join(row)
         print '[*] %d rows listed.' % (len(results))
 
     def do_shell(self, params):
