@@ -12,16 +12,15 @@ class Module(_cmd.base_cmd):
                         'domain': self.goptions['domain'],
                         'pattern': '<fn>.<ln>'
                         }
-
-    def do_info(self, params):
-        print ''
-        print 'Info:'
-        print '====='
-        print 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses for each harvested contact.'
-        print ''
-        print 'Pattern options: <fi>,<fn>,<li>,<ln>'
-        print 'Example:         <fi>.<ln> => j.doe@domain.com'
-        print ''
+        self.info = {
+                     'Name': 'Contact Name Mangler',
+                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses for each harvested contact.',
+                     'Comments': [
+                                  'Pattern options: <fi>,<fn>,<li>,<ln>',
+                                  'Example:         <fi>.<ln> => j.doe@domain.com'
+                                  ]
+                     }
 
     def do_run(self, params):
         self.mutate_contacts()

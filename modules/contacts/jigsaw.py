@@ -14,13 +14,12 @@ class Module(_cmd.base_cmd):
                         'company': self.goptions['company'],
                         'keywords': 'system'
                         }
-
-    def do_info(self, params):
-        print ''
-        print 'Info:'
-        print '====='
-        print 'Harvests contacts from Jigsaw.com.'
-        print ''
+        self.info = {
+                     'Name': 'Jigsaw Contact Enumerator',
+                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Harvests contacts from Jigsaw.com.',
+                     'Comments': []
+                     }
 
     def do_run(self, params):
         company_id = self.get_company_id()

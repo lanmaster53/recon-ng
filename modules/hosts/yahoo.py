@@ -15,13 +15,12 @@ class Module(_cmd.base_cmd):
         self.options = {
                         'domain': self.goptions['domain']
                         }
-
-    def do_info(self, params):
-        print ''
-        print 'Info:'
-        print '====='
-        print 'Harvests hosts from Yahoo.com by using the \'site\' search operator.'
-        print ''
+        self.info = {
+                     'Name': 'Yahoo Hostname Enumerator',
+                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Harvests hosts from Yahoo.com by using the \'site\' search operator.',
+                     'Comments': []
+                     }
 
     def do_run(self, params):
         self.get_hosts()

@@ -18,13 +18,12 @@ class Module(_cmd.base_cmd):
                         'company': self.goptions['company'],
                         'keywords': ''
                         }
-
-    def do_info(self, params):
-        print ''
-        print 'Info:'
-        print '====='
-        print 'Harvests contacts from Jigsaw.com.'
-        print ''
+        self.info = {
+                     'Name': 'LinkedIn Authenticated Contact Enumerator',
+                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Harvests contacts from LinkedIn.com using an authenticated connections network.',
+                     'Comments': []
+                     }
 
     def do_run(self, params):
         consumer_key = self.manage_key('linkedin_key', 'LinkedIn API Key')

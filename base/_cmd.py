@@ -2,6 +2,7 @@ import cmd
 import sqlite3
 import os
 import sys
+import textwrap
 import urllib2
 import socket
 import datetime
@@ -12,9 +13,10 @@ class base_cmd(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
         self.prompt = (params)
+        self.ruler = '-'
+        self.spacer = '  '
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = """Displays this menu"""
-        self.do_info.__func__.__doc__ = """Displays module info"""
         try: self.do_run.__func__.__doc__ = """Runs the module"""
         except: pass
         self.doc_header = 'Commands (type [help|?] <topic>):'
@@ -175,20 +177,42 @@ class base_cmd(cmd.Cmd):
         """Exits current prompt level"""
         return True
 
+    def do_info(self, params):
+        """Displays module information"""
+        print ''
+        print '%s:' % ('Name')
+        print '%s%s' % (self.spacer, self.info['Name'])
+        print ''
+        print '%s:' % ('Author')
+        print '%s%s' % (self.spacer, self.info['Author'])
+        print ''
+        print '%s:' % ('Description')
+        print '%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 80, initial_indent='', subsequent_indent=self.spacer))
+        print ''
+        print '%s:' % ('Options')
+        self.do_options(None)
+        if self.info['Comments']:
+            print '%s:' % ('Comments')
+            for comment in self.info['Comments']:
+                print '%s%s' % (self.spacer, textwrap.fill(comment, 80, initial_indent='', subsequent_indent=self.spacer*2))
+            print ''
+
     def do_options(self, params):
         """Lists options"""
         if self.options.keys():
-            pattern = '%s\t%s\t%s'
+            pattern = '%s%%s\t%%s\t%%s' % (self.spacer)
             key_len = len(max(self.options.keys(), key=len))
             print ''
             print pattern % ('Name'.ljust(key_len), 'Type'.ljust(4), 'Current Value')
-            print pattern % ('='*key_len, '='*4, '='*13)
+            print pattern % (self.ruler*key_len, self.ruler*4, self.ruler*13)
             for key in sorted(self.options.keys()):
                 value = self.options[key]
                 print pattern % (key.ljust(key_len), type(value).__name__[:4].lower().ljust(4), str(value))
             print ''
         else:
-            print 'No options available for this module.'
+            print ''
+            print '%sNo options available for this module.' % (self.spacer)
+            print ''
 
     def do_set(self, params):
         """Sets module options"""
@@ -228,7 +252,7 @@ class base_cmd(cmd.Cmd):
         delim = ' '
         columns = [column[0] for column in c.description]
         print delim.join(columns)
-        print delim.join(['='*len(column) for column in columns])
+        print delim.join([self.ruler*len(column) for column in columns])
         for row in results:
             print delim.join(row)
         self.output('%d rows listed.' % (len(results)))

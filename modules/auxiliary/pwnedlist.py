@@ -15,16 +15,14 @@ class Module(_cmd.base_cmd):
         self.options = {
                         'source': 'db'
                         }
-
-    def do_info(self, params):
-        print ''
-        print 'Info:'
-        print '====='
-        print 'Leverages PwnedList.com to determine if email addresses are associated with breached credentials.'
-        print ''
-        print 'Source options: db,email@address,path/to/infile'
-        print 'Note:           db will be updated to reflect results'
-        print ''
+        self.info = {
+                     'Name': 'PwnedList Validator',
+                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Leverages PwnedList.com to determine if email addresses are associated with breached credentials, updating the database with the results.',
+                     'Comments': [
+                                  'Source options: db, email@address, path/to/infile'
+                                  ]
+                     }
 
     def do_run(self, params):
         self.check_pwned()

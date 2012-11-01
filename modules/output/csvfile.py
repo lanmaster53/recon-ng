@@ -11,16 +11,14 @@ class Module(_cmd.base_cmd):
                         'source': 'all',
                         'file': './data/results.csv'
                         }
-
-    def do_info(self, params):
-        print ''
-        print 'Info:'
-        print '====='
-        print 'Creates a CSV file containing the specified harvested data types.'
-        print ''
-        print 'Source options: hosts,contacts,all,<sql>'
-        print 'Note:           Only SELECT queries allowed.'
-        print ''
+        self.info = {
+                     'Name': 'CSV File Creator',
+                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Creates a CSV file containing the specified harvested data types.',
+                     'Comments': [
+                                  'Source options: hosts, contacts, all, <sql>'
+                                  ]
+                     }
 
     def do_run(self, params):
         self.append_to_csv()

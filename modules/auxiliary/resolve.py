@@ -8,13 +8,12 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {}
-
-    def do_info(self, params):
-        print ''
-        print 'Info:'
-        print '====='
-        print 'Resolves the IP address for all of the hosts stored in the database.'
-        print ''
+        self.info = {
+                     'Name': 'Hostname Resolver',
+                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Resolves the IP address for all of the hosts stored in the database.',
+                     'Comments': []
+                     }
 
     def do_run(self, params):
         self.resolve_hosts()

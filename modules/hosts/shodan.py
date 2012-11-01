@@ -11,17 +11,17 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'domain': self.goptions['domain'],
-                        'restrict': False
+                        'restrict': False,
+                        'requests': 1
                         }
-
-    def do_info(self, params):
-        print ''
-        print 'Info:'
-        print '====='
-        print 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator.'
-        print ''
-        print 'Note: \'restrict\' option limits API requests to 1 in order to prevent API query exhaustion.'
-        print ''
+        self.info = {
+                     'Name': 'Shodan Hostname Enumerator',
+                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator.',
+                     'Comments': [
+                                  'Note: \'restrict\' option limits the number of API requests to \'requests\' in order to prevent API query exhaustion.'
+                                  ]
+                     }
 
     def do_run(self, params):
         self.get_hosts()
@@ -29,7 +29,8 @@ class Module(_cmd.base_cmd):
     def get_hosts(self):
         domain = self.options['domain']
         subs = []
-        key = self.manage_key('shodan')
+        key = self.manage_key('shodan', 'Shodan API key')
+        if not key: return
         base_url = 'http://www.shodanhq.com/api/search'
         params = 'q=hostname:%s&key=%s' % (domain, key)
         url = '%s?%s' % (base_url, params)
@@ -63,7 +64,8 @@ class Module(_cmd.base_cmd):
                         host = '%s.%s' % (site, domain)
                         self.output('%s' % (host))
                         self.add_host(host)
-            if self.options['restrict']: break
+            if self.options['restrict']:
+                if page == self.options['requests']: break
             if not new: break
             page += 1
             url = '%s?%s&page=%s' % (base_url, params, str(page))

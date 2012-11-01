@@ -64,7 +64,6 @@ class Shell(_cmd.base_cmd):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
         _cmd.base_cmd.__init__(self, prompt)
-        self.do_info.__func__.__doc__ = """Displays framework info"""
         self.options = self.goptions
         self.loadmodules()
         self.show_banner()
@@ -142,7 +141,7 @@ class Shell(_cmd.base_cmd):
         else:
             name = options[0]
             if name in self.options.keys():
-                value = options[1]
+                value = ' '.join(options[1:])
                 # make sure database file is valid
                 if name == 'dbfilename':
                     try:
@@ -161,17 +160,17 @@ class Shell(_cmd.base_cmd):
         """Lists available modules"""
         print ''
         print 'Modules:'
-        print '===================='
+        print self.ruler*20
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
                 dir = '/'.join(dirpath.split('/')[2:])
-                print '%s/' % (dir)
+                print '%s:' % (dir)
                 #print '{:=^25}'.format(' %s ' % (dir))
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     module = filename.split('.')[0]
-                    print '    -%s' % (module)
+                    print '    %s' % (module)
                     #print os.path.join(dir, filename.split('.')[0])
-                print '===================='
+                print self.ruler*20
         print ''
 
     def do_hosts(self, params):
@@ -206,6 +205,15 @@ class Shell(_cmd.base_cmd):
             except KeyError: self.error('Invalid module name.')
             except AttributeError: self.error('Invalid module name.')
 
+    # alias for load
+    def do_use(self, params):
+        """Loads selected module"""
+        options = params.split()
+        if len(options) == 0:
+            self.help_use()
+        else:
+            self.do_load(params)
+
     #==================================================
     # HELP METHODS
     #==================================================
@@ -214,7 +222,7 @@ class Shell(_cmd.base_cmd):
         print 'Usage: hosts [<column1>,<column2>|<column1> <column2>]'
         print ''
         print 'Notes:'
-        print '======'
+        print self.ruler*5
         print 'Column options: host, address'
         print 'If no column is given, \'*\' is implied.'
         print 'Output is sorted by the first column.'
@@ -224,7 +232,7 @@ class Shell(_cmd.base_cmd):
         print 'Usage: contacts [<column1>,<column2>|<column1> <column2>]'
         print ''
         print 'Notes:'
-        print '======'
+        print self.ruler*5
         print 'Column options: fname, lname, email, status, title'
         print 'If no column is given, \'*\' is implied.'
         print 'Output is sorted by the first column.'
@@ -232,6 +240,10 @@ class Shell(_cmd.base_cmd):
 
     def help_load(self):
         print 'Usage: load <module>'
+        self.do_modules(None)
+
+    def help_use(self):
+        print 'Usage: use <module>'
         self.do_modules(None)
 
 if __name__ == '__main__':
