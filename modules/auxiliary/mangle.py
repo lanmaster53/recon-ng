@@ -1,8 +1,6 @@
 import _cmd
 import __builtin__
 # unique to module
-import sqlite3
-import socket
 
 class Module(_cmd.base_cmd):
 
@@ -26,9 +24,7 @@ class Module(_cmd.base_cmd):
         self.mutate_contacts()
 
     def mutate_contacts(self):
-        conn = sqlite3.connect(self.goptions['dbfilename'])
-        c = conn.cursor()
-        contacts = c.execute('SELECT rowid, fname, lname FROM contacts ORDER BY fname').fetchall()
+        contacts = self.query('SELECT rowid, fname, lname FROM contacts ORDER BY fname')
         for contact in contacts:
             row = contact[0]
             fname = contact[1]
@@ -47,6 +43,4 @@ class Module(_cmd.base_cmd):
                 self.error('Invalid Mutation Pattern \'%s\'.' % (type))
                 break
             self.output('%s %s => %s' % (fname, lname, email))
-            c.execute('UPDATE contacts SET email=? WHERE rowid=?', (email, row))
-        conn.commit()
-        conn.close()
+            self.query('UPDATE contacts SET email="%s" WHERE rowid="%s"' % (email, row))

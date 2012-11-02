@@ -2,7 +2,6 @@ import _cmd
 import __builtin__
 # unique to module
 import urllib2
-import sys
 import json
 
 class Module(_cmd.base_cmd):
@@ -34,6 +33,7 @@ class Module(_cmd.base_cmd):
         base_url = 'http://www.shodanhq.com/api/search'
         params = 'q=hostname:%s&key=%s' % (domain, key)
         url = '%s?%s' % (base_url, params)
+        cnt = 0
         page = 1
         # loop until no results are returned
         while True:
@@ -46,7 +46,7 @@ class Module(_cmd.base_cmd):
             #try: content = urllib2.urlopen(request)
             try: content = self.urlopen(request)
             except KeyboardInterrupt:
-                sys.stdout.write('\n')
+                print ''
                 pass
             except Exception as e: self.error('%s.' % (str(e)))
             if not content: break
@@ -63,9 +63,11 @@ class Module(_cmd.base_cmd):
                         new = True
                         host = '%s.%s' % (site, domain)
                         self.output('%s' % (host))
-                        self.add_host(host)
+                        cnt += self.add_host(host)
             if self.options['restrict']:
                 if page == self.options['requests']: break
             if not new: break
             page += 1
             url = '%s?%s&page=%s' % (base_url, params, str(page))
+        self.output('%d total hosts found.' % (len(subs)))
+        if cnt: self.alert('%d NEW hosts found!' % (cnt))

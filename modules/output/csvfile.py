@@ -1,6 +1,5 @@
 import _cmd
 # unique to module
-import sqlite3
 import csv
 
 class Module(_cmd.base_cmd):
@@ -9,7 +8,7 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
                         'source': 'all',
-                        'file': './data/results.csv'
+                        'filename': './data/results.csv'
                         }
         self.info = {
                      'Name': 'CSV File Creator',
@@ -24,30 +23,32 @@ class Module(_cmd.base_cmd):
         self.append_to_csv()
     
     def append_to_csv(self):
-        try: outfile = open(self.options['file'], 'wb')
+        filename = self.options['filename']
+        try:
+            outfile = open(filename, 'wb')
+            outfile.close()
         except:
             self.error('Invalid path or filename.')
             return
         source = self.options['source']
-        conn = sqlite3.connect(self.goptions['dbfilename'])
-        c = conn.cursor()
         rows = []
-        if source == 'hosts': rows = self.do_query('SELECT * FROM hosts ORDER BY host', True)
-        elif source == 'contacts' : rows = self.do_query('SELECT * FROM contacts ORDER BY fname', True)
+        if source == 'hosts': rows = self.query('SELECT * FROM hosts ORDER BY host')
+        elif source == 'contacts' : rows = self.query('SELECT * FROM contacts ORDER BY fname')
         elif source == 'all':
-            rows.extend(self.do_query('SELECT * FROM hosts ORDER BY host', True))
-            rows.extend(self.do_query('SELECT * FROM contacts ORDER BY fname', True))
+            rows.extend(self.query('SELECT * FROM hosts ORDER BY host'))
+            rows.extend(self.query('SELECT * FROM contacts ORDER BY fname'))
             # rename source for summary
             source = 'rows'
         elif source.lower().startswith('select'):
-            rows = self.do_query(source, True)
+            rows = self.query(source)
             source = 'rows'
-        else: self.error('Invalid output data type.')
+        else:
+            self.error('Invalid data source.')
+            return
+        outfile = open(filename, 'wb')
         for row in rows:
             row = filter(None, row)
             csvwriter = csv.writer(outfile, quoting=csv.QUOTE_ALL)
             csvwriter.writerow([unicode(s).encode("utf-8") for s in row])
-        conn.commit()
-        conn.close()
         outfile.close()
-        self.output('%d %s added to \'%s\'.' % (len(rows), source, self.options['file']))
+        self.output('%d %s added to \'%s\'.' % (len(rows), source, filename))

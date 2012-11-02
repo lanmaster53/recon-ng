@@ -3,7 +3,6 @@ import __builtin__
 # unique to module
 import urllib
 import urllib2
-import sys
 import re
 import time
 import random
@@ -33,6 +32,7 @@ class Module(_cmd.base_cmd):
         base_query = 'site:' + domain
         pattern = '<span class="g">\s\s(\S*?)\.%s.*?</span>'  % (domain)
         subs = []
+        cnt = 0
         # control variables
         new = True
         page = 0
@@ -59,7 +59,7 @@ class Module(_cmd.base_cmd):
             # send query to search engine
             try: content = self.urlopen(request)
             except KeyboardInterrupt:
-                sys.stdout.write('\n')
+                print ''
                 pass
             except Exception as e: self.error('%s.' % (str(e)))
             if not content: return
@@ -76,7 +76,7 @@ class Module(_cmd.base_cmd):
                     new = True
                     host = '%s.%s' % (site, domain)
                     self.output('%s' % (host))
-                    self.add_host(host)
+                    cnt += self.add_host(host)
             # exit if maximum number of queries has been made
             # start going through all pages if query size is maxed out
             if not new:
@@ -91,6 +91,8 @@ class Module(_cmd.base_cmd):
             if verbose: self.output('Sleeping to Avoid Lock-out...')
             try: time.sleep(random.randint(5,15))
             except KeyboardInterrupt:
-                sys.stdout.write('\n')
+                print ''
                 break
         if verbose: self.output('Final Query String: %s' % (full_url))
+        self.output('%d total hosts found.' % (len(subs)))
+        if cnt: self.alert('%d NEW hosts found!' % (cnt))

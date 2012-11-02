@@ -2,11 +2,9 @@ import _cmd
 import __builtin__
 # unique to module
 import os
-import sqlite3
 import urllib2
 import urllib
 import re
-import sys
 
 class Module(_cmd.base_cmd):
 
@@ -33,7 +31,7 @@ class Module(_cmd.base_cmd):
 
         # handle sources
         if source == 'db':
-            emails = [x[0] for x in self.do_query('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email', True)]
+            emails = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email')]
             if len(emails) == 0:
                 self.error('No email addresses in the db.')
                 return
@@ -57,7 +55,7 @@ class Module(_cmd.base_cmd):
             req = urllib2.Request(url, data)
             try: response = self.urlopen(req)
             except KeyboardInterrupt:
-                sys.stdout.write('\n')
+                print ''
                 break
             except urllib2.HTTPError as e: response = e
             except Exception as e:
@@ -84,10 +82,6 @@ class Module(_cmd.base_cmd):
                 self.error('Response not understood.')
                 return
             #if status and source == 'db':
-            conn = sqlite3.connect(self.goptions['dbfilename'])
-            c = conn.cursor()
-            c.execute('UPDATE contacts SET status=? WHERE email=?', (status, email))
-            conn.commit()
-            conn.close()
+            self.query('UPDATE contacts SET status="%s" WHERE email="%s"' % (status, email))
             i += 1
         self.output('%d/%d targets pwned.' % (pwned, i))

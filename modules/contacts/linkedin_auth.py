@@ -5,7 +5,6 @@ import oauth2 as oauth
 import httplib2
 import urlparse
 import webbrowser
-import sys
 import urllib
 import json
 import re
@@ -41,7 +40,7 @@ class Module(_cmd.base_cmd):
         request_token_url = 'https://api.linkedin.com/uas/oauth/requestToken'
         try: resp, content = client.request(request_token_url, "POST")
         except KeyboardInterrupt:
-            sys.stdout.write('\n')
+            print ''
             return None
         if resp['status'] != '200':
             raise Exception(self.error('Error: Invalid Response %s.' % resp['status']))
@@ -54,7 +53,7 @@ class Module(_cmd.base_cmd):
         w.open(authorize_url)
         oauth_verifier = ''
         try: oauth_verifier = raw_input('Enter PIN: ')
-        except KeyboardInterrupt: sys.stdout.write('\n')
+        except KeyboardInterrupt: print ''
         if not oauth_verifier: return None
         access_token_url = 'https://api.linkedin.com/uas/oauth/accessToken'
         token = oauth.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
@@ -62,7 +61,7 @@ class Module(_cmd.base_cmd):
         client = oauth.Client(self.consumer, token)
         try: resp, content = client.request(access_token_url, "POST")
         except KeyboardInterrupt:
-            sys.stdout.write('\n')
+            print ''
             return None
         self.access_token = dict(urlparse.parse_qsl(content))
         self.add_key_to_file('linkedin_token', self.access_token['oauth_token'])
@@ -76,11 +75,12 @@ class Module(_cmd.base_cmd):
         count = 25
         base_url = "http://api.linkedin.com/v1/people-search:(people:(id,first-name,last-name,headline))?format=json&company-name=%s&current-company=true&count=%d" % (urllib.quote_plus(self.options['company']), count)
         url = base_url
+        cnt, tot = 0, 0
         page = 1
         while True:
             try: resp, content = client.request(url)
             except KeyboardInterrupt:
-                sys.stdout.write('\n')
+                print ''
                 break
             try: jsonobj = json.loads(content)
             except ValueError as e:
@@ -101,9 +101,12 @@ class Module(_cmd.base_cmd):
                     fname = self.unescape(re.split('[\s]',contact['firstName'])[0])
                     lname = self.unescape(re.split('[,;]',contact['lastName'])[0])
                     self.output('%s %s - %s' % (fname, lname, title))
-                    self.add_contact(fname, lname, title)
+                    tot += 1
+                    cnt += self.add_contact(fname, lname, title)
             if not '_start' in jsonobj['people']: break
             if jsonobj['people']['_start'] + jsonobj['people']['_count'] == jsonobj['people']['_total']: break
             start = page * jsonobj['people']['_count']
             url = '%s&start=%d' % (base_url, start)
             page += 1
+        self.output('%d total contacts found.' % (tot))
+        if cnt: self.alert('%d NEW contacts found!' % (cnt))

@@ -4,7 +4,7 @@
 
 __author__    = "Tim Tomes (@LaNMaSteR53)"
 __email__     = "tjt1980[at]gmail.com"
-__version__   = "0.10"
+__version__   = "0.12"
 __copyright__ = "Copyright (C) 2012, Tim Tomes"
 __license__   = "GPLv3"
 """
@@ -40,12 +40,14 @@ sys.path.append('./libs/')
 # rendering of command history
 # native
 __builtin__.N  = "\033[m"
+# red
+__builtin__.R  = "\033[31m"
+# green
+__builtin__.G  = "\033[32m"
 # orange
 __builtin__.O  = "\033[33m"
 # blue
 __builtin__.B  = "\033[34m"
-# red
-__builtin__.R  = "\033[31m"
 # set global framework options
 __builtin__.goptions = {
                         'dbfilename': './data/data.db',
@@ -56,7 +58,8 @@ __builtin__.goptions = {
                         'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
                         'proxy': False,
                         'proxyhost': '127.0.0.1:8080',
-                        'verbose': False
+                        "socket_timeout": 10,
+                        'verbose': True
                         }
 
 class Shell(_cmd.base_cmd):
@@ -178,14 +181,14 @@ class Shell(_cmd.base_cmd):
         columns = '*'
         if params:
             columns = ','.join(params.split())
-        self.do_query('SELECT %s from hosts ORDER BY 1' % (columns))
+        self.query('SELECT %s from hosts ORDER BY 1' % (columns), False)
 
     def do_contacts(self, params):
         """Lists contacts from the database"""
         columns = '*'
         if params:
             columns = ','.join(params.split())
-        self.do_query('SELECT %s from contacts ORDER BY 1' % (columns))
+        self.query('SELECT %s from contacts ORDER BY 1' % (columns), False)
 
     def do_load(self, params):
         """Loads selected module"""
@@ -196,7 +199,7 @@ class Shell(_cmd.base_cmd):
             try:
                 y = sys.modules[params].Module('%s [%s] > ' % (self.name, params))
                 try: y.cmdloop()
-                except KeyboardInterrupt: sys.stdout.write('\n')
+                except KeyboardInterrupt: print ''
                 except:# Exception as e:
                     print '-'*60
                     traceback.print_exc(file=sys.stdout)
@@ -259,4 +262,4 @@ if __name__ == '__main__':
             readline.parse_and_bind("tab: complete")
     x = Shell()
     try: x.cmdloop()
-    except KeyboardInterrupt: sys.stdout.write('\n')
+    except KeyboardInterrupt: print ''

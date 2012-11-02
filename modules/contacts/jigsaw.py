@@ -3,7 +3,6 @@ import __builtin__
 # unique to module
 import urllib
 import urllib2
-import sys
 import re
 
 class Module(_cmd.base_cmd):
@@ -36,7 +35,7 @@ class Module(_cmd.base_cmd):
             if self.goptions['verbose']: self.output('Query: %s' % url)
             try: content = self.urlopen(urllib2.Request(url)).read()
             except KeyboardInterrupt:
-                sys.stdout.write('\n')
+                print ''
                 break
             pattern = "href=./id(\d+?)/.+?>(.+?)<.+?\n.+?title='([\d,]+?)'"
             companies = re.findall(pattern, content)
@@ -67,7 +66,7 @@ class Module(_cmd.base_cmd):
                     company_id = raw_input('Enter Company ID from list [%s]: ' % (all_companies[0][0]))
                     if not company_id: company_id = all_companies[0][0]
                 except KeyboardInterrupt:
-                    sys.stdout.write('\n')
+                    print ''
                     company_id = ''
             else:
                 company_id = all_companies[0][0]
@@ -75,6 +74,7 @@ class Module(_cmd.base_cmd):
             return company_id
 
     def get_contacts(self, company_id):
+        cnt, tot = 0, 0
         page_cnt = 1
         base_url = 'http://www.jigsaw.com/SearchContact.xhtml?companyId=%s&opCode=showCompDir' % (company_id)
         url = base_url
@@ -83,7 +83,7 @@ class Module(_cmd.base_cmd):
             if self.goptions['verbose']: self.output('Query: %s' % (url))
             try: content = self.urlopen(urllib2.Request(url)).read()
             except KeyboardInterrupt:
-                sys.stdout.write('\n')
+                print ''
                 break
             pattern = "<span.+?>(.+?)</span>.+?\n.+?href.+?\('(\d+?)'\)>(.+?)<"
             contacts = re.findall(pattern, content)
@@ -95,7 +95,7 @@ class Module(_cmd.base_cmd):
                     url = 'http://www.jigsaw.com/BC.xhtml?contactId=%s' % contact_id
                     try: content = self.urlopen(urllib2.Request(url)).read()
                     except KeyboardInterrupt:
-                        sys.stdout.write('\n')
+                        print ''
                         break
                     pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
                     names = re.findall(pattern, content)
@@ -105,5 +105,8 @@ class Module(_cmd.base_cmd):
                     fname = self.unescape(contact[2].split(',')[1].strip())
                     lname = self.unescape(contact[2].split(',')[0].strip())
                 self.output('%s %s - %s' % (fname, lname, title))
-                self.add_contact(fname, lname, title)
+                tot += 1
+                cnt += self.add_contact(fname, lname, title)
             page_cnt += 1
+        self.output('%d total contacts found.' % (tot))
+        if cnt: self.alert('%d NEW contacts found!' % (cnt))

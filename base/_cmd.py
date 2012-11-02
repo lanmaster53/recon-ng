@@ -58,6 +58,9 @@ class base_cmd(cmd.Cmd):
     def output(self, line):
         print '%s[*]%s %s' % (B, N, line)
 
+    def alert(self, line):
+        print '%s[*]%s %s' % (G, N, line)
+
     def boolify(self, s):
         return {'true': True, 'false': False}[s.lower()]
     
@@ -80,13 +83,7 @@ class base_cmd(cmd.Cmd):
     def add_host(self, host, addr=''):
         host = self.sanitize(host)
         addr = self.sanitize(addr)
-        conn = sqlite3.connect(self.goptions['dbfilename'])
-        c = conn.cursor()
-        hosts = [x[0] for x in c.execute('SELECT host from hosts ORDER BY host').fetchall()]
-        if not host in hosts:
-            c.execute('INSERT INTO hosts VALUES (?, ?)', (host, addr))
-        conn.commit()
-        conn.close()
+        return self.query(u'INSERT INTO hosts (host) SELECT "{0}" WHERE NOT EXISTS(SELECT * FROM hosts WHERE host="{0}")'.format(host))
 
     def add_contact(self, fname, lname, title, email='', status=''):
         fname = self.sanitize(fname)
@@ -94,12 +91,41 @@ class base_cmd(cmd.Cmd):
         title = self.sanitize(title)
         email = self.sanitize(email)
         status = self.sanitize(status)
+        return self.query(u'INSERT INTO contacts (fname,lname,title) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}")'.format(fname, lname, title))
+
+    def query(self, params, return_results=True):
+        # based on the do_ouput method
+        if not params:
+            self.help_query()
+            return
+        results = []
         conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
-        contacts = c.execute('SELECT fname, lname, title from contacts ORDER BY fname').fetchall()
-        if not (fname, lname, title) in contacts:
-            c.execute('INSERT INTO contacts VALUES (?, ?, ?, ?, ?)', (fname, lname, email, status, title))
-        conn.commit()
+        try: c.execute(params)
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        # a rowcount of -1 typically refers to a select statement
+        if c.rowcount == -1:
+            rows = c.fetchall()
+            for row in rows:
+                row = filter(None, row)
+                if row:
+                    results.append(row)
+            if return_results: return results
+            # print columns with headers if results are not returned
+            delim = ' '
+            columns = [column[0] for column in c.description]
+            print delim.join(columns)
+            print delim.join([self.ruler*len(column) for column in columns])
+            for row in results:
+                print delim.join(row)
+            self.output('%d rows listed.' % (len(results)))
+        # a rowcount of 1 == success and 0 == failure
+        else:
+            conn.commit()
+            if return_results: return c.rowcount
+            self.output('%d rows effected.' % (c.rowcount))
         conn.close()
 
     def manage_key(self, key_name, key_text=''):
@@ -125,7 +151,7 @@ class base_cmd(cmd.Cmd):
     def get_key_from_user(self, key_text='API Key'):
         try: key = raw_input("Enter %s (blank to skip): " % (key_text))
         except KeyboardInterrupt:
-            sys.stdout.write('\n')
+            print ''
             key = False
         return key
 
@@ -156,10 +182,10 @@ class base_cmd(cmd.Cmd):
 
     # proxy currently only works for http connections, not https
     def urlopen(self, req):
+        socket.setdefaulttimeout(self.goptions['socket_timeout'])
         req.add_header('User-Agent', self.goptions['user-agent'])
         if self.goptions['proxy']:
             opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': self.goptions['proxyhost']}))
-            socket.setdefaulttimeout(8)
         else: opener = urllib2.build_opener(AvoidRedirectHandler)
         urllib2.install_opener(opener)
         return urllib2.urlopen(req)
@@ -187,14 +213,14 @@ class base_cmd(cmd.Cmd):
         print '%s%s' % (self.spacer, self.info['Author'])
         print ''
         print '%s:' % ('Description')
-        print '%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 80, initial_indent='', subsequent_indent=self.spacer))
+        print '%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, initial_indent='', subsequent_indent=self.spacer))
         print ''
         print '%s:' % ('Options')
         self.do_options(None)
         if self.info['Comments']:
             print '%s:' % ('Comments')
             for comment in self.info['Comments']:
-                print '%s%s' % (self.spacer, textwrap.fill(comment, 80, initial_indent='', subsequent_indent=self.spacer*2))
+                print '%s%s' % (self.spacer, textwrap.fill(comment, 100, initial_indent='', subsequent_indent=self.spacer*2))
             print ''
 
     def do_options(self, params):
@@ -226,36 +252,9 @@ class base_cmd(cmd.Cmd):
                 self.options[name] = self.autoconvert(value)
             else: self.error('Invalid option.')
 
-    def do_query(self, params, return_results=False):
-        # based on the do_ouput method
+    def do_query(self, params):
         """Queries the database"""
-        if not params:
-            self.help_query()
-            return
-        results = []
-        if not params.lower().startswith('select'):
-            self.error('SELECT statements only.')
-        else:
-            conn = sqlite3.connect(self.goptions['dbfilename'])
-            c = conn.cursor()
-            try: rows = c.execute(params).fetchall()
-            except sqlite3.OperationalError as e:
-                self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-                rows = []
-            for row in rows:
-                row = filter(None, row)
-                if row:
-                    results.append(row)
-            conn.close()
-        if return_results: return results
-        # print columns with headers if results are not returned
-        delim = ' '
-        columns = [column[0] for column in c.description]
-        print delim.join(columns)
-        print delim.join([self.ruler*len(column) for column in columns])
-        for row in results:
-            print delim.join(row)
-        self.output('%d rows listed.' % (len(results)))
+        self.query(params, False)
 
     def do_shell(self, params):
         """Executed shell commands"""
