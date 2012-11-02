@@ -11,14 +11,14 @@ class Module(_cmd.base_cmd):
     def __init__(self, params):
         _cmd.base_cmd.__init__(self, params)
         self.options = {
-                        'source': 'db'
+                        'source': 'database'
                         }
         self.info = {
                      'Name': 'PwnedList Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages PwnedList.com to determine if email addresses are associated with breached credentials, updating the database with the results.',
                      'Comments': [
-                                  'Source options: db, email@address, path/to/infile'
+                                  'Source options: database, email@address, path/to/infile'
                                   ]
                      }
 
@@ -30,10 +30,10 @@ class Module(_cmd.base_cmd):
         source = self.options['source']
 
         # handle sources
-        if source == 'db':
+        if source == 'database':
             emails = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email')]
             if len(emails) == 0:
-                self.error('No email addresses in the db.')
+                self.error('No email addresses in the database.')
                 return
         elif '@' in source: emails = [source]
         elif os.path.exists(source): emails = open(source).read().split()
@@ -70,18 +70,18 @@ class Module(_cmd.base_cmd):
                 return
             elif '>NOPE!<' in the_page:
                 status = 'safe'
-                if verbose: self.output('%s seems %s.' % (email, status))
+                if verbose: self.output('%s => %s.' % (email, status))
             elif '>YES<' in the_page:
                 status = 'pwned'
                 m = re.search(pattern, the_page)
                 qty = m.group(1)
                 last = m.group(2)
-                self.output('%s has been compromised %s times and as recent as %s.' % (email, qty, last))
+                self.alert('%s => %s! Seen %s times as recent as %s.' % (email, status, qty, last))
                 pwned += 1
             else:
                 self.error('Response not understood.')
                 return
-            #if status and source == 'db':
+            #if status and source == 'database':
             self.query('UPDATE contacts SET status="%s" WHERE email="%s"' % (status, email))
             i += 1
         self.output('%d/%d targets pwned.' % (pwned, i))

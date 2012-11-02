@@ -8,7 +8,7 @@ class Module(_cmd.base_cmd):
         _cmd.base_cmd.__init__(self, params)
         self.options = {}
         self.info = {
-                     'Name': 'Apache Server-Status Page Enumerator',
+                     'Name': 'Apache Server-Status Page Scanner',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Checks all of the hosts stored in the database for a \'server-status\' page.',
                      'Comments': [
@@ -23,22 +23,24 @@ class Module(_cmd.base_cmd):
     
     def check_for_status(self):
         hosts = self.query('SELECT host FROM hosts ORDER BY host')
+        protocols = ['http', 'https']
         cnt = 0
         for host in hosts:
-            url = 'http://%s/server-status/' % (host)
-            try: resp = self.urlopen(urllib2.Request(url))
-            except KeyboardInterrupt:
-                print ''
-                code = None
-                break
-            except urllib2.HTTPError as e:
-                code = e.code
-                continue
-            except:
-                code = 'Error'
-                continue
-            finally:
-                if self.goptions['verbose'] and code: self.output('\'%s\' => %s.' % (url, code))
-            self.alert('\'%s\' => %s. Possible server status page found!' % (url, resp.code))
-            cnt += 1
+            for proto in protocols:
+                url = '%s://%s/server-status/' % (proto, host[0])
+                try: resp = self.urlopen(urllib2.Request(url))
+                except KeyboardInterrupt:
+                    print ''
+                    code = None
+                    break
+                except urllib2.HTTPError as e:
+                    code = e.code
+                    continue
+                except:
+                    code = 'Error'
+                    continue
+                finally:
+                    if self.goptions['verbose'] and code: self.output('%s => %s.' % (url, code))
+                self.alert('%s => %s. Possible server status page found!' % (url, resp.code))
+                cnt += 1
         self.output('%d Server Status pages found.' % (cnt))

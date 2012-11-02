@@ -28,7 +28,7 @@ class Module(_cmd.base_cmd):
         fake_host = 'sudhfydgssjdue.%s' % (self.options['domain'])
         cnt, tot = 0, 0
         try:
-            answers = q.query(fake_host, 'A')
+            answers = q.query(fake_host)
             self.output('Wildcard DNS entry found. Cannot brute force hostnames.')
             return
         except KeyboardInterrupt:
@@ -41,14 +41,14 @@ class Module(_cmd.base_cmd):
             words = open(self.options['wordlist']).read().split()
             for word in words:
                 host = '%s.%s' % (word, self.options['domain'])
-                try: answers = q.query(host, 'A')
+                try: answers = q.query(host)
                 except KeyboardInterrupt:
                     print ''
                     break
                 except dns.resolver.NXDOMAIN:
-                    if self.goptions['verbose']: self.output('\'%s\' is not a valid host.' % (host))
+                    if self.goptions['verbose']: self.output('%s => Not a host.' % (host))
                     continue
-                self.alert('Host found! \'%s\'' % (host))
+                self.alert('%s => Host found!' % (host))
                 tot += 1
                 cnt += self.add_host(host)
             self.output('%d total hosts found.' % (tot))
