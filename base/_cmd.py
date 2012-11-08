@@ -280,6 +280,13 @@ class base_cmd(cmd.Cmd):
         print 'Usage: [shell|!] <command>'
         print '...or just type a command at the prompt.'
 
+    #==================================================
+    # COMPLETE METHODS
+    #==================================================
+
+    def complete_set(self, text, *ignored):
+        return [x for x in self.options.keys() if x.startswith(text)]
+
 class AvoidRedirectHandler(urllib2.HTTPRedirectHandler):
     def http_error_302(self, req, fp, code, msg, headers):
         pass

@@ -79,6 +79,7 @@ class Shell(_cmd.base_cmd):
     def loadmodules(self, reload=False):
         # add logic to NOT break when a module fails, but alert which module fails
         self.loaded = []
+        self.modules = []
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
                 cnt = 0
@@ -92,6 +93,7 @@ class Shell(_cmd.base_cmd):
                         imp.load_source(modulename, modulepath, ModuleFile)
                         __import__(modulename)
                         cnt += 1
+                        self.modules.append(modulename)
                     except:
                         print '-'*60
                         traceback.print_exc(file=sys.stdout)
@@ -248,6 +250,14 @@ class Shell(_cmd.base_cmd):
     def help_use(self):
         print 'Usage: use <module>'
         self.do_modules(None)
+
+    #==================================================
+    # COMPLETE METHODS
+    #==================================================
+
+    def complete_load(self, text, *ignored):
+        return [x for x in self.modules if x.startswith(text)]
+    complete_use = complete_load
 
 if __name__ == '__main__':
     try:
