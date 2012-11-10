@@ -38,16 +38,11 @@ sys.path.append('./libs/')
 # define colors for output
 # note: color in prompt effects
 # rendering of command history
-# native
-__builtin__.N  = "\033[m"
-# red
-__builtin__.R  = "\033[31m"
-# green
-__builtin__.G  = "\033[32m"
-# orange
-__builtin__.O  = "\033[33m"
-# blue
-__builtin__.B  = "\033[34m"
+__builtin__.N  = "\033[m" # native
+__builtin__.R  = "\033[31m" # red
+__builtin__.G  = "\033[32m" # green
+__builtin__.O  = "\033[33m" # orange
+__builtin__.B  = "\033[34m" # blue
 # set global framework options
 __builtin__.goptions = {
                         'dbfilename': './data/data.db',
@@ -78,14 +73,15 @@ class Shell(_cmd.base_cmd):
 
     def loadmodules(self, reload=False):
         # add logic to NOT break when a module fails, but alert which module fails
-        self.loaded = []
-        self.modules = []
+        self.loaded_summary = []
+        self.loaded_modules = {}
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
                 cnt = 0
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     # this (as opposed to sys.path.append) allows for module reloading
-                    modulename = filename.split('.')[0]
+                    modulename = '%s:%s' % (':'.join(dirpath.split('/')[2:]), filename.split('.')[0])
+                    modulekey = modulename.replace(':','/')
                     modulepath = os.path.join(dirpath, filename)
                     ModuleFile = open(modulepath, 'rb')
                     try:
@@ -93,13 +89,13 @@ class Shell(_cmd.base_cmd):
                         imp.load_source(modulename, modulepath, ModuleFile)
                         __import__(modulename)
                         cnt += 1
-                        self.modules.append(modulename)
+                        self.loaded_modules[modulekey] = modulename 
                     except:
                         print '-'*60
                         traceback.print_exc(file=sys.stdout)
                         print '-'*60
-                        self.error('Unable to load module: %s' % (modulename))
-                self.loaded.append(('/'.join(dirpath.split('/')[2:]), cnt))
+                        self.error('Unable to load module: %s' % (modulekey))
+                self.loaded_summary.append(('/'.join(dirpath.split('/')[2:]), cnt))
 
     def show_banner(self):
         print ''
@@ -111,7 +107,7 @@ class Shell(_cmd.base_cmd):
         print ''
         print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), 96)
         print ''
-        for module in self.loaded:
+        for module in self.loaded_summary:
             print '%s[%d] %s modules%s' % (B, module[1], module[0], N)
         print ''
 
@@ -164,18 +160,18 @@ class Shell(_cmd.base_cmd):
     def do_modules(self, params):
         """Lists available modules"""
         print ''
-        print 'Modules:'
-        print self.ruler*20
+        print '%sModules:' % (self.spacer)
+        print '%s%s' % (self.spacer, self.ruler*20)
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
                 dir = '/'.join(dirpath.split('/')[2:])
-                print '%s:' % (dir)
+                print '%s%s/' % (self.spacer, dir)
                 #print '{:=^25}'.format(' %s ' % (dir))
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     module = filename.split('.')[0]
-                    print '    %s' % (module)
+                    print '%s    %s' % (self.spacer, module)
                     #print os.path.join(dir, filename.split('.')[0])
-                print self.ruler*20
+                print '%s%s' % (self.spacer, self.ruler*20)
         print ''
 
     def do_hosts(self, params):
@@ -198,8 +194,9 @@ class Shell(_cmd.base_cmd):
         if len(options) == 0:
             self.help_load()
         else:
+            modulename = self.loaded_modules[params]
             try:
-                y = sys.modules[params].Module('%s [%s] > ' % (self.name, params))
+                y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
                 except:# Exception as e:
@@ -256,7 +253,7 @@ class Shell(_cmd.base_cmd):
     #==================================================
 
     def complete_load(self, text, *ignored):
-        return [x for x in self.modules if x.startswith(text)]
+        return [x for x in self.loaded_modules.keys() if x.startswith(text)]
     complete_use = complete_load
 
 if __name__ == '__main__':
