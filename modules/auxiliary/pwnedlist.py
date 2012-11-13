@@ -27,16 +27,16 @@ class Module(_cmd.base_cmd):
 
     def check_pwned(self):
         verbose = self.goptions['verbose']
-        source = self.options['source']
 
         # handle sources
+        source = self.options['source']
         if source == 'database':
-            emails = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email')]
-            if len(emails) == 0:
+            accounts = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email')]
+            if len(accounts) == 0:
                 self.error('No email addresses in the database.')
                 return
-        elif '@' in source: emails = [source]
-        elif os.path.exists(source): emails = open(source).read().split()
+        elif '@' in source: accounts = [source]
+        elif os.path.exists(source): accounts = open(source).read().split()
         else:
             self.error('Invalid source: %s' % (source))
             return
@@ -44,11 +44,11 @@ class Module(_cmd.base_cmd):
         # retrieve status
         pattern = "class='query_result_footer'>... we found your email in our database a total of (\d+?) times. It was last seen on ([\d-]+?). Please read on. <div"
         i, pwned = 0, 0
-        while i < len(emails):
+        while i < len(accounts):
             status = None
-            email = emails[i].encode('utf-8')
+            account = accounts[i].encode('utf-8')
             url = 'http://pwnedlist.com/query'
-            values = {'query_input' : email,
+            values = {'query_input' : account,
                       'query_input_hash' : 'empty',
                       'submit' : 'CHECK' }
             data = urllib.urlencode(values)
@@ -59,7 +59,7 @@ class Module(_cmd.base_cmd):
                 break
             except urllib2.HTTPError as e: response = e
             except Exception as e:
-                try: self.error('Error: %s. Retrying %s.' % (e.reason, email))
+                try: self.error('Error: %s. Retrying %s.' % (e.reason, account))
                 except:
                     self.error('Unknown Error.')
                     return
@@ -70,18 +70,18 @@ class Module(_cmd.base_cmd):
                 return
             elif '>NOPE!<' in the_page:
                 status = 'safe'
-                if verbose: self.output('%s => %s.' % (email, status))
+                if verbose: self.output('%s => %s.' % (account, status))
             elif '>YES<' in the_page:
                 status = 'pwned'
                 m = re.search(pattern, the_page)
                 qty = m.group(1)
                 last = m.group(2)
-                self.alert('%s => %s! Seen %s times as recent as %s.' % (email, status, qty, last))
+                self.alert('%s => %s! Seen %s times as recent as %s.' % (account, status, qty, last))
                 pwned += 1
             else:
                 self.error('Response not understood.')
                 return
             #if status and source == 'database':
-            self.query('UPDATE contacts SET status="%s" WHERE email="%s"' % (status, email))
+            self.query('UPDATE contacts SET status="%s" WHERE email="%s"' % (status, account))
             i += 1
         self.output('%d/%d targets pwned.' % (pwned, i))

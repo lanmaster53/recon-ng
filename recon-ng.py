@@ -30,10 +30,9 @@ import imp
 import sqlite3
 import traceback
 import __builtin__
-sys.path.append('./base/')
+# prep python path for core modules
+sys.path.append('./core/')
 import _cmd
-# prep python path for supporting modules
-sys.path.append('./libs/')
 
 # define colors for output
 # note: color in prompt effects
@@ -52,7 +51,8 @@ __builtin__.goptions = {
                         'company': 'SANS',
                         'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
                         'proxy': False,
-                        'proxyhost': '127.0.0.1:8080',
+                        'proxy_http': '127.0.0.1:8080',
+                        'proxy_https': '127.0.0.1:8080',
                         "socket_timeout": 10,
                         'verbose': True
                         }
@@ -169,7 +169,7 @@ class Shell(_cmd.base_cmd):
                 #print '{:=^25}'.format(' %s ' % (dir))
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     module = filename.split('.')[0]
-                    print '%s    %s' % (self.spacer, module)
+                    print '%s%s' % (self.spacer*2, module)
                     #print os.path.join(dir, filename.split('.')[0])
                 print '%s%s' % (self.spacer, self.ruler*20)
         print ''
@@ -194,8 +194,8 @@ class Shell(_cmd.base_cmd):
         if len(options) == 0:
             self.help_load()
         else:
-            modulename = self.loaded_modules[params]
             try:
+                modulename = self.loaded_modules[params]
                 y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''

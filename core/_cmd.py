@@ -8,6 +8,9 @@ import socket
 import datetime
 import subprocess
 import __builtin__
+# prep python path for supporting modules
+sys.path.append('./libs/')
+import requests
 
 class base_cmd(cmd.Cmd):
     def __init__(self, params):
@@ -128,12 +131,12 @@ class base_cmd(cmd.Cmd):
             self.output('%d rows effected.' % (c.rowcount))
         conn.close()
 
-    def manage_key(self, key_name, key_text=''):
+    def manage_key(self, key_name, key_text):
         key = self.get_key_from_file(key_name)
         if not key:
             key = self.get_key_from_user(key_text)
             if not key:
-                self.error('No API Key.')
+                self.error('No %s.' % (key_text))
                 return
             self.add_key_to_file(key_name, key)
         return key
@@ -185,10 +188,30 @@ class base_cmd(cmd.Cmd):
         socket.setdefaulttimeout(self.goptions['socket_timeout'])
         req.add_header('User-Agent', self.goptions['user-agent'])
         if self.goptions['proxy']:
-            opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': self.goptions['proxyhost']}))
+            opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': self.goptions['proxy_http']}))
         else: opener = urllib2.build_opener(AvoidRedirectHandler)
         urllib2.install_opener(opener)
         return urllib2.urlopen(req)
+
+    def request(self, url, payload, request_method='GET', headers={}, redirect=True):
+        kwargs = {}
+        # add global user-agent
+        headers['User-Agent'] = self.goptions['user-agent']
+        kwargs['headers'] = headers
+        # if global proxy is enabled, add global proxy and socket timeout
+        if self.goptions['proxy']:
+            kwargs['timeout'] = self.goptions['socket_timeout']
+            proxies = {'http': self.goptions['proxy_http'], 'https': self.goptions['proxy_https']}
+            kwargs['proxies'] = proxies
+        # make request based on given method
+        if request_method == 'GET':
+            kwargs['params'] = payload
+            resp = requests.get(url, **kwargs)
+        elif request_method == 'POST':
+            kwargs['data'] = payload
+            resp = requests.post(url, **kwargs)
+        else: raise Exception('Request method \'%s\' is not a supported method.' % (request_method))
+        return resp
 
     def log(self, str):
         logfile = open(self.goptions['logfilename'], 'ab')
@@ -205,28 +228,32 @@ class base_cmd(cmd.Cmd):
 
     def do_info(self, params):
         """Displays module information"""
+        pattern = '%s%s:'
         print ''
-        print '%s:' % ('Name')
-        print '%s%s' % (self.spacer, self.info['Name'])
+        print pattern % (self.spacer, 'Name')
+        print pattern[:-1] % (self.spacer*2, self.info['Name'])
         print ''
-        print '%s:' % ('Author')
-        print '%s%s' % (self.spacer, self.info['Author'])
+        print pattern % (self.spacer, 'Author')
+        print pattern[:-1] % (self.spacer*2, self.info['Author'])
         print ''
-        print '%s:' % ('Description')
-        print '%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, initial_indent='', subsequent_indent=self.spacer))
+        print pattern % (self.spacer, 'Description')
+        print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info['Description'], 100, initial_indent='', subsequent_indent=self.spacer*2))
         print ''
-        print '%s:' % ('Options')
-        self.do_options(None)
+        print pattern % (self.spacer, 'Options')
+        self.do_options('info')
         if self.info['Comments']:
-            print '%s:' % ('Comments')
+            print pattern % (self.spacer, 'Comments')
             for comment in self.info['Comments']:
-                print '%s%s' % (self.spacer, textwrap.fill(comment, 100, initial_indent='', subsequent_indent=self.spacer*2))
+                print pattern[:-1] % (self.spacer*2, textwrap.fill(comment, 100, initial_indent='', subsequent_indent=self.spacer*2))
             print ''
 
     def do_options(self, params):
         """Lists options"""
+        spacer = self.spacer
+        if params == 'info':
+            spacer = self.spacer*2
         if self.options.keys():
-            pattern = '%s%%s\t%%s\t%%s' % (self.spacer)
+            pattern = '%s%%s\t%%s\t%%s' % (spacer)
             key_len = len(max(self.options.keys(), key=len))
             print ''
             print pattern % ('Name'.ljust(key_len), 'Type'.ljust(4), 'Current Value')
@@ -236,8 +263,8 @@ class base_cmd(cmd.Cmd):
                 print pattern % (key.ljust(key_len), type(value).__name__[:4].lower().ljust(4), str(value))
             print ''
         else:
-            print ''
-            print '%sNo options available for this module.' % (self.spacer)
+            if params != 'info': print ''
+            print '%sNo options available for this module.' % (spacer)
             print ''
 
     def do_set(self, params):
