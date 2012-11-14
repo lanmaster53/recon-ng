@@ -1,4 +1,4 @@
-import _cmd
+import framework
 import __builtin__
 # unique to module
 import oauth2 as oauth
@@ -9,10 +9,10 @@ import urllib
 import json
 import re
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'company': self.goptions['company'],
                         'keywords': ''
@@ -82,9 +82,9 @@ class Module(_cmd.base_cmd):
             except KeyboardInterrupt:
                 print ''
                 break
-            try: jsonobj = json.loads(content)
+            try: jsonobj = json.loads(jsonstr)
             except ValueError as e:
-                self.error('Error: %s in %s' % (e, url))
+                self.error(e.__str__())
                 continue
             if resp['status'] == '401':
                 self.error('Access Token Needed or Expired.')

@@ -1,11 +1,11 @@
-import _cmd
+import framework
 import __builtin__
 # unique to module
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'domain': self.goptions['domain'],
                         'pattern': '<fn>.<ln>',

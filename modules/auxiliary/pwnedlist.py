@@ -1,15 +1,13 @@
-import _cmd
+import framework
 import __builtin__
 # unique to module
 import os
-import urllib2
-import urllib
 import re
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'source': 'database'
                         }
@@ -48,23 +46,17 @@ class Module(_cmd.base_cmd):
             status = None
             account = accounts[i].encode('utf-8')
             url = 'http://pwnedlist.com/query'
-            values = {'query_input' : account,
+            payload = {'query_input' : account,
                       'query_input_hash' : 'empty',
                       'submit' : 'CHECK' }
-            data = urllib.urlencode(values)
-            req = urllib2.Request(url, data)
-            try: response = self.urlopen(req)
+            try: resp = self.request(url, payload=payload, method='POST', redirect=False)
             except KeyboardInterrupt:
                 print ''
                 break
-            except urllib2.HTTPError as e: response = e
             except Exception as e:
-                try: self.error('Error: %s. Retrying %s.' % (e.reason, account))
-                except:
-                    self.error('Unknown Error.')
-                    return
-                continue
-            the_page = response.read()
+                self.error(e.__str__())
+                break
+            the_page = resp.text
             if 'Gotcha!' in the_page:
                 self.error('Hm... Got a captcha.')
                 return

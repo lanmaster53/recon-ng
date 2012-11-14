@@ -1,14 +1,13 @@
-import _cmd
+import framework
 import __builtin__
 # unique to module
 import urllib
-import urllib2
 import re
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'company': self.goptions['company'],
                         'keywords': 'system'
@@ -22,29 +21,36 @@ class Module(_cmd.base_cmd):
 
     def do_run(self, params):
         company_id = self.get_company_id()
-        if company_id: self.get_contacts(company_id)
+        if company_id:
+            contact_ids = self.get_contact_ids(company_id)
+            if contact_ids:
+                self.get_contacts(contact_ids)
 
     def get_company_id(self):
+        self.output('Gathering Company IDs...')
         company_name = self.options['company']
         all_companies = []
         page_cnt = 1
         params = '%s %s' % (company_name, self.options['keywords'])
-        base_url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml?opCode=search&freeText=%s' % (urllib.quote_plus(params))
-        url = base_url
+        url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml'
+        payload = {'opCode': 'search', 'freeText': params}
         while True:
-            if self.goptions['verbose']: self.output('Query: %s' % url)
-            try: content = self.urlopen(urllib2.Request(url)).read()
+            if self.goptions['verbose']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            try: content = self.request(url, payload=payload).text
             except KeyboardInterrupt:
                 print ''
+                break
+            except Exception as e:
+                self.error(e.__str__())
                 break
             pattern = "href=./id(\d+?)/.+?>(.+?)<.+?\n.+?title='([\d,]+?)'"
             companies = re.findall(pattern, content)
             if not companies:
-                if content.find('did not match any results') == -1 and page_cnt == 1:
+                if not 'did not match any results' in content and page_cnt == 1:
                     pattern_id = '<a href="/id(\d+?)/.+?">'
                     pattern_name = 'pageTitle.>(.+?)<'
                     pattern_cnt = 'contactCount.+>\s+(\d+)\sContacts'
-                    if content.find('Create a wiki') != -1:
+                    if 'Create a wiki' in content:
                         pattern_id = '<a href="/.+?companyId=(\d+?)">'
                     company_id = re.findall(pattern_id, content)[0]
                     company_name = re.findall(pattern_name, content)[0]
@@ -54,7 +60,7 @@ class Module(_cmd.base_cmd):
             for company in companies:
                 all_companies.append((company[0], company[1], company[2]))
             page_cnt += 1
-            url = base_url + '&rpage=%d' % (page_cnt)
+            payload['rpage'] = str(page_cnt)
         if len(all_companies) == 0:
             self.output('No Company Matches Found.')
             return False
@@ -73,40 +79,50 @@ class Module(_cmd.base_cmd):
                 self.output('Unique Company Match Found: %s' % company_id)
             return company_id
 
-    def get_contacts(self, company_id):
-        cnt, tot = 0, 0
+    def get_contact_ids(self, company_id):
+        self.output('Gathering Contact IDs for Company \'%s\'...' % (company_id))
         page_cnt = 1
-        base_url = 'http://www.jigsaw.com/SearchContact.xhtml?companyId=%s&opCode=showCompDir' % (company_id)
-        url = base_url
+        contact_ids = []
+        url = 'http://www.jigsaw.com/SearchContact.xhtml'
+        payload = {'companyId': company_id, 'opCode': 'showCompDir'}
         while True:
-            url = base_url + '&rpage=%d' % (page_cnt)
-            if self.goptions['verbose']: self.output('Query: %s' % (url))
-            try: content = self.urlopen(urllib2.Request(url)).read()
+            payload['rpage'] = str(page_cnt)
+            if self.goptions['verbose']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            try: content = self.request(url, payload=payload).text
             except KeyboardInterrupt:
                 print ''
                 break
-            pattern = "<span.+?>(.+?)</span>.+?\n.+?href.+?\('(\d+?)'\)>(.+?)<"
+            except Exception as e:
+                self.error(e.__str__())
+                break
+            pattern = "showContact\('(\d+?)'\)"
             contacts = re.findall(pattern, content)
             if not contacts: break
-            for contact in contacts:
-                title = contact[0]
-                contact_id = contact[1]
-                if contact[2].find('...') != -1:
-                    url = 'http://www.jigsaw.com/BC.xhtml?contactId=%s' % contact_id
-                    try: content = self.urlopen(urllib2.Request(url)).read()
-                    except KeyboardInterrupt:
-                        print ''
-                        break
-                    pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
-                    names = re.findall(pattern, content)
-                    fname = self.unescape(names[0][0])
-                    lname = self.unescape(names[0][1])
-                else:
-                    fname = self.unescape(contact[2].split(',')[1].strip())
-                    lname = self.unescape(contact[2].split(',')[0].strip())
-                self.output('%s %s - %s' % (fname, lname, title))
-                tot += 1
-                cnt += self.add_contact(fname, lname, title)
+            contact_ids.extend(contacts)
             page_cnt += 1
+        return contact_ids
+
+    def get_contacts(self, contact_ids):
+        self.output('Gathering Contacts...')
+        cnt, tot = 0, 0
+        for contact_id in contact_ids:
+            url = 'http://www.jigsaw.com/BC.xhtml'
+            payload = {'contactId': contact_id}
+            try: content = self.request(url, payload=payload).text
+            except KeyboardInterrupt:
+                print ''
+                break
+            except Exception as e:
+                self.error(e.__str__())
+                break
+            pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
+            names = re.findall(pattern, content)
+            fname = self.unescape(names[0][0])
+            lname = self.unescape(names[0][1])
+            pattern = '<span id="title" title=".*?">(.*?)</span>'
+            title = self.unescape(re.findall(pattern, content)[0])
+            self.output('%s %s - %s' % (fname, lname, title))
+            tot += 1
+            cnt += self.add_contact(fname, lname, title)
         self.output('%d total contacts found.' % (tot))
         if cnt: self.alert('%d NEW contacts found!' % (cnt))

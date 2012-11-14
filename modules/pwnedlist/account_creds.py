@@ -1,14 +1,14 @@
-import _cmd
+import framework
 import __builtin__
 # unique to module
 import pwnedlist
 import os
 import json
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'source': 'database'
                         }
@@ -55,7 +55,7 @@ class Module(_cmd.base_cmd):
             # make request
             payload = pwnedlist.build_payload(payload, method, api_key, secret)
             url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-            try: resp = self.request(url, payload)
+            try: resp = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
                 return
@@ -63,14 +63,17 @@ class Module(_cmd.base_cmd):
                 self.error(e.__str__())
                 return
             jsonstr = resp.text
-            jsonobj = json.loads(jsonstr)
-
+            try: jsonobj = json.loads(jsonstr)
+            except ValueError as e:
+                self.error(e.__str__())
+                return
             if len(jsonobj['results']) == 0:
                 self.alert('No results returned for \'%s\'.' % (account))
                 return
 
-            # handle ourput
+            # handle output
             for cred in jsonobj['results']:
                 account = cred['plain']
                 password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
                 self.output('%s:%s' % (account, password))
+                self.add_cred(account, password)

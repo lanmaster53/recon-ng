@@ -1,13 +1,13 @@
-import _cmd
+import framework
 import __builtin__
 # unique to module
 import pwnedlist
 import json
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {}
         self.info = {
                      'Name': 'PwnedList - API Statistics Viewer',
@@ -33,7 +33,7 @@ class Module(_cmd.base_cmd):
         # make request
         payload = pwnedlist.build_payload(payload, method, key, secret)
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        try: resp = self.request(url, payload)
+        try: resp = self.request(url, payload=payload)
         except KeyboardInterrupt:
             print ''
             return
@@ -41,9 +41,12 @@ class Module(_cmd.base_cmd):
             self.error(e.__str__())
             return
         jsonstr = resp.text
-        jsonobj = json.loads(jsonstr)
+        try: jsonobj = json.loads(jsonstr)
+        except ValueError as e:
+            self.error(e.__str__())
+            return
 
-        # handle ourput
+        # handle output
         total = jsonobj['num_queries_allotted']
         left = jsonobj['num_queries_left']
         self.output('Queries allotted: %d' % (total))

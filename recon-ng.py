@@ -32,7 +32,7 @@ import traceback
 import __builtin__
 # prep python path for core modules
 sys.path.append('./core/')
-import _cmd
+import framework
 
 # define colors for output
 # note: color in prompt effects
@@ -48,7 +48,7 @@ __builtin__.goptions = {
                         'keyfilename': './data/api.keys',
                         'logfilename': './data/cmd.log',
                         'domain': 'sans.org',
-                        'company': 'SANS',
+                        'company': 'SANS Institute',
                         'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
                         'proxy': False,
                         'proxy_http': '127.0.0.1:8080',
@@ -57,13 +57,13 @@ __builtin__.goptions = {
                         'verbose': True
                         }
 
-class Shell(_cmd.base_cmd):
+class Shell(framework.module):
     def __init__(self):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
-        _cmd.base_cmd.__init__(self, prompt)
+        framework.module.__init__(self, prompt)
         self.options = self.goptions
-        self.loadmodules()
+        self.load_modules()
         self.show_banner()
         self.init_db()
 
@@ -71,7 +71,7 @@ class Shell(_cmd.base_cmd):
     # SUPPORT METHODS
     #==================================================
 
-    def loadmodules(self, reload=False):
+    def load_modules(self, reload=False):
         # add logic to NOT break when a module fails, but alert which module fails
         self.loaded_summary = []
         self.loaded_modules = {}
@@ -97,6 +97,15 @@ class Shell(_cmd.base_cmd):
                         self.error('Unable to load module: %s' % (modulekey))
                 self.loaded_summary.append(('/'.join(dirpath.split('/')[2:]), cnt))
 
+    def display_modules(self, modules):
+        print ''
+        print '%sModules:' % (self.spacer)
+        key_len = len(max(modules, key=len))
+        print '%s%s' % (self.spacer, self.ruler*key_len)
+        for module in sorted(modules):
+            print '%s%s' % (self.spacer, module)
+        print ''
+
     def show_banner(self):
         print ''
         print '    _/_/_/    _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/_/_/'
@@ -116,8 +125,15 @@ class Shell(_cmd.base_cmd):
         c = conn.cursor()
         c.execute('create table if not exists hosts (host text, address text)')
         c.execute('create table if not exists contacts (fname text, lname text, email text, status text, title text)')
+        c.execute('create table if not exists creds (username text, password text)')
         conn.commit()
         conn.close()
+
+    def list_from_db(self, params, table):
+        columns = '*'
+        if params:
+            columns = ','.join(params.split())
+        self.query('SELECT %s from %s ORDER BY 1' % (columns, table), False)
 
     #==================================================
     # FRAMEWORK METHODS
@@ -125,7 +141,7 @@ class Shell(_cmd.base_cmd):
 
     def do_reload(self, params):
         """Reloads all modules"""
-        self.loadmodules(True)
+        self.load_modules(True)
 
     def do_info(self, params):
         """Displays framework information"""
@@ -159,34 +175,33 @@ class Shell(_cmd.base_cmd):
 
     def do_modules(self, params):
         """Lists available modules"""
-        print ''
-        print '%sModules:' % (self.spacer)
-        print '%s%s' % (self.spacer, self.ruler*20)
-        for dirpath, dirnames, filenames in os.walk('./modules/'):
-            if len(filenames) > 0:
-                dir = '/'.join(dirpath.split('/')[2:])
-                print '%s%s/' % (self.spacer, dir)
-                #print '{:=^25}'.format(' %s ' % (dir))
-                for filename in [f for f in filenames if f.endswith('.py')]:
-                    module = filename.split('.')[0]
-                    print '%s%s' % (self.spacer*2, module)
-                    #print os.path.join(dir, filename.split('.')[0])
-                print '%s%s' % (self.spacer, self.ruler*20)
-        print ''
+        if params:
+            modules = [x for x in self.loaded_modules.keys() if x.startswith(params)]
+        else:
+            modules = self.loaded_modules.keys()
+        self.display_modules(modules)
+
+    def do_search(self, params):
+        """Searches available modules"""
+        if not params:
+            self.help_search()
+            return
+        str = params.split()[0]
+        self.output('Searching for \'%s\'' % (str))
+        modules = [x for x in self.loaded_modules.keys() if str in x]
+        self.display_modules(modules)
 
     def do_hosts(self, params):
         """Lists hosts from the database"""
-        columns = '*'
-        if params:
-            columns = ','.join(params.split())
-        self.query('SELECT %s from hosts ORDER BY 1' % (columns), False)
+        self.list_from_db(params, 'hosts')
 
     def do_contacts(self, params):
         """Lists contacts from the database"""
-        columns = '*'
-        if params:
-            columns = ','.join(params.split())
-        self.query('SELECT %s from contacts ORDER BY 1' % (columns), False)
+        self.list_from_db(params, 'contacts')
+
+    def do_creds(self, params):
+        """Lists credentials from the database"""
+        self.list_from_db(params, 'creds')
 
     def do_load(self, params):
         """Loads selected module"""
@@ -240,6 +255,19 @@ class Shell(_cmd.base_cmd):
         print 'Output is sorted by the first column.'
         print ''
 
+    def help_creds(self):
+        print 'Usage: creds [<column1>,<column2>|<column1> <column2>]'
+        print ''
+        print 'Notes:'
+        print self.ruler*5
+        print 'Column options: username, password'
+        print 'If no column is given, \'*\' is implied.'
+        print 'Output is sorted by the first column.'
+        print ''
+
+    def help_search(self):
+        print 'Usage: search <string>'
+
     def help_load(self):
         print 'Usage: load <module>'
         self.do_modules(None)
@@ -254,7 +282,7 @@ class Shell(_cmd.base_cmd):
 
     def complete_load(self, text, *ignored):
         return [x for x in self.loaded_modules.keys() if x.startswith(text)]
-    complete_use = complete_load
+    complete_modules = complete_use = complete_load
 
 if __name__ == '__main__':
     try:

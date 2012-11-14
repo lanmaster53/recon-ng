@@ -3,7 +3,6 @@ import sqlite3
 import os
 import sys
 import textwrap
-import urllib2
 import socket
 import datetime
 import subprocess
@@ -12,7 +11,7 @@ import __builtin__
 sys.path.append('./libs/')
 import requests
 
-class base_cmd(cmd.Cmd):
+class module(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
         self.prompt = (params)
@@ -83,10 +82,10 @@ class base_cmd(cmd.Cmd):
                 obj = unicode(obj, encoding)
         return obj
 
-    def add_host(self, host, addr=''):
+    def add_host(self, host, address=''):
         host = self.sanitize(host)
-        addr = self.sanitize(addr)
-        return self.query(u'INSERT INTO hosts (host) SELECT "{0}" WHERE NOT EXISTS(SELECT * FROM hosts WHERE host="{0}")'.format(host))
+        address = self.sanitize(address)
+        return self.query(u'INSERT INTO hosts (host,address) SELECT "{0}","{1}" WHERE NOT EXISTS(SELECT * FROM hosts WHERE host="{0}" and address="{1}")'.format(host, address))
 
     def add_contact(self, fname, lname, title, email='', status=''):
         fname = self.sanitize(fname)
@@ -94,7 +93,12 @@ class base_cmd(cmd.Cmd):
         title = self.sanitize(title)
         email = self.sanitize(email)
         status = self.sanitize(status)
-        return self.query(u'INSERT INTO contacts (fname,lname,title) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}")'.format(fname, lname, title))
+        return self.query(u'INSERT INTO contacts (fname,lname,title,email,status) SELECT "{0}","{1}","{2}","{3}","{4}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}" and email="{3}" and status="{4}")'.format(fname, lname, title, email, status))
+
+    def add_cred(self, username, password):
+        username = self.sanitize(username)
+        password = self.sanitize(password)
+        return self.query(u'INSERT INTO creds (username,password) SELECT "{0}","{1}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}")'.format(username, password))
 
     def query(self, params, return_results=True):
         # based on the do_ouput method
@@ -183,34 +187,27 @@ class base_cmd(cmd.Cmd):
         p.feed(s)
         return p.save_end()
 
-    # proxy currently only works for http connections, not https
-    def urlopen(self, req):
-        socket.setdefaulttimeout(self.goptions['socket_timeout'])
-        req.add_header('User-Agent', self.goptions['user-agent'])
-        if self.goptions['proxy']:
-            opener = urllib2.build_opener(AvoidRedirectHandler, urllib2.ProxyHandler({'http': self.goptions['proxy_http']}))
-        else: opener = urllib2.build_opener(AvoidRedirectHandler)
-        urllib2.install_opener(opener)
-        return urllib2.urlopen(req)
-
-    def request(self, url, payload, request_method='GET', headers={}, redirect=True):
+    def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
         kwargs = {}
-        # add global user-agent
         headers['User-Agent'] = self.goptions['user-agent']
-        kwargs['headers'] = headers
-        # if global proxy is enabled, add global proxy and socket timeout
+        kwargs['headers'] = headers                         # set custom headers
+        kwargs['allow_redirects'] = redirect                # set redirect action
+        kwargs['cookies'] = cookies                         # set custom cookies
+        kwargs['verify'] = False                            # ignore SSL errors
+        kwargs['timeout'] = self.goptions['socket_timeout'] # set socket connection timeout
+        kwargs['params'] = payload                          # set parameters for request
         if self.goptions['proxy']:
-            kwargs['timeout'] = self.goptions['socket_timeout']
             proxies = {'http': self.goptions['proxy_http'], 'https': self.goptions['proxy_https']}
-            kwargs['proxies'] = proxies
-        # make request based on given method
-        if request_method == 'GET':
-            kwargs['params'] = payload
-            resp = requests.get(url, **kwargs)
-        elif request_method == 'POST':
-            kwargs['data'] = payload
-            resp = requests.post(url, **kwargs)
-        else: raise Exception('Request method \'%s\' is not a supported method.' % (request_method))
+            kwargs['proxies'] = proxies                     # set proxies
+        if method == 'GET': resp = requests.get(url, **kwargs)
+        elif method == 'POST': resp = requests.post(url, **kwargs)
+        else: raise Exception('Request method \'%s\' is not a supported method.' % (method))
+        ##### BUG WARNING #####
+        if self.goptions['proxy'] and url.lower().startswith('https'):
+            self.alert('A known bug in the requests library prevents proper proxying of HTTPS requests.')
+            self.alert('Enable support for invisible proxying (Burp) or set the \'proxy\' global option to \'False\'.')
+            self.alert('This warning will disappear when the bug is fixed. I apologize for the inconvenience.')
+        #######################
         return resp
 
     def log(self, str):
@@ -313,8 +310,3 @@ class base_cmd(cmd.Cmd):
 
     def complete_set(self, text, *ignored):
         return [x for x in self.options.keys() if x.startswith(text)]
-
-class AvoidRedirectHandler(urllib2.HTTPRedirectHandler):
-    def http_error_302(self, req, fp, code, msg, headers):
-        pass
-    http_error_301 = http_error_303 = http_error_307 = http_error_302

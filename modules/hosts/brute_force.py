@@ -1,12 +1,12 @@
-import _cmd
+import framework
 # unique to module
 import dns.resolver
 import os.path
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'domain': self.goptions['domain'],
                         'wordlist': './data/wordlist.txt',

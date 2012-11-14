@@ -1,11 +1,11 @@
-import _cmd
+import framework
 # unique to module
 import csv
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'source': 'all',
                         'filename': './data/results.csv'

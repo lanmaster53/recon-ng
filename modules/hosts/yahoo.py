@@ -1,16 +1,15 @@
-import _cmd
+import framework
 import __builtin__
 # unique to module
 import urllib
-import urllib2
 import re
 import time
 import random
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'domain': self.goptions['domain']
                         }
@@ -27,8 +26,7 @@ class Module(_cmd.base_cmd):
     def get_hosts(self):
         domain = self.options['domain']
         verbose = self.goptions['verbose']
-        base_url = 'http://search.yahoo.com'
-        base_uri = '/search?'
+        url = 'http://search.yahoo.com/search'
         base_query = 'site:' + domain
         pattern = 'url>(?:<b>)*(\S+?)\.(?:<b>)*%s</b>' % (domain)
         subs = []
@@ -46,25 +44,21 @@ class Module(_cmd.base_cmd):
             for sub in subs:
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
-            num_param = 'n=%d' % (nr)
-            start_param = 'b=%s' % (str(page*nr))
-            query_param = 'p=%s' % (urllib.quote_plus(full_query))
-            params = '%s&%s&%s' % (num_param, query_param, start_param)
-            full_url = base_url + base_uri + params
-            # note: typical URI max length is 2048 (starts after top level domain)
-            if verbose: self.output('URL: %s' % full_url)
-            # build and send request
-            request = urllib2.Request(full_url)
+            payload = {'n': str(nr), 'b':  str(page*nr), 'p': full_query}
+            #
+            #
+            #
+            if verbose: self.output('URL: %s?%s' % (url, urllib.urlencode(payload)))
             # send query to search engine
-            try: content = self.urlopen(request)
+            try: content = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
-                pass
-            except Exception as e: self.error('%s.' % (str(e)))
-            if not content: return
-            content = content.read()
+            except Exception as e:
+                self.error(e.__str__())
+            if not content: break
+            content = content.text
             sites = re.findall(pattern, content)
-            # create a uniq list
+            # create a unique list
             sites = list(set(sites))
             new = False
             # add subdomain to list if not already exists
@@ -78,8 +72,6 @@ class Module(_cmd.base_cmd):
                     host = '%s.%s' % (site, domain)
                     self.output('%s' % (host))
                     cnt += self.add_host(host)
-            # exit if maximum number of queries has been made
-            # start going through all pages if query size is maxed out
             if not new:
                 # exit if all subdomains have been found
                 if not 'Next &gt;</a>' in content:
@@ -95,6 +87,6 @@ class Module(_cmd.base_cmd):
             except KeyboardInterrupt:
                 print ''
                 break
-        if verbose: self.output('Final Query String: %s' % (full_url))
+        if verbose: self.output('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))

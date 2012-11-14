@@ -1,13 +1,12 @@
-import _cmd
+import framework
 import __builtin__
 # unique to module
-import urllib2
 import json
 
-class Module(_cmd.base_cmd):
+class Module(framework.module):
 
     def __init__(self, params):
-        _cmd.base_cmd.__init__(self, params)
+        framework.module.__init__(self, params)
         self.options = {
                         'domain': self.goptions['domain'],
                         'restrict': False,
@@ -30,28 +29,26 @@ class Module(_cmd.base_cmd):
         subs = []
         key = self.manage_key('shodan', 'Shodan API key')
         if not key: return
-        base_url = 'http://www.shodanhq.com/api/search'
-        params = 'q=hostname:%s&key=%s' % (domain, key)
-        url = '%s?%s' % (base_url, params)
+        url = 'http://www.shodanhq.com/api/search'
+        query = 'hostname:%s' % (domain)
+        payload = {'q': query, 'key': key}
         cnt = 0
         page = 1
         # loop until no results are returned
         while True:
             new = False
-            # build and send request
-            request = urllib2.Request(url)
-            #handler = urllib2.HTTPHandler(debuglevel=1)
             content = None
-            # uses API, so don't need to proxy
-            #try: content = urllib2.urlopen(request)
-            try: content = self.urlopen(request)
+            try: content = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
-                pass
-            except Exception as e: self.error('%s.' % (str(e)))
+            except Exception as e:
+                self.error(e.__str__())
             if not content: break
-            content = content.read()
-            jsonobj = json.loads(content)
+            jsonstr = content.text
+            try: jsonobj = json.loads(jsonstr)
+            except ValueError as e:
+                self.error(e.__str__())
+                break
             try: results = jsonobj['matches']
             except KeyError: break
             for result in results:
@@ -68,6 +65,6 @@ class Module(_cmd.base_cmd):
                 if page == self.options['requests']: break
             if not new: break
             page += 1
-            url = '%s?%s&page=%s' % (base_url, params, str(page))
+            payload['page'] = str(page)
         self.output('%d total hosts found.' % (len(subs)))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))
