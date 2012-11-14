@@ -15,7 +15,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Single Account Credentials Retriever',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for the credentials of the given username.',
+                     'Description': 'Queries the PwnedList API for the credentials of the usernames in the given source, updating the database with the results.',
                      'Comments': [
                                   'Source options: database, email@address, path/to/infile'
                                   ]
