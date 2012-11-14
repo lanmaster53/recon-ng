@@ -15,7 +15,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Creates a CSV file containing the specified harvested data types.',
                      'Comments': [
-                                  'Source options: hosts, contacts, all, <sql>'
+                                  'Source options: hosts, contacts, creds, all, <sql>'
                                   ]
                      }
 
@@ -34,9 +34,11 @@ class Module(framework.module):
         rows = []
         if source == 'hosts': rows = self.query('SELECT * FROM hosts ORDER BY host')
         elif source == 'contacts' : rows = self.query('SELECT * FROM contacts ORDER BY fname')
+        elif source == 'creds' : rows = self.query('SELECT * FROM creds ORDER BY username')
         elif source == 'all':
             rows.extend(self.query('SELECT * FROM hosts ORDER BY host'))
             rows.extend(self.query('SELECT * FROM contacts ORDER BY fname'))
+            rows.extend(self.query('SELECT * FROM creds ORDER BY username'))
             # rename source for summary
             source = 'rows'
         elif source.lower().startswith('select'):

@@ -25,7 +25,7 @@ class Module(framework.module):
         self.get_creds()
 
     def get_creds(self):
-        # required for all PwnedList modules
+        # api key management
         api_key = self.manage_key('pwned_key', 'PwnedList API Key')
         if not api_key: return
         secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
@@ -37,15 +37,20 @@ class Module(framework.module):
         # handle sources
         source = self.options['source']
         if source == 'database':
-            accounts = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email != "" and status = "pwned" ORDER BY email')]
+            results = self.query('SELECT DISTINCT username FROM creds WHERE username != "" and (password IS NULL or password = "") ORDER BY username')
+            accounts = [x[0] for x in results]
             if len(accounts) == 0:
-                self.error('No pwned accounts in the database.')
+                self.error('No unresolved pwned accounts in the database.')
                 return
         elif '@' in source: accounts = [source]
         elif os.path.exists(source): accounts = open(source).read().split()
         else:
             self.error('Invalid source: %s' % (source))
             return
+
+        # API query guard
+        ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (len(accounts)))
+        if ans.upper() != 'Y': return
 
         for account in accounts:
             # setup API call
@@ -73,7 +78,9 @@ class Module(framework.module):
 
             # handle output
             for cred in jsonobj['results']:
-                account = cred['plain']
-                password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
-                self.output('%s:%s' % (account, password))
-                self.add_cred(account, password)
+                username = cred['plain']
+                password = repr(pwnedlist.decrypt(cred['password'], decrypt_key, iv))[1:-1]
+                breach = cred['leak_id']
+                self.output('%s:%s' % (username, password))
+                self.add_cred(username, password, breach)
+            self.query('DELETE FROM creds WHERE username = "%s" and (password IS NULL or password = "")' % (account))

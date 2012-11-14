@@ -95,10 +95,10 @@ class module(cmd.Cmd):
         status = self.sanitize(status)
         return self.query(u'INSERT INTO contacts (fname,lname,title,email,status) SELECT "{0}","{1}","{2}","{3}","{4}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}" and email="{3}" and status="{4}")'.format(fname, lname, title, email, status))
 
-    def add_cred(self, username, password):
+    def add_cred(self, username, password='', breach=''):
         username = self.sanitize(username)
         password = self.sanitize(password)
-        return self.query(u'INSERT INTO creds (username,password) SELECT "{0}","{1}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}")'.format(username, password))
+        return self.query(u'INSERT INTO creds (username,password,breach) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}" and breach="{2}")'.format(username, password, breach))
 
     def query(self, params, return_results=True):
         # based on the do_ouput method
@@ -188,6 +188,7 @@ class module(cmd.Cmd):
         return p.save_end()
 
     def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
+        # build kwargs for request call
         kwargs = {}
         headers['User-Agent'] = self.goptions['user-agent']
         kwargs['headers'] = headers                         # set custom headers
@@ -195,12 +196,16 @@ class module(cmd.Cmd):
         kwargs['cookies'] = cookies                         # set custom cookies
         kwargs['verify'] = False                            # ignore SSL errors
         kwargs['timeout'] = self.goptions['socket_timeout'] # set socket connection timeout
-        kwargs['params'] = payload                          # set parameters for request
         if self.goptions['proxy']:
             proxies = {'http': self.goptions['proxy_http'], 'https': self.goptions['proxy_https']}
             kwargs['proxies'] = proxies                     # set proxies
-        if method == 'GET': resp = requests.get(url, **kwargs)
-        elif method == 'POST': resp = requests.post(url, **kwargs)
+        # handle method and make request
+        if method == 'GET':
+            kwargs['params'] = payload                      # set get parameters for request
+            resp = requests.get(url, **kwargs)
+        elif method == 'POST':
+            kwargs['data'] = payload                        # set post data for request
+            resp = requests.post(url, **kwargs)
         else: raise Exception('Request method \'%s\' is not a supported method.' % (method))
         ##### BUG WARNING #####
         if self.goptions['proxy'] and url.lower().startswith('https'):

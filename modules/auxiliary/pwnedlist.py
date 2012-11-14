@@ -46,9 +46,7 @@ class Module(framework.module):
             status = None
             account = accounts[i].encode('utf-8')
             url = 'http://pwnedlist.com/query'
-            payload = {'query_input' : account,
-                      'query_input_hash' : 'empty',
-                      'submit' : 'CHECK' }
+            payload = {'query_input' : account, 'query_input_hash' : 'empty', 'submit' : 'CHECK' }
             try: resp = self.request(url, payload=payload, method='POST', redirect=False)
             except KeyboardInterrupt:
                 print ''
@@ -69,6 +67,7 @@ class Module(framework.module):
                 qty = m.group(1)
                 last = m.group(2)
                 self.alert('%s => %s! Seen %s times as recent as %s.' % (account, status, qty, last))
+                self.add_cred(account)
                 pwned += 1
             else:
                 self.error('Response not understood.')

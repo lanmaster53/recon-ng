@@ -125,7 +125,7 @@ class Shell(framework.module):
         c = conn.cursor()
         c.execute('create table if not exists hosts (host text, address text)')
         c.execute('create table if not exists contacts (fname text, lname text, email text, status text, title text)')
-        c.execute('create table if not exists creds (username text, password text)')
+        c.execute('create table if not exists creds (username text, password text, breach text)')
         conn.commit()
         conn.close()
 
@@ -260,7 +260,7 @@ class Shell(framework.module):
         print ''
         print 'Notes:'
         print self.ruler*5
-        print 'Column options: username, password'
+        print 'Column options: username, password, breach'
         print 'If no column is given, \'*\' is implied.'
         print 'Output is sorted by the first column.'
         print ''
