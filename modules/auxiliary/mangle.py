@@ -30,6 +30,9 @@ class Module(framework.module):
         pattern = self.options['pattern']
         max = self.options['max-length']
         contacts = self.query('SELECT rowid, fname, lname FROM contacts ORDER BY fname')
+        if len(contacts) == 0:
+            self.error('No contacts in the database.')
+            return
         for contact in contacts:
             row = contact[0]
             fname = contact[1]

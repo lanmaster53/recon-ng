@@ -4,6 +4,7 @@ import __builtin__
 import pwnedlist
 import os
 import json
+import re
 
 class Module(framework.module):
 
@@ -73,7 +74,8 @@ class Module(framework.module):
             else:
                 for cred in jsonobj['results']:
                     username = cred['plain']
-                    password = repr(pwnedlist.decrypt(cred['password'], decrypt_key, iv))[1:-1]
+                    password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
+                    password = re.sub(r'[^\x20-\x7e]', '', password)
                     breach = cred['leak_id']
                     self.output('%s:%s' % (username, password))
                     self.add_cred(username, password, breach)

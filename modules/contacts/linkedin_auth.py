@@ -82,6 +82,7 @@ class Module(framework.module):
             except KeyboardInterrupt:
                 print ''
                 break
+            jsonstr = content
             try: jsonobj = json.loads(jsonstr)
             except ValueError as e:
                 self.error(e.__str__())

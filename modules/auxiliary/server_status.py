@@ -57,5 +57,5 @@ class Module(framework.module):
                     self.alert('%s => %s. Possible server status page found!' % (url, code))
                     cnt += 1
                 else:
-                    if verbose: self.output('%s => %s.' % (url, code))
+                    if verbose: self.output('%s => %s' % (url, code))
         self.output('%d Server Status pages found.' % (cnt))

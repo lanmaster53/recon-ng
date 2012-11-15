@@ -40,12 +40,11 @@ class Module(framework.module):
         # build list of valid hashes with type
         hash_sets = []
         for hash in hashes:
-            clean_hash = re.sub(r'[^\x20-\x7e]', '', hash)
-            type = self.hash_type(clean_hash)
+            type = self.hash_type(hash)
             if type:
-                hash_sets.append((type, clean_hash, hash))
+                hash_sets.append((type, hash))
             else:
-                if verbose: self.output('Type not recognized for this hash: %s' % (clean_hash))
+                if verbose: self.output('Type not recognized for this hash: %s' % (hash))
 
         # lookup each hash according to type
         for hash_set in hash_sets:
