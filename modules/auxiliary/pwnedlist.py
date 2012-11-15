@@ -29,15 +29,12 @@ class Module(framework.module):
         # handle sources
         source = self.options['source']
         if source == 'database':
-            accounts = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email != "" ORDER BY email')]
+            accounts = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL or email != "" ORDER BY email')]
             if len(accounts) == 0:
                 self.error('No email addresses in the database.')
                 return
-        elif '@' in source: accounts = [source]
         elif os.path.exists(source): accounts = open(source).read().split()
-        else:
-            self.error('Invalid source: %s' % (source))
-            return
+        else: accounts = [source]
 
         # retrieve status
         pattern = "class='query_result_footer'>... we found your email in our database a total of (\d+?) times. It was last seen on ([\d-]+?). Please read on. <div"

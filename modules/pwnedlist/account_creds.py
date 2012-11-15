@@ -37,16 +37,12 @@ class Module(framework.module):
         # handle sources
         source = self.options['source']
         if source == 'database':
-            results = self.query('SELECT DISTINCT username FROM creds WHERE username != "" and (password IS NULL or password = "") ORDER BY username')
-            accounts = [x[0] for x in results]
+            accounts = [x[0] for x in self.query('SELECT DISTINCT username FROM creds WHERE (username IS NOT NULL or username != "") and (password IS NULL or password = "") ORDER BY username')]
             if len(accounts) == 0:
                 self.error('No unresolved pwned accounts in the database.')
                 return
-        elif '@' in source: accounts = [source]
         elif os.path.exists(source): accounts = open(source).read().split()
-        else:
-            self.error('Invalid source: %s' % (source))
-            return
+        else: accounts = [source]
 
         # API query guard
         ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (len(accounts)))
@@ -66,21 +62,19 @@ class Module(framework.module):
                 return
             except Exception as e:
                 self.error(e.__str__())
-                return
+                continue
             jsonstr = resp.text
             try: jsonobj = json.loads(jsonstr)
             except ValueError as e:
                 self.error(e.__str__())
-                return
+                continue
             if len(jsonobj['results']) == 0:
-                self.alert('No results returned for \'%s\'.' % (account))
-                return
-
-            # handle output
-            for cred in jsonobj['results']:
-                username = cred['plain']
-                password = repr(pwnedlist.decrypt(cred['password'], decrypt_key, iv))[1:-1]
-                breach = cred['leak_id']
-                self.output('%s:%s' % (username, password))
-                self.add_cred(username, password, breach)
+                self.output('No results returned for \'%s\'.' % (account))
+            else:
+                for cred in jsonobj['results']:
+                    username = cred['plain']
+                    password = repr(pwnedlist.decrypt(cred['password'], decrypt_key, iv))[1:-1]
+                    breach = cred['leak_id']
+                    self.output('%s:%s' % (username, password))
+                    self.add_cred(username, password, breach)
             self.query('DELETE FROM creds WHERE username = "%s" and (password IS NULL or password = "")' % (account))

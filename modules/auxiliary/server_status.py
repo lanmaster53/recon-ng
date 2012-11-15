@@ -31,7 +31,7 @@ class Module(framework.module):
         # handle sources
         source = self.options['source']
         if source == 'database':
-            hosts = [x[0] for x in self.query('SELECT DISTINCT host FROM hosts WHERE host != "" ORDER BY host')]
+            hosts = [x[0] for x in self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL or host != "" ORDER BY host')]
             if len(hosts) == 0:
                 self.error('No hosts in the database.')
                 return
