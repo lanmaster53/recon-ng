@@ -87,17 +87,17 @@ class module(cmd.Cmd):
         address = self.sanitize(address)
         return self.query(u'INSERT INTO hosts (host,address) SELECT "{0}","{1}" WHERE NOT EXISTS(SELECT * FROM hosts WHERE host="{0}" and address="{1}")'.format(host, address))
 
-    def add_contact(self, fname, lname, title, email='', status=''):
+    def add_contact(self, fname, lname, title, email=''):
         fname = self.sanitize(fname)
         lname = self.sanitize(lname)
         title = self.sanitize(title)
         email = self.sanitize(email)
-        status = self.sanitize(status)
-        return self.query(u'INSERT INTO contacts (fname,lname,title,email,status) SELECT "{0}","{1}","{2}","{3}","{4}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}" and email="{3}" and status="{4}")'.format(fname, lname, title, email, status))
+        return self.query(u'INSERT INTO contacts (fname,lname,title,email) SELECT "{0}","{1}","{2}","{3}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}" and email="{3}")'.format(fname, lname, title, email))
 
     def add_cred(self, username, password='', breach=''):
         username = self.sanitize(username)
         password = self.sanitize(password)
+        breach = self.sanitize(breach)
         return self.query(u'INSERT INTO creds (username,password,breach) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}" and breach="{2}")'.format(username, password, breach))
 
     def query(self, params, return_results=True):

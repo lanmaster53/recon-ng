@@ -28,11 +28,10 @@ class Module(framework.module):
 
         # setup API call
         method = 'usage.info'
-        payload = {}
-
-        # make request
-        payload = pwnedlist.build_payload(payload, method, key, secret)
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+        payload = {}
+        payload = pwnedlist.build_payload(payload, method, key, secret)
+        # make request
         try: resp = self.request(url, payload=payload)
         except KeyboardInterrupt:
             print ''
@@ -40,10 +39,9 @@ class Module(framework.module):
         except Exception as e:
             self.error(e.__str__())
             return
-        jsonstr = resp.text
-        try: jsonobj = json.loads(jsonstr)
-        except ValueError as e:
-            self.error(e.__str__())
+        if resp.json: jsonobj = resp.json
+        else:
+            self.error('Invalid JSON returned from the API.')
             return
 
         # handle output

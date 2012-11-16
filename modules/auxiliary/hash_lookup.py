@@ -57,6 +57,7 @@ class Module(framework.module):
             else:
                 if cleartext:
                     self.alert('%s (%s) => %s' % (hash, type, cleartext))
+                    self.query('UPDATE creds SET password="%s" WHERE password="%s"' % (cleartext, hash))
                 else:
                     if verbose: self.output('Value not found for this hash: %s' % (hash))
 

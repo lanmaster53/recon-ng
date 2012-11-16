@@ -37,14 +37,15 @@ class Module(framework.module):
         # loop until no results are returned
         while True:
             new = False
-            content = None
-            try: content = self.request(url, payload=payload)
+            resp = None
+            try: resp = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
             except Exception as e:
                 self.error(e.__str__())
-            if not content: break
-            jsonstr = content.text
+            if not resp: break
+            # resp.json will not work here
+            jsonstr = resp.text
             try: jsonobj = json.loads(jsonstr)
             except ValueError as e:
                 self.error(e.__str__())

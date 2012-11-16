@@ -49,14 +49,15 @@ class Module(framework.module):
         ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (len(accounts)))
         if ans.upper() != 'Y': return
 
+        # setup API call
+        method = 'accounts.query'
+        url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+
         for account in accounts:
-            # setup API call
-            method = 'accounts.query'
+            # build the payload for each account
             payload = {'account_identifier': account}
-    
-            # make request
             payload = pwnedlist.build_payload(payload, method, api_key, secret)
-            url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+            # make and handle the request
             try: resp = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
@@ -64,10 +65,9 @@ class Module(framework.module):
             except Exception as e:
                 self.error(e.__str__())
                 continue
-            jsonstr = resp.text
-            try: jsonobj = json.loads(jsonstr)
-            except ValueError as e:
-                self.error(e.__str__())
+            if resp.json: jsonobj = resp.json
+            else:
+                self.error('Invalid JSON returned from the API for \'%s\'.' % (account))
                 continue
             if len(jsonobj['results']) == 0:
                 self.output('No results returned for \'%s\'.' % (account))

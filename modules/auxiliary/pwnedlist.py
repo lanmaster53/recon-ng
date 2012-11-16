@@ -69,7 +69,5 @@ class Module(framework.module):
             else:
                 self.error('Response not understood.')
                 return
-            #if status and source == 'database':
-            self.query('UPDATE contacts SET status="%s" WHERE email="%s"' % (status, account))
             i += 1
         self.output('%d/%d targets pwned.' % (pwned, i))
