@@ -13,7 +13,8 @@ class Module(framework.module):
                      'Name': 'Hostname Resolver',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Resolves the IP address for all of the hosts stored in the database.',
-                     'Comments': []
+                     'Comments': [
+                                  'Note: Nameserver must be in IP form.']
                      }
 
     def do_run(self, params):
@@ -32,7 +33,11 @@ class Module(framework.module):
             except KeyboardInterrupt:
                 print ''
                 return
-            except dns.resolver.NXDOMAIN:
-                address = 'unknown'
+            except dns.resolver.NXDOMAIN: address = 'unknown'
+            except dns.resolver.NoAnswer: address = 'no answer'
+            except dns.exception.SyntaxError:
+                self.error('Nameserver must be in IP form.')
+                return
+            except: address = 'error'
             self.output('%s => %s' % (host, address))
             self.query('UPDATE hosts SET address="%s" WHERE rowid="%s"' % (address, row))

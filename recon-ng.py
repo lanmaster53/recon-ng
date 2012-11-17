@@ -4,7 +4,7 @@
 
 __author__    = "Tim Tomes (@LaNMaSteR53)"
 __email__     = "tjt1980[at]gmail.com"
-__version__   = "0.12"
+__version__   = "0.40"
 __copyright__ = "Copyright (C) 2012, Tim Tomes"
 __license__   = "GPLv3"
 """
@@ -18,8 +18,8 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+See <http://www.gnu.org/licenses/> for a copy of the GNU General
+Public License
 """
 
 import cmd
@@ -98,23 +98,24 @@ class Shell(framework.module):
                 self.loaded_summary.append(('/'.join(dirpath.split('/')[2:]), cnt))
 
     def display_modules(self, modules):
-        print ''
-        print '%sModules:' % (self.spacer)
-        key_len = len(max(modules, key=len))
-        print '%s%s' % (self.spacer, self.ruler*key_len)
+        key_len = len(max(modules, key=len)) + len(self.spacer)
+        last_cat = ''
         for module in sorted(modules):
-            print '%s%s' % (self.spacer, module)
+            if module.split('/')[0] != last_cat:
+                # print header
+                print ''
+                last_cat = module.split('/')[0]
+                print '%s%s%s:' % (self.spacer, last_cat[0].upper(), last_cat[1:])
+                print '%s%s' % (self.spacer, self.ruler*key_len)
+            # print module
+            print '%s%s' % (self.spacer*2, module)
         print ''
 
     def show_banner(self):
-        print ''
-        print '    _/_/_/    _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/_/_/'
-        print '   _/    _/  _/        _/        _/    _/  _/_/    _/              _/_/    _/  _/       '
-        print '  _/_/_/    _/_/_/    _/        _/    _/  _/  _/  _/  _/_/_/_/_/  _/  _/  _/  _/  _/_/  '
-        print ' _/    _/  _/        _/        _/    _/  _/    _/_/              _/    _/_/  _/    _/   '
-        print '_/    _/  _/_/_/_/    _/_/_/    _/_/    _/      _/              _/      _/    _/_/_/    '
-        print ''
-        print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), 96)
+        banner = open('./core/banner').read()
+        banner_len = len(max(banner.split('\n'), key=len))
+        print banner
+        print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), banner_len+8) # +8 compensates for the color bytes
         print ''
         for module in self.loaded_summary:
             print '%s[%d] %s modules%s' % (B, module[1], module[0], N)

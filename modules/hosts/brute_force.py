@@ -41,16 +41,27 @@ class Module(framework.module):
             words = open(self.options['wordlist']).read().split()
             for word in words:
                 host = '%s.%s' % (word, self.options['domain'])
-                try: answers = q.query(host)
+                try: answers = q.query(host, 'A')
                 except KeyboardInterrupt:
                     print ''
                     break
                 except dns.resolver.NXDOMAIN:
-                    if self.goptions['verbose']: self.output('%s => Not a host.' % (host))
+                    if self.goptions['verbose']: self.output('%s => Not a host' % (host))
                     continue
-                self.alert('%s => Host found!' % (host))
-                tot += 1
-                cnt += self.add_host(host)
+                except dns.resolver.NoAnswer:
+                    if self.goptions['verbose']: self.output('%s => No answer' % (host))
+                    continue
+                for answer in answers.response.answer:
+                    for rdata in answer:
+                        if rdata.rdtype == 1:
+                            self.alert('%s => Host found!' % (host))
+                            cnt += self.add_host(host)
+                            tot += 1
+                        if rdata.rdtype == 5:
+                            cname = rdata.target.to_text()[:-1]
+                            self.alert('%s => Host found!' % (cname))
+                            cnt += self.add_host(cname)
+                            tot += 1
             self.output('%d total hosts found.' % (tot))
             if cnt: self.alert('%d NEW hosts found!' % (cnt))
         else:
