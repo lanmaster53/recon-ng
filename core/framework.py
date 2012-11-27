@@ -83,22 +83,49 @@ class module(cmd.Cmd):
         return obj
 
     def add_host(self, host, address=''):
-        host = self.sanitize(host)
+        host    = self.sanitize(host)
         address = self.sanitize(address)
-        return self.query(u'INSERT INTO hosts (host,address) SELECT "{0}","{1}" WHERE NOT EXISTS(SELECT * FROM hosts WHERE host="{0}" and address="{1}")'.format(host, address))
+        conn = sqlite3.connect(self.goptions['dbfilename'])
+        c = conn.cursor()
+        try: c.execute(u'INSERT INTO hosts (host,address) SELECT ?, ? WHERE NOT EXISTS(SELECT * FROM hosts WHERE host=?)', (host, address, host))
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        conn.commit()
+        conn.close()
+        return c.rowcount
+        #return self.query(u'INSERT INTO hosts (host,address) SELECT "{0}","{1}" WHERE NOT EXISTS(SELECT * FROM hosts WHERE host="{0}" and address="{1}")'.format(host, address))
 
     def add_contact(self, fname, lname, title, email=''):
         fname = self.sanitize(fname)
         lname = self.sanitize(lname)
         title = self.sanitize(title)
         email = self.sanitize(email)
-        return self.query(u'INSERT INTO contacts (fname,lname,title,email) SELECT "{0}","{1}","{2}","{3}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}" and email="{3}")'.format(fname, lname, title, email))
+        conn = sqlite3.connect(self.goptions['dbfilename'])
+        c = conn.cursor()
+        try: c.execute(u'INSERT INTO contacts (fname,lname,title,email) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname=? and lname=? and title=?)', (fname, lname, title, email, fname, lname, title))
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        conn.commit()
+        conn.close()
+        return c.rowcount
+        #return self.query(u'INSERT INTO contacts (fname,lname,title,email) SELECT "{0}","{1}","{2}","{3}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}" and email="{3}")'.format(fname, lname, title, email))
 
     def add_cred(self, username, password='', breach=''):
         username = self.sanitize(username)
         password = self.sanitize(password)
-        breach = self.sanitize(breach)
-        return self.query(u'INSERT INTO creds (username,password,breach) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}" and breach="{2}")'.format(username, password, breach))
+        breach   = self.sanitize(breach)
+        conn = sqlite3.connect(self.goptions['dbfilename'])
+        c = conn.cursor()
+        try: c.execute(u'INSERT INTO creds (username,password,breach) SELECT ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and breach=?)', (username, password, breach, username, password, breach))
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        conn.commit()
+        conn.close()
+        return c.rowcount
+        #return self.query(u'INSERT INTO creds (username,password,breach) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}" and breach="{2}")'.format(username, password, breach))
 
     def query(self, params, return_results=True):
         # based on the do_ouput method
