@@ -83,8 +83,8 @@ except ImportError:
 
 
 if is_py2:
-    from urllib import quote, unquote, quote_plus, unquote_plus, urlencode
-    from urlparse import urlparse, urlunparse, urljoin, urlsplit, urldefrag
+    from urllib import quote, unquote, urlencode
+    from urlparse import urlparse, urlunparse, urljoin, urlsplit
     from urllib2 import parse_http_list
     import cookielib
     from Cookie import Morsel
@@ -104,7 +104,7 @@ if is_py2:
 
 
 elif is_py3:
-    from urllib.parse import urlparse, urlunparse, urljoin, urlsplit, urlencode, quote, unquote, quote_plus, unquote_plus, urldefrag
+    from urllib.parse import urlparse, urlunparse, urljoin, urlsplit, urlencode, quote, unquote
     from urllib.request import parse_http_list
     from http import cookiejar as cookielib
     from http.cookies import Morsel
@@ -115,5 +115,5 @@ elif is_py3:
     builtin_str = str
     str = str
     bytes = bytes
-    basestring = (str, bytes)
+    basestring = (str,bytes)
     numeric_types = (int, float)
