@@ -17,7 +17,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Attempts to identify the type of hash, then uses web based databases to perform a lookup.',
                      'Comments': [
-                                  'Source options: database, hash, path/to/infile'
+                                  'Source options: database, <hash>, <path/to/infile>'
                                   ]
                      }
 

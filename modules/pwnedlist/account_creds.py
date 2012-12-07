@@ -14,11 +14,11 @@ class Module(framework.module):
                         'source': 'database'
                         }
         self.info = {
-                     'Name': 'PwnedList - Single Account Credentials Retriever',
+                     'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the PwnedList API for the credentials of the usernames in the given source, updating the database with the results.',
                      'Comments': [
-                                  'Source options: database, email@address, path/to/infile'
+                                  'Source options: database, <email@address>, <path/to/infile>'
                                   ]
                      }
 
@@ -27,8 +27,8 @@ class Module(framework.module):
 
     def get_creds(self):
         # api key management
-        api_key = self.manage_key('pwned_key', 'PwnedList API Key')
-        if not api_key: return
+        key = self.manage_key('pwned_key', 'PwnedList API Key')
+        if not key: return
         secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
         if not secret: return
         decrypt_key = secret[:16]
@@ -56,8 +56,8 @@ class Module(framework.module):
         for account in accounts:
             # build the payload for each account
             payload = {'account_identifier': account}
-            payload = pwnedlist.build_payload(payload, method, api_key, secret)
-            # make and handle the request
+            payload = pwnedlist.build_payload(payload, method, key, secret)
+            # make request
             try: resp = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''

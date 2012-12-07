@@ -16,7 +16,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages PwnedList.com to determine if email addresses are associated with breached credentials, updating the database with the results.',
                      'Comments': [
-                                  'Source options: database, email@address, path/to/infile'
+                                  'Source options: database, <email@address>, <path/to/infile>'
                                   ]
                      }
 

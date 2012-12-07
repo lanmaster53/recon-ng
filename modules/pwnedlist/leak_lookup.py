@@ -2,34 +2,42 @@ import framework
 import __builtin__
 # unique to module
 import pwnedlist
+import os
 import json
+import re
 
 class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {}
+        self.options = {
+                        'leak_id': '0b35c0ba48a899baeea2021e245d6da8'
+                        }
         self.info = {
-                     'Name': 'PwnedList - API Usage Statistics Fetcher',
+                     'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for account usage statistics.',
+                     'Description': 'Queries the PwnedList API for information about the leak IDs in the given source.',
                      'Comments': []
                      }
 
     def do_run(self, params):
-        self.check_usage()
+        self.leak_lookup()
 
-    def check_usage(self):
-        # required for all PwnedList modules
+    def leak_lookup(self):
+        # api key management
         key = self.manage_key('pwned_key', 'PwnedList API Key')
         if not key: return
         secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
         if not secret: return
 
+        # API query guard
+        ans = raw_input('This operation will use 1 API queries. Do you want to continue? [Y/N]: ')
+        if ans.upper() != 'Y': return
+
         # setup API call
-        method = 'usage.info'
+        method = 'leaks.info'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        payload = {}
+        payload = {'leakId': self.options['leak_id']}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
         try: resp = self.request(url, payload=payload)
@@ -45,8 +53,7 @@ class Module(framework.module):
             return
 
         # handle output
-        total = jsonobj['num_queries_allotted']
-        left = jsonobj['num_queries_left']
-        self.output('Queries allotted: %d' % (total))
-        self.output('Queries remaining: %d' % (left))
-        self.output('Queries used: %d' % (total - left))
+        leak = jsonobj['leaks'][0]
+        for key in leak.keys():
+            header = ' '.join(key.split('_')).title()
+            self.output('%s: %s' % (header, leak[key]))

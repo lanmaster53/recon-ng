@@ -14,7 +14,7 @@ class Module(framework.module):
                         'domain': self.goptions['domain']
                         }
         self.info = {
-                     'Name': 'PwnedList - General Domain Query',
+                     'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the PwnedList API for the given domain to determine if any credentials from that domain have been compromised. This module does NOT return any credentials, only a total number of compromised credentials belonging to the given domain.',
                      'Comments': []

@@ -112,20 +112,20 @@ class module(cmd.Cmd):
         return c.rowcount
         #return self.query(u'INSERT INTO contacts (fname,lname,title,email) SELECT "{0}","{1}","{2}","{3}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}" and email="{3}")'.format(fname, lname, title, email))
 
-    def add_cred(self, username, password='', breach=''):
+    def add_cred(self, username, password='', leak=''):
         username = self.sanitize(username)
         password = self.sanitize(password)
-        breach   = self.sanitize(breach)
+        leak   = self.sanitize(leak)
         conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
-        try: c.execute(u'INSERT INTO creds (username,password,breach) SELECT ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and breach=?)', (username, password, breach, username, password, breach))
+        try: c.execute(u'INSERT INTO creds (username,password,leak) SELECT ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and leak=?)', (username, password, leak, username, password, leak))
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return
         conn.commit()
         conn.close()
         return c.rowcount
-        #return self.query(u'INSERT INTO creds (username,password,breach) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}" and breach="{2}")'.format(username, password, breach))
+        #return self.query(u'INSERT INTO creds (username,password,leak) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}" and leak="{2}")'.format(username, password, leak))
 
     def query(self, params, return_results=True):
         # based on the do_ouput method

@@ -49,7 +49,7 @@ __builtin__.goptions = {
                         'logfilename': './data/cmd.log',
                         'domain': 'sans.org',
                         'company': 'SANS Institute',
-                        'user-agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
+                        'user-agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)',#'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
                         'proxy': False,
                         'proxy_http': '127.0.0.1:8080',
                         'proxy_https': '127.0.0.1:8080',
@@ -126,7 +126,7 @@ class Shell(framework.module):
         c = conn.cursor()
         c.execute('create table if not exists hosts (host text, address text)')
         c.execute('create table if not exists contacts (fname text, lname text, email text, status text, title text)')
-        c.execute('create table if not exists creds (username text, password text, breach text)')
+        c.execute('create table if not exists creds (username text, password text, leak text)')
         conn.commit()
         conn.close()
 
@@ -261,7 +261,7 @@ class Shell(framework.module):
         print ''
         print 'Notes:'
         print self.ruler*5
-        print 'Column options: username, password, breach'
+        print 'Column options: username, password, leak'
         print 'If no column is given, \'*\' is implied.'
         print 'Output is sorted by the first column.'
         print ''
