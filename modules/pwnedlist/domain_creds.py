@@ -8,33 +8,36 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.options = {
-                        'leak_id': '0b35c0ba48a899baeea2021e245d6da8'
+                        'domain': self.goptions['domain']
                         }
         self.info = {
-                     'Name': 'PwnedList - Leak Details Fetcher',
+                     'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for information about the leak IDs in the given source.',
+                     'Description': 'Queries the PwnedList API to fetch the credentials for the given domain.',
                      'Comments': []
                      }
 
     def do_run(self, params):
-        self.leak_lookup()
+        self.get_creds()
 
-    def leak_lookup(self):
+    def get_creds(self):
         # api key management
         key = self.manage_key('pwned_key', 'PwnedList API Key')
         if not key: return
         secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
         if not secret: return
+        decrypt_key = secret[:16]
+        iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV')
+        if not iv: return
 
         # API query guard
-        ans = raw_input('This operation will use 1 API queries. Do you want to continue? [Y/N]: ')
+        ans = raw_input('This operation will use 10,000 API queries, +1 query for each account. Do you want to continue? [Y/N]: ')
         if ans.upper() != 'Y': return
 
         # setup API call
-        method = 'leaks.info'
+        method = 'domains.query'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        payload = {'leakId': self.options['leak_id']}
+        payload = {'domain_identifier': self.options['domain']}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
         try: resp = self.request(url, payload=payload)
@@ -48,9 +51,13 @@ class Module(framework.module):
         else:
             self.error('Invalid JSON returned from the API.')
             return
-
-        # handle output
-        leak = jsonobj['leaks'][0]
-        for key in leak.keys():
-            header = ' '.join(key.split('_')).title()
-            self.output('%s: %s' % (header, leak[key]))
+        if len(jsonobj['accounts']) == 0:
+            self.output('No results returned for \'%s\'.' % (self.options['domain']))
+        else:
+            for cred in jsonobj['accounts']:
+                username = cred['plain']
+                password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
+                password = "".join([i for i in password if ord(i) in range(32, 126)])
+                breach = cred['leak_id']
+                self.output('%s:%s' % (username, password))
+                self.add_cred(username, password, breach)

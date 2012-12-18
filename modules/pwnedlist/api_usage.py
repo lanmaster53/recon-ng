@@ -2,7 +2,6 @@ import framework
 import __builtin__
 # unique to module
 import pwnedlist
-import json
 
 class Module(framework.module):
 
