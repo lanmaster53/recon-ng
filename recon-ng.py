@@ -125,8 +125,8 @@ class Shell(framework.module):
         conn = sqlite3.connect(self.options['dbfilename'])
         c = conn.cursor()
         c.execute('create table if not exists hosts (host text, address text)')
-        c.execute('create table if not exists contacts (fname text, lname text, email text, status text, title text)')
-        c.execute('create table if not exists creds (username text, password text, leak text)')
+        c.execute('create table if not exists contacts (fname text, lname text, email text, title text)')
+        c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
         conn.commit()
         conn.close()
 

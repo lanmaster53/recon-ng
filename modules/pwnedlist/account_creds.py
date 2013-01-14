@@ -36,7 +36,7 @@ class Module(framework.module):
         # handle sources
         source = self.options['source']
         if source == 'database':
-            accounts = [x[0] for x in self.query('SELECT DISTINCT username FROM creds WHERE (username IS NOT NULL or username != "") and (password IS NULL or password = "") ORDER BY username')]
+            accounts = [x[0] for x in self.query('SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')]
             if len(accounts) == 0:
                 self.error('No unresolved pwned accounts in the database.')
                 return
@@ -74,7 +74,7 @@ class Module(framework.module):
                     username = cred['plain']
                     password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
                     password = "".join([i for i in password if ord(i) in range(32, 126)])
-                    breach = cred['leak_id']
+                    leak = cred['leak_id']
                     self.output('%s:%s' % (username, password))
-                    self.add_cred(username, password, breach)
-            self.query('DELETE FROM creds WHERE username = "%s" and (password IS NULL or password = "")' % (account))
+                    self.add_cred(username, password, None, leak)
+            self.query('DELETE FROM creds WHERE username = "%s" and password IS NULL and hash IS NULL' % (account))

@@ -1,5 +1,6 @@
 import cmd
 import sqlite3
+import re
 import os
 import sys
 import textwrap
@@ -82,7 +83,7 @@ class module(cmd.Cmd):
                 obj = unicode(obj, encoding)
         return obj
 
-    def add_host(self, host, address=''):
+    def add_host(self, host, address=None):
         host    = self.sanitize(host)
         address = self.sanitize(address)
         conn = sqlite3.connect(self.goptions['dbfilename'])
@@ -94,9 +95,8 @@ class module(cmd.Cmd):
         conn.commit()
         conn.close()
         return c.rowcount
-        #return self.query(u'INSERT INTO hosts (host,address) SELECT "{0}","{1}" WHERE NOT EXISTS(SELECT * FROM hosts WHERE host="{0}" and address="{1}")'.format(host, address))
 
-    def add_contact(self, fname, lname, title, email=''):
+    def add_contact(self, fname, lname, title, email=None):
         fname = self.sanitize(fname)
         lname = self.sanitize(lname)
         title = self.sanitize(title)
@@ -110,27 +110,53 @@ class module(cmd.Cmd):
         conn.commit()
         conn.close()
         return c.rowcount
-        #return self.query(u'INSERT INTO contacts (fname,lname,title,email) SELECT "{0}","{1}","{2}","{3}" WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname="{0}" and lname="{1}" and title="{2}" and email="{3}")'.format(fname, lname, title, email))
 
-    def add_cred(self, username, password='', leak=''):
+    def add_cred(self, username, password=None, hashtype=None, leak=None):
         username = self.sanitize(username)
         password = self.sanitize(password)
         leak   = self.sanitize(leak)
+        query = u'INSERT INTO creds (username,password,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and type=? and leak=?)'
+        if password:
+            if self.is_hash(password):
+                query = u'INSERT INTO creds (username,hash,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and hash=? and type=? and leak=?)'
         conn = sqlite3.connect(self.goptions['dbfilename'])
         c = conn.cursor()
-        try: c.execute(u'INSERT INTO creds (username,password,leak) SELECT ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and leak=?)', (username, password, leak, username, password, leak))
+        try: c.execute(query, (username, password, hashtype, leak, username, password, hashtype, leak))
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return
         conn.commit()
         conn.close()
         return c.rowcount
-        #return self.query(u'INSERT INTO creds (username,password,leak) SELECT "{0}","{1}","{2}" WHERE NOT EXISTS(SELECT * FROM creds WHERE username="{0}" and password="{1}" and leak="{2}")'.format(username, password, leak))
+
+    def is_hash(self, hashstr):
+        hashdict = [
+            {"pattern": "[a-fA-F0-9]", "len": 16},
+            {"pattern": "[a-fA-F0-9]", "len": 32},
+            {"pattern": "[a-fA-F0-9]", "len": 40},
+            {"pattern": "^\*[a-fA-F0-9]", "len": 41},
+            {"pattern": "[a-fA-F0-9]", "len": 56},
+            {"pattern": "[a-fA-F0-9]", "len": 64},
+            {"pattern": "[a-fA-F0-9]", "len": 96},
+            {"pattern": "[a-fA-F0-9]", "len": 128}
+        ]
+        for hashitem in hashdict:
+            if len(hashstr) == hashitem["len"] and re.match(hashitem["pattern"], hashstr):
+                return True
+        return False
 
     def query(self, params, return_results=True):
         # based on the do_ouput method
         if not params:
             self.help_query()
+            return
+        if not return_results:
+            # use sqlite to format and output the query
+            cmd = 'sqlite3 -column -header %s "%s"' % (self.goptions['dbfilename'], params)
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            output, error = p.communicate()
+            if output: print output
+            if error: self.error('Invalid query. %s' % error)
             return
         results = []
         conn = sqlite3.connect(self.goptions['dbfilename'])
@@ -148,18 +174,18 @@ class module(cmd.Cmd):
                     results.append(row)
             if return_results: return results
             # print columns with headers if results are not returned
-            delim = ' '
-            columns = [column[0] for column in c.description]
-            print delim.join(columns)
-            print delim.join([self.ruler*len(column) for column in columns])
-            for row in results:
-                print delim.join(row)
-            self.output('%d rows listed.' % (len(results)))
+            #delim = ' '
+            #columns = [column[0] for column in c.description]
+            #print delim.join(columns)
+            #print delim.join([self.ruler*len(column) for column in columns])
+            #for row in results:
+            #    print delim.join(row)
+            #self.output('%d rows listed.' % (len(results)))
         # a rowcount of 1 == success and 0 == failure
         else:
             conn.commit()
             if return_results: return c.rowcount
-            self.output('%d rows effected.' % (c.rowcount))
+            #self.output('%d rows effected.' % (c.rowcount))
         conn.close()
 
     def manage_key(self, key_name, key_text):

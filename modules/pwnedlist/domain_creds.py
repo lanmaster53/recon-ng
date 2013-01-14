@@ -58,6 +58,6 @@ class Module(framework.module):
                 username = cred['plain']
                 password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
                 password = "".join([i for i in password if ord(i) in range(32, 126)])
-                breach = cred['leak_id']
+                leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))
-                self.add_cred(username, password, breach)
+                self.add_cred(username, password, None, leak)
