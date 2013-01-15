@@ -48,10 +48,10 @@ class Module(framework.module):
             if not companies:
                 if not 'did not match any results' in content and page_cnt == 1:
                     pattern_id = '<a href="/id(\d+?)/.+?">'
-                    pattern_name = 'pageTitle.>(.+?)<'
-                    pattern_cnt = 'contactCount.+>\s+(\d+)\sContacts'
                     if 'Create a wiki' in content:
                         pattern_id = '<a href="/.+?companyId=(\d+?)">'
+                    pattern_name = 'pageTitle.>(.+?)<'
+                    pattern_cnt = 'contactCount.+>\s+([,\d]+)\sContacts'
                     company_id = re.findall(pattern_id, content)[0]
                     company_name = re.findall(pattern_name, content)[0]
                     contact_cnt = re.findall(pattern_cnt, content)[0]
@@ -115,6 +115,7 @@ class Module(framework.module):
             except Exception as e:
                 self.error(e.__str__())
                 break
+            if 'Contact Not Found' in content: continue
             pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
             names = re.findall(pattern, content)
             fname = self.unescape(names[0][0])

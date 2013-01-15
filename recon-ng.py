@@ -74,14 +74,15 @@ class Shell(framework.module):
     def load_modules(self, reload=False):
         # add logic to NOT break when a module fails, but alert which module fails
         self.loaded_summary = []
-        self.loaded_modules = {}
+        self.loaded_modules = []
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
                 cnt = 0
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     # this (as opposed to sys.path.append) allows for module reloading
-                    modulename = '%s:%s' % (':'.join(dirpath.split('/')[2:]), filename.split('.')[0])
-                    modulekey = modulename.replace(':','/')
+                    modulename = '%s_%s' % ('_'.join(dirpath.split('/')[2:]), filename.split('.')[0])
+                    #modulename = '%s:%s' % (':'.join(dirpath.split('/')[2:]), filename.split('.')[0])
+                    #modulekey = modulename.replace(':','/')
                     modulepath = os.path.join(dirpath, filename)
                     ModuleFile = open(modulepath, 'rb')
                     try:
@@ -89,7 +90,7 @@ class Shell(framework.module):
                         imp.load_source(modulename, modulepath, ModuleFile)
                         __import__(modulename)
                         cnt += 1
-                        self.loaded_modules[modulekey] = modulename 
+                        self.loaded_modules.append(modulename)
                     except:
                         print '-'*60
                         traceback.print_exc(file=sys.stdout)
@@ -99,13 +100,14 @@ class Shell(framework.module):
 
     def display_modules(self, modules):
         key_len = len(max(modules, key=len)) + len(self.spacer)
-        last_cat = ''
+        last_category = ''
         for module in sorted(modules):
-            if module.split('/')[0] != last_cat:
+            category = module.split('_')[0]
+            if category != last_category:
                 # print header
                 print ''
-                last_cat = module.split('/')[0]
-                print '%s%s%s:' % (self.spacer, last_cat[0].upper(), last_cat[1:])
+                last_category = category
+                print '%s%s%s:' % (self.spacer, last_category[0].upper(), last_category[1:])
                 print '%s%s' % (self.spacer, self.ruler*key_len)
             # print module
             print '%s%s' % (self.spacer*2, module)
@@ -177,9 +179,9 @@ class Shell(framework.module):
     def do_modules(self, params):
         """Lists available modules"""
         if params:
-            modules = [x for x in self.loaded_modules.keys() if x.startswith(params)]
+            modules = [x for x in self.loaded_modules if x.startswith(params)]
         else:
-            modules = self.loaded_modules.keys()
+            modules = self.loaded_modules
         self.display_modules(modules)
 
     def do_search(self, params):
@@ -189,7 +191,7 @@ class Shell(framework.module):
             return
         str = params.split()[0]
         self.output('Searching for \'%s\'' % (str))
-        modules = [x for x in self.loaded_modules.keys() if str in x]
+        modules = [x for x in self.loaded_modules if str in x]
         self.display_modules(modules)
 
     def do_hosts(self, params):
@@ -211,7 +213,7 @@ class Shell(framework.module):
             self.help_load()
         else:
             try:
-                modulename = self.loaded_modules[params]
+                modulename = params
                 y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
@@ -282,7 +284,7 @@ class Shell(framework.module):
     #==================================================
 
     def complete_load(self, text, *ignored):
-        return [x for x in self.loaded_modules.keys() if x.startswith(text)]
+        return [x for x in self.loaded_modules if x.startswith(text)]
     complete_modules = complete_use = complete_load
 
 if __name__ == '__main__':
