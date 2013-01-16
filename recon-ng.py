@@ -4,7 +4,7 @@
 
 __author__    = "Tim Tomes (@LaNMaSteR53)"
 __email__     = "tjt1980[at]gmail.com"
-__version__   = "0.40"
+__version__   = "0.60"
 __copyright__ = "Copyright (C) 2012, Tim Tomes"
 __license__   = "GPLv3"
 """
@@ -81,8 +81,6 @@ class Shell(framework.module):
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     # this (as opposed to sys.path.append) allows for module reloading
                     modulename = '%s_%s' % ('_'.join(dirpath.split('/')[2:]), filename.split('.')[0])
-                    #modulename = '%s:%s' % (':'.join(dirpath.split('/')[2:]), filename.split('.')[0])
-                    #modulekey = modulename.replace(':','/')
                     modulepath = os.path.join(dirpath, filename)
                     ModuleFile = open(modulepath, 'rb')
                     try:
@@ -132,12 +130,6 @@ class Shell(framework.module):
         conn.commit()
         conn.close()
 
-    def list_from_db(self, params, table):
-        columns = '*'
-        if params:
-            columns = ','.join(params.split())
-        self.query('SELECT %s from %s ORDER BY 1' % (columns, table), False)
-
     #==================================================
     # FRAMEWORK METHODS
     #==================================================
@@ -147,8 +139,22 @@ class Shell(framework.module):
         self.load_modules(True)
 
     def do_info(self, params):
-        """Displays framework information"""
-        print 'Framework information.'
+        """Displays module information"""
+        options = params.split()
+        if len(options) == 0:
+            self.help_info()
+        else:
+            try:
+                modulename = params
+                y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params))
+                try: y.do_info(modulename)
+                except KeyboardInterrupt: print ''
+                except:
+                    print '-'*60
+                    traceback.print_exc(file=sys.stdout)
+                    print '-'*60
+            except KeyError: self.error('Invalid module name.')
+            except AttributeError: self.error('Invalid module name.')
 
     def do_banner(self, params):
         """Displays the banner"""
@@ -194,18 +200,6 @@ class Shell(framework.module):
         modules = [x for x in self.loaded_modules if str in x]
         self.display_modules(modules)
 
-    def do_hosts(self, params):
-        """Lists hosts from the database"""
-        self.list_from_db(params, 'hosts')
-
-    def do_contacts(self, params):
-        """Lists contacts from the database"""
-        self.list_from_db(params, 'contacts')
-
-    def do_creds(self, params):
-        """Lists credentials from the database"""
-        self.list_from_db(params, 'creds')
-
     def do_load(self, params):
         """Loads selected module"""
         options = params.split()
@@ -217,11 +211,10 @@ class Shell(framework.module):
                 y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
-                except:# Exception as e:
+                except:
                     print '-'*60
                     traceback.print_exc(file=sys.stdout)
                     print '-'*60
-                    #self.error('%s: \'%s\'' % (type(e).__name__, e.message))
             except KeyError: self.error('Invalid module name.')
             except AttributeError: self.error('Invalid module name.')
 
@@ -238,36 +231,6 @@ class Shell(framework.module):
     # HELP METHODS
     #==================================================
 
-    def help_hosts(self):
-        print 'Usage: hosts [<column1>,<column2>|<column1> <column2>]'
-        print ''
-        print 'Notes:'
-        print self.ruler*5
-        print 'Column options: host, address'
-        print 'If no column is given, \'*\' is implied.'
-        print 'Output is sorted by the first column.'
-        print ''
-
-    def help_contacts(self):
-        print 'Usage: contacts [<column1>,<column2>|<column1> <column2>]'
-        print ''
-        print 'Notes:'
-        print self.ruler*5
-        print 'Column options: fname, lname, email, status, title'
-        print 'If no column is given, \'*\' is implied.'
-        print 'Output is sorted by the first column.'
-        print ''
-
-    def help_creds(self):
-        print 'Usage: creds [<column1>,<column2>|<column1> <column2>]'
-        print ''
-        print 'Notes:'
-        print self.ruler*5
-        print 'Column options: username, password, leak'
-        print 'If no column is given, \'*\' is implied.'
-        print 'Output is sorted by the first column.'
-        print ''
-
     def help_search(self):
         print 'Usage: search <string>'
 
@@ -279,13 +242,17 @@ class Shell(framework.module):
         print 'Usage: use <module>'
         self.do_modules(None)
 
+    def help_info(self):
+        print 'Usage: info <module>'
+        self.do_modules(None)
+
     #==================================================
     # COMPLETE METHODS
     #==================================================
 
     def complete_load(self, text, *ignored):
         return [x for x in self.loaded_modules if x.startswith(text)]
-    complete_modules = complete_use = complete_load
+    complete_modules = complete_info = complete_use = complete_load
 
 if __name__ == '__main__':
     try:

@@ -155,8 +155,13 @@ class module(cmd.Cmd):
             cmd = 'sqlite3 -column -header %s "%s"' % (self.goptions['dbfilename'], params)
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, error = p.communicate()
-            if output: print output
-            if error: self.error('Invalid query. %s' % error)
+            if output:
+                print ''
+                print output.strip()
+                print ''
+            if error:
+                self.error('Invalid query. %s' % error.strip())
+                self.do_schema(None)
             return
         results = []
         conn = sqlite3.connect(self.goptions['dbfilename'])
@@ -333,6 +338,24 @@ class module(cmd.Cmd):
                 print '%s => %s' % (name, value)
                 self.options[name] = self.autoconvert(value)
             else: self.error('Invalid option.')
+
+    def do_schema(self, params):
+        """Displays the database schema"""
+        conn = sqlite3.connect(self.goptions['dbfilename'])
+        c = conn.cursor()
+        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
+        tables = [x[0] for x in c.fetchall()]
+        for table in tables:
+            print ''
+            print '%s+---------------------+' % (self.spacer)
+            print '%s| %s |' % (self.spacer, table.center(19))
+            print '%s+---------------------+' % (self.spacer)
+            c.execute("PRAGMA table_info(%s)" % (table))
+            columns = [(x[1],x[2]) for x in c.fetchall()]
+            for column in columns:
+                print '%s| %s | %s |' % (self.spacer, column[0].ljust(8), column[1].center(8))
+            print '%s+---------------------+' % (self.spacer)
+        print ''
 
     def do_query(self, params):
         """Queries the database"""
