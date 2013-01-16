@@ -161,37 +161,25 @@ class module(cmd.Cmd):
                 print ''
             if error:
                 self.error('Invalid query. %s' % error.strip())
+                self.help_query()
                 self.do_schema(None)
             return
-        results = []
-        conn = sqlite3.connect(self.goptions['dbfilename'])
-        c = conn.cursor()
-        try: c.execute(params)
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        # a rowcount of -1 typically refers to a select statement
-        if c.rowcount == -1:
-            rows = c.fetchall()
-            for row in rows:
-                row = filter(None, row)
-                if row:
-                    results.append(row)
-            if return_results: return results
-            # print columns with headers if results are not returned
-            #delim = ' '
-            #columns = [column[0] for column in c.description]
-            #print delim.join(columns)
-            #print delim.join([self.ruler*len(column) for column in columns])
-            #for row in results:
-            #    print delim.join(row)
-            #self.output('%d rows listed.' % (len(results)))
-        # a rowcount of 1 == success and 0 == failure
         else:
-            conn.commit()
-            if return_results: return c.rowcount
-            #self.output('%d rows effected.' % (c.rowcount))
-        conn.close()
+            conn = sqlite3.connect(self.goptions['dbfilename'])
+            c = conn.cursor()
+            try: c.execute(params)
+            except sqlite3.OperationalError as e:
+                self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+                return
+            # a rowcount of -1 typically refers to a select statement
+            if c.rowcount == -1:
+                rows = c.fetchall()
+                return rows
+            # a rowcount of 1 == success and 0 == failure
+            else:
+                conn.commit()
+                return c.rowcount
+            conn.close()
 
     def manage_key(self, key_name, key_text):
         key = self.get_key_from_file(key_name)
@@ -380,6 +368,10 @@ class module(cmd.Cmd):
 
     def help_query(self):
         print 'Usage: query <sql>'
+        print ''
+        print 'SQL Examples:'
+        print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename>')
+        print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename> WHERE <columnname>=<string>')
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
