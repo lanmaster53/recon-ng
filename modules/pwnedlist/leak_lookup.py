@@ -13,8 +13,10 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for information about the leak IDs in the given source.',
-                     'Comments': []
+                     'Description': 'Queries the PwnedList API for information associated with leak IDs.',
+                     'Comments': [
+                                  'API Query Cost: 1 query per request.'
+                                  ]
                      }
 
     def do_run(self, params):
@@ -28,8 +30,7 @@ class Module(framework.module):
         if not secret: return
 
         # API query guard
-        ans = raw_input('This operation will use 1 API queries. Do you want to continue? [Y/N]: ')
-        if ans.upper() != 'Y': return
+        if not pwnedlist.guard(1): return
 
         # setup API call
         method = 'leaks.info'

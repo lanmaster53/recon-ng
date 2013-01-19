@@ -20,3 +20,8 @@ def decrypt(plain, key, iv):
     decoded=base64.b64decode(plain) # your ecrypted and encoded text goes here
     decrypted=crypt_object.decrypt(decoded)
     return decrypted
+
+def guard(num):
+    ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (num))
+    if ans.upper() != 'Y': return False
+    return True

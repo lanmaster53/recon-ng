@@ -14,9 +14,10 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for the credentials of the usernames in the given source, updating the database with the results.',
+                     'Description': 'Queries the PwnedList API for credentials asscoiated with usernames. This module updates the \'creds\' table of the database with the results.',
                      'Comments': [
-                                  'Source options: database, <email@address>, <path/to/infile>'
+                                  'Source options: database, <email@address>, <path/to/infile>',
+                                  'API Query Cost: 1 query per request.'
                                   ]
                      }
 
@@ -44,8 +45,7 @@ class Module(framework.module):
         else: accounts = [source]
 
         # API query guard
-        ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (len(accounts)))
-        if ans.upper() != 'Y': return
+        if not pwnedlist.guard(len(accounts)): return
 
         # setup API call
         method = 'accounts.query'

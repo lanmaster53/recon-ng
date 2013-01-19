@@ -12,7 +12,9 @@ class Module(framework.module):
                      'Name': 'PwnedList - API Usage Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the PwnedList API for account usage statistics.',
-                     'Comments': []
+                     'Comments': [
+                                  'API Query Cost: 1 query per request.'
+                                  ]
                      }
 
     def do_run(self, params):

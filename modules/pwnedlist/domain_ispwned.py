@@ -13,8 +13,10 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for the given domain to determine if any credentials from that domain have been compromised. This module does NOT return any credentials, only a total number of compromised credentials belonging to the given domain.',
-                     'Comments': []
+                     'Description': 'Queries the PwnedList API for a domain to determine if any credentials from that domain have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
+                     'Comments': [
+                                  'API Query Cost: 1 query per request.'
+                                  ]
                      }
 
     def do_run(self, params):
@@ -28,8 +30,7 @@ class Module(framework.module):
         if not secret: return
 
         # API query guard
-        ans = raw_input('This operation will use 1 API queries. Do you want to continue? [Y/N]: ')
-        if ans.upper() != 'Y': return
+        if not pwnedlist.guard(1): return
 
         # setup API call
         method = 'domains.info'

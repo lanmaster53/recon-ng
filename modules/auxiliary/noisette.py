@@ -15,7 +15,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Noisette MD5 Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Uses the Noisette.ch web based MD5 hash database to perform a lookup.',
+                     'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: database, <hash>, <path/to/infile>',
                                   'Hash types supported: MD5'

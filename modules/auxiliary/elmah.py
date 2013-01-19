@@ -11,21 +11,21 @@ class Module(framework.module):
                         'source': 'database'
                         }
         self.info = {
-                     'Name': 'Apache Server-Status Page Scanner',
+                     'Name': 'ELMAH Log Scanner',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Checks all of the hosts stored in the database for a \'server-status\' page.',
+                     'Description': 'Checks hosts for a \'elmah.axd\' log page.',
                      'Comments': [
                                   'Source options: database, <hostname>, <path/to/infile>',
-                                  'http://blog.sucuri.net/2012/10/popular-sites-with-apache-server-status-enabled.html',
-                                  'http://httpd.apache.org/docs/2.2/mod/mod_status.html',
-                                  'Google dork: intitle:"Apache Status" inurl:"server-status"'
+                                  'http://www.troyhunt.com/2012/01/aspnet-session-hijacking-with-google.html',
+                                  'Google dorks: inurl:elmah.axd ASPXAUTH',
+                                  '              inurl:elmah.axd intitle:"Error log for"'
                                   ]
                      }
 
     def do_run(self, params):
-        self.check_for_status()
+        self.check_for_elmah()
     
-    def check_for_status(self):
+    def check_for_elmah(self):
         verbose = self.goptions['verbose']
         
         # handle sources
@@ -38,12 +38,12 @@ class Module(framework.module):
         elif os.path.exists(source): hosts = open(source).read().split()
         else: hosts = [source]
 
-        # check all hosts for server-status pages
+        # check all hosts for elmah page
         protocols = ['http', 'https']
         cnt = 0
         for host in hosts:
             for proto in protocols:
-                url = '%s://%s/server-status/' % (proto, host)
+                url = '%s://%s/elmah.axd' % (proto, host)
                 try:
                     resp = self.request(url, redirect=False)
                     code = resp.status_code
@@ -54,8 +54,8 @@ class Module(framework.module):
                 except:
                     code = 'Error'
                 if code == 200:
-                    self.alert('%s => %s. Possible server status page found!' % (url, code))
+                    self.alert('%s => %s. Possible ELMAH log page found!' % (url, code))
                     cnt += 1
                 else:
                     if verbose: self.output('%s => %s' % (url, code))
-        self.output('%d Server Status pages found.' % (cnt))
+        self.output('%d ELMAH log pages found.' % (cnt))

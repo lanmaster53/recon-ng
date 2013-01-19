@@ -13,8 +13,10 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API to fetch the credentials for the given domain.',
-                     'Comments': []
+                     'Description': 'Queries the PwnedList API to fetch all credentials for a domain.',
+                     'Comments': [
+                                  'API Query Cost: 10,000 queries per request plus 1 query for each account returned.'
+                                  ]
                      }
 
     def do_run(self, params):
@@ -31,8 +33,7 @@ class Module(framework.module):
         if not iv: return
 
         # API query guard
-        ans = raw_input('This operation will use 10,000 API queries, +1 query for each account. Do you want to continue? [Y/N]: ')
-        if ans.upper() != 'Y': return
+        if not pwnedlist.guard(10000): return
 
         # setup API call
         method = 'domains.query'

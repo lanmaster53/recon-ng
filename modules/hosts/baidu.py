@@ -16,7 +16,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Baidu Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests hosts from Baidu.com by using the \'site\' search operator.',
+                     'Description': 'Harvests hosts from Baidu.com by using the \'site\' search operator. This module updates the \'hosts\' table of the database with the results.',
                      'Comments': []
                      }
 

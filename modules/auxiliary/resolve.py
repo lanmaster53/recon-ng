@@ -12,7 +12,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Hostname Resolver',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Resolves the IP address for all of the hosts stored in the database.',
+                     'Description': 'Resolves IP addresses to hosts. This module updates the \'hosts\' table of the database with the results.',
                      'Comments': [
                                   'Note: Nameserver must be in IP form.']
                      }

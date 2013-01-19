@@ -14,7 +14,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials, updating the database with the results.',
+                     'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: database, <email@address>, <path/to/infile>'
                                   ]

@@ -14,7 +14,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Contact Name Mangler',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact.',
+                     'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact. This module updates the \'contacts\' table of the database with the results.',
                      'Comments': [
                                   'Pattern options: <fi>,<fn>,<li>,<ln>',
                                   'Example:         <fi>.<ln> => j.doe@domain.com',
