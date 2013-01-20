@@ -53,7 +53,7 @@ class Module(framework.module):
                     return
                 except:
                     code = 'Error'
-                if code == 200:
+                if code == 200 and 'Error Log for' in resp.text:
                     self.alert('%s => %s. Possible ELMAH log page found!' % (url, code))
                     cnt += 1
                 else:

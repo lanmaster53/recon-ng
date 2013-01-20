@@ -10,7 +10,10 @@ import subprocess
 import __builtin__
 # prep python path for supporting modules
 sys.path.append('./libs/')
-import requests
+#import requests
+import urllib
+import urllib2
+import json
 
 class module(cmd.Cmd):
     def __init__(self, params):
@@ -233,7 +236,7 @@ class module(cmd.Cmd):
         p.feed(s)
         return p.save_end()
 
-    def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
+    """def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
         # build kwargs for request call
         kwargs = {}
         headers['User-Agent'] = self.goptions['user-agent']
@@ -259,7 +262,58 @@ class module(cmd.Cmd):
             self.alert('Enable support for invisible proxying (Burp) or set the \'proxy\' global option to \'False\'.')
             self.alert('This warning will disappear when the bug is fixed. I apologize for the inconvenience.')
         #######################
-        return resp
+        return resp"""
+
+    def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
+        
+        # set request arguments
+        # process user-agent header
+        headers['User-Agent'] = self.goptions['user-agent']
+        # process payload
+        payload = urllib.urlencode(payload)
+        # process cookies
+        if len(cookies.keys()) > 0:
+            cookie_value = '; '.join('%s=%s' % (key, cookies[key]) for key in cookies.keys())
+            headers['Cookie'] = cookie_value
+        # process socket timeout
+        socket.setdefaulttimeout(self.goptions['socket_timeout'])
+        
+        # set handlers
+        handlers = [] #urllib2.HTTPHandler(debuglevel=1)
+        # process redirect and add handler
+        if redirect == False:
+            handlers.append(NoRedirectHandler)
+        # process proxies and add handler
+        if self.goptions['proxy']:
+            proxies = {'http': self.goptions['proxy_http'], 'https': self.goptions['proxy_https']}
+            handlers.append(urllib2.ProxyHandler(proxies))
+        
+        # install opener
+        opener = urllib2.build_opener(*handlers)
+        urllib2.install_opener(opener)
+        
+        # process method and make request
+        if method == 'GET':
+            req = urllib2.Request('%s?%s' % (url, payload), headers=headers)
+        elif method == 'POST':
+            req = urllib2.Request(url, data=payload, headers=headers)
+        else:
+            raise Exception('Request method \'%s\' is not a supported method.' % (method))
+        try:
+            resp = urllib2.urlopen(req)
+        except urllib2.HTTPError as e:
+            resp = e
+        
+        # build response object
+        # creates anonymous inline object
+        response = lambda: None
+        response.text = resp.read()
+        response.status_code = resp.getcode()
+        try:
+            response.json = json.loads(response.text)
+        except:
+            pass
+        return response
 
     def log(self, str):
         logfile = open(self.goptions['logfilename'], 'ab')
@@ -383,3 +437,20 @@ class module(cmd.Cmd):
 
     def complete_set(self, text, *ignored):
         return [x for x in self.options.keys() if x.startswith(text)]
+
+#=================================================
+# CUSTOM CLASSES & WRAPPERS
+#=================================================
+
+class NoRedirectHandler(urllib2.HTTPRedirectHandler):
+
+    def http_error_302(self, req, fp, code, msg, headers):
+        pass
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_302
+
+class resp_obj:
+
+    text = None
+    status_code = None
+    json = None

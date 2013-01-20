@@ -47,7 +47,7 @@ class Module(framework.module):
             payload = {'first': str(page*nr), 'q': full_query}
             #
             #
-            cookies = {'SRCHHPGUSR': 'NEWWND=0&NRSLT=%d&SRCHLANG=&AS=1;' % (nr)}
+            cookies = {'SRCHHPGUSR': 'NEWWND=0&NRSLT=%d&SRCHLANG=&AS=1' % (nr)}
             if verbose: self.output('URL: %s?%s' % (url, urllib.urlencode(payload)))
             # send query to search engine
             try: content = self.request(url, payload=payload, cookies=cookies)
