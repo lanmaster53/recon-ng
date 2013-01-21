@@ -303,17 +303,9 @@ class module(cmd.Cmd):
             resp = urllib2.urlopen(req)
         except urllib2.HTTPError as e:
             resp = e
-        
-        # build response object
-        # creates anonymous inline object
-        response = lambda: None
-        response.text = resp.read()
-        response.status_code = resp.getcode()
-        try:
-            response.json = json.loads(response.text)
-        except:
-            pass
-        return response
+
+        # build and return response object
+        return ResponseObject(resp)
 
     def log(self, str):
         logfile = open(self.goptions['logfilename'], 'ab')
@@ -449,8 +441,28 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
 
     http_error_301 = http_error_303 = http_error_307 = http_error_302
 
-class resp_obj:
+class ResponseObject:
 
-    text = None
-    status_code = None
-    json = None
+    def __init__(self, resp):
+        # set hidden text property
+        self.__text__ = resp.read()
+        # set inherited properties
+        self.url = resp.geturl()
+        self.status_code = resp.getcode()
+        self.headers = resp.headers.dict
+        # detect and set encoding property
+        self.encoding = resp.headers.getparam('charset')
+
+    @property
+    def text(self):
+        if self.encoding:
+            return self.__text__.decode(self.encoding)
+        else:
+            return self.__text__
+
+    @property
+    def json(self):
+        try:
+            return json.loads(self.text)
+        except ValueError:
+            return None
