@@ -1,10 +1,4 @@
-`
-    _/_/_/    _/_/_/_/    _/_/_/    _/_/_/    _/      _/            _/      _/    _/_/_/
-   _/    _/  _/        _/        _/      _/  _/_/    _/            _/_/    _/  _/       
-  _/_/_/    _/_/_/    _/        _/      _/  _/  _/  _/  _/_/_/_/  _/  _/  _/  _/  _/_/_/
- _/    _/  _/        _/        _/      _/  _/    _/_/            _/    _/_/  _/      _/ 
-_/    _/  _/_/_/_/    _/_/_/    _/_/_/    _/      _/            _/      _/    _/_/_/    
-`
+# Recon-ng
 
 Recon-ng is a full-featured Web Reconnaisance framework written in Python. Complete with independent modules, database interaction, built in convenience functions, interactive help, and command completion, Recon-ng provides a powerful environment in which open source web-based reconnaissance can be conducted quickly and thoroughly.
 
