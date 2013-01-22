@@ -53,6 +53,7 @@ class Module(framework.module):
             try: results = jsonobj['matches']
             except KeyError: break
             for result in results:
+                if not 'hostnames' in result.keys(): continue
                 hostnames = result['hostnames']
                 for hostname in hostnames:
                     site = '.'.join(hostname.split('.')[:-2])

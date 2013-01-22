@@ -10,7 +10,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.options = {
                         'company': self.goptions['company'],
-                        'keywords': 'system'
+                        'keywords': ''
                         }
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',

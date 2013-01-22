@@ -31,7 +31,7 @@ class Module(framework.module):
         if not consumer_secret: return
         # Use API key and secret to instantiate consumer object
         self.consumer = oauth.Consumer(consumer_key, consumer_secret)
-        self.access_token = {'oauth_token': self.get_key_from_file('linkedin_token'),'oauth_token_secret': self.get_key_from_file('linkedin_token_secret')}
+        self.access_token = {'oauth_token': self.get_key_from_db('linkedin_token'),'oauth_token_secret': self.get_key_from_db('linkedin_token_secret')}
         if not self.access_token['oauth_token']: self.get_access_tokens()
         if self.access_token['oauth_token']: self.get_contacts()
 
@@ -64,8 +64,8 @@ class Module(framework.module):
             print ''
             return None
         self.access_token = dict(urlparse.parse_qsl(content))
-        self.add_key_to_file('linkedin_token', self.access_token['oauth_token'])
-        self.add_key_to_file('linkedin_token_secret', self.access_token['oauth_token_secret'])
+        self.add_key_to_db('linkedin_token', self.access_token['oauth_token'])
+        self.add_key_to_db('linkedin_token_secret', self.access_token['oauth_token_secret'])
     
     def get_contacts(self):
         if not hasattr(self, 'access_token'): return

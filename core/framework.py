@@ -57,19 +57,9 @@ class module(cmd.Cmd):
     # SUPPORT METHODS
     #==================================================
 
-    def error(self, line):
-        self.log('Error: %s' % (line))
-        print '%s[!] %s%s' % (R, line, N)
-
-    def output(self, line):
-        print '%s[*]%s %s' % (B, N, line)
-
-    def alert(self, line):
-        print '%s[*]%s %s' % (G, N, line)
-
     def boolify(self, s):
         return {'true': True, 'false': False}[s.lower()]
-    
+
     def autoconvert(self, s):
         if s.lower() in ['none', "''", '""']:
             return ''
@@ -85,52 +75,6 @@ class module(cmd.Cmd):
             if not isinstance(obj, unicode):
                 obj = unicode(obj, encoding)
         return obj
-
-    def add_host(self, host, address=None):
-        host    = self.sanitize(host)
-        address = self.sanitize(address)
-        conn = sqlite3.connect(self.goptions['dbfilename'])
-        c = conn.cursor()
-        try: c.execute(u'INSERT INTO hosts (host,address) SELECT ?, ? WHERE NOT EXISTS(SELECT * FROM hosts WHERE host=?)', (host, address, host))
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        conn.commit()
-        conn.close()
-        return c.rowcount
-
-    def add_contact(self, fname, lname, title, email=None):
-        fname = self.sanitize(fname)
-        lname = self.sanitize(lname)
-        title = self.sanitize(title)
-        email = self.sanitize(email)
-        conn = sqlite3.connect(self.goptions['dbfilename'])
-        c = conn.cursor()
-        try: c.execute(u'INSERT INTO contacts (fname,lname,title,email) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname=? and lname=? and title=?)', (fname, lname, title, email, fname, lname, title))
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        conn.commit()
-        conn.close()
-        return c.rowcount
-
-    def add_cred(self, username, password=None, hashtype=None, leak=None):
-        username = self.sanitize(username)
-        password = self.sanitize(password)
-        leak   = self.sanitize(leak)
-        query = u'INSERT INTO creds (username,password,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and type=? and leak=?)'
-        if password:
-            if self.is_hash(password):
-                query = u'INSERT INTO creds (username,hash,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and hash=? and type=? and leak=?)'
-        conn = sqlite3.connect(self.goptions['dbfilename'])
-        c = conn.cursor()
-        try: c.execute(query, (username, password, hashtype, leak, username, password, hashtype, leak))
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        conn.commit()
-        conn.close()
-        return c.rowcount
 
     def is_hash(self, hashstr):
         hashdict = [
@@ -148,7 +92,88 @@ class module(cmd.Cmd):
                 return True
         return False
 
+    #==================================================
+    # CONVENIENCE METHODS
+    #==================================================
+
+    def error(self, line):
+        '''Formats and presents errors.'''
+        self.log('Error: %s' % (line))
+        print '%s[!] %s%s' % (R, line, N)
+
+    def output(self, line):
+        '''Formats and presents normal output.'''
+        print '%s[*]%s %s' % (B, N, line)
+
+    def alert(self, line):
+        '''Formats and presents important output.'''
+        print '%s[*]%s %s' % (G, N, line)
+
+    def log(self, str):
+        '''Logs information to the global framework log.'''
+        logfile = open(self.goptions['logfilename'], 'ab')
+        logfile.write('[%s] %s\n' % (datetime.datetime.now(), str))
+        logfile.close()
+
+    def unescape(self, s):
+        '''Unescapes HTML markup and returns an unescaped string.'''
+        import htmllib
+        p = htmllib.HTMLParser(None)
+        p.save_bgn()
+        p.feed(s)
+        return p.save_end()
+
+    def add_host(self, host, address=None):
+        '''Adds a host to the database and returns the affected row count.'''
+        host    = self.sanitize(host)
+        address = self.sanitize(address)
+        conn = sqlite3.connect(self.goptions['dbfilename'])
+        c = conn.cursor()
+        try: c.execute(u'INSERT INTO hosts (host,address) SELECT ?, ? WHERE NOT EXISTS(SELECT * FROM hosts WHERE host=?)', (host, address, host))
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        conn.commit()
+        conn.close()
+        return c.rowcount
+
+    def add_contact(self, fname, lname, title, email=None):
+        '''Adds a contact to the database and returns the affected row count.'''
+        fname = self.sanitize(fname)
+        lname = self.sanitize(lname)
+        title = self.sanitize(title)
+        email = self.sanitize(email)
+        conn = sqlite3.connect(self.goptions['dbfilename'])
+        c = conn.cursor()
+        try: c.execute(u'INSERT INTO contacts (fname,lname,title,email) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname=? and lname=? and title=?)', (fname, lname, title, email, fname, lname, title))
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        conn.commit()
+        conn.close()
+        return c.rowcount
+
+    def add_cred(self, username, password=None, hashtype=None, leak=None):
+        '''Adds a credential to the database and returns the affected row count.'''
+        username = self.sanitize(username)
+        password = self.sanitize(password)
+        leak   = self.sanitize(leak)
+        query = u'INSERT INTO creds (username,password,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and type=? and leak=?)'
+        if password:
+            if self.is_hash(password):
+                query = u'INSERT INTO creds (username,hash,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and hash=? and type=? and leak=?)'
+        conn = sqlite3.connect(self.goptions['dbfilename'])
+        c = conn.cursor()
+        try: c.execute(query, (username, password, hashtype, leak, username, password, hashtype, leak))
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        conn.commit()
+        conn.close()
+        return c.rowcount
+
     def query(self, params, return_results=True):
+        '''Queries the database and returns the results as a list.'''
         # based on the do_ouput method
         if not params:
             self.help_query()
@@ -185,56 +210,54 @@ class module(cmd.Cmd):
             conn.close()
 
     def manage_key(self, key_name, key_text):
-        key = self.get_key_from_file(key_name)
+        '''Automates the API key retrieval and storage process.'''
+        key = self.get_key_from_db(key_name)
         if not key:
             key = self.get_key_from_user(key_text)
             if not key:
                 self.error('No %s.' % (key_text))
-                return
-            self.add_key_to_file(key_name, key)
+                return False
+            if self.add_key_to_db(key_name, key):
+                self.output('%s added.' % (key_text))
+            else:
+                self.output('Error adding %s.' % (key_text))
         return key
 
-    def get_key_from_file(self, key_name):
-        if os.path.exists(self.goptions['keyfilename']):
-            for line in open(self.goptions['keyfilename']):
-                key, value = line.split('::')[0], line.split('::')[1]
-                if key == key_name:
-                    return value.strip()
+    def get_key_from_db(self, key_name):
+        '''Retrieves an API key from the API key storage database.'''
+        conn = sqlite3.connect(self.goptions['keyfilename'])
+        c = conn.cursor()
+        c.execute('SELECT value FROM keys WHERE name=?', (key_name,))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return row[0]
         else:
-            self.error('Invalid keyfile path or name.')
-        return False
+            return False
 
     def get_key_from_user(self, key_text='API Key'):
-        try: key = raw_input("Enter %s (blank to skip): " % (key_text))
+        '''Retrieves an API key from the user.'''
+        try:
+            key = raw_input("Enter %s (blank to skip): " % (key_text))
+            return key
         except KeyboardInterrupt:
             print ''
-            key = False
-        return key
+            return False
 
-    def add_key_to_file(self, key_name, key_value):
-        keys = []
-        if os.path.exists(self.goptions['keyfilename']):
-            # remove the old key if duplicate
-            for line in open(self.goptions['keyfilename']):
-                key = line.split('::')[0]
-                if key != key_name:
-                    keys.append(line)
-        keys = ''.join(keys)
-        try:
-            file = open(self.goptions['keyfilename'], 'w')
-            file.write(keys)
-            file.write('%s::%s\n' % (key_name, key_value))
-            file.close()
-            self.output('\'%s\' key added to \'%s\'.' % (key_name, self.goptions['keyfilename']))
-        except:
-            self.error('Invalid keyfile path or name.')
-
-    def unescape(self, s):
-        import htmllib
-        p = htmllib.HTMLParser(None)
-        p.save_bgn()
-        p.feed(s)
-        return p.save_end()
+    def add_key_to_db(self, key_name, key_value):
+        '''Adds an API key to the API key storage database.'''
+        conn = sqlite3.connect(self.goptions['keyfilename'])
+        c = conn.cursor()
+        try: c.execute('INSERT INTO keys VALUES (?,?)', (key_name, key_value))
+        except sqlite3.OperationalError:
+            return False
+        except sqlite3.IntegrityError:
+            self.output('Duplicate key name \'%s\'.' % (key_name))
+            return False
+        conn.commit()
+        conn.close()
+        return True
+        
 
     """def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
         # build kwargs for request call
@@ -265,7 +288,7 @@ class module(cmd.Cmd):
         return resp"""
 
     def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
-        
+        '''Makes a web request and returns a response object.'''
         # set request arguments
         # process user-agent header
         headers['User-Agent'] = self.goptions['user-agent']
@@ -306,11 +329,6 @@ class module(cmd.Cmd):
 
         # build and return response object
         return ResponseObject(resp)
-
-    def log(self, str):
-        logfile = open(self.goptions['logfilename'], 'ab')
-        logfile.write('[%s] %s\n' % (datetime.datetime.now(), str))
-        logfile.close()
 
     #==================================================
     # FRAMEWORK METHODS

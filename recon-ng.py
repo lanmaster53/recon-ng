@@ -4,7 +4,7 @@
 
 __author__    = "Tim Tomes (@LaNMaSteR53)"
 __email__     = "tjt1980[at]gmail.com"
-__version__   = "0.60"
+__version__   = "1.00"
 __copyright__ = "Copyright (C) 2012, Tim Tomes"
 __license__   = "GPLv3"
 """
@@ -45,10 +45,10 @@ __builtin__.B  = "\033[34m" # blue
 # set global framework options
 __builtin__.goptions = {
                         'dbfilename': './data/data.db',
-                        'keyfilename': './data/api.keys',
+                        'keyfilename': './data/keys.db',
                         'logfilename': './data/cmd.log',
-                        'domain': 'sans.org',
-                        'company': 'SANS Institute',
+                        'domain': '',
+                        'company': '',
                         'user-agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)',#'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
                         'proxy': False,
                         'proxy_http': '127.0.0.1:8080',
@@ -57,7 +57,7 @@ __builtin__.goptions = {
                         'verbose': True
                         }
 
-class Shell(framework.module):
+class Recon(framework.module):
     def __init__(self):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
@@ -127,6 +127,11 @@ class Shell(framework.module):
         c.execute('create table if not exists hosts (host text, address text)')
         c.execute('create table if not exists contacts (fname text, lname text, email text, title text)')
         c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
+        conn.commit()
+        conn.close()
+        conn = sqlite3.connect(self.options['keyfilename'])
+        c = conn.cursor()
+        c.execute('create table if not exists keys (name text primary key, value text)')
         conn.commit()
         conn.close()
 
@@ -265,6 +270,6 @@ if __name__ == '__main__':
             readline.parse_and_bind("bind ^I rl_complete")
         else:
             readline.parse_and_bind("tab: complete")
-    x = Shell()
+    x = Recon()
     try: x.cmdloop()
     except KeyboardInterrupt: print ''
