@@ -198,7 +198,7 @@ class module(cmd.Cmd):
             try: c.execute(params)
             except sqlite3.OperationalError as e:
                 self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-                return
+                return False
             # a rowcount of -1 typically refers to a select statement
             if c.rowcount == -1:
                 rows = c.fetchall()
