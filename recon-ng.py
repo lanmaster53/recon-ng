@@ -42,11 +42,13 @@ __builtin__.R  = "\033[31m" # red
 __builtin__.G  = "\033[32m" # green
 __builtin__.O  = "\033[33m" # orange
 __builtin__.B  = "\033[34m" # blue
+# mode flags
+__builtin__.script = 0
 # set global framework options
 __builtin__.goptions = {
-                        'dbfilename': './data/data.db',
-                        'keyfilename': './data/keys.db',
-                        'logfilename': './data/cmd.log',
+                        'db_file': './data/data.db',
+                        'key_file': './data/keys.db',
+                        'log_file': './data/cmd.log',
                         'domain': '',
                         'company': '',
                         'user-agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)',#'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
@@ -122,14 +124,14 @@ class Recon(framework.module):
         print ''
 
     def init_db(self):
-        conn = sqlite3.connect(self.options['dbfilename'])
+        conn = sqlite3.connect(self.options['db_file'])
         c = conn.cursor()
         c.execute('create table if not exists hosts (host text, address text)')
         c.execute('create table if not exists contacts (fname text, lname text, email text, title text)')
         c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
         conn.commit()
         conn.close()
-        conn = sqlite3.connect(self.options['keyfilename'])
+        conn = sqlite3.connect(self.options['key_file'])
         c = conn.cursor()
         c.execute('create table if not exists keys (name text primary key, value text)')
         conn.commit()
@@ -174,7 +176,7 @@ class Recon(framework.module):
             if name in self.options.keys():
                 value = ' '.join(options[1:])
                 # make sure database file is valid
-                if name == 'dbfilename':
+                if name == 'db_file':
                     try:
                         conn = sqlite3.connect(value)
                         conn.close()
@@ -260,6 +262,13 @@ class Recon(framework.module):
     complete_modules = complete_info = complete_use = complete_load
 
 if __name__ == '__main__':
+    # help and non-interactive options
+    import optparse
+    usage = "%%prog [options]\n\n%%prog - %s %s" % (__author__, __email__)
+    parser = optparse.OptionParser(usage=usage, version=__version__)
+    parser.add_option('-r', help='resource file for scripted session', metavar='filename', dest='script_file', type='string', action='store')
+    (opts, args) = parser.parse_args()
+    # set up command completion
     try:
         import readline
     except ImportError:
@@ -270,6 +279,14 @@ if __name__ == '__main__':
             readline.parse_and_bind("bind ^I rl_complete")
         else:
             readline.parse_and_bind("tab: complete")
+    # check for and run script session
+    if opts.script_file:
+        try:
+            sys.stdin = open(opts.script_file)
+            __builtin__.script = 1
+        except:
+            print '%s[!] %s%s' % (R, 'Script file not found.', N)
+            sys.exit()
     x = Recon()
     try: x.cmdloop()
     except KeyboardInterrupt: print ''

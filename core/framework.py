@@ -36,12 +36,46 @@ class module(cmd.Cmd):
     def default(self, line):
         self.do_shell(line)
         self.log('Shell: %s' % (line))
-        #self.log('Error: Unknown syntax: %s' % (line))
-        #print '%s[!] Unknown syntax: %s%s' % (R, line, N)
+
+    def emptyline(self):
+        # disables running of last command when no command is given
+        # return flag to tell interpreter to continue
+        return 0
 
     def precmd(self, line):
-        self.log('Command: %s' % (line))
+        if __builtin__.script:
+            sys.stdout.write('%s\n' % (line))
+        else:
+            self.log('Command: %s' % (line))
         return line
+
+    def onecmd(self, line):
+        cmd, arg, line = self.parseline(line)
+        if not line:
+            return self.emptyline()
+        if line == 'EOF':
+            # reset stdin for raw_input
+            sys.stdin = sys.__stdin__
+            #if os.name == 'nt':
+            #    # Windows OSs
+            #    sys.stdin = open('CON:')
+            #else:
+            #    # Unix-like OSs
+            #    sys.stdin = open('/dev/tty')
+            # disable the script mode
+            __builtin__.script = 0
+            return 0
+        if cmd is None:
+            return self.default(line)
+        self.lastcmd = line
+        if cmd == '':
+            return self.default(line)
+        else:
+            try:
+                func = getattr(self, 'do_' + cmd)
+            except AttributeError:
+                return self.default(line)
+            return func(arg)
 
     # make help menu more attractive
     def print_topics(self, header, cmds, cmdlen, maxcol):
@@ -111,7 +145,7 @@ class module(cmd.Cmd):
 
     def log(self, str):
         '''Logs information to the global framework log.'''
-        logfile = open(self.goptions['logfilename'], 'ab')
+        logfile = open(self.goptions['log_file'], 'ab')
         logfile.write('[%s] %s\n' % (datetime.datetime.now(), str))
         logfile.close()
 
@@ -127,7 +161,7 @@ class module(cmd.Cmd):
         '''Adds a host to the database and returns the affected row count.'''
         host    = self.sanitize(host)
         address = self.sanitize(address)
-        conn = sqlite3.connect(self.goptions['dbfilename'])
+        conn = sqlite3.connect(self.goptions['db_file'])
         c = conn.cursor()
         try: c.execute(u'INSERT INTO hosts (host,address) SELECT ?, ? WHERE NOT EXISTS(SELECT * FROM hosts WHERE host=?)', (host, address, host))
         except sqlite3.OperationalError as e:
@@ -143,7 +177,7 @@ class module(cmd.Cmd):
         lname = self.sanitize(lname)
         title = self.sanitize(title)
         email = self.sanitize(email)
-        conn = sqlite3.connect(self.goptions['dbfilename'])
+        conn = sqlite3.connect(self.goptions['db_file'])
         c = conn.cursor()
         try: c.execute(u'INSERT INTO contacts (fname,lname,title,email) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname=? and lname=? and title=?)', (fname, lname, title, email, fname, lname, title))
         except sqlite3.OperationalError as e:
@@ -162,7 +196,7 @@ class module(cmd.Cmd):
         if password:
             if self.is_hash(password):
                 query = u'INSERT INTO creds (username,hash,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and hash=? and type=? and leak=?)'
-        conn = sqlite3.connect(self.goptions['dbfilename'])
+        conn = sqlite3.connect(self.goptions['db_file'])
         c = conn.cursor()
         try: c.execute(query, (username, password, hashtype, leak, username, password, hashtype, leak))
         except sqlite3.OperationalError as e:
@@ -180,7 +214,7 @@ class module(cmd.Cmd):
             return
         if not return_results:
             # use sqlite to format and output the query
-            cmd = 'sqlite3 -column -header %s "%s"' % (self.goptions['dbfilename'], params)
+            cmd = 'sqlite3 -column -header %s "%s"' % (self.goptions['db_file'], params)
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, error = p.communicate()
             if output:
@@ -193,7 +227,7 @@ class module(cmd.Cmd):
                 self.do_schema(None)
             return
         else:
-            conn = sqlite3.connect(self.goptions['dbfilename'])
+            conn = sqlite3.connect(self.goptions['db_file'])
             c = conn.cursor()
             try: c.execute(params)
             except sqlite3.OperationalError as e:
@@ -225,7 +259,7 @@ class module(cmd.Cmd):
 
     def get_key_from_db(self, key_name):
         '''Retrieves an API key from the API key storage database.'''
-        conn = sqlite3.connect(self.goptions['keyfilename'])
+        conn = sqlite3.connect(self.goptions['key_file'])
         c = conn.cursor()
         c.execute('SELECT value FROM keys WHERE name=?', (key_name,))
         row = c.fetchone()
@@ -246,7 +280,7 @@ class module(cmd.Cmd):
 
     def add_key_to_db(self, key_name, key_value):
         '''Adds an API key to the API key storage database.'''
-        conn = sqlite3.connect(self.goptions['keyfilename'])
+        conn = sqlite3.connect(self.goptions['key_file'])
         c = conn.cursor()
         try: c.execute('INSERT INTO keys VALUES (?,?)', (key_name, key_value))
         except sqlite3.OperationalError:
@@ -257,7 +291,6 @@ class module(cmd.Cmd):
         conn.commit()
         conn.close()
         return True
-        
 
     """def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
         # build kwargs for request call
@@ -393,7 +426,7 @@ class module(cmd.Cmd):
 
     def do_schema(self, params):
         """Displays the database schema"""
-        conn = sqlite3.connect(self.goptions['dbfilename'])
+        conn = sqlite3.connect(self.goptions['db_file'])
         c = conn.cursor()
         c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
         tables = [x[0] for x in c.fetchall()]
@@ -459,7 +492,7 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
 
     http_error_301 = http_error_303 = http_error_307 = http_error_302
 
-class ResponseObject:
+class ResponseObject(object):
 
     def __init__(self, resp):
         # set hidden text property
