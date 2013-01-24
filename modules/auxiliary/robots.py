@@ -55,7 +55,7 @@ class Module(framework.module):
                     if code == 200:
                         self.alert('%s => %s. %s found!' % (url, code, filename))
                         self.output("\t ---")                        
-                        self.output("\n".join(["\t| %s" % l for l in resp.text.splitlines()]))
+                        self.output("\n".join(["\t| %s" % v for v in resp.text.splitlines()]))
                         self.output("\t ---")
                         cnt += 1
                     else:
