@@ -2,6 +2,8 @@ import framework
 import __builtin__
 # unique to module
 import os
+import gzip
+from StringIO import StringIO
 
 class Module(framework.module):
 
@@ -12,7 +14,7 @@ class Module(framework.module):
                         }
         self.info = {
                      'Name': 'robots.txt/sitemap.xml Finder',
-                     'Author': 'thrapt (thrapt@yahoo.com.br)',
+                     'Author': 'thrapt (thrapt@gmail.com)',
                      'Description': 'Checks all of the hosts stored in the database for the robots.txt and sitemap.xml.',
                      'Comments': [
                                   'Source options: database, <hostname>, <path/to/infile>',
@@ -21,6 +23,17 @@ class Module(framework.module):
 
     def do_run(self, params):
         self.check_for_status()
+    
+    def uncompress(self, data_gz):
+        inbuffer = StringIO(data_gz)
+        data_ct = ''
+        f = gzip.GzipFile(mode='rb', fileobj=inbuffer)
+        try:
+            data_ct = f.read()
+        except IOError:
+            pass
+        f.close()
+        return data_ct     
     
     def check_for_status(self):
         verbose = self.goptions['verbose']
@@ -37,11 +50,11 @@ class Module(framework.module):
 
         # check all hosts for robots.txt and sitemap.xml
         protocols = ['http', 'https']
-        filenames = ['robots.txt', 'sitemap.xml']
+        filetypes = [('robots.txt', 'user-agent:'), ('sitemap.xml', '<?xml'), ('sitemap.xml.gz', '<?xml')]
         cnt = 0
         for host in hosts:
             for proto in protocols:
-                for filename in filenames:
+                for (filename, verify) in filetypes:
                     url = '%s://%s/%s' % (proto, host, filename)
                     try:
                         resp = self.request(url, redirect=False)
@@ -53,11 +66,15 @@ class Module(framework.module):
                     except:
                         code = 'Error'
                     if code == 200:
-                        self.alert('%s => %s. %s found!' % (url, code, filename))
-                        self.output("\t ---")                        
-                        self.output("\n".join(["\t| %s" % v for v in resp.text.splitlines()]))
-                        self.output("\t ---")
-                        cnt += 1
+                        text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text.lower()
+                        if (verify in text):
+                            self.alert('%s => %s. %s found!' % (url, code, filename))
+                            self.output("\t ---")                        
+                            self.output("\n".join(["\t| %s" % v for v in text.splitlines()]))
+                            self.output("\t ---")
+                            cnt += 1
+                        else:
+                            self.output('%s => %s. %s invalid!' % (url, code, filename))
                     else:
                         if verbose: self.output('%s => %s' % (url, code))
         
