@@ -1,5 +1,4 @@
 import framework
-import __builtin__
 # unique to module
 import pwnedlist
 
