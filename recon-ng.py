@@ -95,7 +95,7 @@ class Recon(framework.module):
                         print '-'*60
                         traceback.print_exc(file=sys.stdout)
                         print '-'*60
-                        self.error('Unable to load module: %s' % (modulekey))
+                        self.error('Unable to load module: %s' % (modulename))
                 self.loaded_summary.append(('/'.join(dirpath.split('/')[2:]), cnt))
 
     def display_modules(self, modules):
