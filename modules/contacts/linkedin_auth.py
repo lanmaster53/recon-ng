@@ -1,5 +1,4 @@
 import framework
-import __builtin__
 # unique to module
 import oauth2 as oauth
 import httplib2

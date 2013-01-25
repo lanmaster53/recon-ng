@@ -1,5 +1,4 @@
 import framework
-import __builtin__
 # unique to module
 import os
 import gzip
@@ -72,9 +71,6 @@ class Module(framework.module):
                         # check for file type since many custom 404s are returned as 200s 
                         if (verify in text.lower()):
                             self.alert('%s => %s. %s found!' % (url, code, filename))
-                            self.output("\t ---")                        
-                            self.output("\n".join(["\t| %s" % v for v in text.splitlines()]))
-                            self.output("\t ---")
                             cnt += 1
                         else:
                             self.output('%s => %s. %s invalid!' % (url, code, filename))
