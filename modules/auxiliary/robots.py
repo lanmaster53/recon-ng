@@ -1,5 +1,4 @@
 import framework
-import __builtin__
 # unique to module
 import os
 import gzip
@@ -15,7 +14,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'robots.txt/sitemap.xml Finder',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Checks all of the hosts stored in the database for the robots.txt and sitemap.xml.',
+                     'Description': 'Checks all of the hosts stored in the database for the robots.txt, sitemap.xml and sitemap.xml.gz.',
                      'Comments': [
                                   'Source options: database, <hostname>, <path/to/infile>',
                                   ]
@@ -48,8 +47,9 @@ class Module(framework.module):
         elif os.path.exists(source): hosts = open(source).read().split()
         else: hosts = [source]
 
-        # check all hosts for robots.txt and sitemap.xml
+        # check all hosts for robots.txt, sitemap.xml and sitemap.xml.gz
         protocols = ['http', 'https']
+        # filename and string used to verify the file
         filetypes = [('robots.txt', 'user-agent:'), ('sitemap.xml', '<?xml'), ('sitemap.xml.gz', '<?xml')]
         cnt = 0
         for host in hosts:
@@ -66,12 +66,11 @@ class Module(framework.module):
                     except:
                         code = 'Error'
                     if code == 200:
-                        text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text.lower()
-                        if (verify in text):
+                        # uncompress if necessary
+                        text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text
+                        # check for file type since many custom 404s are returned as 200s 
+                        if (verify in text.lower()):
                             self.alert('%s => %s. %s found!' % (url, code, filename))
-                            self.output("\t ---")                        
-                            self.output("\n".join(["\t| %s" % v for v in text.splitlines()]))
-                            self.output("\t ---")
                             cnt += 1
                         else:
                             self.output('%s => %s. %s invalid!' % (url, code, filename))
