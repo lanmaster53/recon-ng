@@ -42,7 +42,7 @@ class Module(framework.module):
             try: resp = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
-                return
+                break
             except Exception as e:
                 self.error(e.__str__())
                 continue

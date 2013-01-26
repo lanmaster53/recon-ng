@@ -40,18 +40,20 @@ class Module(framework.module):
             try: resp = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
+                break
             except Exception as e:
                 self.error(e.__str__())
-            if not resp: break
-            # resp.json will not work here
-            jsonstr = resp.text
-            try: jsonobj = json.loads(jsonstr)
-            except ValueError as e:
-                self.error(e.__str__())
                 break
-            try: results = jsonobj['matches']
-            except KeyError: break
-            for result in results:
+            if resp.json == None:
+                self.error('Not a valid JSON response.')
+                break
+            if 'error' in resp.json:
+                self.error(resp.json['error'])
+                break
+            # returns an empty json when no matches are found
+            if not 'matches' in resp.json:
+                break
+            for result in resp.json['matches']:
                 if not 'hostnames' in result.keys(): continue
                 hostnames = result['hostnames']
                 for hostname in hostnames:
