@@ -56,13 +56,6 @@ class module(cmd.Cmd):
         if line == 'EOF':
             # reset stdin for raw_input
             sys.stdin = sys.__stdin__
-            #if os.name == 'nt':
-            #    # Windows OSs
-            #    sys.stdin = open('CON:')
-            #else:
-            #    # Unix-like OSs
-            #    sys.stdin = open('/dev/tty')
-            # disable the script mode
             __builtin__.script = 0
             return 0
         if cmd is None:
@@ -291,34 +284,6 @@ class module(cmd.Cmd):
         conn.commit()
         conn.close()
         return True
-
-    """def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
-        # build kwargs for request call
-        kwargs = {}
-        headers['User-Agent'] = self.goptions['user-agent']
-        kwargs['headers'] = headers                         # set custom headers
-        kwargs['allow_redirects'] = redirect                # set redirect action
-        kwargs['cookies'] = cookies                         # set custom cookies
-        kwargs['verify'] = False                            # ignore SSL errors
-        kwargs['timeout'] = self.goptions['socket_timeout'] # set socket connection timeout
-        if self.goptions['proxy']:
-            proxies = {'http': self.goptions['proxy_http'], 'https': self.goptions['proxy_https']}
-            kwargs['proxies'] = proxies                     # set proxies
-        # handle method and make request
-        if method == 'GET':
-            kwargs['params'] = payload                      # set get parameters for request
-            resp = requests.get(url, **kwargs)
-        elif method == 'POST':
-            kwargs['data'] = payload                        # set post data for request
-            resp = requests.post(url, **kwargs)
-        else: raise Exception('Request method \'%s\' is not a supported method.' % (method))
-        ##### BUG WARNING #####
-        if self.goptions['proxy'] and url.lower().startswith('https'):
-            self.alert('A known bug in the requests library prevents proper proxying of HTTPS requests.')
-            self.alert('Enable support for invisible proxying (Burp) or set the \'proxy\' global option to \'False\'.')
-            self.alert('This warning will disappear when the bug is fixed. I apologize for the inconvenience.')
-        #######################
-        return resp"""
 
     def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
         '''Makes a web request and returns a response object.'''

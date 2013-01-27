@@ -176,12 +176,14 @@ class Recon(framework.module):
             if name in self.options.keys():
                 value = ' '.join(options[1:])
                 # make sure database file is valid
-                if name == 'db_file':
+                if name in ['db_file', 'key_file', 'log_file']:
                     try:
                         conn = sqlite3.connect(value)
                         conn.close()
+                        f = open(value)
+                        f.close()
                     except:
-                        self.error('Invalid database path or name.')
+                        self.error('Invalid path or name for \'%s\'.' % (name))
                         return
                 self.options[name] = self.autoconvert(value)
                 __builtin__.goptions = self.options
