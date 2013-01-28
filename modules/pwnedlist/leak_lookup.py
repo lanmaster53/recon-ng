@@ -6,9 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'leak_id': '0b35c0ba48a899baeea2021e245d6da8'
-                        }
+        self.register_option('leak_id', '0b35c0ba48a899baeea2021e245d6da8', 'yes', 'pwnedlist leak id')
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -19,13 +17,15 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.leak_lookup()
 
     def leak_lookup(self):
         # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key')
+        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
         if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
+        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
         if not secret: return
 
         # API query guard
@@ -34,7 +34,7 @@ class Module(framework.module):
         # setup API call
         method = 'leaks.info'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        payload = {'leakId': self.options['leak_id']}
+        payload = {'leakId': self.options['leak_id']['value']}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
         try: resp = self.request(url, payload=payload)

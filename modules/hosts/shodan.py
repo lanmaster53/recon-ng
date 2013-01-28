@@ -6,11 +6,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'domain': self.goptions['domain'],
-                        'restrict': False,
-                        'requests': 1
-                        }
+        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('restrict', False, 'yes', 'limit number of api requests to \'requests\'')
+        self.register_option('requests', 1, 'yes', 'maximum number of api requets to make')
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -21,10 +19,12 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.get_hosts()
     
     def get_hosts(self):
-        domain = self.options['domain']
+        domain = self.options['domain']['value']
         subs = []
         key = self.manage_key('shodan', 'Shodan API key')
         if not key: return
@@ -64,8 +64,8 @@ class Module(framework.module):
                         host = '%s.%s' % (site, domain)
                         self.output('%s' % (host))
                         cnt += self.add_host(host)
-            if self.options['restrict']:
-                if page == self.options['requests']: break
+            if self.options['restrict']['value']:
+                if page == self.options['requests']['value']: break
             if not new: break
             page += 1
             payload['page'] = str(page)

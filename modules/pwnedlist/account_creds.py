@@ -7,9 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'source': 'database'
-                        }
+        self.register_option('source', 'database', 'yes', 'source of module input')
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -21,20 +19,22 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.get_creds()
 
     def get_creds(self):
         # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key')
+        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
         if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
+        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
         if not secret: return
         decrypt_key = secret[:16]
         iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV')
         if not iv: return
 
         # handle sources
-        source = self.options['source']
+        source = self.options['source']['value']
         if source == 'database':
             accounts = [x[0] for x in self.query('SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')]
             if len(accounts) == 0:

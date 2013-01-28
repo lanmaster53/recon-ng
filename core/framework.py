@@ -56,13 +56,6 @@ class module(cmd.Cmd):
         if line == 'EOF':
             # reset stdin for raw_input
             sys.stdin = sys.__stdin__
-            #if os.name == 'nt':
-            #    # Windows OSs
-            #    sys.stdin = open('CON:')
-            #else:
-            #    # Unix-like OSs
-            #    sys.stdin = open('/dev/tty')
-            # disable the script mode
             __builtin__.script = 0
             return 0
         if cmd is None:
@@ -90,6 +83,20 @@ class module(cmd.Cmd):
     #==================================================
     # SUPPORT METHODS
     #==================================================
+
+    def register_option(self, name, value, reqd, desc, options=None):
+        # can't use not because empty dictonary would eval as true
+        if options == None: options = self.options
+        options[name] = {'value':value, 'reqd':reqd, 'desc':desc}
+
+    def validate_options(self):
+        for option in self.options:
+            # if value type is bool or int, then we know the options is set
+            if not type(self.options[option]['value']) in [bool, int]:
+                if self.options[option]['reqd'].lower() == 'yes' and not self.options[option]['value']:
+                    self.error('Value required for the \'%s\' option.' % (option))
+                    return False
+        return True
 
     def boolify(self, s):
         return {'true': True, 'false': False}[s.lower()]
@@ -145,7 +152,7 @@ class module(cmd.Cmd):
 
     def log(self, str):
         '''Logs information to the global framework log.'''
-        logfile = open(self.goptions['log_file'], 'ab')
+        logfile = open(self.goptions['log_file']['value'], 'ab')
         logfile.write('[%s] %s\n' % (datetime.datetime.now(), str))
         logfile.close()
 
@@ -161,7 +168,7 @@ class module(cmd.Cmd):
         '''Adds a host to the database and returns the affected row count.'''
         host    = self.sanitize(host)
         address = self.sanitize(address)
-        conn = sqlite3.connect(self.goptions['db_file'])
+        conn = sqlite3.connect(self.goptions['db_file']['value'])
         c = conn.cursor()
         try: c.execute(u'INSERT INTO hosts (host,address) SELECT ?, ? WHERE NOT EXISTS(SELECT * FROM hosts WHERE host=?)', (host, address, host))
         except sqlite3.OperationalError as e:
@@ -177,7 +184,7 @@ class module(cmd.Cmd):
         lname = self.sanitize(lname)
         title = self.sanitize(title)
         email = self.sanitize(email)
-        conn = sqlite3.connect(self.goptions['db_file'])
+        conn = sqlite3.connect(self.goptions['db_file']['value'])
         c = conn.cursor()
         try: c.execute(u'INSERT INTO contacts (fname,lname,title,email) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname=? and lname=? and title=?)', (fname, lname, title, email, fname, lname, title))
         except sqlite3.OperationalError as e:
@@ -196,7 +203,7 @@ class module(cmd.Cmd):
         if password:
             if self.is_hash(password):
                 query = u'INSERT INTO creds (username,hash,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and hash=? and type=? and leak=?)'
-        conn = sqlite3.connect(self.goptions['db_file'])
+        conn = sqlite3.connect(self.goptions['db_file']['value'])
         c = conn.cursor()
         try: c.execute(query, (username, password, hashtype, leak, username, password, hashtype, leak))
         except sqlite3.OperationalError as e:
@@ -214,7 +221,7 @@ class module(cmd.Cmd):
             return
         if not return_results:
             # use sqlite to format and output the query
-            cmd = 'sqlite3 -column -header %s "%s"' % (self.goptions['db_file'], params)
+            cmd = 'sqlite3 -column -header %s "%s"' % (self.goptions['db_file']['value'], params)
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, error = p.communicate()
             if output:
@@ -227,7 +234,7 @@ class module(cmd.Cmd):
                 self.do_schema(None)
             return
         else:
-            conn = sqlite3.connect(self.goptions['db_file'])
+            conn = sqlite3.connect(self.goptions['db_file']['value'])
             c = conn.cursor()
             try: c.execute(params)
             except sqlite3.OperationalError as e:
@@ -259,7 +266,7 @@ class module(cmd.Cmd):
 
     def get_key_from_db(self, key_name):
         '''Retrieves an API key from the API key storage database.'''
-        conn = sqlite3.connect(self.goptions['key_file'])
+        conn = sqlite3.connect(self.goptions['key_file']['value'])
         c = conn.cursor()
         c.execute('SELECT value FROM keys WHERE name=?', (key_name,))
         row = c.fetchone()
@@ -280,7 +287,7 @@ class module(cmd.Cmd):
 
     def add_key_to_db(self, key_name, key_value):
         '''Adds an API key to the API key storage database.'''
-        conn = sqlite3.connect(self.goptions['key_file'])
+        conn = sqlite3.connect(self.goptions['key_file']['value'])
         c = conn.cursor()
         try: c.execute('INSERT INTO keys VALUES (?,?)', (key_name, key_value))
         except sqlite3.OperationalError:
@@ -292,39 +299,11 @@ class module(cmd.Cmd):
         conn.close()
         return True
 
-    """def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
-        # build kwargs for request call
-        kwargs = {}
-        headers['User-Agent'] = self.goptions['user-agent']
-        kwargs['headers'] = headers                         # set custom headers
-        kwargs['allow_redirects'] = redirect                # set redirect action
-        kwargs['cookies'] = cookies                         # set custom cookies
-        kwargs['verify'] = False                            # ignore SSL errors
-        kwargs['timeout'] = self.goptions['socket_timeout'] # set socket connection timeout
-        if self.goptions['proxy']:
-            proxies = {'http': self.goptions['proxy_http'], 'https': self.goptions['proxy_https']}
-            kwargs['proxies'] = proxies                     # set proxies
-        # handle method and make request
-        if method == 'GET':
-            kwargs['params'] = payload                      # set get parameters for request
-            resp = requests.get(url, **kwargs)
-        elif method == 'POST':
-            kwargs['data'] = payload                        # set post data for request
-            resp = requests.post(url, **kwargs)
-        else: raise Exception('Request method \'%s\' is not a supported method.' % (method))
-        ##### BUG WARNING #####
-        if self.goptions['proxy'] and url.lower().startswith('https'):
-            self.alert('A known bug in the requests library prevents proper proxying of HTTPS requests.')
-            self.alert('Enable support for invisible proxying (Burp) or set the \'proxy\' global option to \'False\'.')
-            self.alert('This warning will disappear when the bug is fixed. I apologize for the inconvenience.')
-        #######################
-        return resp"""
-
     def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
         '''Makes a web request and returns a response object.'''
         # set request arguments
         # process user-agent header
-        headers['User-Agent'] = self.goptions['user-agent']
+        headers['User-Agent'] = self.goptions['user-agent']['value']
         # process payload
         payload = urllib.urlencode(payload)
         # process cookies
@@ -332,7 +311,7 @@ class module(cmd.Cmd):
             cookie_value = '; '.join('%s=%s' % (key, cookies[key]) for key in cookies.keys())
             headers['Cookie'] = cookie_value
         # process socket timeout
-        socket.setdefaulttimeout(self.goptions['socket_timeout'])
+        socket.setdefaulttimeout(self.goptions['socket_timeout']['value'])
         
         # set handlers
         handlers = [] #urllib2.HTTPHandler(debuglevel=1)
@@ -340,8 +319,8 @@ class module(cmd.Cmd):
         if redirect == False:
             handlers.append(NoRedirectHandler)
         # process proxies and add handler
-        if self.goptions['proxy']:
-            proxies = {'http': self.goptions['proxy_http'], 'https': self.goptions['proxy_https']}
+        if self.goptions['proxy']['value']:
+            proxies = {'http': self.goptions['proxy_server']['value'], 'https': self.goptions['proxy_server']['value']}
             handlers.append(urllib2.ProxyHandler(proxies))
         
         # install opener
@@ -397,15 +376,19 @@ class module(cmd.Cmd):
         spacer = self.spacer
         if params == 'info':
             spacer = self.spacer*2
-        if self.options.keys():
-            pattern = '%s%%s\t%%s\t%%s' % (spacer)
-            key_len = len(max(self.options.keys(), key=len))
+        if self.options:
+            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
+            key_len = len(max(self.options, key=len))
+            val_len = len(max([str(self.options[x]['value']) for x in self.options], key=len))
+            if val_len < 13: val_len = 13
             print ''
-            print pattern % ('Name'.ljust(key_len), 'Type'.ljust(4), 'Current Value')
-            print pattern % (self.ruler*key_len, self.ruler*4, self.ruler*13)
-            for key in sorted(self.options.keys()):
-                value = self.options[key]
-                print pattern % (key.ljust(key_len), type(value).__name__[:4].lower().ljust(4), str(value))
+            print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
+            print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
+            for key in sorted(self.options):
+                value = self.options[key]['value']
+                reqd = self.options[key]['reqd']
+                desc = self.options[key]['desc']
+                print pattern % (key.ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
             print ''
         else:
             if params != 'info': print ''
@@ -418,15 +401,15 @@ class module(cmd.Cmd):
         if len(options) < 2: self.help_set()
         else:
             name = options[0]
-            if name in self.options.keys():
+            if name in self.options:
                 value = ' '.join(options[1:])
                 print '%s => %s' % (name, value)
-                self.options[name] = self.autoconvert(value)
+                self.options[name]['value'] = self.autoconvert(value)
             else: self.error('Invalid option.')
 
     def do_schema(self, params):
         """Displays the database schema"""
-        conn = sqlite3.connect(self.goptions['db_file'])
+        conn = sqlite3.connect(self.goptions['db_file']['value'])
         c = conn.cursor()
         c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
         tables = [x[0] for x in c.fetchall()]
@@ -479,7 +462,7 @@ class module(cmd.Cmd):
     #==================================================
 
     def complete_set(self, text, *ignored):
-        return [x for x in self.options.keys() if x.startswith(text)]
+        return [x for x in self.options if x.startswith(text)]
 
 #=================================================
 # CUSTOM CLASSES & WRAPPERS

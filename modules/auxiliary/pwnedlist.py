@@ -7,9 +7,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'source': 'database'
-                        }
+        self.register_option('source', 'database', 'yes', 'source of module input')
+        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'PwnedList Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -20,13 +19,15 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.check_pwned()
 
     def check_pwned(self):
-        verbose = self.goptions['verbose']
-
+        verbose = self.options['verbose']['value']
+        
         # handle sources
-        source = self.options['source']
+        source = self.options['source']['value']
         if source == 'database':
             accounts = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')]
             if len(accounts) == 0:

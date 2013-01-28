@@ -5,10 +5,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'filename': './data/results.html',
-                        'sanitize': True
-                        }
+        self.register_option('filename', './data/results.html', 'yes', 'path and filename for report output')
+        self.register_option('sanitize', True, 'yes', 'mask sensitive data in the report')
         self.info = {
                      'Name': 'HTML Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -17,6 +15,8 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.generate_report()
 
     def sanitize_html(self, htmlstring):
@@ -31,7 +31,7 @@ class Module(framework.module):
         return htmlstring
 
     def generate_report(self):
-        filename = self.options['filename']
+        filename = self.options['filename']['value']
         try:
             outfile = open(filename, 'wb')
             outfile.close()
@@ -123,7 +123,7 @@ td {
                 cred = [x if x != None else '' for x in cred]
                 password = cred[1]
                 hashstr = cred[2]
-                if self.options['sanitize']:
+                if self.options['sanitize']['value']:
                     password = '%s%s%s' % (password[:1], '*'*(len(password)-2), password[-1:])
                     hashstr = '%s%s%s' % (hashstr[:8], '*'*(len(hashstr)-16), hashstr[-8:])
                 creds_content += '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (cred[0], password, hashstr, cred[3])

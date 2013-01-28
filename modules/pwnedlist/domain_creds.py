@@ -6,9 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'domain': self.goptions['domain']
-                        }
+        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -19,13 +17,17 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.get_creds()
 
     def get_creds(self):
+        domain = self.options['domain']['value']
+
         # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key')
+        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
         if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
+        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
         if not secret: return
         decrypt_key = secret[:16]
         iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV')
@@ -37,7 +39,7 @@ class Module(framework.module):
         # setup API call
         method = 'domains.query'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        payload = {'domain_identifier': self.options['domain']}
+        payload = {'domain_identifier': domain}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
         try: resp = self.request(url, payload=payload)
@@ -52,7 +54,7 @@ class Module(framework.module):
             self.error('Invalid JSON returned from the API.')
             return
         if len(jsonobj['accounts']) == 0:
-            self.output('No results returned for \'%s\'.' % (self.options['domain']))
+            self.output('No results returned for \'%s\'.' % (domain))
         else:
             for cred in jsonobj['accounts']:
                 username = cred['plain']

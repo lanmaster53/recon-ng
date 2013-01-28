@@ -6,7 +6,6 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {}
         self.info = {
                      'Name': 'PwnedList - API Usage Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -17,13 +16,15 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.check_usage()
 
     def check_usage(self):
         # required for all PwnedList modules
-        key = self.manage_key('pwned_key', 'PwnedList API Key')
+        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
         if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
+        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
         if not secret: return
 
         # setup API call

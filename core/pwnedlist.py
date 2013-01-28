@@ -9,7 +9,7 @@ def build_payload(payload, method, key, secret):
     timestamp = int(time.time())
     payload['ts'] = timestamp
     payload['key'] = key
-    msg = "%s%s%s%s" % (key, timestamp, method, secret)
+    msg = '%s%s%s%s' % (key, timestamp, method, secret)
     hm = hmac.new(secret, msg, hashlib.sha1)
     payload['hmac'] = hm.hexdigest() 
     return payload

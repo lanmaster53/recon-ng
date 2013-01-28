@@ -45,25 +45,23 @@ __builtin__.B  = "\033[34m" # blue
 # mode flags
 __builtin__.script = 0
 # set global framework options
-__builtin__.goptions = {
-                        'db_file': './data/data.db',
-                        'key_file': './data/keys.db',
-                        'log_file': './data/cmd.log',
-                        'domain': '',
-                        'company': '',
-                        'user-agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)',#'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; FDM; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 1.1.4322)',
-                        'proxy': False,
-                        'proxy_http': '127.0.0.1:8080',
-                        'proxy_https': '127.0.0.1:8080',
-                        "socket_timeout": 10,
-                        'verbose': True
-                        }
+__builtin__.goptions = {}
 
 class Recon(framework.module):
     def __init__(self):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, prompt)
+        self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
+        self.register_option('key_file', './data/keys.db', 'yes', 'path to API key database file', self.goptions)
+        self.register_option('log_file', './data/cmd.log', 'yes', 'path to command log file', self.goptions)
+        self.register_option('domain', '', 'no', 'target domain', self.goptions)
+        self.register_option('company', '', 'no', 'target company name', self.goptions)
+        self.register_option('user-agent', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)', 'yes', 'user-agent string', self.goptions)
+        self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
+        self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
+        self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
+        self.register_option('verbose', True,  'yes', 'verbose output', self.goptions)
         self.options = self.goptions
         self.load_modules()
         self.show_banner()
@@ -124,14 +122,14 @@ class Recon(framework.module):
         print ''
 
     def init_db(self):
-        conn = sqlite3.connect(self.options['db_file'])
+        conn = sqlite3.connect(self.options['db_file']['value'])
         c = conn.cursor()
         c.execute('create table if not exists hosts (host text, address text)')
         c.execute('create table if not exists contacts (fname text, lname text, email text, title text)')
         c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
         conn.commit()
         conn.close()
-        conn = sqlite3.connect(self.options['key_file'])
+        conn = sqlite3.connect(self.options['key_file']['value'])
         c = conn.cursor()
         c.execute('create table if not exists keys (name text primary key, value text)')
         conn.commit()
@@ -173,20 +171,21 @@ class Recon(framework.module):
         if len(options) < 2: self.help_set()
         else:
             name = options[0]
-            if name in self.options.keys():
+            if name in self.options:
                 value = ' '.join(options[1:])
                 # make sure database file is valid
-                if name == 'db_file':
+                if name in ['db_file', 'key_file', 'log_file']:
                     try:
                         conn = sqlite3.connect(value)
                         conn.close()
+                        f = open(value)
+                        f.close()
                     except:
-                        self.error('Invalid database path or name.')
+                        self.error('Invalid path or name for \'%s\'.' % (name))
                         return
-                self.options[name] = self.autoconvert(value)
-                __builtin__.goptions = self.options
+                    self.init_db()
                 print '%s => %s' % (name, value)
-                self.init_db()
+                self.options[name]['value'] = self.autoconvert(value)
             else: self.error('Invalid option.')
 
     def do_modules(self, params):
@@ -209,6 +208,7 @@ class Recon(framework.module):
 
     def do_load(self, params):
         """Loads selected module"""
+        if not self.validate_options(): return
         options = params.split()
         if len(options) == 0:
             self.help_load()

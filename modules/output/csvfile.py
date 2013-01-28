@@ -6,10 +6,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'source': 'all',
-                        'filename': './data/results.csv'
-                        }
+        self.register_option('source', 'all', 'yes', 'data source for the report')
+        self.register_option('filename', './data/results.csv', 'yes', 'path and filename for report output')
         self.info = {
                      'Name': 'CSV File Creator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -20,17 +18,19 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.append_to_csv()
     
     def append_to_csv(self):
-        filename = self.options['filename']
+        filename = self.options['filename']['value']
         try:
             outfile = open(filename, 'wb')
             outfile.close()
         except:
             self.error('Invalid path or filename.')
             return
-        source = self.options['source']
+        source = self.options['source']['value']
         rows = []
         if source == 'hosts': rows = self.query('SELECT * FROM hosts ORDER BY host')
         elif source == 'contacts' : rows = self.query('SELECT * FROM contacts ORDER BY fname')
