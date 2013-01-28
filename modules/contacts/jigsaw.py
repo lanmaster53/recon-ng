@@ -7,9 +7,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option(self.options, 'company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
-        self.register_option(self.options, 'keywords', '', 'no', 'additional keywords to identify company')
-        self.register_option(self.options, 'verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
+        self.register_option('keywords', '', 'no', 'additional keywords to identify company')
+        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

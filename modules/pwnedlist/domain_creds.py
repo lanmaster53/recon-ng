@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option(self.options, 'domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

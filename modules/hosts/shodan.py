@@ -6,9 +6,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option(self.options, 'domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option(self.options, 'restrict', False, 'yes', 'limit number of api requests to \'requests\'')
-        self.register_option(self.options, 'requests', 1, 'yes', 'maximum number of api requets to make')
+        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('restrict', False, 'yes', 'limit number of api requests to \'requests\'')
+        self.register_option('requests', 1, 'yes', 'maximum number of api requets to make')
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

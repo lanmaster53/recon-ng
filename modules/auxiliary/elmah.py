@@ -6,8 +6,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option(self.options, 'source', 'database', 'yes', 'source of module input')
-        self.register_option(self.options, 'verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.register_option('source', 'database', 'yes', 'source of module input')
+        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'ELMAH Log Scanner',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

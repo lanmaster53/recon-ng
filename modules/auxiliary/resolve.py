@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option(self.options, 'nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
+        self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.info = {
                      'Name': 'Hostname Resolver',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

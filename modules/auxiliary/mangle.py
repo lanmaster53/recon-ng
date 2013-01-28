@@ -5,9 +5,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option(self.options, 'domain', self.goptions['domain']['value'], 'no', 'target email domain')
-        self.register_option(self.options, 'pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
-        self.register_option(self.options, 'max-length', 30, 'yes', 'maximum length of email address prefix or username')
+        self.register_option('domain', self.goptions['domain']['value'], 'no', 'target email domain')
+        self.register_option('pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
+        self.register_option('max-length', 30, 'yes', 'maximum length of email address prefix or username')
         self.info = {
                      'Name': 'Contact Name Mangler',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

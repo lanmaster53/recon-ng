@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option(self.options, 'source', 'database', 'yes', 'source of module input')
+        self.register_option('source', 'database', 'yes', 'source of module input')
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

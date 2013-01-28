@@ -84,7 +84,9 @@ class module(cmd.Cmd):
     # SUPPORT METHODS
     #==================================================
 
-    def register_option(self, options, name, value, reqd, desc):
+    def register_option(self, name, value, reqd, desc, options=None):
+        # can't use not because empty dictonary would eval as true
+        if options == None: options = self.options
         options[name] = {'value':value, 'reqd':reqd, 'desc':desc}
 
     def validate_options(self):

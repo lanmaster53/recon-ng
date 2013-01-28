@@ -8,8 +8,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option(self.options, 'source', '21232f297a57a5a743894a0e4a801fc3', 'yes', 'source of module input')
-        self.register_option(self.options, 'verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.register_option('source', '21232f297a57a5a743894a0e4a801fc3', 'yes', 'source of module input')
+        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Noisette MD5 Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
