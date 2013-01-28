@@ -14,7 +14,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Checks Netcraft for the Hosting History of given target. This module DOES NOT updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Checks Netcraft for the Hosting History of given target.',
                      'Comments': [
                                   'Source options: database, <hostname>, <path/to/infile>',
                                  ]
