@@ -8,9 +8,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'domain': self.goptions['domain']
-                        }
+        self.register_option(self.options, 'domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option(self.options, 'verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Netcraft Hostname Enumerator',
                      'Author': 'thrapt (thrapt@gmail.com)',
@@ -19,11 +18,13 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.get_hosts()
     
     def get_hosts(self):
-        domain = self.options['domain']
-        verbose = self.goptions['verbose']
+        verbose = self.options['verbose']['value']
+        domain = self.options['domain']['value']
         url = 'http://searchdns.netcraft.com/'        
         payload = {'restriction': 'site+ends+with', 'host': domain}
         pattern = '<td align\=\"left\">\s*<a href=\"http://(.*?)/"'
