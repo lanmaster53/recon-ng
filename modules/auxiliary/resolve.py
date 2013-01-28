@@ -6,9 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'nameserver': '8.8.8.8'
-                        }
+        self.register_option(self.options, 'nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.info = {
                      'Name': 'Hostname Resolver',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -18,11 +16,13 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.resolve_hosts()
     
     def resolve_hosts(self):
         q = dns.resolver.get_default_resolver()
-        q.nameservers = [self.options['nameserver']]
+        q.nameservers = [self.options['nameserver']['value']]
         hosts = self.query('SELECT rowid, host FROM hosts ORDER BY host')
         for host in hosts:
             row = host[0]

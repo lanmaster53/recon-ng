@@ -7,10 +7,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'company': self.goptions['company'],
-                        'keywords': ''
-                        }
+        self.register_option(self.options, 'company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
+        self.register_option(self.options, 'keywords', '', 'no', 'additional keywords to identify company')
+        self.register_option(self.options, 'verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -19,6 +18,8 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         company_id = self.get_company_id()
         if company_id:
             contact_ids = self.get_contact_ids(company_id)
@@ -27,14 +28,14 @@ class Module(framework.module):
 
     def get_company_id(self):
         self.output('Gathering Company IDs...')
-        company_name = self.options['company']
+        company_name = self.options['company']['value']
         all_companies = []
         page_cnt = 1
-        params = '%s %s' % (company_name, self.options['keywords'])
+        params = '%s %s' % (company_name, self.options['keywords']['value'])
         url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml'
         payload = {'opCode': 'search', 'freeText': params}
         while True:
-            if self.goptions['verbose']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
             try: content = self.request(url, payload=payload).text
             except KeyboardInterrupt:
                 print ''
@@ -86,7 +87,7 @@ class Module(framework.module):
         payload = {'companyId': company_id, 'opCode': 'showCompDir'}
         while True:
             payload['rpage'] = str(page_cnt)
-            if self.goptions['verbose']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
             try: content = self.request(url, payload=payload).text
             except KeyboardInterrupt:
                 print ''

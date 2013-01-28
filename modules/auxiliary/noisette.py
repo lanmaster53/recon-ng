@@ -8,9 +8,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'source': '21232f297a57a5a743894a0e4a801fc3'
-                        }
+        self.register_option(self.options, 'source', '21232f297a57a5a743894a0e4a801fc3', 'yes', 'source of module input')
+        self.register_option(self.options, 'verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Noisette MD5 Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -22,13 +21,15 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.noisette()
     
     def noisette(self):
-        verbose = self.goptions['verbose']
-
+        verbose = self.options['verbose']['value']
+        
         # handle sources
-        source = self.options['source']
+        source = self.options['source']['value']
         if source == 'database':
             hashes = [x[0] for x in self.query('SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')]
             if len(hashes) == 0:

@@ -7,11 +7,10 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'domain': self.goptions['domain'],
-                        'wordlist': './data/wordlist.txt',
-                        'nameserver': '8.8.8.8'
-                        }
+        self.register_option(self.options, 'domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option(self.options, 'wordlist', './data/wordlist.txt', 'yes', 'path to hostname wordlist')
+        self.register_option(self.options, 'nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
+        self.register_option(self.options, 'verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -20,12 +19,17 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.brute_hosts()
     
     def brute_hosts(self):
+        verbose = self.options['verbose']['value']
+        domain = self.options['domain']['value']
+        wordlist = self.options['wordlist']['value']
         q = dns.resolver.get_default_resolver()
-        q.nameservers = [self.options['nameserver']]
-        fake_host = 'sudhfydgssjdue.%s' % (self.options['domain'])
+        q.nameservers = [self.options['nameserver']['value']]
+        fake_host = 'sudhfydgssjdue.%s' % (domain)
         cnt, tot = 0, 0
         try:
             answers = q.query(fake_host)
@@ -35,21 +39,21 @@ class Module(framework.module):
             print ''
             return
         except dns.resolver.NXDOMAIN:
-            if self.goptions['verbose']: self.output('No Wildcard DNS entry found. Attempting to brute force DNS records.')
+            if verbose: self.output('No Wildcard DNS entry found. Attempting to brute force DNS records.')
             pass
-        if os.path.exists(self.options['wordlist']):
-            words = open(self.options['wordlist']).read().split()
+        if os.path.exists(wordlist):
+            words = open(wordlist).read().split()
             for word in words:
-                host = '%s.%s' % (word, self.options['domain'])
+                host = '%s.%s' % (word, domain)
                 try: answers = q.query(host, 'A')
                 except KeyboardInterrupt:
                     print ''
                     break
                 except dns.resolver.NXDOMAIN:
-                    if self.goptions['verbose']: self.output('%s => Not a host' % (host))
+                    if verbose: self.output('%s => Not a host' % (host))
                     continue
                 except dns.resolver.NoAnswer:
-                    if self.goptions['verbose']: self.output('%s => No answer' % (host))
+                    if verbose: self.output('%s => No answer' % (host))
                     continue
                 for answer in answers.response.answer:
                     for rdata in answer:

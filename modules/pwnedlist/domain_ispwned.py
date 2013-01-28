@@ -6,9 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'domain': self.goptions['domain']
-                        }
+        self.register_option(self.options, 'domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -19,13 +17,17 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.domain_ispwned()
 
     def domain_ispwned(self):
+        domain = self.options['domain']['value']
+
         # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key')
+        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
         if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
+        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
         if not secret: return
 
         # API query guard
@@ -34,7 +36,7 @@ class Module(framework.module):
         # setup API call
         method = 'domains.info'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        payload = {'domain_identifier': self.options['domain']}
+        payload = {'domain_identifier': domain}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
         try: resp = self.request(url, payload=payload)
@@ -52,7 +54,7 @@ class Module(framework.module):
         # handle output
         domain = jsonobj['domain']
         if not domain:
-            self.output('Domain \'%s\' has no publicly compromised accounts.' % (self.options['domain']))
+            self.output('Domain \'%s\' has no publicly compromised accounts.' % (domain))
             return
         first_seen = jsonobj['first_seen']
         last_seen = jsonobj['last_seen']

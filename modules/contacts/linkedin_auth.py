@@ -12,10 +12,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'company': self.goptions['company'],
-                        'keywords': ''
-                        }
+        self.register_option(self.options, 'company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
+        self.register_option(self.options, 'verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -24,6 +22,8 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         consumer_key = self.manage_key('linkedin_key', 'LinkedIn API Key')
         if not consumer_key: return
         consumer_secret = self.manage_key('linkedin_secret', 'LinkedIn Secret Key') 
@@ -72,7 +72,7 @@ class Module(framework.module):
         token = oauth.Token(key=self.access_token['oauth_token'], secret=self.access_token['oauth_token_secret'])
         client = oauth.Client(self.consumer, token)
         count = 25
-        base_url = "http://api.linkedin.com/v1/people-search:(people:(id,first-name,last-name,headline))?format=json&company-name=%s&current-company=true&count=%d" % (urllib.quote_plus(self.options['company']), count)
+        base_url = "http://api.linkedin.com/v1/people-search:(people:(id,first-name,last-name,headline))?format=json&company-name=%s&current-company=true&count=%d" % (urllib.quote_plus(self.options['company']['value']), count)
         url = base_url
         cnt, tot = 0, 0
         page = 1

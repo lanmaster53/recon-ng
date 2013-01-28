@@ -5,11 +5,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.options = {
-                        'domain': self.goptions['domain'],
-                        'pattern': '<fn>.<ln>',
-                        'max-length': 30
-                        }
+        self.register_option(self.options, 'domain', self.goptions['domain']['value'], 'no', 'target email domain')
+        self.register_option(self.options, 'pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
+        self.register_option(self.options, 'max-length', 30, 'yes', 'maximum length of email address prefix or username')
         self.info = {
                      'Name': 'Contact Name Mangler',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -22,12 +20,14 @@ class Module(framework.module):
                      }
 
     def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
         self.mutate_contacts()
 
     def mutate_contacts(self):
-        domain = self.options['domain']
-        pattern = self.options['pattern']
-        max = self.options['max-length']
+        domain = self.options['domain']['value']
+        pattern = self.options['pattern']['value']
+        max = self.options['max-length']['value']
         contacts = self.query('SELECT rowid, fname, lname FROM contacts ORDER BY fname')
         if len(contacts) == 0:
             self.error('No contacts in the database.')
