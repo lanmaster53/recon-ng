@@ -72,18 +72,13 @@ class Module(framework.module):
                     self.error(e.__str__())
 
             content = content.text
-            
-            # Sorry for this... Apparently groups are overwritten if I use '+' 
-            # to repeat the groups. Need a more elegant approach...
-            history = re.findall(r'''
-                    (?:<tr\ class="TBtr">|<tr\ class="TRtr2">)     # Identify the position
-                    (?:\s*<td.*?>(.*?)<\/td>)                      # OS
-                    (?:\s*<td.*?>(.*?)<\/td>)                      # SERVER
-                    (?:\s*<td.*?>(.*?)<\/td>)                      # Last Changed
-                    (?:\s*<td.*?>(.*?)<\/td>)                      # IP
-                    (?:\s*<td.*?>.*?<a.*?\">(.*?)<\/a>)            # Block owner
-                 ''', content, re.VERBOSE)
 
+            history = []
+            rows = re.findall(r'<tr class="T\wtr\d*">(?:\s|.)+?<\/div>', content)
+            for row in rows:
+                cell = re.findall(r'>(.*?)<', row) 
+                history.append([cell[0], cell[2], cell[4], cell[6], cell[8]])
+                
             if len(history) > 0:
                 self.output("-------------------------------------------------------------------------------")
                 self.output("|       OS      |     Server    |  Last Changed |      IP       |     Owner    ")
@@ -97,5 +92,6 @@ class Module(framework.module):
             else:
                 self.alert('No results found')
     
+
 
 
