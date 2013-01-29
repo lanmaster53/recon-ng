@@ -73,8 +73,8 @@ class Module(framework.module):
 
             content = resp.text
 
-            # instantiate history list and creater header row
-            history = [['OS', 'Server', 'Last Changed', 'IP Address', 'Owner']]
+            # instantiate history list
+            history = []
             rows = re.findall(r'<tr class="T\wtr\d*">(?:\s|.)+?<\/div>', content)
             for row in rows:
                 cell = re.findall(r'>(.*?)<', row)
@@ -82,6 +82,8 @@ class Module(framework.module):
                 history.append([x.strip() for x in raw])
 
             if len(history) > 0:
+                header = ['OS', 'Server', 'Last Changed', 'IP Address', 'Owner']
+                history.insert(0, header)
                 self.build_table(history, True)
             else:
                 self.output('No results found')
