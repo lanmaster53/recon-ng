@@ -150,6 +150,35 @@ class module(cmd.Cmd):
         '''Formats and presents important output.'''
         print '%s[*]%s %s' % (G, N, line)
 
+    def build_table(self, tdata, header=False):
+        '''Accepts a list of rows and outputs a table.'''
+        if len(set([len(x) for x in tdata])) > 1:
+            self.error('Row lengths not consistent.')
+            return
+        lens = []
+        cols = len(tdata[0])
+        for i in range(0,cols):
+            lens.append(len(max([x[i] for x in tdata], key=len)))
+        # build table
+        if len(tdata) > 0:
+            separator_str = '+-%s%%s-+' % ('%s---'*(cols-1))
+            separator_sub = tuple(['-'*x for x in lens])
+            separator = separator_str % separator_sub
+            data_str = '| %s%%s |' % ('%s | '*(cols-1))
+            # top of table
+            self.output(separator)
+            # table data
+            if header:
+                rdata = tdata.pop(0)
+                data_sub = tuple([rdata[i].center(lens[i]) for i in range(0,cols)])
+                self.output(data_str % data_sub)
+                self.output(separator)
+            for rdata in tdata:
+                data_sub = tuple([rdata[i].ljust(lens[i]) for i in range(0,cols)])
+                self.output(data_str % data_sub)
+            # bottom of table
+            self.output(separator)
+
     def log(self, str):
         '''Logs information to the global framework log.'''
         logfile = open(self.goptions['log_file']['value'], 'ab')

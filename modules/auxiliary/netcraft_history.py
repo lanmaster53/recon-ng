@@ -42,17 +42,17 @@ class Module(framework.module):
         for host in hosts:
             url = 'http://uptime.netcraft.com/up/graph?site=%s' % (host)
             if verbose: self.output('URL: %s' % url)
-            try: content = self.request(url, cookies=cookies)
+            try: resp = self.request(url, cookies=cookies)
             except KeyboardInterrupt:
                 print ''
             except Exception as e:
                 self.error(e.__str__())
-            if not content: break
+            if not resp: break
 
-            if 'set-cookie' in content.headers:
+            if 'set-cookie' in resp.headers:
                 # we have a cookie to set!
                 if verbose: self.output('Setting cookie...')
-                cookie = content.headers['set-cookie']
+                cookie = resp.headers['set-cookie']
                 # this was taken from the netcraft page's JavaScript, no need to use big parsers just for that
                 # grab the cookie sent by the server, hash it and send the response
                 challenge_token = (cookie.split('=')[1].split(';')[0])
@@ -65,33 +65,25 @@ class Module(framework.module):
 
                 # Now we can request the page again
                 if verbose: self.output('URL: %s' % url)
-                try: content = self.request(url, cookies=cookies)
+                try: resp = self.request(url, cookies=cookies)
                 except KeyboardInterrupt:
                     print ''
                 except Exception as e:
                     self.error(e.__str__())
 
-            content = content.text
+            content = resp.text
 
+            # instantiate history list
             history = []
             rows = re.findall(r'<tr class="T\wtr\d*">(?:\s|.)+?<\/div>', content)
             for row in rows:
-                cell = re.findall(r'>(.*?)<', row) 
-                history.append([cell[0], cell[2], cell[4], cell[6], cell[8]])
-                
+                cell = re.findall(r'>(.*?)<', row)
+                raw  = [cell[0], cell[2], cell[4], cell[6], cell[8]]
+                history.append([x.strip() for x in raw])
+
             if len(history) > 0:
-                self.output("-------------------------------------------------------------------------------")
-                self.output("|       OS      |     Server    |  Last Changed |      IP       |     Owner    ")
-                self.output("-------------------------------------------------------------------------------")
-
-                # Strip, padd and substrings each entry to make a pretty table
-                for history in history:
-                    self.output("".join(['| %s ' % v.strip().ljust(13)[:13] for v in history]))
-                    
-                self.output("-------------------------------------------------------------------------------")
+                header = ['OS', 'Server', 'Last Changed', 'IP Address', 'Owner']
+                history.insert(0, header)
+                self.build_table(history, True)
             else:
-                self.alert('No results found')
-    
-
-
-
+                self.output('No results found')
