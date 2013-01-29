@@ -329,7 +329,8 @@ class module(cmd.Cmd):
         
         # process method and make request
         if method == 'GET':
-            req = urllib2.Request('%s?%s' % (url, payload), headers=headers)
+            if payload: url = '%s?%s' % (url, payload)
+            req = urllib2.Request(url, headers=headers)
         elif method == 'POST':
             req = urllib2.Request(url, data=payload, headers=headers)
         else:
