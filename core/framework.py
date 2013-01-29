@@ -150,7 +150,7 @@ class module(cmd.Cmd):
         '''Formats and presents important output.'''
         print '%s[*]%s %s' % (G, N, line)
 
-    def build_table(self, tdata, header=False):
+    def table(self, tdata, header=False):
         '''Accepts a list of rows and outputs a table.'''
         if len(set([len(x) for x in tdata])) > 1:
             self.error('Row lengths not consistent.')
