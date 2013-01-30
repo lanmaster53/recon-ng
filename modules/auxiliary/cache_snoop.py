@@ -8,19 +8,17 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('nameserver', '', 'yes', 'ip address of nameserver')
-        self.register_option('domains', 'default', 'yes', 'list of domains to check')
+        self.register_option('nameserver', '', 'yes', 'ip address of target\'s nameserver')
+        self.register_option('domains', './data/av_domains.lst', 'yes', 'domain or list of domains to snoop for')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
-                     'Name': 'DNS cache snooping',
+                     'Name': 'DNS Cache Snooper',
                      'Author': 'thrapt (thrapt@gmail.com)',
                      'Description': 'Uses the DNS cache snooping technique to check for visited domains',
                      'Comments': [
-                                  'Based on the work of 304geeks.com',
-                                  'http://304geeks.blogspot.com/2013/01/dns-scraping-for-corporate-av-detection.html',
-                                  '',
-                                  'domains options: default, <hostname>, <path/to/infile>',
-                                  'Nameserver must be in IP form.'
+                                  'Nameserver must be in IP form.',
+                                  'Domains options: host.domain.com, <path/to/infile>',
+                                  'http://304geeks.blogspot.com/2013/01/dns-scraping-for-corporate-av-detection.html'
                                  ]
                      }
 
@@ -34,13 +32,15 @@ class Module(framework.module):
         domains = self.options['domains']['value']
         nameserver = self.options['nameserver']['value']
         
-        if domains == 'default': domains = 'data/domains-scrape.lst'
-        if os.path.exists(domains): hosts = open(domains).read().split()
-        else: hosts = [domains]
+        if os.path.exists(domains):
+            hosts = open(domains).read().split()
+        else:
+            hosts = [domains]
         
         self.output('Starting queries...')
         
         for host in hosts:
+            status = 'Not found'
             # prepare our query
             query = dns.message.make_query(host, dns.rdatatype.A, dns.rdataclass.IN)
             # unset the Recurse flag 
@@ -51,22 +51,16 @@ class Module(framework.module):
             except KeyboardInterrupt:
                 print ''
                 return
-            except dns.resolver.NXDOMAIN: 
-                self.output('%s => Unknown', host)
-                return
-            except dns.resolver.NoAnswer: 
-                self.output('%s => No answer', nameserver)
-                return
+            except dns.resolver.NXDOMAIN: status = 'Unknown'
+            except dns.resolver.NoAnswer: status = 'No answer'
             except dns.exception.SyntaxError:
                 self.error('Nameserver must be in IP form.')
                 return
-            except: response = 'error'
+            except: status = 'Error'
 
             # searchs the response to find the answer
-            response = re.findall(r';ANSWER\s^(?=(?!;))(.*)$', str(response), re.MULTILINE)
-            
-            if len(response) > 0:
-                ip = response[0].split()[-1]
-                self.output('%s %s' % (host.ljust(50), ip))
+            if len(response.answer) > 0:
+                status = 'Snooped!'
+                self.alert('%s => %s' % (host, status))
             else:
-                if verbose: self.output('%s not found' % (host.ljust(50)))
+                if verbose: self.output('%s => %s' % (host, status))

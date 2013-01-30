@@ -33,11 +33,11 @@ class Module(framework.module):
             except KeyboardInterrupt:
                 print ''
                 return
-            except dns.resolver.NXDOMAIN: address = 'unknown'
-            except dns.resolver.NoAnswer: address = 'no answer'
+            except dns.resolver.NXDOMAIN: address = 'Unknown'
+            except dns.resolver.NoAnswer: address = 'No answer'
             except dns.exception.SyntaxError:
                 self.error('Nameserver must be in IP form.')
                 return
-            except: address = 'error'
+            except: address = 'Error'
             self.output('%s => %s' % (host, address))
             self.query('UPDATE hosts SET address="%s" WHERE rowid="%s"' % (address, row))
