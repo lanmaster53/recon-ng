@@ -57,6 +57,7 @@ class Recon(framework.module):
         # add logic to NOT break when a module fails, but alert which module fails
         self.loaded_summary = []
         self.loaded_modules = []
+        if reload: self.output('Reloading...')
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
                 cnt = 0
@@ -66,7 +67,6 @@ class Recon(framework.module):
                     modulepath = os.path.join(dirpath, filename)
                     ModuleFile = open(modulepath, 'rb')
                     try:
-                        if reload: self.output('Reloading %s...' % (modulename))
                         imp.load_source(modulename, modulepath, ModuleFile)
                         __import__(modulename)
                         cnt += 1
