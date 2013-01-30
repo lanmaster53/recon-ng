@@ -84,6 +84,6 @@ class Module(framework.module):
             if len(history) > 0:
                 header = ['OS', 'Server', 'Last Changed', 'IP Address', 'Owner']
                 history.insert(0, header)
-                self.build_table(history, True)
+                self.table(history, True)
             else:
                 self.output('No results found')
