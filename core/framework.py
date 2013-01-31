@@ -384,6 +384,11 @@ class module(cmd.Cmd):
         """Exits current prompt level"""
         return True
 
+    # alias for exit
+    def do_back(self, params):
+        """Exits current prompt level"""
+        return True
+
     def do_info(self, params):
         """Displays module information"""
         pattern = '%s%s:'
