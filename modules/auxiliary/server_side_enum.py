@@ -1,7 +1,6 @@
 import framework
 # unique to module
-import os
-import re
+from random import choice
 
 class Module(framework.module):
 
@@ -23,11 +22,58 @@ class Module(framework.module):
         # === begin here ===
         self.enumerate()
 
+    def lookup(self, db, name, value):
+        for platform in db:
+            for i in db[platform][name.lower()]:
+                if i.lower() in value.lower():
+                    return platform
+        return None
+
     def enumerate(self):
         host = self.options['host']['value']
         protocol = self.options['protocol']['value']
         redirect = self.options['redirect']['value']
         verbose = self.options['verbose']['value']
+
+        # dictionaries of search terms for each platform and check
+        # dictionary for server side scripting technologies
+        ss_script = {
+            'PHP': {
+                'ext':     ['php'],
+                'cookie':  ['phpsession', 'phpsessid'],
+                'powered': ['php']
+                },
+            'ASP/.NET': {
+                'ext':     ['asp', 'aspx'],
+                'cookie':  ['aspsessionid', 'asp.net_sessionid', 'aspsessid'],
+                'powered': ['asp', 'asp.net', 'vb.net']
+                },
+            'ColdFusion': {
+                'ext':     ['cfc', 'cfm', 'cfml', 'dbm', 'dbml'],
+                'cookie':  ['cfid', 'cftoken', 'cfglobals'],
+                'powered': ['coldfusion', 'cfmx']
+                },
+            'Java/J2E': {
+                'ext':     ['jsp', 'jspx', 'jspf'],
+                'cookie':  ['jsessionid', 'jsessid'],
+                'powered': ['jsp', 'jboss']
+                }
+            }
+        # dictionary for server side server technologies
+        ss_server = {
+            'Apache': {
+                'server': ['apache'],
+                'error':  ['apache']
+                },
+            'IIS': {
+                'server': ['iis'],
+                'error':  ['iis']
+                },
+            'Nginx': {
+                'server': ['nginx'],
+                'error':  ['nginx']
+                }
+            }
 
         # make request
         url = '%s://%s' % (protocol, host)
@@ -37,31 +83,67 @@ class Module(framework.module):
             return
         except Exception as e:
             self.error(e.__str__())
-        if not resp: return
+            return
         
+        tdata = []
         # check for redirect
+        if verbose: self.output('Checking for redirect...')
         if url != resp.url:
-            if verbose: self.output('URL => %s' % (url))
-            if verbose: self.output('REDIR => %s' % (resp.url)) 
+            if verbose: tdata.append(['URL', url, '--'])
+            if verbose: tdata.append(['REDIR', resp.url, '--'])
         else:
-            if verbose: self.output('URL => %s' % (resp.url))
+            if verbose: tdata.append(['URL', resp.url, '--'])
 
         # check file ext
+        if verbose: self.output('Checking file extension...')
         from urlparse import urlparse
-        path = urlparse(url).path
+        path = urlparse(resp.url).path
         if path:
             filename = path.split('/')[-1]
-            if verbose: self.output('FILENAME => %s' % (filename))
+            if verbose: tdata.append(['FILENAME', filename, '--'])
             if '.' in filename:
                 ext = filename.split('.')[-1]
-                self.output('EXT => %s' % (ext))
+                platform = self.lookup(ss_script, 'ext', ext)
+                if not platform: platform = 'Unknown'
+                tdata.append(['FILETYPE', ext, platform])
 
         # check headers
+        if verbose: self.output('Checking headers...')
         for header in resp.headers:
-            if header.lower() in ['server', 'x-powered-by', 'location']:
-                self.output('%s => %s' % (header.upper(), resp.headers[header]))
+            if header.lower() == 'location': platform = '--'
+            elif header.lower() == 'server': platform = self.lookup(ss_server, 'server', resp.headers[header])
+            elif header.lower() == 'x-powered-by': platform = self.lookup(ss_script, 'powered', resp.headers[header])
+            else: continue
+            # all ifs will end here if successful
+            if not platform: platform = 'Unknown'
+            tdata.append([header.upper(), resp.headers[header], platform])
 
         # check cookies
+        if verbose: self.output('Checking cookies...')
         for cookie in resp.cookies:
-            if 'sess' in cookie.name.lower():
-                self.output('COOKIE => %s' % (cookie.name))
+            platform = self.lookup(ss_script, 'cookie', cookie.name)
+            if platform:
+                tdata.append(['COOKIE', cookie.name, platform])
+            elif 'sess' in cookie.name.lower(): 
+                tdata.append(['COOKIE', cookie.name, 'Unknown'])
+
+        # check error
+        if verbose: self.output('Checking error page...')
+        seq = ''.join(map(chr, range(97, 123)))
+        pre = ''.join(choice(seq) for x in range(10))
+        suf = ''.join(choice(seq) for x in range(3))
+        bad_file = '%s.%s' % (pre, suf)
+        bad_url = '%s/%s' % (url, bad_file)
+        if verbose: self.output('Attempting to generate an error with %s...' % (bad_url))
+        try:
+            resp = self.request(bad_url, redirect=False)
+            platform = self.lookup(ss_server, 'error', resp.text)
+            if not platform: platform = 'Unknown'
+            tdata.append(['ERROR', '%s (/%s)' % (str(resp.status_code), bad_file), platform])
+        except KeyboardInterrupt:
+            print ''
+            return
+        except Exception as e:
+            self.error(e.__str__())
+
+        self.table(tdata)
