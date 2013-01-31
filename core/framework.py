@@ -366,6 +366,10 @@ class module(cmd.Cmd):
             req = urllib2.Request(url, headers=headers)
         elif method == 'POST':
             req = urllib2.Request(url, data=payload, headers=headers)
+        elif method == 'HEAD':
+            if payload: url = '%s?%s' % (url, payload)
+            req = urllib2.Request(url, headers=headers)
+            req.get_method = lambda : 'HEAD'
         else:
             raise Exception('Request method \'%s\' is not a supported method.' % (method))
         try:
