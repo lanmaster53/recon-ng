@@ -13,6 +13,7 @@ sys.path.append('./libs/')
 #import requests
 import urllib
 import urllib2
+import cookielib
 import json
 
 class module(cmd.Cmd):
@@ -351,7 +352,10 @@ class module(cmd.Cmd):
         if self.goptions['proxy']['value']:
             proxies = {'http': self.goptions['proxy_server']['value'], 'https': self.goptions['proxy_server']['value']}
             handlers.append(urllib2.ProxyHandler(proxies))
-        
+        # create cookie jar
+        cj = cookielib.CookieJar()
+        handlers.append(urllib2.HTTPCookieProcessor(cj))
+
         # install opener
         opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(opener)
@@ -370,13 +374,18 @@ class module(cmd.Cmd):
             resp = e
 
         # build and return response object
-        return ResponseObject(resp)
+        return ResponseObject(resp, cj)
 
     #==================================================
     # FRAMEWORK METHODS
     #==================================================
 
     def do_exit(self, params):
+        """Exits current prompt level"""
+        return True
+
+    # alias for exit
+    def do_back(self, params):
         """Exits current prompt level"""
         return True
 
@@ -507,7 +516,7 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
 
 class ResponseObject(object):
 
-    def __init__(self, resp):
+    def __init__(self, resp, cj):
         # set hidden text property
         self.__text__ = resp.read()
         # set inherited properties
@@ -516,6 +525,7 @@ class ResponseObject(object):
         self.headers = resp.headers.dict
         # detect and set encoding property
         self.encoding = resp.headers.getparam('charset')
+        self.cookies = cj
 
     @property
     def text(self):
