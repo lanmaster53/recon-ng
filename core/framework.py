@@ -162,23 +162,25 @@ class module(cmd.Cmd):
             lens.append(len(max([x[i] for x in tdata], key=len)))
         # build table
         if len(tdata) > 0:
-            separator_str = '+-%s%%s-+' % ('%s---'*(cols-1))
+            separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
             separator_sub = tuple(['-'*x for x in lens])
             separator = separator_str % separator_sub
-            data_str = '| %s%%s |' % ('%s | '*(cols-1))
+            data_str = '%s| %s%%s |' % (self.spacer, '%s | '*(cols-1))
             # top of table
-            self.output(separator)
+            print ''
+            print separator
             # table data
             if header:
                 rdata = tdata.pop(0)
                 data_sub = tuple([rdata[i].center(lens[i]) for i in range(0,cols)])
-                self.output(data_str % data_sub)
-                self.output(separator)
+                print data_str % data_sub
+                print separator
             for rdata in tdata:
                 data_sub = tuple([rdata[i].ljust(lens[i]) for i in range(0,cols)])
-                self.output(data_str % data_sub)
+                print data_str % data_sub
             # bottom of table
-            self.output(separator)
+            print separator
+            print ''
 
     def log(self, str):
         '''Logs information to the global framework log.'''

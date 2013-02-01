@@ -32,6 +32,7 @@ __builtin__.goptions = {}
 class Recon(framework.module):
     def __init__(self):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
+        self.mod_delim = '::'
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, prompt)
         self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
@@ -63,7 +64,7 @@ class Recon(framework.module):
                 cnt = 0
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     # this (as opposed to sys.path.append) allows for module reloading
-                    modulename = '%s_%s' % ('_'.join(dirpath.split('/')[2:]), filename.split('.')[0])
+                    modulename = '%s%s%s' % (self.mod_delim.join(dirpath.split('/')[2:]), self.mod_delim, filename.split('.')[0])
                     modulepath = os.path.join(dirpath, filename)
                     ModuleFile = open(modulepath, 'rb')
                     try:
@@ -82,7 +83,7 @@ class Recon(framework.module):
         key_len = len(max(modules, key=len)) + len(self.spacer)
         last_category = ''
         for module in sorted(modules):
-            category = module.split('_')[0]
+            category = module.split(self.mod_delim)[0]
             if category != last_category:
                 # print header
                 print ''

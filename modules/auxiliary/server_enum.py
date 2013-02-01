@@ -1,6 +1,7 @@
 import framework
 # unique to module
 from random import choice
+import textwrap
 
 class Module(framework.module):
 
@@ -23,10 +24,13 @@ class Module(framework.module):
         self.enumerate()
 
     def lookup(self, db, name, value):
+        matches = []
         for platform in db:
             for i in db[platform][name.lower()]:
                 if i.lower() in value.lower():
-                    return platform
+                    matches.append(platform)
+        if matches:
+            return ', '.join(list(set(matches)))
         return None
 
     def enumerate(self):
@@ -57,6 +61,11 @@ class Module(framework.module):
                 'ext':     ['jsp', 'jspx', 'jspf'],
                 'cookie':  ['jsessionid', 'jsessid'],
                 'powered': ['jsp', 'jboss']
+                },
+            'Rails': {
+                'ext':     [],
+                'cookie':  [],
+                'powered': ['rails']
                 }
             }
         # dictionary for server side server technologies
@@ -72,6 +81,14 @@ class Module(framework.module):
             'Nginx': {
                 'server': ['nginx'],
                 'error':  ['nginx']
+                },
+            'Python': {
+                'server': ['python'],
+                'error':  ['python', 'django']
+                },
+            'Ruby': {
+                'server': ['ruby'],
+                'error':  ['ruby']
                 }
             }
 
@@ -85,9 +102,20 @@ class Module(framework.module):
             self.error(e.__str__())
             return
         
+        if verbose:
+            print 'START'.center(50, self.ruler)
+            self.output('ORIG_URL: %s' % (url))
+            self.output('DEST_URL: %s' % (resp.url))
+            print 'HEADERS'.center(50, self.ruler)
+            for header in resp.headers:
+                self.output('%s: %s' % (header.upper(), textwrap.fill(resp.headers[header], 100, initial_indent='', subsequent_indent=self.spacer*2)))
+            print 'COOKIES'.center(50, self.ruler)
+            for cookie in resp.cookies:
+                self.output('%s: %s' % (cookie.name.upper(), textwrap.fill(cookie.value, 100, initial_indent='', subsequent_indent=self.spacer*2)))
+            print 'END'.center(50, self.ruler)
+
         tdata = []
         # check for redirect
-        if verbose: self.output('Checking for redirect...')
         if url != resp.url:
             if verbose: tdata.append(['URL', url, '--'])
             if verbose: tdata.append(['REDIR', resp.url, '--'])
@@ -95,7 +123,6 @@ class Module(framework.module):
             if verbose: tdata.append(['URL', resp.url, '--'])
 
         # check file ext
-        if verbose: self.output('Checking file extension...')
         from urlparse import urlparse
         path = urlparse(resp.url).path
         if path:
@@ -108,7 +135,6 @@ class Module(framework.module):
                 tdata.append(['FILETYPE', ext, platform])
 
         # check headers
-        if verbose: self.output('Checking headers...')
         for header in resp.headers:
             if header.lower() == 'location': platform = '--'
             elif header.lower() == 'server': platform = self.lookup(ss_server, 'server', resp.headers[header])
@@ -119,7 +145,6 @@ class Module(framework.module):
             tdata.append([header.upper(), resp.headers[header], platform])
 
         # check cookies
-        if verbose: self.output('Checking cookies...')
         for cookie in resp.cookies:
             platform = self.lookup(ss_script, 'cookie', cookie.name)
             if platform:
@@ -128,13 +153,11 @@ class Module(framework.module):
                 tdata.append(['COOKIE', cookie.name, 'Unknown'])
 
         # check error
-        if verbose: self.output('Checking error page...')
         seq = ''.join(map(chr, range(97, 123)))
         pre = ''.join(choice(seq) for x in range(10))
         suf = ''.join(choice(seq) for x in range(3))
         bad_file = '%s.%s' % (pre, suf)
         bad_url = '%s/%s' % (url, bad_file)
-        if verbose: self.output('Attempting to generate an error with %s...' % (bad_url))
         try:
             resp = self.request(bad_url, redirect=False)
             platform = self.lookup(ss_server, 'error', resp.text)
