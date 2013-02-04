@@ -32,7 +32,7 @@ __builtin__.goptions = {}
 class Recon(framework.module):
     def __init__(self):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
-        self.mod_delim = '::'
+        self.mod_delim = '_'
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, prompt)
         self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
