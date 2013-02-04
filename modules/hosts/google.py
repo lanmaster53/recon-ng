@@ -44,7 +44,7 @@ class Module(framework.module):
             for sub in subs:
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
-            payload = {'start': page*nr, 'q': full_query}
+            payload = {'start': page*nr, 'q': full_query, 'filter' : 0}
             # note: query character limit is passive in mobile, but seems to be ~794
             # note: query character limit seems to be 852 for desktop queries
             # note: typical URI max length is 2048 (starts after top level domain)
