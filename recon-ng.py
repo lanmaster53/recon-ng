@@ -184,10 +184,13 @@ class Recon(framework.module):
         if not params:
             self.help_search()
             return
-        str = params.split()[0]
-        self.output('Searching for \'%s\'' % (str))
-        modules = [x for x in self.loaded_modules if str in x]
-        self.display_modules(modules)
+        text = params.split()[0]
+        self.output('Searching for \'%s\'' % (text))
+        modules = [x for x in self.loaded_modules if text in x]
+        if not modules:
+            self.error('No modules found containing \'%s\'.' % (text))
+        else:
+            self.display_modules(modules)
 
     def do_load(self, params):
         """Loads selected module"""
