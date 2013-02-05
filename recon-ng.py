@@ -24,15 +24,22 @@ __builtin__.R  = "\033[31m" # red
 __builtin__.G  = "\033[32m" # green
 __builtin__.O  = "\033[33m" # orange
 __builtin__.B  = "\033[34m" # blue
+
 # mode flags
 __builtin__.script = 0
+
 # set global framework options
 __builtin__.goptions = {}
+
+# set the module path delimiter
+# delimiter only effects systems with GNU readline
+# defaults to ':' for systems with libedit readline
+__builtin__.module_delimiter = ':'
 
 class Recon(framework.module):
     def __init__(self):
         self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
-        self.mod_delim = '_'
+        self.module_delimiter = __builtin__.module_delimiter
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, prompt)
         self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
@@ -56,39 +63,40 @@ class Recon(framework.module):
 
     def load_modules(self, reload=False):
         # add logic to NOT break when a module fails, but alert which module fails
-        self.loaded_summary = []
+        self.loaded_summary = {}
         self.loaded_modules = []
         if reload: self.output('Reloading...')
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
-                cnt = 0
+                mod_category = dirpath.split('/')[2]
+                if not mod_category in self.loaded_summary: self.loaded_summary[mod_category] = 0
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     # this (as opposed to sys.path.append) allows for module reloading
-                    modulename = '%s%s%s' % (self.mod_delim.join(dirpath.split('/')[2:]), self.mod_delim, filename.split('.')[0])
-                    modulepath = os.path.join(dirpath, filename)
-                    ModuleFile = open(modulepath, 'rb')
+                    mod_name = filename.split('.')[0]
+                    mod_loadname = '%s%s%s' % (self.module_delimiter.join(dirpath.split('/')[2:]), self.module_delimiter, mod_name)
+                    mod_loadpath = os.path.join(dirpath, filename)
+                    mod_file = open(mod_loadpath, 'rb')
                     try:
-                        imp.load_source(modulename, modulepath, ModuleFile)
-                        __import__(modulename)
-                        cnt += 1
-                        self.loaded_modules.append(modulename)
+                        imp.load_source(mod_loadname, mod_loadpath, mod_file)
+                        __import__(mod_loadname)
+                        self.loaded_summary[mod_category] += 1
+                        self.loaded_modules.append(mod_loadname)
                     except:
                         print '-'*60
                         traceback.print_exc(file=sys.stdout)
                         print '-'*60
                         self.error('Unable to load module: %s' % (modulename))
-                self.loaded_summary.append(('/'.join(dirpath.split('/')[2:]), cnt))
 
     def display_modules(self, modules):
         key_len = len(max(modules, key=len)) + len(self.spacer)
         last_category = ''
         for module in sorted(modules):
-            category = module.split(self.mod_delim)[0]
+            category = module.split(self.module_delimiter)[0]
             if category != last_category:
                 # print header
                 print ''
                 last_category = category
-                print '%s%s%s:' % (self.spacer, last_category[0].upper(), last_category[1:])
+                print '%s%s:' % (self.spacer, last_category.title())
                 print '%s%s' % (self.spacer, self.ruler*key_len)
             # print module
             print '%s%s' % (self.spacer*2, module)
@@ -100,8 +108,8 @@ class Recon(framework.module):
         print banner
         print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), banner_len+8) # +8 compensates for the color bytes
         print ''
-        for module in self.loaded_summary:
-            print '%s[%d] %s modules%s' % (B, module[1], module[0], N)
+        for category in sorted(self.loaded_summary.keys()):
+            print '%s[%d] %s modules%s' % (B, self.loaded_summary[category], category, N)
         print ''
 
     def init_db(self):
@@ -141,8 +149,8 @@ class Recon(framework.module):
                     print '-'*60
                     traceback.print_exc(file=sys.stdout)
                     print '-'*60
-            except KeyError: self.error('Invalid module name.')
-            except AttributeError: self.error('Invalid module name.')
+            except (KeyError, AttributeError):
+                self.error('Invalid module name.')
 
     def do_banner(self, params):
         """Displays the banner"""
@@ -175,6 +183,9 @@ class Recon(framework.module):
         """Lists available modules"""
         if params:
             modules = [x for x in self.loaded_modules if x.startswith(params)]
+            if not modules:
+                self.error('Invalid module category.')
+                return
         else:
             modules = self.loaded_modules
         self.display_modules(modules)
@@ -262,9 +273,11 @@ if __name__ == '__main__':
     else:
         import rlcompleter
         if 'libedit' in readline.__doc__:
+            __builtin__.module_delimiter = ':'
             readline.parse_and_bind("bind ^I rl_complete")
         else:
             readline.parse_and_bind("tab: complete")
+        readline.set_completer_delims(readline.get_completer_delims().replace(__builtin__.module_delimiter, ''))
     # check for and run script session
     if opts.script_file:
         try:
