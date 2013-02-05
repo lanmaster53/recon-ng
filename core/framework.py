@@ -325,8 +325,9 @@ class module(cmd.Cmd):
         except sqlite3.OperationalError:
             return False
         except sqlite3.IntegrityError:
-            self.output('Duplicate key name \'%s\'.' % (key_name))
-            return False
+            try: c.execute('UPDATE keys SET value=? WHERE name=?', (key_value, key_name))
+            except sqlite3.OperationalError:
+                return False
         conn.commit()
         conn.close()
         return True

@@ -36,7 +36,7 @@ class Module(framework.module):
 
     def get_access_tokens(self):
         client = oauth.Client(self.consumer)
-        request_token_url = 'https://api.linkedin.com/uas/oauth/requestToken'
+        request_token_url = 'https://api.linkedin.com/uas/oauth/requestToken?scope=r_basicprofile+r_network'
         try: resp, content = client.request(request_token_url, "POST")
         except KeyboardInterrupt:
             print ''
@@ -45,7 +45,7 @@ class Module(framework.module):
             raise Exception(self.error('Error: Invalid Response %s.' % resp['status']))
         request_token = dict(urlparse.parse_qsl(content))
         base_authorize_url = 'https://api.linkedin.com/uas/oauth/authorize'
-        authorize_url = "%s?oauth_token=%s&scope=%s" % (base_authorize_url, request_token['oauth_token'], 'r_basicprofile+r_network')
+        authorize_url = "%s?oauth_token=%s" % (base_authorize_url, request_token['oauth_token'])
         self.output('Go to the following link in your browser and enter the pin below:') 
         self.output(authorize_url)
         w = webbrowser.get()
