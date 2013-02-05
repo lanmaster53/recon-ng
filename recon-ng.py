@@ -85,7 +85,7 @@ class Recon(framework.module):
                         print '-'*60
                         traceback.print_exc(file=sys.stdout)
                         print '-'*60
-                        self.error('Unable to load module: %s' % (modulename))
+                        self.error('Unable to load module: %s' % (mod_name))
 
     def display_modules(self, modules):
         key_len = len(max(modules, key=len)) + len(self.spacer)
