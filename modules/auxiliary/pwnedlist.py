@@ -1,20 +1,19 @@
 import framework
 # unique to module
-import os
 import re
 
 class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'database', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'PwnedList Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
-                                  'Source options: database, <email@address>, <path/to/infile>'
+                                  'Source options: db, <email@address>, <path/to/infile>'
                                   ]
                      }
 
@@ -26,15 +25,8 @@ class Module(framework.module):
     def check_pwned(self):
         verbose = self.options['verbose']['value']
         
-        # handle sources
-        source = self.options['source']['value']
-        if source == 'database':
-            accounts = [x[0] for x in self.query('SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')]
-            if len(accounts) == 0:
-                self.error('No email addresses in the database.')
-                return
-        elif os.path.exists(source): accounts = open(source).read().split()
-        else: accounts = [source]
+        accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
+        if not accounts: return
 
         # retrieve status
         pattern = "class='query_result_footer'>... we found your email in our database a total of (\d+?) times. It was last seen on ([\d-]+?). Please read on. <div"

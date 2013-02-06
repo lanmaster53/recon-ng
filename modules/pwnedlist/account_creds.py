@@ -7,13 +7,13 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'database', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of module input')
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the PwnedList API for credentials asscoiated with usernames. This module updates the \'creds\' table of the database with the results.',
                      'Comments': [
-                                  'Source options: database, <email@address>, <path/to/infile>',
+                                  'Source options: db, <email@address>, <path/to/infile>',
                                   'API Query Cost: 1 query per request.'
                                   ]
                      }
@@ -30,18 +30,11 @@ class Module(framework.module):
         secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
         if not secret: return
         decrypt_key = secret[:16]
-        iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV')
+        iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV').encode('ascii')
         if not iv: return
 
-        # handle sources
-        source = self.options['source']['value']
-        if source == 'database':
-            accounts = [x[0] for x in self.query('SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')]
-            if len(accounts) == 0:
-                self.error('No unresolved pwned accounts in the database.')
-                return
-        elif os.path.exists(source): accounts = open(source).read().split()
-        else: accounts = [source]
+        accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')
+        if not accounts: return
 
         # API query guard
         if not pwnedlist.guard(len(accounts)): return

@@ -1,19 +1,18 @@
 import framework
 # unique to module
-import os
 
 class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'database', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'ELMAH Log Scanner',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Checks hosts for a \'elmah.axd\' log page.',
                      'Comments': [
-                                  'Source options: database, <hostname>, <path/to/infile>',
+                                  'Source options: db, <hostname>, <path/to/infile>',
                                   'http://www.troyhunt.com/2012/01/aspnet-session-hijacking-with-google.html',
                                   'Google dorks: inurl:elmah.axd ASPXAUTH',
                                   '              inurl:elmah.axd intitle:"Error log for"'
@@ -28,15 +27,8 @@ class Module(framework.module):
     def check_for_elmah(self):
         verbose = self.options['verbose']['value']
         
-        # handle sources
-        source = self.options['source']['value']
-        if source == 'database':
-            hosts = [x[0] for x in self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')]
-            if len(hosts) == 0:
-                self.error('No hosts in the database.')
-                return
-        elif os.path.exists(source): hosts = open(source).read().split()
-        else: hosts = [source]
+        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        if not hosts: return
 
         # check all hosts for elmah page
         protocols = ['http', 'https']
@@ -49,7 +41,6 @@ class Module(framework.module):
                     code = resp.status_code
                 except KeyboardInterrupt:
                     print ''
-                    code = None
                     return
                 except:
                     code = 'Error'
