@@ -22,5 +22,4 @@ class Module(framework.module):
         # do not remove or modify
         if not self.validate_options(): return
         # === begin module code here ===
-        # call the main method which will handle module logic
 	self.add_host( self.options['host']['value'], self.options['address']['value'] )
