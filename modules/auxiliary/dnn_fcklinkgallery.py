@@ -1,6 +1,7 @@
 import framework
 # unique to module
 import os
+import urllib
 
 class Module(framework.module):
 
@@ -11,8 +12,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Dot Net Nuke Remote File Upload Vulnerability Checker',
                      'Author': 'Jay Turla (@shipcod3)',
-                     'Description': 'Checks all of the hosts stored in the database for a fcklinkgallery.aspx' 
-                     'page for Dot Net Nuke(DNN) which is possibly vulnerable to Remote File Upload.',
+                     'Description': 'Checks the hosts for a DNN fcklinkgallery page which is possibly vulnerable to Remote File Upload.',
                      'Comments': [
                                   'Source options: database, <hostname>, <path/to/infile>',
                                   'http://www.exploit-db.com/exploits/12700/'
@@ -22,9 +22,9 @@ class Module(framework.module):
     def do_run(self, params):
         if not self.validate_options(): return
         # === begin here ===
-        self.check_for_status()
+        self.check_for_dnnfcklink()
     
-    def check_for_status(self):
+    def check_for_dnnfcklink(self):
         verbose = self.options['verbose']['value']
         
         # handle sources
@@ -48,10 +48,9 @@ class Module(framework.module):
                     code = resp.status_code
                 except KeyboardInterrupt:
                     print ''
-                    code = None
                     return
                 except:
-                    code = 'Error'
+                   code = 'Error'
                 if code == 200:
                     self.alert('%s => %s. Possible DNN fcklinkgallery page found!' % (url, code))
                     cnt += 1
