@@ -317,7 +317,7 @@ class module(cmd.Cmd):
         row = c.fetchone()
         conn.close()
         if row:
-            return row[0]
+            return str(row[0])
         else:
             return False
 
@@ -325,7 +325,7 @@ class module(cmd.Cmd):
         '''Retrieves an API key from the user.'''
         try:
             key = raw_input("Enter %s (blank to skip): " % (key_text))
-            return key
+            return str(key)
         except KeyboardInterrupt:
             print ''
             return False
