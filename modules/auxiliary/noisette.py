@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import os
 import re
 from xml.dom.minidom import parseString
 
@@ -15,7 +14,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
-                                  'Source options: database, <hash>, <path/to/infile>',
+                                  'Source options: db, <hash>, <path/to/infile>',
                                   'Hash types supported: MD5'
                                   ]
                      }
@@ -28,15 +27,8 @@ class Module(framework.module):
     def noisette(self):
         verbose = self.options['verbose']['value']
         
-        # handle sources
-        source = self.options['source']['value']
-        if source == 'database':
-            hashes = [x[0] for x in self.query('SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')]
-            if len(hashes) == 0:
-                self.error('No hashes in the database.')
-                return
-        elif os.path.exists(source): hashes = open(source).read().split()
-        else: hashes = [source]
+        hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
+        if not hashes: return
 
         # lookup each hash
         url = 'http://md5.noisette.ch/md5.php'

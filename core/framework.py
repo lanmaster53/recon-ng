@@ -245,6 +245,19 @@ class module(cmd.Cmd):
         conn.close()
         return c.rowcount
 
+    def get_source(self, source, query=None):
+        if source.lower() == 'db':
+            rows = self.query(query)
+            if not rows:
+                self.error('No items found.')
+                return None
+            sources = [x[0] for x in rows]
+        elif os.path.exists(source):
+            sources = open(source).read().split()
+        else:
+            sources = [source]
+        return sources
+
     def query(self, params, return_results=True):
         '''Queries the database and returns the results as a list.'''
         # based on the do_ouput method

@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import os
 import gzip
 from StringIO import StringIO
 
@@ -8,14 +7,14 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'database', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'robots.txt/sitemap.xml Finder',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Checks all of the hosts stored in the database for the robots.txt, sitemap.xml and sitemap.xml.gz.',
+                     'Description': 'Checks hosts for a robots.txt, sitemap.xml and sitemap.xml.gz file.',
                      'Comments': [
-                                  'Source options: database, <hostname>, <path/to/infile>',
+                                  'Source options: db, <hostname>, <path/to/infile>',
                                   ]
                      }
 
@@ -38,15 +37,8 @@ class Module(framework.module):
     def check_for_status(self):
         verbose = self.options['verbose']['value']
         
-        # handle sources
-        source = self.options['source']['value']
-        if source == 'database':
-            hosts = [x[0] for x in self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')]
-            if len(hosts) == 0:
-                self.error('No hosts in the database.')
-                return
-        elif os.path.exists(source): hosts = open(source).read().split()
-        else: hosts = [source]
+        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        if not hosts: return
 
         # check all hosts for robots.txt, sitemap.xml and sitemap.xml.gz
         protocols = ['http', 'https']
@@ -62,7 +54,6 @@ class Module(framework.module):
                         code = resp.status_code
                     except KeyboardInterrupt:
                         print ''
-                        code = None
                         return
                     except:
                         code = 'Error'

@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import os
 import re
 import hashlib
 import urllib
@@ -9,14 +8,14 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'database', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',
                      'Description': 'Checks Netcraft for the Hosting History of given target.',
                      'Comments': [
-                                  'Source options: database, <hostname>, <path/to/infile>',
+                                  'Source options: db, <hostname>, <path/to/infile>',
                                  ]
                      }
 
@@ -29,15 +28,8 @@ class Module(framework.module):
         verbose = self.options['verbose']['value']
         cookies = {}
 
-        # handle sources
-        source = self.options['source']['value']
-        if source == 'database':
-            hosts = [x[0] for x in self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')]
-            if len(hosts) == 0:
-                self.error('No hosts in the database.')
-                return
-        elif os.path.exists(source): hosts = open(source).read().split()
-        else: hosts = [source]
+        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        if not hosts: return
 
         for host in hosts:
             url = 'http://uptime.netcraft.com/up/graph?site=%s' % (host)
@@ -45,6 +37,7 @@ class Module(framework.module):
             try: resp = self.request(url, cookies=cookies)
             except KeyboardInterrupt:
                 print ''
+                return
             except Exception as e:
                 self.error(e.__str__())
             if not resp: break
