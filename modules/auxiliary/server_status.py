@@ -44,8 +44,8 @@ class Module(framework.module):
                     return
                 except:
                     code = 'Error'
-                if code == 200:
-                    self.alert('%s => %s. Possible server status page found!' % (url, code))
+                if code == 200 and '>Apache Status<' in resp.text:
+                    self.alert('%s => %s. Possible Apache Status page found!' % (url, code))
                     cnt += 1
                 else:
                     if verbose: self.output('%s => %s' % (url, code))
