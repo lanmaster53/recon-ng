@@ -25,9 +25,9 @@ class Module(framework.module):
         domain = self.options['domain']['value']
 
         # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
+        key = self.manage_key('pwned_key', 'PwnedList API Key')
         if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
+        secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
         if not secret: return
         decrypt_key = secret[:16]
         iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV')

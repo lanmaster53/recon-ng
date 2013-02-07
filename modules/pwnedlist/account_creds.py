@@ -25,12 +25,12 @@ class Module(framework.module):
 
     def get_creds(self):
         # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
+        key = self.manage_key('pwned_key', 'PwnedList API Key')
         if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
+        secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
         if not secret: return
         decrypt_key = secret[:16]
-        iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV').encode('ascii')
+        iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV')
         if not iv: return
 
         accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')

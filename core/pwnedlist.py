@@ -17,7 +17,7 @@ def build_payload(payload, method, key, secret):
 
 def decrypt(ciphertext, key, iv):
     decoded = base64.b64decode(ciphertext)
-    return aes.decryptData(key, iv + decoded)
+    return aes.decryptData(key, str(iv) + decoded)
 
 def guard(num):
     ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (num))
