@@ -1,7 +1,6 @@
 import framework
 # unique to module
 import os
-import urllib
 
 class Module(framework.module):
 
@@ -51,9 +50,9 @@ class Module(framework.module):
                     return
                 except:
                    code = 'Error'
-                if code == 200:
-                    self.alert('%s => %s. Possible DNN fcklinkgallery page found!' % (url, code))
+                if code == 200 and '> Link Gallery' in resp.text:
+                    self.alert('%s. > Possible DNN Fcklinkgallery page found!' % (url))
                     cnt += 1
                 else:
-                    if verbose: self.output('%s => %s' % (url, code))
-        self.output('%d DNN fcklinkgallery pages found.' % (cnt))
+                    if verbose: self.output('%s => %s Error!' % (url, code))
+        self.output('%d DNN Fcklinkgallery pages found.' % (cnt))
