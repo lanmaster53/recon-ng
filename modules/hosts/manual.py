@@ -11,7 +11,7 @@ class Module(framework.module):
         self.register_option('address', None, 'no', 'The IP address of the host')
 
         self.info = {
-                     'Name': 'Manual add host',
+                     'Name': 'Manuallly add host',
                      'Author': 'Drumm',
                      'Description': 'Manually adds a host.',
                      'Comments':[ ]

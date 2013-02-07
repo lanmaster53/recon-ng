@@ -13,7 +13,7 @@ class Module(framework.module):
 
 
         self.info = {
-                     'Name': 'Contact manual add',
+                     'Name': 'Manually add contact',
                      'Author': 'Drumm',
                      'Description': 'Manually adds a contact.',
                      'Comments':[ ]
