@@ -52,14 +52,10 @@ class Module(framework.module):
             return
 
         # handle output
-        domain = jsonobj['domain']
-        if not domain:
+        if not jsonobj['domain']:
             self.output('Domain \'%s\' has no publicly compromised accounts.' % (domain))
             return
-        first_seen = jsonobj['first_seen']
-        last_seen = jsonobj['last_seen']
-        num_entries = jsonobj['num_entries']
-        self.output('Domain: %s' % (domain))
-        self.output('First seen: %s' % (first_seen))
-        self.output('Last seen: %s' % (last_seen))
-        self.alert('Pwned Accounts: %d' % (num_entries))
+        self.output('Domain: %s' % (jsonobj['domain']))
+        self.output('First seen: %s' % (jsonobj['first_seen']))
+        self.output('Last seen: %s' % (jsonobj['last_seen']))
+        self.alert('Pwned Accounts: %d' % (jsonobj['num_entries']))
