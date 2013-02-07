@@ -1,36 +1,64 @@
-#!/usr/bin/env python
-
+import framework
+# unique to module
+import re
 from bs4 import BeautifulSoup
-import optparse, re, urllib2
+import urllib
 
-def printLinks(dom):
-    url = "http://xssed.com/search?key=" + dom
-    html = urllib2.urlopen(url)
-    
-    try:
-        print '\n[-] Printing possible hits from XSSed.com for %s' % dom
-        soup = BeautifulSoup(html.read())
-        for link in soup.findAll('a', attrs={'href': re.compile("mirror")}):
-            print "[+] Found http://xssed.com" + link.get('href')
- 
-            subhtml = urllib2.urlopen('http://xssed.com'+link.get('href'))
-            subsoup = BeautifulSoup(subhtml.read())
-            #rows = subsoup.findAll("th", {"class":"row3"})
-            data = [a.get_text() for a in subsoup.findAll("th", {"class":"row3"})]
-            print "[!]   %s\n[!]   %s\n[!]   %s, %s\n[!]   %s\n[!]   %s" % (data[5], data[8], data[0], data[1], data[3], data[6])
-    except:
-        pass
+class Module(framework.module):
+
+    def __init__(self, params):
+        framework.module.__init__(self, params)
+        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.info = {
+                     'Name': 'XSSed Host Lookup',
+                     'Author': 'Micah Hoffman (@WebBreacher)',
+                     'Description': 'Checks XSSed site for XSS records for given target.',
+                     'Comments': []
+                     }
+
+    def do_run(self, params):
+        if not self.validate_options(): return
+        # === begin here ===
+        self.xssed()
+
+    def xssed(self):
+        verbose = self.options['verbose']['value']
+        domain = self.options['domain']['value']
+
+        url = 'http://xssed.com/search?key=%s' % (domain)
+        if verbose: self.output('URL: %s' % url)
+        try: resp = self.request(url)
+        except KeyboardInterrupt:
+            print ''
+        except Exception as e:
+            self.error(e.__str__())
+        if not resp: exit(0)
         
-def main():
-    parser = optparse.OptionParser('usage%prog -d <targetDomain>')
-    parser.add_option('-d', dest='tgtDOMAIN', type='string', help='specify target domain')
-    (options, args) = parser.parse_args()
-    dom = options.tgtDOMAIN
-    if dom == None:
-        print parser.usage
-        exit(0)
-    else:
-        printLinks(dom)
+        content = resp.text
+
+        # Find if there are any results for the domain search
+        results = re.findall(r"Results for.*", content)
+        if results:
+            rows = re.split('<br>', str(results))
+            for row in rows:
+                finding = re.findall(r"mirror/([0-9]+)/.+blank\\'>(.+?)</a>", row)
+                if finding:
+                    # Now go fetch and parse the specific page for this item
+                    urlDetail = 'http://xssed.com/mirror/%s/' % finding[0][0]
+                    try: respDetail = self.request(urlDetail)
+                    except KeyboardInterrupt:
+                        print ''
+                    except Exception as e:
+                        self.error(e.__str__())
+                    if not respDetail: exit(0)
+                    
+                    #parse the response and get the details
+                    soup = BeautifulSoup(respDetail.text)
+                    data = [a.get_text() for a in soup.findAll("th", {"class":"row3"})]
+                    self.output(data[8])
+                    self.output('  '+data[0]+'; '+data[1]+'; '+data[3]+'; '+data[6])
+                    
+        else:
+            self.output('No results found')
         
-if __name__ == '__main__':
-    main()
