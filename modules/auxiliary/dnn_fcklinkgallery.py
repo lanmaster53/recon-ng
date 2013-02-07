@@ -2,14 +2,14 @@ import framework
 # unique to module
 
 class Module(framework.module):
-	
-	def __init__(self, params):
+
+    def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Dot Net Nuke Remote File Upload Vulnerability Checker',
-                     'Author': 'Jay Turla (@shipcod3)',
+                     'Author': 'Jay (@shipcod3)',
                      'Description': 'Checks the hosts for a DNN fcklinkgallery page which is possibly vulnerable to Remote File Upload.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',
@@ -41,10 +41,10 @@ class Module(framework.module):
                     print ''
                     return
                 except:
-                   code = 'Error'
+                    code = 'Error'
                 if code == 200 and '> Link Gallery' in resp.text:
-                    self.alert('%s. => Possible DNN Fcklinkgallery page found!' % (url))
+                    self.alert('%s => %s. Possible DNN Fcklinkgallery page found!' % (url, code))
                     cnt += 1
                 else:
                     if verbose: self.output('%s => %s' % (url, code))
-        self.output('%d DNN Fcklinkgallery pages found.' % (cnt))
+        self.output('%d DNN Fcklinkgallery pages found' % (cnt))
