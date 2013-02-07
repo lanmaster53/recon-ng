@@ -36,7 +36,6 @@ class module(cmd.Cmd):
 
     def default(self, line):
         self.do_shell(line)
-        self.log('Shell: %s' % (line))
 
     def emptyline(self):
         # disables running of last command when no command is given
@@ -46,8 +45,11 @@ class module(cmd.Cmd):
     def precmd(self, line):
         if __builtin__.script:
             sys.stdout.write('%s\n' % (line))
-        else:
-            self.log('Command: %s' % (line))
+        if __builtin__.record:
+            recorder = open(self.goptions['rec_file']['value'], 'ab')
+            recorder.write('%s\n' % (line))
+            recorder.flush()
+            recorder.close()
         return line
 
     def onecmd(self, line):
@@ -140,7 +142,6 @@ class module(cmd.Cmd):
 
     def error(self, line):
         '''Formats and presents errors.'''
-        self.log('Error: %s' % (line))
         print '%s[!] %s%s' % (R, line, N)
 
     def output(self, line):
@@ -181,12 +182,6 @@ class module(cmd.Cmd):
             # bottom of table
             print separator
             print ''
-
-    def log(self, str):
-        '''Logs information to the global framework log.'''
-        logfile = open(self.goptions['log_file']['value'], 'ab')
-        logfile.write('[%s] %s\n' % (datetime.datetime.now(), str))
-        logfile.close()
 
     def unescape(self, s):
         '''Unescapes HTML markup and returns an unescaped string.'''
@@ -488,6 +483,22 @@ class module(cmd.Cmd):
         """Queries the database"""
         self.query(params, False)
 
+    def do_record(self, params):
+        """Records commands to a resource file"""
+        arg = params.lower()
+        rec_file = self.goptions['rec_file']['value']
+        if arg == 'start':
+            __builtin__.record = 1
+            self.output('Recording commands to \'%s\'' % (rec_file))
+        elif arg == 'stop':
+            __builtin__.record = 0
+            self.output('Recording stopped. Commands saved to \'%s\'' % (rec_file))
+        elif arg == 'status':
+            status = 'started' if __builtin__.record == 1 else 'stopped'
+            self.output('Command recording is %s.' % (status))
+        else:
+            self.help_record()
+
     def do_shell(self, params):
         """Executed shell commands"""
         proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
@@ -515,6 +526,9 @@ class module(cmd.Cmd):
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
         print '...or just type a command at the prompt.'
+
+    def help_record(self):
+        print 'Usage: record [start|stop|status]'
 
     #==================================================
     # COMPLETE METHODS

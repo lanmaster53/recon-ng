@@ -27,6 +27,7 @@ __builtin__.B  = "\033[34m" # blue
 
 # mode flags
 __builtin__.script = 0
+__builtin__.record = 0
 
 # set global framework options
 __builtin__.goptions = {}
@@ -44,7 +45,7 @@ class Recon(framework.module):
         framework.module.__init__(self, prompt)
         self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
         self.register_option('key_file', './data/keys.db', 'yes', 'path to API key database file', self.goptions)
-        self.register_option('log_file', './data/cmd.log', 'yes', 'path to command log file', self.goptions)
+        self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
         self.register_option('domain', '', 'no', 'target domain', self.goptions)
         self.register_option('company', '', 'no', 'target company name', self.goptions)
         self.register_option('user-agent', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)', 'yes', 'user-agent string', self.goptions)
@@ -165,7 +166,7 @@ class Recon(framework.module):
             if name in self.options:
                 value = ' '.join(options[1:])
                 # make sure database file is valid
-                if name in ['db_file', 'key_file', 'log_file']:
+                if name in ['db_file', 'key_file', 'rec_file']:
                     try:
                         conn = sqlite3.connect(value)
                         conn.close()
