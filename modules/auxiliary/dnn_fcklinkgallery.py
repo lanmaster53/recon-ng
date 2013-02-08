@@ -9,7 +9,7 @@ class Module(framework.module):
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Dot Net Nuke Remote File Upload Vulnerability Checker',
-                     'Author': 'Jay (@shipcod3)',
+                     'Author': 'Jay Turla (@shipcod3)',
                      'Description': 'Checks the hosts for a DNN fcklinkgallery page which is possibly vulnerable to Remote File Upload.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',
