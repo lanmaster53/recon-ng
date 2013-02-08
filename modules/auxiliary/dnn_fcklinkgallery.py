@@ -33,7 +33,7 @@ class Module(framework.module):
         cnt = 0
         for host in hosts:
             for proto in protocols:
-                url = '%s://%s/Providers/HtmlEditorProviders/Fck/fcklinkgallery.aspx/' % (proto, host)
+                url = '%s://%s/Providers/HtmlEditorProviders/Fck/fcklinkgallery.aspx' % (proto, host)
                 try:
                     resp = self.request(url, redirect=False)
                     code = resp.status_code
