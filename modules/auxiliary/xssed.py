@@ -1,8 +1,7 @@
 import framework
 # unique to module
 import re
-from bs4 import BeautifulSoup
-import urllib
+import urllib2
 
 class Module(framework.module):
 
@@ -13,7 +12,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'XSSed Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks XSSed site for XSS records for given target.',
+                     'Description': 'Checks XSSed site for XSS records for given target and displays first 20 hits.',
                      'Comments': []
                      }
 
@@ -27,15 +26,15 @@ class Module(framework.module):
         domain = self.options['domain']['value']
 
         url = 'http://xssed.com/search?key=%s' % (domain)
-        if verbose: self.output('URL: %s' % url)
-        try: resp = self.request(url)
+        if verbose: self.output('URL for XSSED.com: %s' % url)
+        try: resp = urllib2.urlopen(url)
         except KeyboardInterrupt:
             print ''
         except Exception as e:
             self.error(e.__str__())
-        if not resp: exit(0)
+            return
         
-        content = resp.text
+        content = resp.read()
 
         # Find if there are any results for the domain search
         results = re.findall(r"Results for.*", content)
@@ -46,19 +45,30 @@ class Module(framework.module):
                 if finding:
                     # Now go fetch and parse the specific page for this item
                     urlDetail = 'http://xssed.com/mirror/%s/' % finding[0][0]
-                    try: respDetail = self.request(urlDetail)
+                    try: respDetail = urllib2.urlopen(urlDetail)
                     except KeyboardInterrupt:
                         print ''
                     except Exception as e:
                         self.error(e.__str__())
-                    if not respDetail: exit(0)
+                    if not respDetail: return
                     
-                    #parse the response and get the details
-                    soup = BeautifulSoup(respDetail.text)
-                    data = [a.get_text() for a in soup.findAll("th", {"class":"row3"})]
-                    self.output(data[8])
-                    self.output('  '+data[0]+'; '+data[1]+'; '+data[3]+'; '+data[6])
-                    
+                    # Parse the response and get the details
+                    details = []
+                    for line in respDetail.readlines():
+                        if "row3" in line:
+                            try: 
+                                a = re.search(r'">(.+)</th', line.strip())
+                                details.append(a.group(1))
+                            except: pass
+                    # Output the results
+                    status = re.search(r';([UNFIXED]+)$',details[2])
+                    self.output(details[4])
+                    self.output('  '+details[7])
+                    self.output('  '+details[0].replace('&nbsp;', ' '))
+                    self.output('  '+details[1].replace('&nbsp;', ' '))
+                    self.output('  '+details[5])
+                    self.output('  STATUS: '+status.group(1))
+                    self.error(' ')                    
         else:
             self.output('No results found')
         
