@@ -407,15 +407,10 @@ class module(cmd.Cmd):
     def do_info(self, params):
         """Displays module information"""
         pattern = '%s%s:'
-        print ''
-        print pattern % (self.spacer, 'Name')
-        print pattern[:-1] % (self.spacer*2, self.info['Name'])
-        print ''
-        print pattern % (self.spacer, 'Author')
-        print pattern[:-1] % (self.spacer*2, self.info['Author'])
-        print ''
-        print pattern % (self.spacer, 'Description')
-        print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info['Description'], 100, initial_indent='', subsequent_indent=self.spacer*2))
+        for item in ['Name', 'Author', 'Classification', 'Description']:
+            print ''
+            print pattern % (self.spacer, item)
+            print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, initial_indent='', subsequent_indent=self.spacer*2))
         print ''
         print pattern % (self.spacer, 'Options')
         self.do_options('info')

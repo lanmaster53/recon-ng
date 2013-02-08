@@ -7,9 +7,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'active'
         self.info = {
                      'Name': 'Dot Net Nuke Remote File Upload Vulnerability Checker',
                      'Author': 'Jay Turla (@shipcod3)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks the hosts for a DNN fcklinkgallery page which is possibly vulnerable to Remote File Upload.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',

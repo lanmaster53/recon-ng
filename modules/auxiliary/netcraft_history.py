@@ -10,9 +10,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks Netcraft for the Hosting History of given target.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',

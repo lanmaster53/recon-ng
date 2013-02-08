@@ -7,9 +7,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', '21232f297a57a5a743894a0e4a801fc3', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'Goog.li Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Uses the Goog.li hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: db, <hash>, <path/to/infile>',

@@ -7,9 +7,11 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Queries the PwnedList API to fetch all credentials for a domain.',
                      'Comments': [
                                   'API Query Cost: 10,000 queries per request plus 1 query for each account returned.'
