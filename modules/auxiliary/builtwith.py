@@ -9,9 +9,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('host', 'www.google.com', 'yes', 'target host')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'BuiltWith Server-side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Leverages the BuiltWith API to identify server-side technologies.',
                      'Comments': []
                      }

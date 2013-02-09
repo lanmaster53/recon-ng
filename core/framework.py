@@ -106,7 +106,7 @@ class module(cmd.Cmd):
 
     def autoconvert(self, s):
         if s.lower() in ['none', "''", '""']:
-            return ''
+            return None
         for fn in (self.boolify, int, float):
             try: return fn(s)
             except ValueError: pass
@@ -407,15 +407,10 @@ class module(cmd.Cmd):
     def do_info(self, params):
         """Displays module information"""
         pattern = '%s%s:'
-        print ''
-        print pattern % (self.spacer, 'Name')
-        print pattern[:-1] % (self.spacer*2, self.info['Name'])
-        print ''
-        print pattern % (self.spacer, 'Author')
-        print pattern[:-1] % (self.spacer*2, self.info['Author'])
-        print ''
-        print pattern % (self.spacer, 'Description')
-        print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info['Description'], 100, initial_indent='', subsequent_indent=self.spacer*2))
+        for item in ['Name', 'Author', 'Classification', 'Description']:
+            print ''
+            print pattern % (self.spacer, item)
+            print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, initial_indent='', subsequent_indent=self.spacer*2))
         print ''
         print pattern % (self.spacer, 'Options')
         self.do_options('info')
@@ -439,7 +434,7 @@ class module(cmd.Cmd):
             print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
             print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
             for key in sorted(self.options):
-                value = self.options[key]['value']
+                value = self.options[key]['value'] if self.options[key]['value'] else ''
                 reqd = self.options[key]['reqd']
                 desc = self.options[key]['desc']
                 print pattern % (key.ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
