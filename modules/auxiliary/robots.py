@@ -9,9 +9,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'active'
         self.info = {
                      'Name': 'robots.txt/sitemap.xml Finder',
                      'Author': 'thrapt (thrapt@gmail.com)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks hosts for a robots.txt, sitemap.xml and sitemap.xml.gz file.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',

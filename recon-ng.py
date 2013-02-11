@@ -4,7 +4,6 @@ __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
 __version__   = '1.00'
 
-import cmd
 import datetime
 import os
 import sys
@@ -27,6 +26,7 @@ __builtin__.B  = "\033[34m" # blue
 
 # mode flags
 __builtin__.script = 0
+__builtin__.record = 0
 
 # set global framework options
 __builtin__.goptions = {}
@@ -44,7 +44,7 @@ class Recon(framework.module):
         framework.module.__init__(self, prompt)
         self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
         self.register_option('key_file', './data/keys.db', 'yes', 'path to API key database file', self.goptions)
-        self.register_option('log_file', './data/cmd.log', 'yes', 'path to command log file', self.goptions)
+        self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
         self.register_option('domain', '', 'no', 'target domain', self.goptions)
         self.register_option('company', '', 'no', 'target company name', self.goptions)
         self.register_option('user-agent', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)', 'yes', 'user-agent string', self.goptions)
@@ -63,13 +63,14 @@ class Recon(framework.module):
 
     def load_modules(self, reload=False):
         # add logic to NOT break when a module fails, but alert which module fails
-        self.loaded_summary = {}
+        self.loaded_category = {}
+        self.loaded_class = {}
         self.loaded_modules = []
         if reload: self.output('Reloading...')
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
                 mod_category = dirpath.split('/')[2]
-                if not mod_category in self.loaded_summary: self.loaded_summary[mod_category] = 0
+                if not mod_category in self.loaded_category: self.loaded_category[mod_category] = []
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     # this (as opposed to sys.path.append) allows for module reloading
                     mod_name = filename.split('.')[0]
@@ -79,7 +80,10 @@ class Recon(framework.module):
                     try:
                         imp.load_source(mod_loadname, mod_loadpath, mod_file)
                         __import__(mod_loadname)
-                        self.loaded_summary[mod_category] += 1
+                        mod_class = sys.modules[mod_loadname].Module(None).classify
+                        if not mod_class in self.loaded_class: self.loaded_class[mod_class] = []
+                        self.loaded_class[mod_class].append(mod_loadname)
+                        self.loaded_category[mod_category].append(mod_loadname)
                         self.loaded_modules.append(mod_loadname)
                     except:
                         print '-'*60
@@ -108,8 +112,8 @@ class Recon(framework.module):
         print banner
         print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), banner_len+8) # +8 compensates for the color bytes
         print ''
-        for category in sorted(self.loaded_summary.keys()):
-            print '%s[%d] %s modules%s' % (B, self.loaded_summary[category], category, N)
+        for category in sorted(self.loaded_category.keys()):
+            print '%s[%d] %s modules%s' % (B, len(self.loaded_category[category]), category, N)
         print ''
 
     def init_db(self):
@@ -142,7 +146,7 @@ class Recon(framework.module):
         else:
             try:
                 modulename = params
-                y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params))
+                y = sys.modules[modulename].Module(None)
                 try: y.do_info(modulename)
                 except KeyboardInterrupt: print ''
                 except:
@@ -165,7 +169,7 @@ class Recon(framework.module):
             if name in self.options:
                 value = ' '.join(options[1:])
                 # make sure database file is valid
-                if name in ['db_file', 'key_file', 'log_file']:
+                if name in ['db_file', 'key_file', 'rec_file']:
                     try:
                         conn = sqlite3.connect(value)
                         conn.close()

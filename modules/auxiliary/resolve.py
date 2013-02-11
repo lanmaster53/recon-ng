@@ -7,9 +7,11 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
+        self.classify = 'passive'
         self.info = {
                      'Name': 'Hostname Resolver',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Resolves IP addresses to hosts. This module updates the \'hosts\' table of the database with the results.',
                      'Comments': [
                                   'Note: Nameserver must be in IP form.']

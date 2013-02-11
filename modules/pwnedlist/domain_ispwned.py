@@ -7,9 +7,11 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Queries the PwnedList API for a domain to determine if any credentials from that domain have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
                      'Comments': [
                                   'API Query Cost: 1 query per request.'
@@ -52,14 +54,10 @@ class Module(framework.module):
             return
 
         # handle output
-        domain = jsonobj['domain']
-        if not domain:
+        if not jsonobj['domain']:
             self.output('Domain \'%s\' has no publicly compromised accounts.' % (domain))
             return
-        first_seen = jsonobj['first_seen']
-        last_seen = jsonobj['last_seen']
-        num_entries = jsonobj['num_entries']
-        self.output('Domain: %s' % (domain))
-        self.output('First seen: %s' % (first_seen))
-        self.output('Last seen: %s' % (last_seen))
-        self.alert('Pwned Accounts: %d' % (num_entries))
+        self.output('Domain: %s' % (jsonobj['domain']))
+        self.output('First seen: %s' % (jsonobj['first_seen']))
+        self.output('Last seen: %s' % (jsonobj['last_seen']))
+        self.alert('Pwned Accounts: %d' % (jsonobj['num_entries']))
