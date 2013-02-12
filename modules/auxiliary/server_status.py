@@ -13,7 +13,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Checks hosts for a \'server-status\' page.',
                      'Comments': [
-                                  'Source options: db, <hostname>, <path/to/infile>',
+                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
                                   'http://blog.sucuri.net/2012/10/popular-sites-with-apache-server-status-enabled.html',
                                   'http://httpd.apache.org/docs/2.2/mod/mod_status.html',
                                   'Google dork: intitle:"Apache Status" inurl:"server-status"'

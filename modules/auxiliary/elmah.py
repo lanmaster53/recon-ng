@@ -13,7 +13,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Checks hosts for a \'elmah.axd\' log page.',
                      'Comments': [
-                                  'Source options: db, <hostname>, <path/to/infile>',
+                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
                                   'http://www.troyhunt.com/2012/01/aspnet-session-hijacking-with-google.html',
                                   'Google dorks: inurl:elmah.axd ASPXAUTH',
                                   '              inurl:elmah.axd intitle:"Error log for"'

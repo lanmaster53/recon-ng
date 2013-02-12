@@ -15,7 +15,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
-                                  'Source options: db, <hash>, <path/to/infile>',
+                                  'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
                                   'Hash types supported: MD5'
                                   ]
                      }

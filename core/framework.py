@@ -113,12 +113,62 @@ class module(cmd.Cmd):
             except KeyError: pass
         return s
 
+    def display_options(self, params):
+        '''Lists options'''
+        spacer = self.spacer
+        if params == 'info':
+            spacer = self.spacer*2
+        if self.options:
+            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
+            key_len = len(max(self.options, key=len))
+            val_len = len(max([str(self.options[x]['value']) for x in self.options], key=len))
+            if val_len < 13: val_len = 13
+            print ''
+            print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
+            print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
+            for key in sorted(self.options):
+                value = self.options[key]['value'] if self.options[key]['value'] else ''
+                reqd = self.options[key]['reqd']
+                desc = self.options[key]['desc']
+                print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
+            print ''
+        else:
+            if params != 'info': print ''
+            print '%sNo options available for this module.' % (spacer)
+            print ''
+
+    def display_schema(self):
+        '''Displays the database schema'''
+        conn = sqlite3.connect(self.goptions['db_file']['value'])
+        c = conn.cursor()
+        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
+        tables = [x[0] for x in c.fetchall()]
+        for table in tables:
+            print ''
+            print '%s+---------------------+' % (self.spacer)
+            print '%s| %s |' % (self.spacer, table.center(19))
+            print '%s+---------------------+' % (self.spacer)
+            c.execute("PRAGMA table_info(%s)" % (table))
+            columns = [(x[1],x[2]) for x in c.fetchall()]
+            for column in columns:
+                print '%s| %s | %s |' % (self.spacer, column[0].ljust(8), column[1].center(8))
+            print '%s+---------------------+' % (self.spacer)
+        print ''
+
     def sanitize(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
         if isinstance(obj, basestring):
             if not isinstance(obj, unicode):
                 obj = unicode(obj, encoding)
         return obj
+
+    def unescape(self, s):
+        '''Unescapes HTML markup and returns an unescaped string.'''
+        import htmllib
+        p = htmllib.HTMLParser(None)
+        p.save_bgn()
+        p.feed(s)
+        return p.save_end()
 
     def is_hash(self, hashstr):
         hashdict = [
@@ -183,14 +233,6 @@ class module(cmd.Cmd):
             print separator
             print ''
 
-    def unescape(self, s):
-        '''Unescapes HTML markup and returns an unescaped string.'''
-        import htmllib
-        p = htmllib.HTMLParser(None)
-        p.save_bgn()
-        p.feed(s)
-        return p.save_end()
-
     def add_host(self, host, address=None):
         '''Adds a host to the database and returns the affected row count.'''
         host    = self.sanitize(host)
@@ -240,8 +282,19 @@ class module(cmd.Cmd):
         conn.close()
         return c.rowcount
 
-    def get_source(self, source, query=None):
-        if source.lower() == 'db':
+    def get_source(self, params, query=None):
+        source = params.split()[0].lower()
+        if source == 'query':
+            query = ' '.join(params.split()[1:])
+            results = self.query(query, True)
+            if not results:
+                self.error('No items found.')
+                return None
+            if len(results[0]) > 1:
+                self.error('Too many columns of data returned.')
+                return None
+            sources = [x[0] for x in results]
+        elif source == 'db':
             rows = self.query(query)
             if not rows:
                 self.error('No items found.')
@@ -252,48 +305,6 @@ class module(cmd.Cmd):
         else:
             sources = [source]
         return sources
-
-    def display_options(self, params):
-        '''Lists options'''
-        spacer = self.spacer
-        if params == 'info':
-            spacer = self.spacer*2
-        if self.options:
-            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
-            key_len = len(max(self.options, key=len))
-            val_len = len(max([str(self.options[x]['value']) for x in self.options], key=len))
-            if val_len < 13: val_len = 13
-            print ''
-            print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
-            print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
-            for key in sorted(self.options):
-                value = self.options[key]['value'] if self.options[key]['value'] else ''
-                reqd = self.options[key]['reqd']
-                desc = self.options[key]['desc']
-                print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
-            print ''
-        else:
-            if params != 'info': print ''
-            print '%sNo options available for this module.' % (spacer)
-            print ''
-
-    def display_schema(self):
-        '''Displays the database schema'''
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
-        c = conn.cursor()
-        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
-        tables = [x[0] for x in c.fetchall()]
-        for table in tables:
-            print ''
-            print '%s+---------------------+' % (self.spacer)
-            print '%s| %s |' % (self.spacer, table.center(19))
-            print '%s+---------------------+' % (self.spacer)
-            c.execute("PRAGMA table_info(%s)" % (table))
-            columns = [(x[1],x[2]) for x in c.fetchall()]
-            for column in columns:
-                print '%s| %s | %s |' % (self.spacer, column[0].ljust(8), column[1].center(8))
-            print '%s+---------------------+' % (self.spacer)
-        print ''
 
     def query(self, params, return_results=True):
         '''Queries the database and returns the results as a list.'''

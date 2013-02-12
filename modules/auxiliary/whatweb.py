@@ -14,7 +14,7 @@ class Module(framework.module):
                      'Author': 'thrapt (thrapt@gmail.com)',
                      'Description': 'Leverages WhatWeb.net to recognise web technologies being used.',
                      'Comments': [
-                                  'Source options: db, <hostname>, <path/to/infile>',
+                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
                                  ]
                      }
 

@@ -18,7 +18,7 @@ class Module(framework.module):
                      'Author': 'thrapt (thrapt@gmail.com)',
                      'Description': 'Checks Netcraft for the Hosting History of given target.',
                      'Comments': [
-                                  'Source options: db, <hostname>, <path/to/infile>',
+                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
                                  ]
                      }
 

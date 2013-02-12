@@ -13,7 +13,7 @@ class Module(framework.module):
                      'Author': 'Jay Turla (@shipcod3)',
                      'Description': 'Checks the hosts for a DNN fcklinkgallery page which is possibly vulnerable to Remote File Upload.',
                      'Comments': [
-                                  'Source options: db, <hostname>, <path/to/infile>',
+                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
                                   'http://www.exploit-db.com/exploits/12700/',
                                   ]
                      }

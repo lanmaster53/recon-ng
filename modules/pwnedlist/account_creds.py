@@ -14,7 +14,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the PwnedList API for credentials asscoiated with usernames. This module updates the \'creds\' table of the database with the results.',
                      'Comments': [
-                                  'Source options: db, <email@address>, <path/to/infile>',
+                                  'Source options: [ db | email.address@domain.com | ./path/to/file | query <sql> ]',
                                   'API Query Cost: 1 query per request.'
                                   ]
                      }
