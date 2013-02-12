@@ -10,9 +10,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'Netcraft Hostname Enumerator',
                      'Author': 'thrapt (thrapt@gmail.com)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Harvests hosts from Netcraft.com. This module updates the \'hosts\' table of the database with the results.',
                      'Comments': []
                      }

@@ -11,9 +11,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('username', 'lanmaster53', 'yes', 'username to validate')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'NameChk.com Username Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Leverages NameChk.com to validate the existance of usernames at specific web sites.',
                      'Comments': [
                                   'Note: The global socket_timeout may need to be increased to support slower sites.']

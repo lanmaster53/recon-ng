@@ -8,9 +8,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'PwnedList Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: db, <email@address>, <path/to/infile>'

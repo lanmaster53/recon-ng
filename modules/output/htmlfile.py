@@ -7,9 +7,11 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('filename', './data/results.html', 'yes', 'path and filename for report output')
         self.register_option('sanitize', True, 'yes', 'mask sensitive data in the report')
+        self.classify = 'passive'
         self.info = {
                      'Name': 'HTML Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Creates a HTML report.',
                      'Comments': []
                      }

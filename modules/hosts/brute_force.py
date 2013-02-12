@@ -11,9 +11,11 @@ class Module(framework.module):
         self.register_option('wordlist', './data/hostnames.txt', 'yes', 'path to hostname wordlist')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'active'
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Brute forces host names using DNS. This module updates the \'hosts\' table of the database with the results.',
                      'Comments': []
                      }

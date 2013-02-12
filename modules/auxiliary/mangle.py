@@ -8,9 +8,11 @@ class Module(framework.module):
         self.register_option('domain', self.goptions['domain']['value'], 'no', 'target email domain')
         self.register_option('pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
         self.register_option('max-length', 30, 'yes', 'maximum length of email address prefix or username')
+        self.classify = 'passive'
         self.info = {
                      'Name': 'Contact Name Mangler',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact. This module updates the \'contacts\' table of the database with the results.',
                      'Comments': [
                                   'Pattern options: <fi>,<fn>,<li>,<ln>',
