@@ -38,19 +38,19 @@ class Module(framework.module):
         cnt = 0
         for host in hosts:
             for proto in protocols:
-			   for filename in files:
-			    url = '%s://%s/%s' % (proto, host, filename)
-			   try:
-				resp = self.request(url, redirect=False)
-				code = resp.status_code
-			   except KeyboardInterrupt:
-				print ''
-				return
-			   except:
-				code = 'Error'
-			   if code == 200 and 'phpinfo()' in resp.text:
-				self.alert('%s => %s. phpinfo() page found!' % (url, code))
-				cnt += 1
-			else:
-				if verbose: self.output('%s => %s' % (url, code))
+                for filename in files:
+	            url = '%s://%s/%s' % (proto, host, filename)
+	        try:
+	            resp = self.request(url, redirect=False)
+	            code = resp.status_code
+	        except KeyboardInterrupt:
+	            print ''
+		    return
+	        except:
+		    code = 'Error'
+	        if code == 200 and 'phpinfo()' in resp.text:
+		    self.alert('%s => %s. phpinfo() page found!' % (url, code))
+		    cnt += 1
+		else:
+		   if verbose: self.output('%s => %s' % (url, code))
         self.output('%d phpinfo() pages found' % (cnt))
