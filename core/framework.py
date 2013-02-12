@@ -406,6 +406,7 @@ class module(cmd.Cmd):
 
     def do_info(self, params):
         """Displays module information"""
+        self.info['Classification'] = self.classify.title()
         pattern = '%s%s:'
         for item in ['Name', 'Author', 'Classification', 'Description']:
             print ''

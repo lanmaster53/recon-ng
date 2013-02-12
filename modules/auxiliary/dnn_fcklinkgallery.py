@@ -11,7 +11,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Dot Net Nuke Remote File Upload Vulnerability Checker',
                      'Author': 'Jay Turla (@shipcod3)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks the hosts for a DNN fcklinkgallery page which is possibly vulnerable to Remote File Upload.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',

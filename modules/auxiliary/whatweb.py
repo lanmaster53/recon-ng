@@ -12,7 +12,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'WhatWeb Web Technologies scan',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Leverages WhatWeb.net to recognise web technologies being used.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',

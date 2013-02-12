@@ -12,7 +12,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Queries the PwnedList API for credentials asscoiated with usernames. This module updates the \'creds\' table of the database with the results.',
                      'Comments': [
                                   'Source options: db, <email@address>, <path/to/infile>',

@@ -11,7 +11,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Host Adder',
                      'Author': 'Drumm',
-                     'Classification': 'Reconnaissance %s' % (self.classify.title()),
                      'Description': 'Manually adds a host.',
                      'Comments':[]
                      }
