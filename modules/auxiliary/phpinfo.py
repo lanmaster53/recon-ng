@@ -11,7 +11,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'phpinfo() Page Checker',
                      'Author': 'Jay Turla (@shipcod3)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks the hosts for phpinfo() page which outputs information about PHP configuration',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',
