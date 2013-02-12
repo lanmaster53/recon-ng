@@ -70,7 +70,7 @@ class Module(framework.module):
                 self.output('%s %s (%s contacts)' % (company[0], company[1], company[2]))
             if len(all_companies) > 1:
                 try:
-                    company_id = raw_input('Enter Company ID from list [%s]: ' % (all_companies[0][0]))
+                    company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
                     if not company_id: company_id = all_companies[0][0]
                 except KeyboardInterrupt:
                     print ''
