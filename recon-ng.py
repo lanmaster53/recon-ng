@@ -135,11 +135,11 @@ class Recon(framework.module):
     #==================================================
 
     def do_reload(self, params):
-        """Reloads all modules"""
+        '''Reloads all modules'''
         self.load_modules(True)
 
     def do_info(self, params):
-        """Displays module information"""
+        '''Displays module information'''
         options = params.split()
         if len(options) == 0:
             self.help_info()
@@ -157,11 +157,11 @@ class Recon(framework.module):
                 self.error('Invalid module name.')
 
     def do_banner(self, params):
-        """Displays the banner"""
+        '''Displays the banner'''
         self.show_banner()
 
     def do_set(self, params):
-        """Sets global options"""
+        '''Sets global options'''
         options = params.split()
         if len(options) < 2: self.help_set()
         else:
@@ -184,7 +184,7 @@ class Recon(framework.module):
             else: self.error('Invalid option.')
 
     def do_modules(self, params):
-        """Lists available modules"""
+        '''Lists available modules'''
         if params:
             modules = [x for x in self.loaded_modules if x.startswith(params)]
             if not modules:
@@ -195,7 +195,7 @@ class Recon(framework.module):
         self.display_modules(modules)
 
     def do_search(self, params):
-        """Searches available modules"""
+        '''Searches available modules'''
         if not params:
             self.help_search()
             return
@@ -208,7 +208,7 @@ class Recon(framework.module):
             self.display_modules(modules)
 
     def do_load(self, params):
-        """Loads selected module"""
+        '''Loads selected module'''
         if not self.validate_options(): return
         options = params.split()
         if len(options) == 0:
@@ -228,7 +228,7 @@ class Recon(framework.module):
 
     # alias for load
     def do_use(self, params):
-        """Loads selected module"""
+        '''Loads selected module'''
         options = params.split()
         if len(options) == 0:
             self.help_use()
