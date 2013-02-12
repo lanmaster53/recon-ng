@@ -16,8 +16,8 @@ class Module(framework.module):
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',
                                   'Reference: http://php.net/manual/en/function.phpinfo.php',
-                                  'Google Dorks: inurl:phpinfo.php ext:php',
-                                  'inurl:test.php + intitle:phpinfo() ext:php',
+                                  'Google Dorks: inurl:phpinfo.php + ext:php',
+                                  'inurl:test.php + intitle:phpinfo() + ext:php',
                                   ]
                      }
 
