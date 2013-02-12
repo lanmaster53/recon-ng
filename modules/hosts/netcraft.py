@@ -3,6 +3,8 @@ import framework
 import urllib
 import re
 import hashlib
+import time
+import random
 
 class Module(framework.module):
 
@@ -91,6 +93,12 @@ class Module(framework.module):
                 payload['last'] = link[0][1]
                 payload['from'] = link[1][1]
                 if verbose: self.output('Next page available! Requesting again...' )
+		# sleep script to avoid lock-out
+		if verbose: self.output('Sleeping to Avoid Lock-out...')
+		try: time.sleep(random.randint(5,15))
+		except KeyboardInterrupt:
+		    print ''
+		    break
 
         if verbose: self.output('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))
