@@ -30,6 +30,7 @@ class Module(framework.module):
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''
+            return
         except Exception as e:
             self.error(e.__str__())
             return

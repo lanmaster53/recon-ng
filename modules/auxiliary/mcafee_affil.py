@@ -7,6 +7,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
+        self.classify = 'passive'
         self.info = {
                      'Name': 'McAfee Domain Affiliation Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
@@ -28,6 +29,7 @@ class Module(framework.module):
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''
+            return
         except Exception as e:
             self.error(e.__str__())
             return
@@ -37,9 +39,7 @@ class Module(framework.module):
             tdata = [] 
             tdata.append(['Domain/URL', 'Category', 'Links'])
             for col in resp.json:
-                tdata.append([col['label'], col['hover'], str(col['link'])])
-            
-            # Print the table  
+                tdata.append([col['label'], col['hover'], str(col['link'])]) 
             self.table(tdata, True)
 
         else:
