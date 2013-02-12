@@ -85,4 +85,3 @@ class Module(framework.module):
 
         else:
             self.output('No results found')
-        
