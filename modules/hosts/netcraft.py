@@ -43,32 +43,32 @@ class Module(framework.module):
             content = None
             if verbose: self.output('URL: %s?%s' % (url, urllib.urlencode(payload)))
 
-	    try: content = self.request(url, payload=payload, cookies=cookies)
-	    except KeyboardInterrupt:
-		print ''
-	    except Exception as e:
-		self.error(e.__str__())
-	    if not content: break
-	    
-	    if 'set-cookie' in content.headers:
-		# we have a cookie to set!
-		cookie = content.headers['set-cookie']
-		# this was taken from the netcraft page's JavaScript, no need to use big parsers just for that
-		# grab the cookie sent by the server, hash it and send the response
-		challenge_token = (cookie.split('=')[1].split(';')[0])
-		response = hashlib.sha1(urllib.unquote(challenge_token))
-		cookies = {
-			  'netcraft_js_verification_response': '%s' % response.hexdigest(),
-			  'netcraft_js_verification_challenge': '%s' % challenge_token,
-			  'path' : '/'
-			  }
+            try: content = self.request(url, payload=payload, cookies=cookies)
+            except KeyboardInterrupt:
+                print ''
+            except Exception as e:
+                self.error(e.__str__())
+            if not content: break
+            
+            if 'set-cookie' in content.headers:
+                # we have a cookie to set!
+                cookie = content.headers['set-cookie']
+                # this was taken from the netcraft page's JavaScript, no need to use big parsers just for that
+                # grab the cookie sent by the server, hash it and send the response
+                challenge_token = (cookie.split('=')[1].split(';')[0])
+                response = hashlib.sha1(urllib.unquote(challenge_token))
+                cookies = {
+                      'netcraft_js_verification_response': '%s' % response.hexdigest(),
+                      'netcraft_js_verification_challenge': '%s' % challenge_token,
+                      'path' : '/'
+                      }
 
-		# Now we can request the page again
-		try: content = self.request(url, payload=payload, cookies=cookies)
-		except KeyboardInterrupt:
-		    print ''
-		except Exception as e:
-		    self.error(e.__str__())
+                # Now we can request the page again
+                try: content = self.request(url, payload=payload, cookies=cookies)
+                except KeyboardInterrupt:
+                    print ''
+                except Exception as e:
+                    self.error(e.__str__())
 
             content = content.text
 
@@ -93,12 +93,12 @@ class Module(framework.module):
                 payload['last'] = link[0][1]
                 payload['from'] = link[1][1]
                 if verbose: self.output('Next page available! Requesting again...' )
-		# sleep script to avoid lock-out
-		if verbose: self.output('Sleeping to Avoid Lock-out...')
-		try: time.sleep(random.randint(5,15))
-		except KeyboardInterrupt:
-		    print ''
-		    break
+                # sleep script to avoid lock-out
+                if verbose: self.output('Sleeping to Avoid Lock-out...')
+                try: time.sleep(random.randint(5,15))
+                except KeyboardInterrupt:
+                    print ''
+                    break
 
         if verbose: self.output('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))

@@ -67,6 +67,7 @@ class Module(framework.module):
                     print ''
                 except Exception as e:
                     self.error(e.__str__())
+                if not resp: break
 
             content = resp.text
 
