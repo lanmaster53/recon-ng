@@ -35,41 +35,36 @@ class Module(framework.module):
             self.error(e.__str__())
             return
 
-        if resp:
-            # Get the overall security results
-            sec_results = re.findall(r'class="results">(.+)</p>', resp.text)
-            tdata_sec = [] 
-            tdata_sec.append(['Security Results'])
-            
-            # Get country of origin and number of users
-            finding_country = re.search(r'img src="/images/countryflags.+p> (.+)</td', resp.text)
-            finding_visitors = re.search(r'img src="/images/visitor.+p>(.+)</td', resp.text)
-            tdata_sec.append(['Country: ' + finding_country.group(1) + '                Visitors: ' + finding_visitors.group(1)])
-            tdata_sec.append([' '])
-            
-            # Line wrapping for long paragraph that breaks table formatting
-            paraMaxLen = 80
-            paraLen = len(sec_results[0])
-            if paraLen > paraMaxLen:
-                wrappedLines = []
-                for line in sec_results[0].split('\n'):
-                    while True:
-                        wrappedLines.append(line[:paraMaxLen])
-                        line = line[paraMaxLen:]
-                        if not line: break
-                for item in wrappedLines:
-                    tdata_sec.append([item])
-            self.table(tdata_sec, True)
+        # Get the overall security results
+        sec_results = re.findall(r'class="results">(.+)</p>', resp.text)
+        tdata_sec = [] 
+        tdata_sec.append(['Security Results'])
         
-            # Get the sites this domain's web site links to
-            finding = re.findall(r"area shape.+title='(.+)' onMouse", resp.text)
-            finding.sort()
-            tdata = [] 
-            tdata.append(['Domain(s) Linked to'])
-            for domain in finding:
-                tdata.append([domain])
-            self.table(tdata, True)
-
-        else:
-            self.output('No results found')
+        # Get country of origin and number of users
+        finding_country = re.search(r'img src="/images/countryflags.+p> (.+)</td', resp.text)
+        finding_visitors = re.search(r'img src="/images/visitor.+p>(.+)</td', resp.text)
+        tdata_sec.append(['Country: ' + finding_country.group(1) + '                Visitors: ' + finding_visitors.group(1)])
+        tdata_sec.append([' '])
         
+        # Line wrapping for long paragraph that breaks table formatting
+        paraMaxLen = 80
+        paraLen = len(sec_results[0])
+        if paraLen > paraMaxLen:
+            wrappedLines = []
+            for line in sec_results[0].split('\n'):
+                while True:
+                    wrappedLines.append(line[:paraMaxLen])
+                    line = line[paraMaxLen:]
+                    if not line: break
+            for item in wrappedLines:
+                tdata_sec.append([item])
+        self.table(tdata_sec, True)
+    
+        # Get the sites this domain's web site links to
+        finding = re.findall(r"area shape.+title='(.+)' onMouse", resp.text)
+        finding.sort()
+        tdata = [] 
+        tdata.append(['Domain(s) Linked to'])
+        for domain in finding:
+            tdata.append([domain])
+        self.table(tdata, True)

@@ -35,15 +35,10 @@ class Module(framework.module):
             self.error(e.__str__())
             return
 
-        if resp:
-            # Get the security results
-            av_engines = re.findall(r'<td>(.+)</td>\n.*images/(.+)\.png" alt=""', resp.text)
-            tdata = []
-            tdata.append(['Site', 'Status'])
-            for line in av_engines:
-                tdata.append([line[0], line[1]])
-            self.table(tdata, True)
-
-        else:
-            self.output('No results found')
-        
+        # Get the security results
+        av_engines = re.findall(r'<td>(.+)</td>\n.*images/(.+)\.png" alt=""', resp.text)
+        tdata = []
+        tdata.append(['Site', 'Status'])
+        for line in av_engines:
+            tdata.append([line[0], line[1]])
+        self.table(tdata, True)

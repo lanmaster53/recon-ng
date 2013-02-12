@@ -34,14 +34,9 @@ class Module(framework.module):
             self.error(e.__str__())
             return
 
-        if resp:
-            # Output the results in table format
-            tdata = [] 
-            tdata.append(['Domain/URL', 'Category', 'Links'])
-            for col in resp.json:
-                tdata.append([col['label'], col['hover'], str(col['link'])]) 
-            self.table(tdata, True)
-
-        else:
-            self.output('No results found')
-        
+        # Output the results in table format
+        tdata = [] 
+        tdata.append(['Domain/URL', 'Category', 'Links'])
+        for col in resp.json:
+            tdata.append([col['label'], col['hover'], str(col['link'])]) 
+        self.table(tdata, True)
