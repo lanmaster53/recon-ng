@@ -90,7 +90,7 @@ class module(cmd.Cmd):
     def register_option(self, name, value, reqd, desc, options=None):
         # can't use not because empty dictonary would eval as true
         if options == None: options = self.options
-        options[name] = {'value':value, 'reqd':reqd, 'desc':desc}
+        options[name.lower()] = {'value':value, 'reqd':reqd, 'desc':desc}
 
     def validate_options(self):
         for option in self.options:
@@ -438,7 +438,7 @@ class module(cmd.Cmd):
                 value = self.options[key]['value'] if self.options[key]['value'] else ''
                 reqd = self.options[key]['reqd']
                 desc = self.options[key]['desc']
-                print pattern % (key.ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
+                print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
             print ''
         else:
             if params != 'info': print ''
@@ -450,10 +450,10 @@ class module(cmd.Cmd):
         options = params.split()
         if len(options) < 2: self.help_set()
         else:
-            name = options[0]
+            name = options[0].lower()
             if name in self.options:
                 value = ' '.join(options[1:])
-                print '%s => %s' % (name, value)
+                print '%s => %s' % (name.upper(), value)
                 self.options[name]['value'] = self.autoconvert(value)
             else: self.error('Invalid option.')
 

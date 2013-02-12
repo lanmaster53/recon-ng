@@ -165,7 +165,7 @@ class Recon(framework.module):
         options = params.split()
         if len(options) < 2: self.help_set()
         else:
-            name = options[0]
+            name = options[0].lower()
             if name in self.options:
                 value = ' '.join(options[1:])
                 # make sure database file is valid
@@ -179,7 +179,7 @@ class Recon(framework.module):
                         self.error('Invalid path or name for \'%s\'.' % (name))
                         return
                     self.init_db()
-                print '%s => %s' % (name, value)
+                print '%s => %s' % (name.upper(), value)
                 self.options[name]['value'] = self.autoconvert(value)
             else: self.error('Invalid option.')
 
