@@ -15,7 +15,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'NameChk.com Username Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Leverages NameChk.com to validate the existance of usernames at specific web sites.',
                      'Comments': [
                                   'Note: The global socket_timeout may need to be increased to support slower sites.']

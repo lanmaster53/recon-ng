@@ -15,7 +15,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Server Side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and Kenan Abdullahoglu (@kyabd)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Analyzes response headers, cookies, and errors to determine which server-side technology is being used (PHP, .NET, JSP, CF, etc.).',
                      'Comments': []
                      }

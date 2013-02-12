@@ -13,7 +13,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator. This module updates the \'hosts\' table of the database with the results.',
                      'Comments': [
                                   'Note: \'restrict\' option limits the number of API requests to \'requests\' in order to prevent API query exhaustion.'

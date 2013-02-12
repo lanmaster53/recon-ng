@@ -16,7 +16,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks Netcraft for the Hosting History of given target.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',

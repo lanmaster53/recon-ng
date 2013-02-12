@@ -13,7 +13,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'BuiltWith Server-side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Leverages the BuiltWith API to identify server-side technologies.',
                      'Comments': []
                      }

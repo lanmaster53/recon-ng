@@ -6,11 +6,10 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.classify = 'passive'
+        self.classify = 'support'
         self.info = {
                      'Name': 'PwnedList - API Usage Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Queries the PwnedList API for account usage statistics.',
                      'Comments': [
                                   'API Query Cost: 1 query per request.'

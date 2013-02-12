@@ -11,7 +11,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Hostname Resolver',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Resolves IP addresses to hosts. This module updates the \'hosts\' table of the database with the results.',
                      'Comments': [
                                   'Note: Nameserver must be in IP form.']

@@ -15,7 +15,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'DNS Cache Snooper',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Uses the DNS cache snooping technique to check for visited domains',
                      'Comments': [
                                   'Nameserver must be in IP form.',

@@ -11,7 +11,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Queries the PwnedList API for information associated with leak IDs.',
                      'Comments': [
                                   'API Query Cost: 1 query per request.'

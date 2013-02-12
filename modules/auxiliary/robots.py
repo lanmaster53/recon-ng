@@ -13,7 +13,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'robots.txt/sitemap.xml Finder',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks hosts for a robots.txt, sitemap.xml and sitemap.xml.gz file.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',

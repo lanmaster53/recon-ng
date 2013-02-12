@@ -11,7 +11,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Apache Server-Status Page Scanner',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks hosts for a \'server-status\' page.',
                      'Comments': [
                                   'Source options: db, <hostname>, <path/to/infile>',

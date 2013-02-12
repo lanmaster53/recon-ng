@@ -18,7 +18,6 @@ class Module(framework.module):
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Harvests contacts from LinkedIn.com using an authenticated connections network. This module updates the \'contacts\' table of the database with the results.',
                      'Comments': []
                      }
