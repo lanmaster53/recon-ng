@@ -3,6 +3,8 @@ import framework
 import re
 import hashlib
 import urllib
+import time
+import random
 
 class Module(framework.module):
 
@@ -65,6 +67,7 @@ class Module(framework.module):
                     print ''
                 except Exception as e:
                     self.error(e.__str__())
+                if not resp: break
 
             content = resp.text
 
@@ -82,3 +85,11 @@ class Module(framework.module):
                 self.table(history, True)
             else:
                 self.output('No results found')
+
+            if len(hosts) > 1:
+                # sleep script to avoid lock-out
+                if verbose: self.output('Sleeping to Avoid Lock-out...')
+                try: time.sleep(random.randint(5,15))
+                except KeyboardInterrupt:
+                    print ''
+                    break
