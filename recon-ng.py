@@ -142,7 +142,7 @@ class Recon(framework.module):
             self.help_info()
         else:
             try:
-                modulename = params
+                modulename = self.loaded_modules[params]
                 y = sys.modules[modulename].Module(None)
                 try: y.do_info(modulename)
                 except KeyboardInterrupt: print ''

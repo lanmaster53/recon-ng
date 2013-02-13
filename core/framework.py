@@ -127,7 +127,7 @@ class module(cmd.Cmd):
             print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
             print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
             for key in sorted(self.options):
-                value = self.options[key]['value'] if self.options[key]['value'] else ''
+                value = self.options[key]['value'] if self.options[key]['value'] != None else ''
                 reqd = self.options[key]['reqd']
                 desc = self.options[key]['desc']
                 print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
