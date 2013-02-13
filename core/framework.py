@@ -22,6 +22,7 @@ class module(cmd.Cmd):
         self.prompt = (params)
         self.ruler = '-'
         self.spacer = '  '
+        self.module_delimiter = '/' # match line ~257 recon-ng.py
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         try: self.do_run.__func__.__doc__ = '''Runs the module'''
@@ -136,6 +137,21 @@ class module(cmd.Cmd):
             if params != 'info': print ''
             print '%sNo options available for this module.' % (spacer)
             print ''
+
+    def display_modules(self, modules):
+        key_len = len(max(modules, key=len)) + len(self.spacer)
+        last_category = ''
+        for module in sorted(modules):
+            category = module.split(self.module_delimiter)[0]
+            if category != last_category:
+                # print header
+                print ''
+                last_category = category
+                print '%s%s:' % (self.spacer, last_category.title())
+                print '%s%s' % (self.spacer, self.ruler*key_len)
+            # print module
+            print '%s%s' % (self.spacer*2, module)
+        print ''
 
     def display_schema(self):
         '''Displays the database schema'''
@@ -503,26 +519,51 @@ class module(cmd.Cmd):
 
     def do_show(self, params):
         '''Shows various framework items'''
-        arg = params.lower()
-        if arg == 'hosts':
-            query = 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host'
-        elif arg == 'contacts':
-            query = 'SELECT * FROM contacts ORDER BY fname'
-        elif arg == 'creds':
-            query = 'SELECT * FROM creds ORDER BY username'
-        elif arg == 'options':
-            self.display_options(None)
+        if params:
+            arg = params.lower()
+            if arg == 'hosts':
+                self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host', False)
+                return
+            elif arg == 'contacts':
+                self.query('SELECT * FROM contacts ORDER BY fname', False)
+                return
+            elif arg == 'creds':
+                self.query('SELECT * FROM creds ORDER BY username', False)
+                return
+            elif arg == 'options':
+                self.display_options(None)
+                return
+            elif arg == 'schema':
+                self.display_schema()
+                return
+            elif arg == 'keys':
+                self.display_keys()
+                return
+            elif arg.split()[0] == 'modules':
+                if len(arg.split()) > 1:
+                    param = arg.split()[1]
+                    modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
+                    if not modules:
+                        self.error('Invalid module category.')
+                        return
+                else:
+                    modules = __builtin__.loaded_modules
+                self.display_modules(modules)
+                return
+        self.help_show()
+
+    def do_search(self, params):
+        '''Searches available modules'''
+        if not params:
+            self.help_search()
             return
-        elif arg == 'schema':
-            self.display_schema()
-            return
-        elif arg == 'keys':
-            self.display_keys()
-            return
+        text = params.split()[0]
+        self.output('Searching for \'%s\'' % (text))
+        modules = [x for x in __builtin__.loaded_modules if text in x]
+        if not modules:
+            self.error('No modules found containing \'%s\'.' % (text))
         else:
-            self.help_show()
-            return
-        self.query(query, False)
+            self.display_modules(modules)
 
     def do_record(self, params):
         '''Records commands to a resource file'''
@@ -565,7 +606,7 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename> WHERE <columnname>=<string>')
 
     def help_show(self):
-        print 'Usage: show [options|schema|hosts|contacts|creds|keys]'
+        print 'Usage: show [modules|options|schema|hosts|contacts|creds|keys]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
@@ -581,8 +622,12 @@ class module(cmd.Cmd):
     def complete_set(self, text, *ignored):
         return [x for x in self.options if x.startswith(text)]
 
-    def complete_show(self, text, *ignored):
-        options = ['options', 'schema', 'hosts', 'contacts', 'creds', 'keys']
+    def complete_show(self, text, line, *ignored):
+        args = line.split()
+        if len(args) > 1 and args[1].lower() == 'modules':
+            if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
+            else: return [x for x in __builtin__.loaded_modules]
+        options = ['modules', 'options', 'schema', 'hosts', 'contacts', 'creds', 'keys']
         return [x for x in options if x.startswith(text)]
 
 #=================================================
