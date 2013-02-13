@@ -57,8 +57,6 @@ class Recon(framework.module):
     #==================================================
 
     def load_modules(self, reload=False):
-        # add logic to NOT break when a module fails, but alert which module fails
-        #self.loaded_class = {}
         self.loaded_category = {}
         self.loaded_modules = __builtin__.loaded_modules
         if reload: self.output('Reloading...')
@@ -76,9 +74,6 @@ class Recon(framework.module):
                     try:
                         imp.load_source(mod_loadname, mod_loadpath, mod_file)
                         __import__(mod_loadname)
-                        #mod_class = sys.modules[mod_loadname].Module(None).classify
-                        #if not mod_class in self.loaded_class: self.loaded_class[mod_class] = []
-                        #self.loaded_class[mod_class].append(mod_loadname)
                         self.loaded_category[mod_category].append(mod_loadname)
                         self.loaded_modules[mod_dispname] = mod_loadname
                     except:

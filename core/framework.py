@@ -570,11 +570,15 @@ class module(cmd.Cmd):
         arg = params.lower()
         rec_file = self.goptions['rec_file']['value']
         if arg == 'start':
-            __builtin__.record = 1
-            self.output('Recording commands to \'%s\'' % (rec_file))
+            if __builtin__.record == 0:
+                __builtin__.record = 1
+                self.output('Recording commands to \'%s\'' % (rec_file))
+            else: self.output('Recording is already started.')
         elif arg == 'stop':
-            __builtin__.record = 0
-            self.output('Recording stopped. Commands saved to \'%s\'' % (rec_file))
+            if __builtin__.record == 1:
+                __builtin__.record = 0
+                self.output('Recording stopped. Commands saved to \'%s\'' % (rec_file))
+            else: self.output('Recording is already stopped.')
         elif arg == 'status':
             status = 'started' if __builtin__.record == 1 else 'stopped'
             self.output('Command recording is %s.' % (status))
