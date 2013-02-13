@@ -7,7 +7,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('host', 'www.google.com', 'yes', 'target host')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
-        self.classify = 'passive'
         self.info = {
                      'Name': 'McAfee Domain Affiliation Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',

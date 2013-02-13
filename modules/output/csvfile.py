@@ -8,7 +8,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', 'all', 'yes', 'data source for the report')
         self.register_option('filename', './data/results.csv', 'yes', 'path and filename for report output')
-        self.classify = 'support'
         self.info = {
                      'Name': 'CSV File Creator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

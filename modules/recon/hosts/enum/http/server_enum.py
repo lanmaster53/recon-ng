@@ -12,7 +12,6 @@ class Module(framework.module):
         self.register_option('protocol', 'http', 'yes', 'protocol of the host: http, https')
         self.register_option('redirect', False, 'yes', 'follow redirects')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
-        self.classify = 'active'
         self.info = {
                      'Name': 'Server Side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53), Kenan Abdullahoglu (@kyabd), Matteo Cantoni (nothink.org)',

@@ -9,7 +9,6 @@ class Module(framework.module):
         self.register_option('lname', None, 'yes', 'last name')
         self.register_option('title', None, 'yes', 'job title')
         self.register_option('email', None, 'no', 'email address')
-        self.classify = 'support'
         self.info = {
                      'Name': 'Contact Adder',
                      'Author': 'Drumm',

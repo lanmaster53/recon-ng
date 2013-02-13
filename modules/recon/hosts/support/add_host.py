@@ -7,7 +7,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('host', None, 'yes', 'fully qualified domain name')
         self.register_option('address', None, 'no', 'ip address')
-        self.classify = 'support'
         self.info = {
                      'Name': 'Host Adder',
                      'Author': 'Drumm',

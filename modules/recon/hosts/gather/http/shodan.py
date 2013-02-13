@@ -9,7 +9,6 @@ class Module(framework.module):
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.register_option('restrict', False, 'yes', 'limit number of api requests to \'requests\'')
         self.register_option('requests', 1, 'yes', 'maximum number of api requets to make')
-        self.classify = 'passive'
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
