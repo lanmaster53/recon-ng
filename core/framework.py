@@ -486,9 +486,8 @@ class module(cmd.Cmd):
 
     def do_info(self, params):
         '''Displays module information'''
-        self.info['Classification'] = self.classify.title()
         pattern = '%s%s:'
-        for item in ['Name', 'Author', 'Classification', 'Description']:
+        for item in ['Name', 'Author', 'Description']:
             print ''
             print pattern % (self.spacer, item)
             print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, initial_indent='', subsequent_indent=self.spacer*2))
