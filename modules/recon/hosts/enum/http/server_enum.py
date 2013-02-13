@@ -2,6 +2,7 @@ import framework
 # unique to module
 from random import choice
 import textwrap
+import re
 
 class Module(framework.module):
 
@@ -14,7 +15,7 @@ class Module(framework.module):
         self.classify = 'active'
         self.info = {
                      'Name': 'Server Side Enumerator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53) and Kenan Abdullahoglu (@kyabd)',
+                     'Author': 'Tim Tomes (@LaNMaSteR53), Kenan Abdullahoglu (@kyabd), Matteo Cantoni (nothink.org)',
                      'Description': 'Analyzes response headers, cookies, and errors to determine which server-side technology is being used (PHP, .NET, JSP, CF, etc.).',
                      'Comments': []
                      }
@@ -113,16 +114,14 @@ class Module(framework.module):
             print 'COOKIES'.center(50, self.ruler)
             for cookie in resp.cookies:
                 self.output('%s: %s' % (cookie.name.upper(), textwrap.fill(cookie.value, 100, initial_indent='', subsequent_indent=self.spacer*2)))
+            print 'META TAGS'.center(50, self.ruler)
+            pattern = '<META NAME=["\'](.+?)["\'] CONTENT=["\'](.+?)["\'][ /]*?>'
+            tags = re.findall(pattern, resp.text, re.IGNORECASE)
+            for tag in tags:
+                self.output('%s: %s' % (tag[0].upper(), textwrap.fill(tag[1], 100, initial_indent='', subsequent_indent=self.spacer*2)))
             print 'END'.center(50, self.ruler)
 
         tdata = []
-        # check for redirect
-        if url != resp.url:
-            if verbose: tdata.append(['URL', url, '--'])
-            if verbose: tdata.append(['REDIR', resp.url, '--'])
-        else:
-            if verbose: tdata.append(['URL', resp.url, '--'])
-
         # check file ext
         from urlparse import urlparse
         path = urlparse(resp.url).path
