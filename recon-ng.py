@@ -2,7 +2,7 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '1.00'
+__version__   = '1.10'
 
 import datetime
 import os
@@ -31,15 +31,10 @@ __builtin__.record = 0
 # set global framework options
 __builtin__.goptions = {}
 
-# set the module path delimiter
-# delimiter only effects systems with GNU readline
-# defaults to ':' for systems with libedit readline
-__builtin__.module_delimiter = ':'
-
 class Recon(framework.module):
     def __init__(self):
-        self.name = 'recon-ng'#os.path.basename(__file__).split('.')[0]
-        self.module_delimiter = __builtin__.module_delimiter
+        self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
+        self.module_delimiter = '/' # if changed, update line ~284
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, prompt)
         self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
@@ -65,7 +60,7 @@ class Recon(framework.module):
         # add logic to NOT break when a module fails, but alert which module fails
         self.loaded_category = {}
         self.loaded_class = {}
-        self.loaded_modules = []
+        self.loaded_modules = {}
         if reload: self.output('Reloading...')
         for dirpath, dirnames, filenames in os.walk('./modules/'):
             if len(filenames) > 0:
@@ -74,7 +69,8 @@ class Recon(framework.module):
                 for filename in [f for f in filenames if f.endswith('.py')]:
                     # this (as opposed to sys.path.append) allows for module reloading
                     mod_name = filename.split('.')[0]
-                    mod_loadname = '%s%s%s' % (self.module_delimiter.join(dirpath.split('/')[2:]), self.module_delimiter, mod_name)
+                    mod_dispname = '%s%s%s' % (self.module_delimiter.join(dirpath.split('/')[2:]), self.module_delimiter, mod_name)
+                    mod_loadname = mod_dispname.replace(self.module_delimiter, '_')
                     mod_loadpath = os.path.join(dirpath, filename)
                     mod_file = open(mod_loadpath, 'rb')
                     try:
@@ -84,7 +80,7 @@ class Recon(framework.module):
                         if not mod_class in self.loaded_class: self.loaded_class[mod_class] = []
                         self.loaded_class[mod_class].append(mod_loadname)
                         self.loaded_category[mod_category].append(mod_loadname)
-                        self.loaded_modules.append(mod_loadname)
+                        self.loaded_modules[mod_dispname] = mod_loadname
                     except:
                         print '-'*60
                         traceback.print_exc(file=sys.stdout)
@@ -112,8 +108,9 @@ class Recon(framework.module):
         print banner
         print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), banner_len+8) # +8 compensates for the color bytes
         print ''
-        for category in sorted(self.loaded_category.keys()):
-            print '%s[%d] %s modules%s' % (B, len(self.loaded_category[category]), category, N)
+        for category in sorted(self.loaded_category.keys(), reverse=True):
+            count = '[%d]' % (len(self.loaded_category[category]))
+            print '%s%s %s modules%s' % (B, count.ljust(4), category, N)
         print ''
 
     def init_db(self):
@@ -215,8 +212,8 @@ class Recon(framework.module):
             self.help_load()
         else:
             try:
-                modulename = params
-                y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params))
+                modulename = self.loaded_modules[params]
+                y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params.split(self.module_delimiter)[-1]))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
                 except:
@@ -262,6 +259,10 @@ class Recon(framework.module):
         return [x for x in self.loaded_modules if x.startswith(text)]
     complete_modules = complete_info = complete_use = complete_load
 
+def display_hook(substitution, matches, longest_match_length) :
+    for match in matches:
+        print match
+
 if __name__ == '__main__':
     # help and non-interactive options
     import optparse
@@ -277,11 +278,12 @@ if __name__ == '__main__':
     else:
         import rlcompleter
         if 'libedit' in readline.__doc__:
-            __builtin__.module_delimiter = ':'
             readline.parse_and_bind("bind ^I rl_complete")
         else:
             readline.parse_and_bind("tab: complete")
-        readline.set_completer_delims(readline.get_completer_delims().replace(__builtin__.module_delimiter, ''))
+        readline.set_completer_delims(readline.get_completer_delims().replace('/', ''))
+        # for possible future use to format command completion output
+        #readline.set_completion_display_matches_hook(display_hook)
     # check for and run script session
     if opts.script_file:
         try:
