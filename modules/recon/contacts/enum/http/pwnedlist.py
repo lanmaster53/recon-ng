@@ -14,7 +14,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
-                                  'Source options: db, <email@address>, <path/to/infile>'
+                                  'Source options: [ db | email.address@domain.com | ./path/to/file | query <sql> ]'
                                   ]
                      }
 

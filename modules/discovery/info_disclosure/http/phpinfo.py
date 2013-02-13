@@ -11,10 +11,9 @@ class Module(framework.module):
         self.info = {
                      'Name': 'phpinfo() Page Checker',
                      'Author': 'Jay Turla (@shipcod3)',
-                     'Classification': '%s Reconnaissance' % (self.classify.title()),
                      'Description': 'Checks the hosts for phpinfo() page which outputs information about PHP configuration',
                      'Comments': [
-                                  'Source options: db, <hostname>, <path/to/infile>',
+                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
                                   'Reference: http://php.net/manual/en/function.phpinfo.php',
                                   'Google Dorks:',
                                   '%sinurl:phpinfo.php ext:php' % (self.spacer),

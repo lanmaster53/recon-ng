@@ -1,5 +1,7 @@
 import framework
 # unique to module
+import re
+from xml.dom.minidom import parseString
 
 class Module(framework.module):
 
@@ -9,45 +11,43 @@ class Module(framework.module):
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.classify = 'support'
         self.info = {
-                     'Name': 'Goog.li Hash Lookup',
+                     'Name': 'Noisette MD5 Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Uses the Goog.li hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
+                     'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
-                                  'Source options: db, <hash>, <path/to/infile>',
-                                  'Hash types supported: MD4, MD5, MD5x2, MYSQL 3, MYSQL 4, MYSQL 5, RIPEMD160, NTLM, GOST, SHA1, SHA1x2, SHA224, SHA256, SHA384, SHA512, WHIRLPOOL'
+                                  'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
+                                  'Hash types supported: MD5'
                                   ]
                      }
 
     def do_run(self, params):
         if not self.validate_options(): return
         # === begin here ===
-        self.googli()
+        self.noisette()
     
-    def googli(self):
+    def noisette(self):
         verbose = self.options['verbose']['value']
         
         hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
         if not hashes: return
 
         # lookup each hash
-        url = 'https://goog.li'
+        url = 'http://md5.noisette.ch/md5.php'
         for hashstr in hashes:
-            payload = {'j': hashstr}
+            payload = {'hash': hashstr}
             try: resp = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
-                break
+                return
             except Exception as e:
                 self.error(e.__str__())
                 continue
-            if resp.json: jsonobj = resp.json
-            else:
-                self.error('Invalid JSON returned from the API for \'%s\'.' % (account))
-                continue
+            dom = parseString(resp.text)
             plaintext = False
-            if jsonobj['found'] == "true":
-                plaintext = jsonobj['hashes'][0]["plaintext"]
-                hashtype = jsonobj['type'].upper()
+            hashtype = "MD5"
+            nodes = dom.getElementsByTagName('string')
+            if len(nodes) > 0:
+                plaintext = nodes[0].firstChild.wholeText
             if plaintext:
                 self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
                 self.query('UPDATE creds SET password="%s", type="%s" WHERE hash="%s"' % (plaintext, hashtype, hashstr))

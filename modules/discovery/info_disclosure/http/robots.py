@@ -15,7 +15,7 @@ class Module(framework.module):
                      'Author': 'thrapt (thrapt@gmail.com)',
                      'Description': 'Checks hosts for a robots.txt, sitemap.xml and sitemap.xml.gz file.',
                      'Comments': [
-                                  'Source options: db, <hostname>, <path/to/infile>',
+                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
                                   ]
                      }
 

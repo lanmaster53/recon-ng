@@ -22,9 +22,10 @@ class module(cmd.Cmd):
         self.prompt = (params)
         self.ruler = '-'
         self.spacer = '  '
+        self.module_delimiter = '/' # match line ~257 recon-ng.py
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
-        self.do_help.__func__.__doc__ = """Displays this menu"""
-        try: self.do_run.__func__.__doc__ = """Runs the module"""
+        self.do_help.__func__.__doc__ = '''Displays this menu'''
+        try: self.do_run.__func__.__doc__ = '''Runs the module'''
         except: pass
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.goptions = __builtin__.goptions
@@ -113,12 +114,88 @@ class module(cmd.Cmd):
             except KeyError: pass
         return s
 
+    def display_options(self, params):
+        '''Lists options'''
+        spacer = self.spacer
+        if params == 'info':
+            spacer = self.spacer*2
+        if self.options:
+            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
+            key_len = len(max(self.options, key=len))
+            val_len = len(max([str(self.options[x]['value']) for x in self.options], key=len))
+            if val_len < 13: val_len = 13
+            print ''
+            print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
+            print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
+            for key in sorted(self.options):
+                value = self.options[key]['value'] if self.options[key]['value'] != None else ''
+                reqd = self.options[key]['reqd']
+                desc = self.options[key]['desc']
+                print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
+            print ''
+        else:
+            if params != 'info': print ''
+            print '%sNo options available for this module.' % (spacer)
+            print ''
+
+    def display_modules(self, modules):
+        key_len = len(max(modules, key=len)) + len(self.spacer)
+        last_category = ''
+        for module in sorted(modules):
+            category = module.split(self.module_delimiter)[0]
+            if category != last_category:
+                # print header
+                print ''
+                last_category = category
+                print '%s%s:' % (self.spacer, last_category.title())
+                print '%s%s' % (self.spacer, self.ruler*key_len)
+            # print module
+            print '%s%s' % (self.spacer*2, module)
+        print ''
+
+    def display_schema(self):
+        '''Displays the database schema'''
+        conn = sqlite3.connect(self.goptions['db_file']['value'])
+        c = conn.cursor()
+        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
+        tables = [x[0] for x in c.fetchall()]
+        for table in tables:
+            print ''
+            print '%s+---------------------+' % (self.spacer)
+            print '%s| %s |' % (self.spacer, table.center(19))
+            print '%s+---------------------+' % (self.spacer)
+            c.execute("PRAGMA table_info(%s)" % (table))
+            columns = [(x[1],x[2]) for x in c.fetchall()]
+            for column in columns:
+                print '%s| %s | %s |' % (self.spacer, column[0].ljust(8), column[1].center(8))
+            print '%s+---------------------+' % (self.spacer)
+        print ''
+
+    def display_keys(self):
+        conn = sqlite3.connect(self.goptions['key_file']['value'])
+        c = conn.cursor()
+        c.execute('SELECT * FROM keys')
+        rows = c.fetchall()
+        conn.close()
+        tdata = [('Name', 'Value')]
+        for row in rows:
+            tdata.append((row[0], row[1]))
+        self.table(tdata, True)
+
     def sanitize(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
         if isinstance(obj, basestring):
             if not isinstance(obj, unicode):
                 obj = unicode(obj, encoding)
         return obj
+
+    def unescape(self, s):
+        '''Unescapes HTML markup and returns an unescaped string.'''
+        import htmllib
+        p = htmllib.HTMLParser(None)
+        p.save_bgn()
+        p.feed(s)
+        return p.save_end()
 
     def is_hash(self, hashstr):
         hashdict = [
@@ -183,14 +260,6 @@ class module(cmd.Cmd):
             print separator
             print ''
 
-    def unescape(self, s):
-        '''Unescapes HTML markup and returns an unescaped string.'''
-        import htmllib
-        p = htmllib.HTMLParser(None)
-        p.save_bgn()
-        p.feed(s)
-        return p.save_end()
-
     def add_host(self, host, address=None):
         '''Adds a host to the database and returns the affected row count.'''
         host    = self.sanitize(host)
@@ -240,8 +309,19 @@ class module(cmd.Cmd):
         conn.close()
         return c.rowcount
 
-    def get_source(self, source, query=None):
-        if source.lower() == 'db':
+    def get_source(self, params, query=None):
+        source = params.split()[0].lower()
+        if source == 'query':
+            query = ' '.join(params.split()[1:])
+            results = self.query(query, True)
+            if not results:
+                self.error('No items found.')
+                return None
+            if len(results[0]) > 1:
+                self.error('Too many columns of data returned.')
+                return None
+            sources = [x[0] for x in results]
+        elif source == 'db':
             rows = self.query(query)
             if not rows:
                 self.error('No items found.')
@@ -271,7 +351,7 @@ class module(cmd.Cmd):
             if error:
                 self.error('Invalid query. %s' % error.strip())
                 self.help_query()
-                self.do_schema(None)
+                self.display_schema()
             return
         else:
             conn = sqlite3.connect(self.goptions['db_file']['value'])
@@ -396,16 +476,16 @@ class module(cmd.Cmd):
     #==================================================
 
     def do_exit(self, params):
-        """Exits current prompt level"""
+        '''Exits current prompt level'''
         return True
 
     # alias for exit
     def do_back(self, params):
-        """Exits current prompt level"""
+        '''Exits current prompt level'''
         return True
 
     def do_info(self, params):
-        """Displays module information"""
+        '''Displays module information'''
         self.info['Classification'] = self.classify.title()
         pattern = '%s%s:'
         for item in ['Name', 'Author', 'Classification', 'Description']:
@@ -414,39 +494,15 @@ class module(cmd.Cmd):
             print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, initial_indent='', subsequent_indent=self.spacer*2))
         print ''
         print pattern % (self.spacer, 'Options')
-        self.do_options('info')
+        self.display_options('info')
         if self.info['Comments']:
             print pattern % (self.spacer, 'Comments')
             for comment in self.info['Comments']:
                 print pattern[:-1] % (self.spacer*2, textwrap.fill(comment, 100, initial_indent='', subsequent_indent=self.spacer*2))
             print ''
 
-    def do_options(self, params):
-        """Lists options"""
-        spacer = self.spacer
-        if params == 'info':
-            spacer = self.spacer*2
-        if self.options:
-            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
-            key_len = len(max(self.options, key=len))
-            val_len = len(max([str(self.options[x]['value']) for x in self.options], key=len))
-            if val_len < 13: val_len = 13
-            print ''
-            print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
-            print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
-            for key in sorted(self.options):
-                value = self.options[key]['value'] if self.options[key]['value'] else ''
-                reqd = self.options[key]['reqd']
-                desc = self.options[key]['desc']
-                print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
-            print ''
-        else:
-            if params != 'info': print ''
-            print '%sNo options available for this module.' % (spacer)
-            print ''
-
     def do_set(self, params):
-        """Sets module options"""
+        '''Sets module options'''
         options = params.split()
         if len(options) < 2: self.help_set()
         else:
@@ -457,30 +513,60 @@ class module(cmd.Cmd):
                 self.options[name]['value'] = self.autoconvert(value)
             else: self.error('Invalid option.')
 
-    def do_schema(self, params):
-        """Displays the database schema"""
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
-        c = conn.cursor()
-        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
-        tables = [x[0] for x in c.fetchall()]
-        for table in tables:
-            print ''
-            print '%s+---------------------+' % (self.spacer)
-            print '%s| %s |' % (self.spacer, table.center(19))
-            print '%s+---------------------+' % (self.spacer)
-            c.execute("PRAGMA table_info(%s)" % (table))
-            columns = [(x[1],x[2]) for x in c.fetchall()]
-            for column in columns:
-                print '%s| %s | %s |' % (self.spacer, column[0].ljust(8), column[1].center(8))
-            print '%s+---------------------+' % (self.spacer)
-        print ''
-
     def do_query(self, params):
-        """Queries the database"""
+        '''Queries the database'''
         self.query(params, False)
 
+    def do_show(self, params):
+        '''Shows various framework items'''
+        if params:
+            arg = params.lower()
+            if arg == 'hosts':
+                self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host', False)
+                return
+            elif arg == 'contacts':
+                self.query('SELECT * FROM contacts ORDER BY fname', False)
+                return
+            elif arg == 'creds':
+                self.query('SELECT * FROM creds ORDER BY username', False)
+                return
+            elif arg == 'options':
+                self.display_options(None)
+                return
+            elif arg == 'schema':
+                self.display_schema()
+                return
+            elif arg == 'keys':
+                self.display_keys()
+                return
+            elif arg.split()[0] == 'modules':
+                if len(arg.split()) > 1:
+                    param = arg.split()[1]
+                    modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
+                    if not modules:
+                        self.error('Invalid module category.')
+                        return
+                else:
+                    modules = __builtin__.loaded_modules
+                self.display_modules(modules)
+                return
+        self.help_show()
+
+    def do_search(self, params):
+        '''Searches available modules'''
+        if not params:
+            self.help_search()
+            return
+        text = params.split()[0]
+        self.output('Searching for \'%s\'' % (text))
+        modules = [x for x in __builtin__.loaded_modules if text in x]
+        if not modules:
+            self.error('No modules found containing \'%s\'.' % (text))
+        else:
+            self.display_modules(modules)
+
     def do_record(self, params):
-        """Records commands to a resource file"""
+        '''Records commands to a resource file'''
         arg = params.lower()
         rec_file = self.goptions['rec_file']['value']
         if arg == 'start':
@@ -496,7 +582,7 @@ class module(cmd.Cmd):
             self.help_record()
 
     def do_shell(self, params):
-        """Executed shell commands"""
+        '''Executed shell commands'''
         proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         self.output('Command: %s' % (params))
         stdout = proc.stdout.read()
@@ -510,7 +596,7 @@ class module(cmd.Cmd):
 
     def help_set(self):
         print 'Usage: set <option> <value>'
-        self.do_options(None)
+        self.display_options(None)
 
     def help_query(self):
         print 'Usage: query <sql>'
@@ -518,6 +604,9 @@ class module(cmd.Cmd):
         print 'SQL Examples:'
         print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename>')
         print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename> WHERE <columnname>=<string>')
+
+    def help_show(self):
+        print 'Usage: show [modules|options|schema|hosts|contacts|creds|keys]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
@@ -532,6 +621,14 @@ class module(cmd.Cmd):
 
     def complete_set(self, text, *ignored):
         return [x for x in self.options if x.startswith(text)]
+
+    def complete_show(self, text, line, *ignored):
+        args = line.split()
+        if len(args) > 1 and args[1].lower() == 'modules':
+            if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
+            else: return [x for x in __builtin__.loaded_modules]
+        options = ['modules', 'options', 'schema', 'hosts', 'contacts', 'creds', 'keys']
+        return [x for x in options if x.startswith(text)]
 
 #=================================================
 # CUSTOM CLASSES & WRAPPERS
