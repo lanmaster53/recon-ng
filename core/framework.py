@@ -582,7 +582,8 @@ class module(cmd.Cmd):
         return [x for x in self.options if x.startswith(text)]
 
     def complete_show(self, text, *ignored):
-        return ['options', 'schema', 'hosts', 'contacts', 'creds', 'keys']
+        options = ['options', 'schema', 'hosts', 'contacts', 'creds', 'keys']
+        return [x for x in options if x.startswith(text)]
 
 #=================================================
 # CUSTOM CLASSES & WRAPPERS
