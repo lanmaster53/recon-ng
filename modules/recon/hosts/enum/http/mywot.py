@@ -41,6 +41,7 @@ class Module(framework.module):
         tdata = []
         tdata.append(['Description', 'Reputation', 'Confidence'])
         for line in findings:
+
             # Description
             if line[0] == '0':
                 descr = 'Trustworthiness'
@@ -50,7 +51,7 @@ class Module(framework.module):
                 descr = 'Privacy'
             elif line[0] == '4':
                 descr = 'Child Safety'
-            
+
             # Reputation Scores
             repTmp = int(line[1])
             if repTmp >= 80:
@@ -63,7 +64,7 @@ class Module(framework.module):
                 rep = 'Poor'
             elif 20 > repTmp >= 0:
                 rep = 'Very poor'
-            
+
             # Confidence Scores
             confTmp = int(line[2])
             if confTmp >= 45:
@@ -78,6 +79,7 @@ class Module(framework.module):
                 conf = '1 - Low'
             else:
                 conf = '0 - None'
-                
+
             tdata.append([descr, rep, conf])
+
         self.table(tdata, True)

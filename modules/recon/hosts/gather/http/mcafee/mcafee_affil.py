@@ -1,31 +1,30 @@
 import framework
 # unique to module
-import re
 
 class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('host', 'www.google.com', 'yes', 'target host')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.classify = 'passive'
         self.info = {
-                     'Name': 'URLVoid Domain Lookup',
+                     'Name': 'McAfee Domain Affiliation Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks urlvoid.com site for information about the security of a domain.',
+                     'Description': 'Checks mcafee.com site for other domains affiliated with a domain.',
                      'Comments': []
                      }
    
     def do_run(self, params):
         if not self.validate_options(): return
         # === begin here ===
-        self.urlvoid()
+        self.mcafee_affil()
 
-    def urlvoid(self):
+    def mcafee_affil(self):
         verbose = self.options['verbose']['value']
-        domain = self.options['domain']['value']
+        host = self.options['host']['value']
 
-        url = 'http://www.urlvoid.com/scan/%s/' % (domain)
+        url = 'http://www.mcafee.com/threat-intelligence/jsproxy/domain.ashx?q=affiliation&f=%s' % (host)
         if verbose: self.output('URL being retrieved: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
@@ -35,10 +34,9 @@ class Module(framework.module):
             self.error(e.__str__())
             return
 
-        # Get the security results
-        av_engines = re.findall(r'<td>(.+)</td>\n.*images/(.+)\.png" alt=""', resp.text)
-        tdata = []
-        tdata.append(['Site', 'Status'])
-        for line in av_engines:
-            tdata.append([line[0], line[1]])
+        # Output the results in table format
+        tdata = [] 
+        tdata.append(['Domain/URL', 'Category', 'Links'])
+        for col in resp.json:
+            tdata.append([col['label'], col['hover'], str(col['link'])]) 
         self.table(tdata, True)

@@ -1,6 +1,8 @@
 import framework
 # unique to module
 import re
+import textwrap
+import time
 
 class Module(framework.module):
 
@@ -42,18 +44,19 @@ class Module(framework.module):
        
         if results:
             rows = re.split('<br>', str(results))
+            print self.ruler*50
             for row in rows:
                 finding = re.findall(r"mirror/([0-9]+)/.+blank\\'>(.+?)</a>", row)
                 if finding:
-                
                     # Go fetch and parse the specific page for this item
                     urlDetail = 'http://xssed.com/mirror/%s/' % finding[0][0]
                     try: respDetail = self.request(urlDetail)
                     except KeyboardInterrupt:
                         print ''
+                        return
                     except Exception as e:
                         self.error(e.__str__())
-                    if not respDetail: return
+                        continue
                     
                     # Parse the response and get the details
                     details = []
@@ -63,40 +66,16 @@ class Module(framework.module):
                                 a = re.search(r'">(.+)</th', line.strip())
                                 details.append(a.group(1))
                             except: pass
-                            
                     # Output the results in table format
-                    status = re.search(r';([UNFIXED]+)$',details[2])
-                                          
-                    tdata = [] 
-                    tdata.append(['Category', 'Details Retrieved'])
-                    tdata.append(details[4].split(":",1))                           # Domain
-                    
-                    # Line wrapping for long XSS URLs that break table formatting
-                    urlMaxLen = 80
-                    xssUrlLen = len(details[7].split(":",1)[1])
-                    if xssUrlLen > urlMaxLen:
-                        wrappedLines = []
-                        for line in details[7].split(":",1)[1].strip().split('\n'):
-                            while True:
-                                wrappedLines.append(line[:urlMaxLen])
-                                line = line[urlMaxLen:]
-                                if not line: break
-                        counter = 1
-                        for item in wrappedLines:
-                            if counter == 1:
-                                tdata.append(['URL:', ' ' + item])
-                            else:
-                                tdata.append(["URL (con't):", '   ' + item])
-                            counter += 1
-                    else:
-                        tdata.append(details[7].split(":",1))                       # URL
-                        
-                    tdata.append(details[0].replace('&nbsp;', ' ').split(":",1))    # Date submitted
-                    tdata.append(details[1].replace('&nbsp;', ' ').split(":",1))    # Date Published
-                    tdata.append(details[5].split(":",1))                           # Category
-                    tdata.append(['STATUS', ' ' + status.group(1)])                 # Fixed
-                    self.table(tdata, True)   
-                        
+                    status = re.search(r';([UNFIXED]+)',details[2]).group(1)
+                    self.output('Mirror: %s' % (urlDetail))
+                    self.output(details[4])
+                    self.output(textwrap.fill(details[7], 100, initial_indent='', subsequent_indent=self.spacer*2))
+                    self.output(details[0])
+                    self.output(details[1])
+                    self.output(details[5])
+                    self.output('Status: %s' % (status))
+                    print self.ruler*50
+                    time.sleep(1) # results in 503 errors if not throttled
         else:
             self.output('No results found')
-        

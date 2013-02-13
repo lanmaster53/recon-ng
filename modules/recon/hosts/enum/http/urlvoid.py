@@ -1,5 +1,6 @@
 import framework
 # unique to module
+import re
 
 class Module(framework.module):
 
@@ -9,22 +10,22 @@ class Module(framework.module):
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.classify = 'passive'
         self.info = {
-                     'Name': 'McAfee Domain Affiliation Lookup',
+                     'Name': 'URLVoid Domain Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks mcafee.com site for other domains affiliated with a domain.',
+                     'Description': 'Checks urlvoid.com site for information about the security of a domain.',
                      'Comments': []
                      }
    
     def do_run(self, params):
         if not self.validate_options(): return
         # === begin here ===
-        self.mcafee_affil()
+        self.urlvoid()
 
-    def mcafee_affil(self):
+    def urlvoid(self):
         verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
 
-        url = 'http://www.mcafee.com/threat-intelligence/jsproxy/domain.ashx?q=affiliation&f=%s' % (domain)
+        url = 'http://www.urlvoid.com/scan/%s/' % (domain)
         if verbose: self.output('URL being retrieved: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
@@ -34,9 +35,10 @@ class Module(framework.module):
             self.error(e.__str__())
             return
 
-        # Output the results in table format
-        tdata = [] 
-        tdata.append(['Domain/URL', 'Category', 'Links'])
-        for col in resp.json:
-            tdata.append([col['label'], col['hover'], str(col['link'])]) 
+        # Get the security results
+        av_engines = re.findall(r'<td>(.+)</td>\n.*images/(.+)\.png" alt=""', resp.text)
+        tdata = []
+        tdata.append(['Site', 'Status'])
+        for line in av_engines:
+            tdata.append([line[0], line[1]])
         self.table(tdata, True)

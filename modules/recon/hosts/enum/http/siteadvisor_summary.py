@@ -36,35 +36,20 @@ class Module(framework.module):
             return
 
         # Get the overall security results
-        sec_results = re.findall(r'class="results">(.+)</p>', resp.text)
-        tdata_sec = [] 
-        tdata_sec.append(['Security Results'])
+        
         
         # Get country of origin and number of users
-        finding_country = re.search(r'img src="/images/countryflags.+p> (.+)</td', resp.text)
-        finding_visitors = re.search(r'img src="/images/visitor.+p>(.+)</td', resp.text)
-        tdata_sec.append(['Country: ' + finding_country.group(1) + '                Visitors: ' + finding_visitors.group(1)])
-        tdata_sec.append([' '])
-        
-        # Line wrapping for long paragraph that breaks table formatting
-        paraMaxLen = 80
-        paraLen = len(sec_results[0])
-        if paraLen > paraMaxLen:
-            wrappedLines = []
-            for line in sec_results[0].split('\n'):
-                while True:
-                    wrappedLines.append(line[:paraMaxLen])
-                    line = line[paraMaxLen:]
-                    if not line: break
-            for item in wrappedLines:
-                tdata_sec.append([item])
-        self.table(tdata_sec, True)
+        country = re.search(r'img src="/images/countryflags.+p> (.+)</td', resp.text)
+        visitors = re.search(r'img src="/images/visitor.+p>(.+)</td', resp.text)
+        results = re.search(r'class="results">(.+)</p>', resp.text)
+        self.output('Country: %s' % (country.group(1)))
+        self.output('Visitors: %s' % (visitors.group(1)))
+        self.output(results.group(1))
     
         # Get the sites this domain's web site links to
-        finding = re.findall(r"area shape.+title='(.+)' onMouse", resp.text)
-        finding.sort()
+        sites = re.findall(r"area shape.+title='(.+)' onMouse", resp.text)
         tdata = [] 
-        tdata.append(['Domain(s) Linked to'])
-        for domain in finding:
-            tdata.append([domain])
+        tdata.append(['Linked to...'])
+        for site in sorted(sites):
+            tdata.append([site])
         self.table(tdata, True)
