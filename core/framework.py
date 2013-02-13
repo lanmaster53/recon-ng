@@ -155,6 +155,17 @@ class module(cmd.Cmd):
             print '%s+---------------------+' % (self.spacer)
         print ''
 
+    def display_keys(self):
+        conn = sqlite3.connect(self.goptions['key_file']['value'])
+        c = conn.cursor()
+        c.execute('SELECT * FROM keys')
+        rows = c.fetchall()
+        conn.close()
+        tdata = [('Name', 'Value')]
+        for row in rows:
+            tdata.append((row[0], row[1]))
+        self.table(tdata, True)
+
     def sanitize(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
         if isinstance(obj, basestring):
@@ -505,6 +516,9 @@ class module(cmd.Cmd):
         elif arg == 'schema':
             self.display_schema()
             return
+        elif arg == 'keys':
+            self.display_keys()
+            return
         else:
             self.help_show()
             return
@@ -551,7 +565,7 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename> WHERE <columnname>=<string>')
 
     def help_show(self):
-        print 'Usage: show [options|schema|hosts|contacts|creds]'
+        print 'Usage: show [options|schema|hosts|contacts|creds|keys]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
@@ -568,7 +582,7 @@ class module(cmd.Cmd):
         return [x for x in self.options if x.startswith(text)]
 
     def complete_show(self, text, *ignored):
-        return ['options', 'schema', 'hosts', 'contacts', 'creds']
+        return ['options', 'schema', 'hosts', 'contacts', 'creds', 'keys']
 
 #=================================================
 # CUSTOM CLASSES & WRAPPERS
