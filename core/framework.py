@@ -321,7 +321,7 @@ class module(cmd.Cmd):
                 self.error('Too many columns of data returned.')
                 return None
             sources = [x[0] for x in results]
-        elif source == 'db':
+        elif source == 'db' and query:
             rows = self.query(query)
             if not rows:
                 self.error('No items found.')
