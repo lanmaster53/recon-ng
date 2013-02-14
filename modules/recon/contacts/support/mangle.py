@@ -8,7 +8,6 @@ class Module(framework.module):
         self.register_option('domain', self.goptions['domain']['value'], 'no', 'target email domain')
         self.register_option('pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
         self.register_option('max-length', 30, 'yes', 'maximum length of email address prefix or username')
-        self.classify = 'support'
         self.info = {
                      'Name': 'Contact Name Mangler',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

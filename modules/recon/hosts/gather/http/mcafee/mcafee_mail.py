@@ -8,7 +8,6 @@ class Module(framework.module):
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.register_option('add_to_db', False, 'no', 'Add hosts discovered to the database.')
-        self.classify = 'passive'
         self.info = {
                      'Name': 'McAfee Mail Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',

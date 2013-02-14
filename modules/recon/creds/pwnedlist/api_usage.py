@@ -6,7 +6,6 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.classify = 'support'
         self.info = {
                      'Name': 'PwnedList - API Usage Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

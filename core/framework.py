@@ -486,9 +486,8 @@ class module(cmd.Cmd):
 
     def do_info(self, params):
         '''Displays module information'''
-        self.info['Classification'] = self.classify.title()
         pattern = '%s%s:'
-        for item in ['Name', 'Author', 'Classification', 'Description']:
+        for item in ['Name', 'Author', 'Description']:
             print ''
             print pattern % (self.spacer, item)
             print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, initial_indent='', subsequent_indent=self.spacer*2))
@@ -570,11 +569,15 @@ class module(cmd.Cmd):
         arg = params.lower()
         rec_file = self.goptions['rec_file']['value']
         if arg == 'start':
-            __builtin__.record = 1
-            self.output('Recording commands to \'%s\'' % (rec_file))
+            if __builtin__.record == 0:
+                __builtin__.record = 1
+                self.output('Recording commands to \'%s\'' % (rec_file))
+            else: self.output('Recording is already started.')
         elif arg == 'stop':
-            __builtin__.record = 0
-            self.output('Recording stopped. Commands saved to \'%s\'' % (rec_file))
+            if __builtin__.record == 1:
+                __builtin__.record = 0
+                self.output('Recording stopped. Commands saved to \'%s\'' % (rec_file))
+            else: self.output('Recording is already stopped.')
         elif arg == 'status':
             status = 'started' if __builtin__.record == 1 else 'stopped'
             self.output('Command recording is %s.' % (status))

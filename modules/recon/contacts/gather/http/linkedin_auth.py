@@ -14,7 +14,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
-        self.classify = 'passive'
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

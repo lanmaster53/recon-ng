@@ -7,7 +7,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
-        self.classify = 'active'
         self.info = {
                      'Name': 'phpinfo() Page Checker',
                      'Author': 'Jay Turla (@shipcod3)',

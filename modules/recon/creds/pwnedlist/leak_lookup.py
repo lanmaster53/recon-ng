@@ -7,7 +7,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('leak_id', '0b35c0ba48a899baeea2021e245d6da8', 'yes', 'pwnedlist leak id')
-        self.classify = 'passive'
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

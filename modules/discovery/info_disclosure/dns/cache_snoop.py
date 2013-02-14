@@ -11,7 +11,6 @@ class Module(framework.module):
         self.register_option('nameserver', '', 'yes', 'ip address of target\'s nameserver')
         self.register_option('domains', './data/av_domains.lst', 'yes', 'domain or list of domains to snoop for')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
-        self.classify = 'active'
         self.info = {
                      'Name': 'DNS Cache Snooper',
                      'Author': 'thrapt (thrapt@gmail.com)',
