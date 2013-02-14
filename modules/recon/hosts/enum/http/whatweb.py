@@ -10,7 +10,7 @@ class Module(framework.module):
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'WhatWeb Web Technologies scan',
-                     'Author': 'thrapt (thrapt@gmail.com)',
+                     'Author': 'thrapt (thrapt@gmail.com) and Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages WhatWeb.net to recognise web technologies being used.',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
@@ -43,18 +43,28 @@ class Module(framework.module):
             content = resp.text
             sites = content.strip().split('\n')
             for site in sites:
-                host = site[:site.index(' [')]
-                site = site.split('] ', 1)[1]
-                items = site.split(', ')
-
-                values = [['Field', 'Value'], ['Host', host]]
+                host, site = re.split(' \[\d\d\d\] ', site)
+                tdata = [['Field', 'Value'], ['Host', host]]
+                items = re.split(',\s*', site)
+                flag = 0
                 for item in items:
+                    item = item.replace('][', ', ')
                     if '[' in item:
-                        split = item.split('[')
-                        key = split[0]
-                        value = split[1][:-1]
-                        values.append([key, value])
+                        name, value = re.split('\s*\[', item)
+                        if ']' in item:
+                            value = value[:-1]
+                        else:
+                            flag = 1
+                            continue
+                    elif flag:
+                        value = '%s, %s' % (value, item) if value else item
+                        if ']' in item:
+                            flag = 0
+                            value = value[:-1]
+                        else:
+                            continue
                     else:
-                        values.append(['', item])
-
-                self.table(values, True)
+                        name = 'Unknown'
+                        value = item
+                    tdata.append([name.strip(), value.strip()])
+                self.table(tdata, True)
