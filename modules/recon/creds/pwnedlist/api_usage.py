@@ -48,6 +48,8 @@ class Module(framework.module):
         # handle output
         total = jsonobj['num_queries_allotted']
         left = jsonobj['num_queries_left']
-        self.output('Queries allotted: %d' % (total))
-        self.output('Queries remaining: %d' % (left))
-        self.output('Queries used: %d' % (total - left))
+        tdata = []
+        tdata.append(('Queries allotted', str(total)))
+        tdata.append(('Queries remaining', str(left)))
+        tdata.append(('Queries used', str(total-left)))
+        self.table(tdata)
