@@ -36,27 +36,22 @@ class Module(framework.module):
         payload = {'opCode': 'search', 'freeText': params}
         while True:
             if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
-            try: content = self.request(url, payload=payload).text
+            try: resp = self.request(url, payload=payload, redirect=False)
             except KeyboardInterrupt:
                 print ''
                 break
             except Exception as e:
                 self.error(e.__str__())
                 break
+            if resp.status_code == 301:
+                header = resp.headers['location']
+                company_id = re.search('\/(\d+?)\/', resp.headers['location']).group(1)
+                self.output('Unique Company Match Found: %s' % company_id)
+                return company_id
+            content = resp.text
             pattern = "href=./id(\d+?)/.+?>(.+?)<.+?\n.+?title='([\d,]+?)'"
             companies = re.findall(pattern, content)
-            if not companies:
-                if not 'did not match any results' in content and page_cnt == 1:
-                    pattern_id = '<a href="/id(\d+?)/.+?">'
-                    if 'Create a wiki' in content:
-                        pattern_id = '<a href="/.+?companyId=(\d+?)">'
-                    pattern_name = 'pageTitle.>(.+?)<'
-                    pattern_cnt = 'contactCount.+>\s+([,\d]+)\sContacts'
-                    company_id = re.findall(pattern_id, content)[0]
-                    company_name = re.findall(pattern_name, content)[0]
-                    contact_cnt = re.findall(pattern_cnt, content)[0]
-                    all_companies.append((company_id, company_name, contact_cnt))
-                break
+            if not companies: break
             for company in companies:
                 all_companies.append((company[0], company[1], company[2]))
             page_cnt += 1
@@ -67,16 +62,12 @@ class Module(framework.module):
         else:
             for company in all_companies:
                 self.output('%s %s (%s contacts)' % (company[0], company[1], company[2]))
-            if len(all_companies) > 1:
-                try:
-                    company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
-                    if not company_id: company_id = all_companies[0][0]
-                except KeyboardInterrupt:
-                    print ''
-                    company_id = ''
-            else:
-                company_id = all_companies[0][0]
-                self.output('Unique Company Match Found: %s' % company_id)
+            try:
+                company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
+                if not company_id: company_id = all_companies[0][0]
+            except KeyboardInterrupt:
+                print ''
+                company_id = ''
             return company_id
 
     def get_contact_ids(self, company_id):
