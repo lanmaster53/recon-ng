@@ -39,12 +39,12 @@ class Module(framework.module):
         # Get the sites this domain's web site links to
         sites = re.findall(r'a href="http://whois.domaintools.com/(.+?)"', resp.text)
         if not sites:
-            self.alert('No other domains discovered.')
+            self.alert('No other hosts discovered at the same IP address.')
             return
             
         # Display the output
         tdata = [] 
-        tdata.append(['Other Domains on this Server'])       
+        tdata.append(['Other Hosts Found'])       
         for site in sorted(sites):
             tdata.append([site])
             # Add each host to the database
