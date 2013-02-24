@@ -262,46 +262,65 @@ class module(cmd.Cmd):
 
     def add_host(self, host, address=None):
         '''Adds a host to the database and returns the affected row count.'''
-        host    = self.sanitize(host)
-        address = self.sanitize(address)
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
-        c = conn.cursor()
-        try: c.execute(u'INSERT INTO hosts (host,address) SELECT ?, ? WHERE NOT EXISTS(SELECT * FROM hosts WHERE host=?)', (host, address, host))
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        conn.commit()
-        conn.close()
-        return c.rowcount
+        data = dict(
+            host = self.sanitize(host),
+            address = self.sanitize(address),
+        )
+
+        return self.insert('hosts', data, ('host',))
 
     def add_contact(self, fname, lname, title, email=None):
         '''Adds a contact to the database and returns the affected row count.'''
-        fname = self.sanitize(fname)
-        lname = self.sanitize(lname)
-        title = self.sanitize(title)
-        email = self.sanitize(email)
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
-        c = conn.cursor()
-        try: c.execute(u'INSERT INTO contacts (fname,lname,title,email) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname=? and lname=? and title=?)', (fname, lname, title, email, fname, lname, title))
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        conn.commit()
-        conn.close()
-        return c.rowcount
+        data = dict(
+            fname = self.sanitize(fname),
+            lname = self.sanitize(lname),
+            title = self.sanitize(title),
+            email = self.sanitize(email),
+        )
+
+        return self.insert('contacts', data, ('fname', 'lname', 'title'))
 
     def add_cred(self, username, password=None, hashtype=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''
-        username = self.sanitize(username)
-        password = self.sanitize(password)
-        leak   = self.sanitize(leak)
-        query = u'INSERT INTO creds (username,password,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and type=? and leak=?)'
-        if password:
-            if self.is_hash(password):
-                query = u'INSERT INTO creds (username,hash,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and hash=? and type=? and leak=?)'
+        data = {}
+        data['username'] = self.sanitize(username)
+        if password and not self.is_hash(password): data['password'] = self.sanitize(password)
+        if password and self.is_hash(password): data['hash'] = self.sanitize(password)
+        if hashtype: data['type'] = self.sanitize(hashtype)
+        if leak: data['leak'] = self.sanitize(leak)
+
+        return self.insert('creds', data, data.keys())
+
+    def insert(self, table, data, unique_columns=None):
+        '''Inserts items into database and returns the affected row count.
+        table - the table to insert the data into
+        data - the information to insert into the database table in the form of a dictionary
+               where the keys are the column names and the values are the column values
+        unique_columns - a list of column names that should be used to determine if the.
+                         information being inserted is unique'''
+
+        columns = data.keys()
+
+        if unique_columns is None:
+            query = u'INSERT INTO %s (%s) VALUES (%s)' % (
+                table,
+                ','.join(columns),
+                ','.join('?'*len(columns))
+            )
+        else:
+            query = u'INSERT INTO %s (%s) SELECT %s WHERE NOT EXISTS(SELECT * FROM %s WHERE %s)' % (
+                table,
+                ','.join(columns),
+                ','.join('?'*len(columns)),
+                table,
+                ' and '.join([column + '=?' for column in unique_columns])
+            )
+
+        values = [data[column] for column in columns] + [data[column] for column in unique_columns]
+
         conn = sqlite3.connect(self.goptions['db_file']['value'])
         c = conn.cursor()
-        try: c.execute(query, (username, password, hashtype, leak, username, password, hashtype, leak))
+        try: c.execute(query, values)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return
@@ -558,7 +577,7 @@ class module(cmd.Cmd):
             self.help_search()
             return
         text = params.split()[0]
-        self.output('Searching for \'%s\'' % (text))
+        self.output('Searching for \'%s\'...' % (text))
         modules = [x for x in __builtin__.loaded_modules if text in x]
         if not modules:
             self.error('No modules found containing \'%s\'.' % (text))
