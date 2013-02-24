@@ -170,7 +170,7 @@ class module(cmd.Cmd):
         lens = []
         cols = len(tdata[0])
         for i in range(0,cols):
-            lens.append(len(max([x[i] for x in tdata], key=len)))
+            lens.append(len(max([x[i] if x[i] != None else '' for x in tdata], key=len)))
         # build table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
@@ -187,7 +187,7 @@ class module(cmd.Cmd):
                 print data_str % data_sub
                 print separator
             for rdata in tdata:
-                data_sub = tuple([rdata[i].ljust(lens[i]) for i in range(0,cols)])
+                data_sub = tuple([rdata[i].ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
             # bottom of table
             print separator
@@ -252,36 +252,37 @@ class module(cmd.Cmd):
         if not params:
             self.help_query()
             return
+        conn = sqlite3.connect(self.goptions['db_file']['value'])
+        c = conn.cursor()
+        try: c.execute(params)
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return False
         if not return_results:
-            # use sqlite to format and output the query
-            cmd = 'sqlite3 -column -header %s "%s"' % (self.goptions['db_file']['value'], params)
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            output, error = p.communicate()
-            if output:
-                print ''
-                print output.strip()
-                print ''
-            if error:
-                self.error('Invalid query. %s' % error.strip())
-                self.help_query()
-                self.display_schema()
+            if c.rowcount == -1:
+                header = tuple([x[0] for x in c.description])
+                tdata = c.fetchall()
+                if not tdata:
+                    self.output('No data returned.')
+                else:
+                    tdata.insert(0, header)
+                    self.table(tdata, True)
+            else:
+                conn.commit()
+                self.output('%d rows affected.' % (c.rowcount))
+            conn.close()
             return
         else:
-            conn = sqlite3.connect(self.goptions['db_file']['value'])
-            c = conn.cursor()
-            try: c.execute(params)
-            except sqlite3.OperationalError as e:
-                self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-                return False
             # a rowcount of -1 typically refers to a select statement
             if c.rowcount == -1:
                 rows = c.fetchall()
-                return rows
+                result = rows
             # a rowcount of 1 == success and 0 == failure
             else:
                 conn.commit()
-                return c.rowcount
+                result = c.rowcount
             conn.close()
+            return result
 
     def insert(self, table, data, unique_columns=None):
         '''Inserts items into database using query and returns the affected row count.
