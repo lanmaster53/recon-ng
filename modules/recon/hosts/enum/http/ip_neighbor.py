@@ -46,7 +46,6 @@ class Module(framework.module):
         tdata = [] 
         tdata.append(['Other Domains on this Server'])       
         for site in sorted(sites):
-            #self.output('Found: %s' % site)
             tdata.append([site])
             # Add each host to the database
             if add_hosts: self.add_host(site)
