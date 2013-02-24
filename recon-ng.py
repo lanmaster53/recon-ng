@@ -167,17 +167,28 @@ class Recon(framework.module):
         if len(options) == 0:
             self.help_load()
         else:
+            modules = []
             try:
-                modulename = self.loaded_modules[params]
-                y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params.split(self.module_delimiter)[-1]))
+                # finds any modules that contain params
+                modules = [x for x in self.loaded_modules if params in x]
+                # raise AssertionError if multiple modules are found
+                assert len(modules) == 1
+                modulename = modules[0]
+                loadedname = self.loaded_modules[modules[0]]
+                y = sys.modules[loadedname].Module('%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1]))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
                 except:
                     print '-'*60
                     traceback.print_exc(file=sys.stdout)
                     print '-'*60
-            except KeyError: self.error('Invalid module name.')
-            except AttributeError: self.error('Invalid module name.')
+            except (KeyError, AttributeError, AssertionError):
+                if not modules:
+                    self.error('Invalid module name.')
+                else:
+                    self.error('Multiple modules match \'%s\'' % params)
+                    self.display_modules(modules)
+
 
     # alias for load
     def do_use(self, params):
