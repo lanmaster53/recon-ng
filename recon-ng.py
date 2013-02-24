@@ -186,7 +186,7 @@ class Recon(framework.module):
                 if not modules:
                     self.error('Invalid module name.')
                 else:
-                    self.error('Multiple modules match \'%s\'' % params)
+                    self.output('Multiple modules match \'%s\'.' % params)
                     self.display_modules(modules)
 
 

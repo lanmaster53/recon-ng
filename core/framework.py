@@ -558,7 +558,7 @@ class module(cmd.Cmd):
             self.help_search()
             return
         text = params.split()[0]
-        self.output('Searching for \'%s\'' % (text))
+        self.output('Searching for \'%s\'...' % (text))
         modules = [x for x in __builtin__.loaded_modules if text in x]
         if not modules:
             self.error('No modules found containing \'%s\'.' % (text))
