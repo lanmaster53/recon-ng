@@ -170,7 +170,7 @@ class module(cmd.Cmd):
         lens = []
         cols = len(tdata[0])
         for i in range(0,cols):
-            lens.append(len(max([x[i] if x[i] != None else '' for x in tdata], key=len)))
+            lens.append(len(max([str(x[i]) if x[i] != None else '' for x in tdata], key=len)))
         # build table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
@@ -187,7 +187,7 @@ class module(cmd.Cmd):
                 print data_str % data_sub
                 print separator
             for rdata in tdata:
-                data_sub = tuple([rdata[i].ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
+                data_sub = tuple([str(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
             # bottom of table
             print separator
@@ -304,6 +304,7 @@ class module(cmd.Cmd):
                 else:
                     tdata.insert(0, header)
                     self.table(tdata, True)
+                    self.output('%d rows returned' % (len(tdata)))
             else:
                 conn.commit()
                 self.output('%d rows affected.' % (c.rowcount))
