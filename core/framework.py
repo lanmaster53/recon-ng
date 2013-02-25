@@ -508,7 +508,7 @@ class module(cmd.Cmd):
         return ResponseObject(resp, cj)
 
     #==================================================
-    # FRAMEWORK COMMAND METHODS
+    # COMMAND METHODS
     #==================================================
 
     def do_exit(self, params):
