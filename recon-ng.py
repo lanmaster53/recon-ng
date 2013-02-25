@@ -108,7 +108,7 @@ class Recon(framework.module):
         conn.close()
 
     #==================================================
-    # FRAMEWORK METHODS
+    # COMMAND METHODS
     #==================================================
 
     def do_reload(self, params):
