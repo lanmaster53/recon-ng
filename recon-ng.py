@@ -108,7 +108,7 @@ class Recon(framework.module):
         conn.close()
 
     #==================================================
-    # FRAMEWORK METHODS
+    # COMMAND METHODS
     #==================================================
 
     def do_reload(self, params):
@@ -170,7 +170,7 @@ class Recon(framework.module):
             modules = []
             try:
                 # finds any modules that contain params
-                modules = [x for x in self.loaded_modules if params in x]
+                modules = [params] if params in self.loaded_modules else [x for x in self.loaded_modules if params in x]
                 # raise AssertionError if multiple modules are found
                 assert len(modules) == 1
                 modulename = modules[0]

@@ -38,6 +38,9 @@ class Module(framework.module):
         except KeyboardInterrupt:
             print ''
             return
+        except dns.resolver.NoNameservers:
+            self.output('Invalid nameserver.')
+            return
         except dns.resolver.NXDOMAIN:
             if verbose: self.output('No Wildcard DNS entry found. Attempting to brute force DNS records.')
             pass
