@@ -34,6 +34,9 @@ class Module(framework.module):
         except Exception as e:
             self.error(e.__str__())
             return
+        if not resp.json:
+            self.error('Invalid JSON returned.')
+            return
 
         # Output the results in table format
         tdata = [] 

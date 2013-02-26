@@ -43,7 +43,6 @@ class Module(framework.module):
        
         if results:
             rows = re.split('<br>', str(results))
-            print self.ruler*50
             for row in rows:
                 finding = re.findall(r"mirror/([0-9]+)/.+blank\\'>(.+?)</a>", row)
                 if finding:
