@@ -55,8 +55,8 @@ class Module(framework.module):
                     except:
                         code = 'Error'
                     if code == 200 and '<?php' in resp.text:
-                        self.alert('%s => %s. Wp-config page found!' % (url, code))
+                        self.alert('%s => %s. Possible exposed wp-config (WP MySQL config) page found!' % (url, code))
                         cnt += 1
                     else:
                         if verbose: self.output('%s => %s' % (url, code))
-        self.output('%d Wp-config pages found' % (cnt))
+        self.output('%d Exposed wp-config pages found' % (cnt))
