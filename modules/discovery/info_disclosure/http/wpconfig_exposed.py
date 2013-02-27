@@ -10,7 +10,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Exposed WordPress Config Page Checker',
                      'Author': 'Jay Turla (@shipcod3)',
-                     'Description': 'Checks the hosts for possible exposed wp-config files which contains WordPress MySQL configuration.',
+                     'Description': 'Checks hosts for exposed wp-config files which contain WordPress MySQL configuration information.',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
                                   'Reference: http://feross.org/cmsploit/',
@@ -32,7 +32,8 @@ class Module(framework.module):
         protocols = ['http', 'https']
         files = [
                  ('wp-config.txt'), ('wp-config.php~'), ('wp-config.php~'), ('#wp-config.php#'), ('wp-config.php.save'),
-                 ('wp-config.php.swp'), ('wp-config.php.swo'), ('wp-config.php~'), ('wp-config.conf'),
+                 ('wp-config.php.swp'), ('wp-config.php.swo'), ('wp-config.php~'), ('wp-config.conf'), ('wp-config.old'),
+                 ('wp-config.bak'),
                 ]
         ############################################
         # wp-config.php~ == Vim, Gedit             # 
@@ -40,6 +41,8 @@ class Module(framework.module):
         # wp-config.php.save == Nano               #
         # wp-config.php.swp == Vim (swap file)     #
         # wp-config.php.swo == Vim (swap file)     #
+        # wp-config.bak == Generic backup          #
+        # wp-config.php.old == Generic backup      #
         ############################################
         cnt = 0
         for host in hosts:
