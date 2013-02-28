@@ -558,7 +558,7 @@ class module(cmd.Cmd):
         if params:
             arg = params.lower()
             if arg == 'hosts':
-                self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host', False)
+                self.query('SELECT * FROM hosts ORDER BY host', False)
                 return
             elif arg == 'contacts':
                 self.query('SELECT * FROM contacts ORDER BY fname', False)
