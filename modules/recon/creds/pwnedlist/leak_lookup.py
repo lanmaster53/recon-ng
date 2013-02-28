@@ -6,13 +6,13 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('leak_id', '0b35c0ba48a899baeea2021e245d6da8', 'yes', 'pwnedlist leak id')
+        self.register_option('source', 'db', 'yes', 'pwnedlist leak id')
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for information associated with leak IDs.',
+                     'Description': 'Queries the local database for information associated with the given leak ID/s.',
                      'Comments': [
-                                  'API Query Cost: 1 query per request.'
+                                  'Source options: [ db | <leak_id> | ./path/to/file | query <sql> ]'
                                   ]
                      }
 
@@ -22,35 +22,17 @@ class Module(framework.module):
         self.leak_lookup()
 
     def leak_lookup(self):
-        # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
-        if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
-        if not secret: return
+        leak_ids = self.get_source(self.options['source']['value'], 'SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
+        if not leak_ids: return
 
-        # API query guard
-        if not pwnedlist.guard(1): return
-
-        # setup API call
-        method = 'leaks.info'
-        url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        payload = {'leakId': self.options['leak_id']['value']}
-        payload = pwnedlist.build_payload(payload, method, key, secret)
-        # make request
-        try: resp = self.request(url, payload=payload)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
-        if resp.json: jsonobj = resp.json
-        else:
-            self.error('Invalid JSON returned from the API.')
-            return
-
-        # handle output
-        leak = jsonobj['leaks'][0]
-        for key in leak.keys():
-            header = ' '.join(key.split('_')).title()
-            self.output('%s: %s' % (header, leak[key]))
+        print self.ruler*50
+        for leak_id in leak_ids:
+            columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
+            if not columns:
+                self.output('Please run the \'leaks_dump\' module to populate the database and try again.')
+                return
+            values = self.query('SELECT %s FROM leaks WHERE leak_id = \'%s\'' % (', '.join(columns), leak_id))[0]
+            for i in range(0,len(columns)):
+                title = ' '.join(columns[i].split('_')).title()
+                self.output('%s: %s' % (title, values[i]))
+            print self.ruler*50
