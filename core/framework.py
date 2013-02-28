@@ -557,14 +557,8 @@ class module(cmd.Cmd):
         '''Shows various framework items'''
         if params:
             arg = params.lower()
-            if arg == 'hosts':
-                self.query('SELECT * FROM hosts ORDER BY host', False)
-                return
-            elif arg == 'contacts':
-                self.query('SELECT * FROM contacts ORDER BY fname', False)
-                return
-            elif arg == 'creds':
-                self.query('SELECT * FROM creds ORDER BY username', False)
+            if arg in ['hosts', 'contacts', 'creds']:
+                self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
                 return
             elif arg == 'options':
                 self.display_options(None)
