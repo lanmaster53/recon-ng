@@ -30,10 +30,12 @@ class Module(framework.module):
         if not hosts: return
 
         protocols = ['http', 'https']
+        # some files are inspired by cmsploit
         files = [
                  ('wp-config.txt'), ('wp-config.php~'), ('wp-config.php~'), ('#wp-config.php#'), ('wp-config.php.save'),
-                 ('wp-config.php.swp'), ('wp-config.php.swo'), ('wp-config.php~'), ('wp-config.conf'), ('wp-config.old'),
-                 ('wp-config.bak'),
+                 ('wp-config.php.swp'), ('wp-config.php.swo'), ('wp-config.php~'), ('wp-config.conf'), ('wp-config.php.old'),
+                 ('wp-config.bak'), ('wp-config.php.save.1'), ('wp-config.php.save.2'), ('wp-config.php%23'),
+                 ('wp-config.php.bak'),
                 ]
         ############################################
         # wp-config.php~ == Vim, Gedit             # 
@@ -42,7 +44,11 @@ class Module(framework.module):
         # wp-config.php.swp == Vim (swap file)     #
         # wp-config.php.swo == Vim (swap file)     #
         # wp-config.bak == Generic backup          #
-        # wp-config.php.old == Generic backup      #
+        # wp-config.php.bak == Generic backup      #
+        # wp-config.php.old == Generic backup      #      
+        # wp-config.php.save.1 == Nano             #
+        # wp-config.php.save.2 == Nano             #
+        # wp-config.php%23 ==  Emacs (Url Encoded) #
         ############################################
         cnt = 0
         for host in hosts:
