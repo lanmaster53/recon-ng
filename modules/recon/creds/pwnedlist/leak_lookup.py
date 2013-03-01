@@ -10,7 +10,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the local database for information associated with the given leak ID/s.',
+                     'Description': 'Queries the local database for information associated with the given leak ID/s. The \'leaks_dump\' module must be used to populate the local database before this module will execute successfully.',
                      'Comments': [
                                   'Source options: [ db | <leak_id> | ./path/to/file | query <sql> ]'
                                   ]
