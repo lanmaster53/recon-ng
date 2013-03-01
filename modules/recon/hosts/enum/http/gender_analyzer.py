@@ -9,8 +9,8 @@ class Module(framework.module):
         self.register_option('host', self.goptions['domain']['value'], 'yes', 'fully qualified target hostname')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
-                     'Name':        'Gender Analyzer Lookup',
-                     'Author':      'Brendan Coles (bcoles[at]gmail.com)',
+                     'Name': 'Gender Analyzer Lookup',
+                     'Author': 'Brendan Coles (bcoles[at]gmail.com)',
                      'Description': 'Attempts to guess the author\'s gender using genderanalyzer.com.',
                      'Comments': []
                      }

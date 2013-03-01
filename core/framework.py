@@ -204,15 +204,17 @@ class module(cmd.Cmd):
         c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
         tables = [x[0] for x in c.fetchall()]
         for table in tables:
-            print ''
-            print '%s+---------------------+' % (self.spacer)
-            print '%s| %s |' % (self.spacer, table.center(19))
-            print '%s+---------------------+' % (self.spacer)
-            c.execute("PRAGMA table_info(%s)" % (table))
+            c.execute('PRAGMA table_info(%s)' % (table))
             columns = [(x[1],x[2]) for x in c.fetchall()]
+            name_len = len(max([x[0] for x in columns], key=len))
+            type_len = len(max([x[1] for x in columns], key=len))
+            print ''
+            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
+            print '%s| %s |' % (self.spacer, table.center(name_len+type_len+3))
+            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
             for column in columns:
-                print '%s| %s | %s |' % (self.spacer, column[0].ljust(8), column[1].center(8))
-            print '%s+---------------------+' % (self.spacer)
+                print '%s| %s | %s |' % (self.spacer, column[0].ljust(name_len), column[1].center(type_len))
+            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
         print ''
 
     def add_host(self, host, address=None):
@@ -557,14 +559,8 @@ class module(cmd.Cmd):
         '''Shows various framework items'''
         if params:
             arg = params.lower()
-            if arg == 'hosts':
-                self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host', False)
-                return
-            elif arg == 'contacts':
-                self.query('SELECT * FROM contacts ORDER BY fname', False)
-                return
-            elif arg == 'creds':
-                self.query('SELECT * FROM creds ORDER BY username', False)
+            if arg in ['hosts', 'contacts', 'creds']:
+                self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
                 return
             elif arg == 'options':
                 self.display_options(None)

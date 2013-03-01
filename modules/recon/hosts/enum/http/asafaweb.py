@@ -9,8 +9,8 @@ class Module(framework.module):
         self.register_option('host', self.goptions['domain']['value'], 'yes', 'fully qualified target hostname')
         self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
-                     'Name':        'ASP Security Analyzer',
-                     'Author':      'Brendan Coles (bcoles[at]gmail.com)',
+                     'Name': 'ASP Security Analyzer',
+                     'Author': 'Brendan Coles (bcoles[at]gmail.com)',
                      'Description': 'Scans a given host for ASP security configuration vulnerabilities with ASafaWeb (Automated Security Analyser for ASP.NET Websites). https://asafaweb.com/',
                      'Comments': []
                      }
