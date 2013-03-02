@@ -16,18 +16,13 @@ class Module(framework.module):
                      'Comments': []
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.archive()
-
-    def archive(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         domain  = self.options['domain']['value']
 
         # Get the first year the domain was archived
         url = 'http://web.archive.org/web/*/%s' % (domain)
-        if verbose: self.output('URL for web.archive.org: %s' % url)
+        if verbose: self.output('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''
@@ -50,7 +45,7 @@ class Module(framework.module):
         cnt = 0
         for year in range(int(first_year), date.today().year+1):
             url = 'http://web.archive.org/web/%s*/%s' % (str(year), domain)
-            if verbose: self.output('URL for web.archive.org: %s' % url)
+            if verbose: self.output('URL: %s' % url)
             try: resp = self.request(url)
             except KeyboardInterrupt:
                 print ''

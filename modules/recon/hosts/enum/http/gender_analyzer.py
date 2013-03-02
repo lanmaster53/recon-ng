@@ -15,18 +15,13 @@ class Module(framework.module):
                      'Comments': []
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.gender_lookup()
-
-    def gender_lookup(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         host  = self.options['host']['value']
 
         # request the author's gender
         url = 'http://genderanalyzer.com/?url=%s' % (host)
-        if verbose: self.output('URL for genderanalyzer.com: %s' % url)
+        if verbose: self.output('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

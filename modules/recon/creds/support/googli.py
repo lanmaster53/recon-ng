@@ -17,12 +17,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.googli()
-    
-    def googli(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         
         hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')

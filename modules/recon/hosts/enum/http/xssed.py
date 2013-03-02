@@ -17,17 +17,12 @@ class Module(framework.module):
                      'Comments': []
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.xssed()
-
-    def xssed(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
 
         url = 'http://xssed.com/search?key=%s' % (domain)
-        if verbose: self.output('URL for XSSED.com: %s' % url)
+        if verbose: self.output('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

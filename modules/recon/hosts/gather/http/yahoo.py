@@ -18,12 +18,7 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.get_hosts()
-    
-    def get_hosts(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
         url = 'http://search.yahoo.com/search'
@@ -45,9 +40,6 @@ class Module(framework.module):
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
             payload = {'n': str(nr), 'b':  str(page*nr), 'p': full_query}
-            #
-            #
-            #
             if verbose: self.output('URL: %s?%s' % (url, urllib.urlencode(payload)))
             # send query to search engine
             try: content = self.request(url, payload=payload)

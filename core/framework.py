@@ -25,8 +25,6 @@ class module(cmd.Cmd):
         self.module_delimiter = '/' # match line ~257 recon-ng.py
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
-        try: self.do_run.__func__.__doc__ = '''Runs the module'''
-        except: pass
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.goptions = __builtin__.goptions
         self.options = {}
@@ -217,11 +215,15 @@ class module(cmd.Cmd):
             print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
         print ''
 
-    def add_host(self, host, address=None):
+    def add_host(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
         '''Adds a host to the database and returns the affected row count.'''
         data = dict(
             host = self.sanitize(host),
-            address = self.sanitize(address),
+            ip_address = self.sanitize(ip_address),
+            region = self.sanitize(region),
+            country = self.sanitize(country),
+            latitude = self.sanitize(latitude),
+            longitude = self.sanitize(longitude),
         )
 
         return self.insert('hosts', data, ('host',))
@@ -373,17 +375,17 @@ class module(cmd.Cmd):
             results = self.query(query, True)
             if not results:
                 self.error('No items found.')
-                return None
-            if len(results[0]) > 1:
+                sources = []
+            elif len(results[0]) > 1:
                 self.error('Too many columns of data returned.')
-                return None
-            sources = [x[0] for x in results]
+                source = []
+            else: sources = [x[0] for x in results]
         elif source == 'db' and query:
             rows = self.query(query)
             if not rows:
                 self.error('No items found.')
-                return None
-            sources = [x[0] for x in rows]
+                sources = []
+            else: sources = [x[0] for x in rows]
         elif os.path.exists(source):
             sources = open(source).read().split()
         else:
@@ -459,7 +461,7 @@ class module(cmd.Cmd):
     # NETWORK METHODS
     #==================================================
 
-    def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
+    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, redirect=True):
         '''Makes a web request and returns a response object.'''
         # set request arguments
         # process user-agent header
@@ -471,7 +473,8 @@ class module(cmd.Cmd):
             cookie_value = '; '.join('%s=%s' % (key, cookies[key]) for key in cookies.keys())
             headers['Cookie'] = cookie_value
         # process socket timeout
-        socket.setdefaulttimeout(self.goptions['socket_timeout']['value'])
+        timeout = timeout or self.goptions['socket_timeout']['value']
+        socket.setdefaulttimeout(timeout)
         
         # set handlers
         handlers = [] #urllib2.HTTPHandler(debuglevel=1)
@@ -625,6 +628,14 @@ class module(cmd.Cmd):
         stderr = proc.stderr.read()
         if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))
         if stderr: sys.stdout.write('%s%s%s' % (R, stderr, N))
+
+    def do_run(self, params):
+        '''Runs the module'''
+        if not self.validate_options(): return
+        self.module_run()
+
+    def module_run(self):
+        pass
 
     #==================================================
     # HELP METHODS

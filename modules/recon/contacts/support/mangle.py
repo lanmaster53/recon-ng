@@ -19,12 +19,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.mutate_contacts()
-
-    def mutate_contacts(self):
+    def module_run(self):
         domain = self.options['domain']['value']
         pattern = self.options['pattern']['value']
         max = self.options['max-length']['value']

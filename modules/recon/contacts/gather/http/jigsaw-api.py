@@ -17,9 +17,7 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
+    def module_run(self):
         self.api_key = self.manage_key('jigsaw_key', 'Jigsaw API Key')
         if not self.api_key: return
         company_id = self.get_company_id()

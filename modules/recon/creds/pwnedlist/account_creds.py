@@ -18,12 +18,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.get_creds()
-
-    def get_creds(self):
+    def module_run(self):
         # api key management
         key = self.manage_key('pwned_key', 'PwnedList API Key')
         if not key: return

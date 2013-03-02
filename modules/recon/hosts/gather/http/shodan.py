@@ -18,12 +18,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.get_hosts()
-    
-    def get_hosts(self):
+    def module_run(self):
         domain = self.options['domain']['value']
         subs = []
         key = self.manage_key('shodan', 'Shodan API key')

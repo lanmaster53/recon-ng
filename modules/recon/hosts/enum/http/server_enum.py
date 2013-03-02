@@ -19,11 +19,6 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.enumerate()
-
     def lookup(self, db, name, value):
         matches = []
         for platform in db:
@@ -34,7 +29,7 @@ class Module(framework.module):
             return ', '.join(list(set(matches)))
         return None
 
-    def enumerate(self):
+    def module_run(self):
         host = self.options['host']['value']
         protocol = self.options['protocol']['value']
         redirect = self.options['redirect']['value']

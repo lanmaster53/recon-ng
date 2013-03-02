@@ -17,12 +17,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.domain_ispwned()
-
-    def domain_ispwned(self):
+    def module_run(self):
         domains = self.get_source(self.options['source']['value'])
         if not domains: return
 

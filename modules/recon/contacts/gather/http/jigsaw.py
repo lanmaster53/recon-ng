@@ -17,9 +17,7 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
+    def module_run(self):
         company_id = self.get_company_id()
         if company_id:
             contact_ids = self.get_contact_ids(company_id)

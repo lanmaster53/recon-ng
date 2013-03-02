@@ -17,12 +17,7 @@ class Module(framework.module):
                                  ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.whatweb()
-
-    def whatweb(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
 
         # handle sources

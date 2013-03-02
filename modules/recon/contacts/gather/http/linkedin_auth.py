@@ -21,9 +21,7 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
+    def module_run(self):
         consumer_key = self.manage_key('linkedin_key', 'LinkedIn API Key')
         if not consumer_key: return
         consumer_secret = self.manage_key('linkedin_secret', 'LinkedIn Secret Key') 

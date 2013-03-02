@@ -20,12 +20,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.wpconfig()
-    
-    def wpconfig(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         uri = self.options['uri']['value']
         searchstr = self.options['searchstr']['value']

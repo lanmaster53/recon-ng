@@ -15,12 +15,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.check_usage()
-
-    def check_usage(self):
+    def module_run(self):
         # required for all PwnedList modules
         key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
         if not key: return

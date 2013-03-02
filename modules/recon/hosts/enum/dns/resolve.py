@@ -15,12 +15,7 @@ class Module(framework.module):
                                   'Note: Nameserver must be in IP form.']
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.resolve_hosts()
-    
-    def resolve_hosts(self):
+    def module_run(self):
         q = dns.resolver.get_default_resolver()
         q.nameservers = [self.options['nameserver']['value']]
         hosts = self.query('SELECT rowid, host FROM hosts ORDER BY host')
@@ -30,6 +25,7 @@ class Module(framework.module):
             try:
                 answers = q.query(host)
                 address = answers[0].address
+                self.query('UPDATE hosts SET ip_address=\'%s\' WHERE rowid=\'%s\'' % (address, row))
             except KeyboardInterrupt:
                 print ''
                 return
@@ -40,4 +36,3 @@ class Module(framework.module):
                 return
             except: address = 'Error'
             self.output('%s => %s' % (host, address))
-            self.query('UPDATE hosts SET address="%s" WHERE rowid="%s"' % (address, row))
