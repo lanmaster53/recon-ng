@@ -13,13 +13,11 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from the Jigsaw.com API. This module updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contacts from the Jigsaw.com API and updates the \'contacts\' table of the database with the results.',
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
+    def module_run(self):
         self.api_key = self.manage_key('jigsaw_key', 'Jigsaw API Key')
         if not self.api_key: return
         company_id = self.get_company_id()

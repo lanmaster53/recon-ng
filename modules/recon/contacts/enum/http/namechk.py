@@ -19,12 +19,7 @@ class Module(framework.module):
                                   'Note: The global socket_timeout may need to be increased to support slower sites.']
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.namechk()
-    
-    def namechk(self):
+    def module_run(self):
         username = self.options['username']['value']
         verbose = self.options['verbose']['value']
 

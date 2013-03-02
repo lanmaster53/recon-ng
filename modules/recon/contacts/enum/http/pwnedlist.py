@@ -11,18 +11,13 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. This module updates the \'creds\' table of the database with the positive results.',
+                     'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials and updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: [ db | email.address@domain.com | ./path/to/file | query <sql> ]'
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.check_pwned()
-
-    def check_pwned(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         
         accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')

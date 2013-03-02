@@ -10,19 +10,14 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Goog.li Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Uses the Goog.li hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
+                     'Description': 'Uses the Goog.li hash database to perform a reverse hash lookup and updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
                                   'Hash types supported: MD4, MD5, MD5x2, MYSQL 3, MYSQL 4, MYSQL 5, RIPEMD160, NTLM, GOST, SHA1, SHA1x2, SHA224, SHA256, SHA384, SHA512, WHIRLPOOL'
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.googli()
-    
-    def googli(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         
         hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')

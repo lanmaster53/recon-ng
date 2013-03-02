@@ -15,18 +15,13 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Checks Netcraft for the Hosting History of given target.',
+                     'Description': 'Checks Netcraft.com for the hosting history of the given target(s).',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
                                  ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.netcraft()
-
-    def netcraft(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         cookies = {}
 

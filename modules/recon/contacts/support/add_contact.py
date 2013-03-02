@@ -16,10 +16,6 @@ class Module(framework.module):
                      'Comments':[]
                      }
 
-    # do not remove or rename
-    def do_run(self, params):
-        # do not remove or modify
-        if not self.validate_options(): return
-        # === begin module code here ===
+    def module_run(self):
         if self.add_contact(self.options['fname']['value'], self.options['lname']['value'], self.options['title']['value'], self.options['email']['value']):
             self.output('Contact successfully added.')

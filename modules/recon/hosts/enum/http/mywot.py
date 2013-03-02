@@ -15,17 +15,12 @@ class Module(framework.module):
                      'Comments': []
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.mywot()
-
-    def mywot(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
 
         url = 'http://api.mywot.com/0.4/public_query2?target=%s' % (domain)
-        if verbose: self.output('URL being retrieved: %s' % url)
+        if verbose: self.output('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

@@ -15,11 +15,6 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.generate_report()
-
     def sanitize_html(self, htmlstring):
         # escape HTML with entities
         escapes = {'"': '&quot;',
@@ -31,7 +26,7 @@ class Module(framework.module):
         htmlstring = ''.join([char for char in htmlstring if ord(char) >= 32 and ord(char) <= 126])
         return htmlstring
 
-    def generate_report(self):
+    def module_run(self):
         filename = self.options['filename']['value']
         try:
             outfile = open(filename, 'wb')
@@ -57,6 +52,7 @@ body {
     display: inline-block;
     margin-left: auto;
     margin-right: auto;
+    width: 1200px;
 }
 .title {
     font-size: 3em;
@@ -84,9 +80,6 @@ td {
 }
 .table_container {
     margin: 10px 0;
-}
-.leak_table {
-    width: 1000px
 }
 .spacer {
     height: 1em;
@@ -122,15 +115,16 @@ td {
             table_content += '<div class="table_container"><table><caption>%s</caption>%s%s</table></div>' % (table.upper(), row_headers, row_content)
 
         leaks = self.query('SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
-        row_content = ''
-        for leak in [x[0] for x in leaks]:
-            columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
-            row = self.query('SELECT * FROM leaks WHERE leak_id = \'%s\'' % (leak))[0]
-            values = [x if x != None else '' for x in row]
-            for i in range(0,len(columns)):
-                row_content += '<tr><td><strong>%s</strong></td><td>%s</td></tr>' % (columns[i], values[i])
-            row_content += '<tr><td class="spacer"></td></tr>'
-        table_content += '<div class="table_container"><table class="leak_table"><caption>ASSOCIATED LEAK DATA</caption>%s</table></div>' % (row_content)
+        if leaks:
+            row_content = ''
+            for leak in [x[0] for x in leaks]:
+                columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
+                row = self.query('SELECT * FROM leaks WHERE leak_id = \'%s\'' % (leak))[0]
+                values = [x if x != None else '' for x in row]
+                for i in range(0,len(columns)):
+                    row_content += '<tr><td><strong>%s</strong></td><td>%s</td></tr>' % (columns[i], values[i])
+                row_content += '<tr><td class="spacer"></td></tr>'
+            table_content += '<div class="table_container"><table><caption>ASSOCIATED LEAK DATA</caption>%s</table></div>' % (row_content)
 
         markup = template % (self.options['company']['value'].title(), table_content)
         outfile.write(self.sanitize_html(markup))

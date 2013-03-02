@@ -15,12 +15,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.leak_dump()
-
-    def leak_dump(self):
+    def module_run(self):
         # api key management
         key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
         if not key: return

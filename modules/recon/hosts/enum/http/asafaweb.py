@@ -15,19 +15,14 @@ class Module(framework.module):
                      'Comments': []
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.asafaweb()
-
-    def asafaweb(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         host  = self.options['host']['value']
 
         # request the scan
         details = [['Check', 'Status']]
         url = 'https://asafaweb.com/Scan?Url=%s' % (host)
-        if verbose: self.output('URL for asafaweb.com: %s' % url)
+        if verbose: self.output('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

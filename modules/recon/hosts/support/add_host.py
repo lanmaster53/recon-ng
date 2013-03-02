@@ -7,6 +7,10 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('host', None, 'yes', 'fully qualified domain name')
         self.register_option('address', None, 'no', 'ip address')
+        self.register_option('region', None, 'no', 'city, state or region')
+        self.register_option('country', None, 'no', 'country name or code')
+        self.register_option('latitude', None, 'no', 'latitude')
+        self.register_option('longitude', None, 'no', 'longitude')
         self.info = {
                      'Name': 'Host Adder',
                      'Author': 'Drumm',
@@ -14,10 +18,6 @@ class Module(framework.module):
                      'Comments':[]
                      }
 
-    # do not remove or rename
-    def do_run(self, params):
-        # do not remove or modify
-        if not self.validate_options(): return
-        # === begin module code here ===
-        if self.add_host(self.options['host']['value'], self.options['address']['value']):
+    def module_run(self):
+        if self.add_host(self.options['host']['value'], self.options['address']['value'], self.options['region']['value'], self.options['country']['value'], self.options['latitude']['value'], self.options['longitude']['value']):
             self.output('Host successfully added.')

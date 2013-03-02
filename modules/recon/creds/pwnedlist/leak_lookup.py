@@ -16,12 +16,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.leak_lookup()
-
-    def leak_lookup(self):
+    def module_run(self):
         leak_ids = self.get_source(self.options['source']['value'], 'SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
         if not leak_ids: return
 
