@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'McAfee SiteAdvisor Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks siteadvisor.com site for links and other information with domains.',
+                     'Description': 'Checks siteadvisor.com for links and other information for the given domain.',
                      'Comments': []
                      }
    

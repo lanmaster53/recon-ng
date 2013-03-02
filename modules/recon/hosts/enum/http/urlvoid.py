@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'URLVoid Domain Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks urlvoid.com site for information about the security of a domain.',
+                     'Description': 'Checks urlvoid.com for information about the security of the given domain.',
                      'Comments': []
                      }
    

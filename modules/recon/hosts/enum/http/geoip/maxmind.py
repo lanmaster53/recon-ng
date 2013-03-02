@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Maxmind GeoIP',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',
-                     'Description': 'Leverages maxmind.com to geolocate the given host(s) by IP address. This module updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Leverages the Maxmind.com Demo API to geolocate the given host(s) by IP address and updates the \'hosts\' table of the database with the results.',
                      'Comments': [
                                   'Source options: [ db | <address> | ./path/to/file | query <sql> ]',
                                   'Note: maxmind.com allows a maximum of 25 queries per day per source IP address.'

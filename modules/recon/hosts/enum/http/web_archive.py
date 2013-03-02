@@ -12,7 +12,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Web Archive Lookup',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',
-                     'Description': 'Checks web.archive.org for archived versions of web pages on the the given domain.',
+                     'Description': 'Checks web.archive.org for archived versions of web pages on the given domain.',
                      'Comments': []
                      }
    

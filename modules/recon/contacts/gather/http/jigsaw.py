@@ -13,7 +13,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from Jigsaw.com. This module updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contacts from Jigsaw.com and updates the \'contacts\' table of the database with the results.',
                      'Comments': []
                      }
 

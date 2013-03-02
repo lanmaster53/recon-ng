@@ -13,7 +13,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Interesting File Finder',
                      'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), and Jay Turla (@shipcod3)',
-                     'Description': 'Checks hosts for interesting files in predcitable locations.',
+                     'Description': 'Checks hosts for interesting files in predictable locations.',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
                                   'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status/',

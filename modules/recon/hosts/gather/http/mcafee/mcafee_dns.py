@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'McAfee Domain DNS Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks mcafee.com site for DNS information about a domain. This module can update the \'hosts\' table of the database with the results.',
+                     'Description': 'Checks mcafee.com site for DNS information about a domain and can update the \'hosts\' table of the database with the results if desired.',
                      'Comments': []
                      }
    

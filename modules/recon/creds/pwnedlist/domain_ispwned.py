@@ -10,7 +10,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for a domain to determine if any credentials from that domain have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
+                     'Description': 'Queries the PwnedList API for the given domain(s) to determine if any credentials from the domain(s) have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
                      'Comments': [
                                   'Source options: [ <domain> | ./path/to/file ]',
                                   'API Query Cost: 1 query per request.'

@@ -15,7 +15,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Netcraft Hostname Enumerator',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Harvests hosts from Netcraft.com. This module updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Harvests hosts from Netcraft.com and updates the \'hosts\' table of the database with the results.',
                      'Comments': []
                      }
 

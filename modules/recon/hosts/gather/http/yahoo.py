@@ -14,7 +14,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Yahoo Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests hosts from Yahoo.com by using the \'site\' search operator. This module updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Harvests hosts from Yahoo.com by using the \'site\' search operator and updates the \'hosts\' table of the database with the results.',
                      'Comments': []
                      }
 

@@ -15,7 +15,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Checks Netcraft for the Hosting History of given target.',
+                     'Description': 'Checks Netcraft.com for the hosting history of the given target(s).',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
                                  ]

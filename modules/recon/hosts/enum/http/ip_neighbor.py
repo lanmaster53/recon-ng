@@ -12,7 +12,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'My-IP-Neighbors Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks my-ip-neighbors.com site for other hosts hosted on the same server. This module can update the \'hosts\' table of the database with the results.',
+                     'Description': 'Checks My-IP-Neighbors.com for other hosts hosted on the same server and can update the \'hosts\' table of the database with the results if desired.',
                      'Comments': ['Knowing what other hosts are hosted on a provider\'s server can sometimes yield interesting results and help identify additional targets for assessment.']
                      }
    

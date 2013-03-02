@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'McAfee Mail Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks mcafee.com site for mail servers for given domain. This module can update the \'hosts\' table of the database with the results.',
+                     'Description': 'Checks mcafee.com site for mail servers for given domain and can update the \'hosts\' table of the database with the results if desired.',
                      'Comments': []
                      }
    

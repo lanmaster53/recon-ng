@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Uniapple GeoIP',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages uniapple.net API to geolocate the given host(s) by IP address. This module updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Leverages the Uniapple.net API to geolocate the given host(s) by IP address and updates the \'hosts\' table of the database with the results.',
                      'Comments': [
                                   'Source options: [ db | <address> | ./path/to/file | query <sql> ]'
                                   ]
@@ -41,15 +41,15 @@ class Module(framework.module):
                 continue
 
             if self.options['source']['value'] == 'db':
-                    location = []
-                    for name in ['city', 'region']:
-                        if jsonobj[name]: location.append(str(jsonobj[name]))
-                    data = [', '.join(location)]
-                    data.append(jsonobj['country'].title())
-                    data.append(str(jsonobj['latitude']))
-                    data.append(str(jsonobj['longitude']))
-                    data.append(host)
-                    self.query('UPDATE hosts SET region=\'%s\', country=\'%s\', latitude=\'%s\', longitude=\'%s\' WHERE ip_address=\'%s\'' % tuple(data))
+                location = []
+                for name in ['city', 'region']:
+                    if jsonobj[name]: location.append(str(jsonobj[name]))
+                data = [', '.join(location)]
+                data.append(jsonobj['country'].title())
+                data.append(str(jsonobj['latitude']))
+                data.append(str(jsonobj['longitude']))
+                data.append(host)
+                self.query('UPDATE hosts SET region=\'%s\', country=\'%s\', latitude=\'%s\', longitude=\'%s\' WHERE ip_address=\'%s\'' % tuple(data))
 
             tdata = [['Host Info', 'Value']]
             for key in jsonobj:

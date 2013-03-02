@@ -13,7 +13,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'XSSed Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks XSSed.com site for XSS records for given domain and displays first 20 hits.',
+                     'Description': 'Checks XSSed.com for XSS records for the given domain and displays the first 20 results.',
                      'Comments': []
                      }
    

@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'HostIP GeoIP',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages hostip.info API to geolocate the given host(s) by IP address. This module updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Leverages the hostip.info API to geolocate the given host(s) by IP address and updates the \'hosts\' table of the database with the results.',
                      'Comments': [
                                   'Source options: [ db | <address> | ./path/to/file | query <sql> ]'
                                   ]

@@ -14,7 +14,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Brute forces host names using DNS. This module updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Brute forces host names using DNS and updates the \'hosts\' table of the database with the results.',
                      'Comments': []
                      }
 
