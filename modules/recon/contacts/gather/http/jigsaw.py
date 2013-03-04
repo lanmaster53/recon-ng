@@ -105,14 +105,18 @@ class Module(framework.module):
                 self.error(e.__str__())
                 break
             if 'Contact Not Found' in content: continue
-            pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
-            names = re.findall(pattern, content)
-            fname = self.unescape(names[0][0])
-            lname = self.unescape(names[0][1])
-            pattern = '<span id="title" title=".*?">(.*?)</span>'
-            title = self.unescape(re.findall(pattern, content)[0])
-            self.output('%s %s - %s' % (fname, lname, title))
+            fname = self.unescape(re.search('<span id="firstname">(.+?)</span>', content).group(1))
+            lname = self.unescape(re.search('<span id="lastname">(.+?)</span>', content).group(1))
+            title = self.unescape(re.search('<span id="title" title=".*?">(.*?)</span>', content).group(1))
+            city = self.unescape(re.search('<span id="city">(.+?)</span>', content).group(1))
+            state = self.unescape(re.search('<span id="state">(.+?)</span>', content).group(1))
+            region = []
+            for item in [city, state]:
+                if item: region.append(item.title())
+            region = ', '.join(region)
+            country = self.unescape(re.search('<span id="country">(.+?)</span>', content).group(1))
+            self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
             tot += 1
-            cnt += self.add_contact(fname, lname, title)
+            cnt += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
         self.output('%d total contacts found.' % (tot))
         if cnt: self.alert('%d NEW contacts found!' % (cnt))

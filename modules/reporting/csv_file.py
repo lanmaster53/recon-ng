@@ -7,7 +7,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'all', 'yes', 'data source for the report')
-        self.register_option('filename', './data/results.csv', 'yes', 'path and filename for report output')
+        self.register_option('filename', '%s/results.csv' % (self.workspace), 'yes', 'path and filename for report output')
         self.info = {
                      'Name': 'CSV File Creator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

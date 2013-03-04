@@ -5,7 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('filename', './data/results.html', 'yes', 'path and filename for report output')
+        self.register_option('filename', '%s/results.html' % (self.workspace), 'yes', 'path and filename for report output')
         self.register_option('sanitize', True, 'yes', 'mask sensitive data in the report')
         self.register_option('company', self.goptions['company']['value'], 'yes', 'name for report header')
         self.info = {
@@ -106,6 +106,7 @@ td {
             columns = [x[1] for x in self.query('PRAGMA table_info(%s)' % (table))]
             row_headers = '<tr><th>%s</th></tr>' % ('</th><th>'.join(columns))
             rows = self.query('SELECT %s FROM %s ORDER BY 1' % (', '.join(columns), table))
+            if not rows: continue
             row_content = ''
             for row in rows:
                 values = [x if x != None else '' for x in row]
