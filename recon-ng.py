@@ -6,6 +6,8 @@ __version__   = '1.20'
 
 import datetime
 import os
+import errno
+import json
 import sys
 import imp
 import sqlite3
@@ -30,14 +32,15 @@ __builtin__.record = 0
 
 # set global framework options
 __builtin__.goptions = {}
-__builtin__.loaded_modules ={}
+__builtin__.loaded_modules = {}
+__builtin__.workspace = ''
 
 class Recon(framework.module):
     def __init__(self):
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, prompt)
-        self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
+        self.register_option('workspace', 'default', 'yes', 'current workspace name', self.goptions)
         self.register_option('key_file', './data/keys.db', 'yes', 'path to API key database file', self.goptions)
         self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
         self.register_option('domain', '', 'no', 'target domain', self.goptions)
@@ -50,7 +53,8 @@ class Recon(framework.module):
         self.options = self.goptions
         self.load_modules()
         self.show_banner()
-        self.init_db()
+        self.init_keys()
+        self.init_workspace()
 
     #==================================================
     # SUPPORT METHODS
@@ -93,19 +97,48 @@ class Recon(framework.module):
             print '%s%s %s modules%s' % (B, count.ljust(4), category, N)
         print ''
 
-    def init_db(self):
-        conn = sqlite3.connect(self.options['db_file']['value'])
-        c = conn.cursor()
-        c.execute('create table if not exists hosts (host text, ip_address text, region text, country text, latitude text, longitude text)')
-        c.execute('create table if not exists contacts (fname text, lname text, email text, title text)')
-        c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
-        conn.commit()
-        conn.close()
+    def init_keys(self):
         conn = sqlite3.connect(self.options['key_file']['value'])
         c = conn.cursor()
         c.execute('create table if not exists keys (name text primary key, value text)')
         conn.commit()
         conn.close()
+
+    def init_workspace(self, workspace=None):
+        workspace = workspace if workspace is not None else self.options['workspace']['value']
+        workspace = './workspaces/%s' % (workspace)
+        try:
+            os.makedirs(workspace)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                self.error(e.__str__())
+                return False
+        else:
+            conn = sqlite3.connect('%s/data.db' % (workspace))
+            c = conn.cursor()
+            c.execute('create table if not exists hosts (host text, ip_address text, region text, country text, latitude text, longitude text)')
+            c.execute('create table if not exists contacts (fname text, lname text, email text, title text, region text, country text)')
+            c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
+            conn.commit()
+            conn.close()
+        self.workspace = __builtin__.workspace = workspace
+        self.config_load()
+        return True
+
+    def config_save(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        config_file = open(config_path, 'wb')
+        json.dump(self.options, config_file)
+        config_file.close()
+
+    def config_load(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        if os.path.exists(config_path):
+            try:
+                config = json.loads(open(config_path, 'rb').read())
+                for key in config: self.options[key] = config[key]
+            except:
+                self.error('Corrupt config file.')
 
     #==================================================
     # COMMAND METHODS
@@ -146,21 +179,14 @@ class Recon(framework.module):
             if name in self.options:
                 value = ' '.join(options[1:])
                 init = False
-                # make sure database file is valid
-                try:
-                    if name in ['db_file', 'key_file']:
-                        conn = sqlite3.connect(value)
-                        conn.close()
-                        init = True
-                    elif name in ['rec_file']:
-                        f = open(value)
-                        f.close()
-                except:
-                    self.error('Invalid path or name for \'%s\'.' % (name))
-                    return
+                # validate workspace
+                if name == 'workspace':
+                    if not self.init_workspace(value):
+                        self.error('Unable to create \'%s\' workspace.' % (value))
+                        return
                 self.options[name]['value'] = self.autoconvert(value)
                 print '%s => %s' % (name.upper(), value)
-                if init: self.init_db()
+                self.config_save()
             else: self.error('Invalid option.')
 
     def do_load(self, params):
@@ -204,7 +230,7 @@ class Recon(framework.module):
 
     def do_run(self, params):
         '''Not available'''
-        self.output('Command \'run\' not available in this context.')
+        self.output('Command \'run\' reserved for future use.')
 
     #==================================================
     # HELP METHODS
