@@ -7,6 +7,7 @@ __version__   = '1.20'
 import datetime
 import os
 import errno
+import json
 import sys
 import imp
 import sqlite3
@@ -121,7 +122,23 @@ class Recon(framework.module):
             conn.commit()
             conn.close()
         self.workspace = __builtin__.workspace = workspace
+        self.config_load()
         return True
+
+    def config_save(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        config_file = open(config_path, 'wb')
+        json.dump(self.options, config_file)
+        config_file.close()
+
+    def config_load(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        if os.path.exists(config_path):
+            try:
+                config = json.loads(open(config_path, 'rb').read())
+                for key in config: self.options[key] = config[key]
+            except:
+                self.error('Corrupt config file.')
 
     #==================================================
     # COMMAND METHODS
@@ -169,6 +186,7 @@ class Recon(framework.module):
                         return
                 self.options[name]['value'] = self.autoconvert(value)
                 print '%s => %s' % (name.upper(), value)
+                self.config_save()
             else: self.error('Invalid option.')
 
     def do_load(self, params):
@@ -212,7 +230,7 @@ class Recon(framework.module):
 
     def do_run(self, params):
         '''Not available'''
-        self.output('Command \'run\' not available in this context.')
+        self.output('Command \'run\' reserved for future use.')
 
     #==================================================
     # HELP METHODS
