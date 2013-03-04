@@ -73,7 +73,7 @@ class Module(framework.module):
                         if verify.lower() in text.lower():
                             self.alert('%s => %s. \'%s\' found!' % (url, code, filename))
                             if download:
-                                filepath = './loot/%s_%s_%s' % (proto, host, filename)
+                                filepath = '%s/%s_%s_%s' % (self.workspace, proto, host, filename)
                                 dl = open(filepath, 'wb')
                                 dl.write(resp.text)
                                 dl.close()

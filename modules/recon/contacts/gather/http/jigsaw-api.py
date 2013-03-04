@@ -92,8 +92,15 @@ class Module(framework.module):
                 fname = contact['firstname']
                 lname = contact['lastname']
                 title = self.unescape(contact['title'])
-                self.output('%s %s - %s' % (fname, lname, title))
-                new += self.add_contact(fname, lname, title)
+                city = contact['city']
+                state = contact['state']
+                region = []
+                for item in [city, state]:
+                    if item: region.append(item.title())
+                region = ', '.join(region)
+                country = contact['country']
+                self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
+                new += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
                 tot += 1
             cnt += size
             if cnt > jsonobj['totalHits']: break

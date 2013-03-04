@@ -70,7 +70,7 @@ class Module(framework.module):
         token = oauth.Token(key=self.access_token['oauth_token'], secret=self.access_token['oauth_token_secret'])
         client = oauth.Client(self.consumer, token)
         count = 25
-        base_url = "http://api.linkedin.com/v1/people-search:(people:(id,first-name,last-name,headline))?format=json&company-name=%s&current-company=true&count=%d" % (urllib.quote_plus(self.options['company']['value']), count)
+        base_url = "http://api.linkedin.com/v1/people-search:(people:(id,first-name,last-name,headline,location:(name,country:(code))))?format=json&company-name=%s&current-company=true&count=%d" % (urllib.quote_plus(self.options['company']['value']), count)
         url = base_url
         cnt, tot = 0, 0
         page = 1
@@ -95,12 +95,14 @@ class Module(framework.module):
             if not 'values' in jsonobj['people']: break
             for contact in jsonobj['people']['values']:
                 if 'headline' in contact:
-                    title = self.unescape(contact['headline'])
                     fname = self.unescape(re.split('[\s]',contact['firstName'])[0])
                     lname = self.unescape(re.split('[,;]',contact['lastName'])[0])
-                    self.output('%s %s - %s' % (fname, lname, title))
+                    title = self.unescape(contact['headline'])
+                    region = re.sub('(?:Greater\s|\sArea)', '', self.unescape(contact['location']['name']).title())
+                    country = self.unescape(contact['location']['country']['code']).upper()
+                    self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
                     tot += 1
-                    cnt += self.add_contact(fname, lname, title)
+                    cnt += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
             if not '_start' in jsonobj['people']: break
             if jsonobj['people']['_start'] + jsonobj['people']['_count'] == jsonobj['people']['_total']: break
             start = page * jsonobj['people']['_count']

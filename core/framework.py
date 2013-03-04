@@ -27,6 +27,7 @@ class module(cmd.Cmd):
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.goptions = __builtin__.goptions
+        self.workspace = __builtin__.workspace
         self.options = {}
 
     #==================================================
@@ -113,6 +114,17 @@ class module(cmd.Cmd):
             print '%s%s' % (self.spacer*2, module)
         print ''
 
+    def display_workspaces(self):
+        dirnames = []
+        for name in os.listdir('./workspaces'):
+            if os.path.isdir('./workspaces/%s' % (name)):
+                if name == self.goptions['workspace']['value']:
+                    name += '*'
+                dirnames.append([name])
+        dirnames.insert(0, ['Workspaces'])
+        self.table(dirnames, header=True)
+        self.output('\'*\' denotes the active workspace.')
+
     def sanitize(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
         if isinstance(obj, basestring):
@@ -168,7 +180,7 @@ class module(cmd.Cmd):
         lens = []
         cols = len(tdata[0])
         for i in range(0,cols):
-            lens.append(len(max([str(x[i]) if x[i] != None else '' for x in tdata], key=len)))
+            lens.append(len(max([unicode(x[i]) if x[i] != None else '' for x in tdata], key=len)))
         # build table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
@@ -185,7 +197,7 @@ class module(cmd.Cmd):
                 print data_str % data_sub
                 print separator
             for rdata in tdata:
-                data_sub = tuple([str(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
+                data_sub = tuple([unicode(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
             # bottom of table
             print separator
@@ -197,7 +209,7 @@ class module(cmd.Cmd):
 
     def display_schema(self):
         '''Displays the database schema'''
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
+        conn = sqlite3.connect('%s/data.db' % (self.workspace))
         c = conn.cursor()
         c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
         tables = [x[0] for x in c.fetchall()]
@@ -228,13 +240,15 @@ class module(cmd.Cmd):
 
         return self.insert('hosts', data, ('host',))
 
-    def add_contact(self, fname, lname, title, email=None):
+    def add_contact(self, fname, lname, title, email=None, region=None, country=None):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
             fname = self.sanitize(fname),
             lname = self.sanitize(lname),
             title = self.sanitize(title),
             email = self.sanitize(email),
+            region = self.sanitize(region),
+            country = self.sanitize(country),
         )
 
         return self.insert('contacts', data, ('fname', 'lname', 'title'))
@@ -277,7 +291,7 @@ class module(cmd.Cmd):
 
         values = [data[column] for column in columns] + [data[column] for column in unique_columns]
 
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
+        conn = sqlite3.connect('%s/data.db' % (self.workspace))
         c = conn.cursor()
         try: c.execute(query, values)
         except sqlite3.OperationalError as e:
@@ -293,7 +307,7 @@ class module(cmd.Cmd):
         if not params:
             self.help_query()
             return
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
+        conn = sqlite3.connect('%s/data.db' % (self.workspace))
         c = conn.cursor()
         try: c.execute(params)
         except sqlite3.OperationalError as e:
@@ -574,6 +588,9 @@ class module(cmd.Cmd):
             elif arg == 'keys':
                 self.display_keys()
                 return
+            elif arg == 'workspaces':
+                self.display_workspaces()
+                return
             elif arg.split()[0] == 'modules':
                 if len(arg.split()) > 1:
                     param = arg.split()[1]
@@ -653,7 +670,7 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename> WHERE <columnname>=<string>')
 
     def help_show(self):
-        print 'Usage: show [modules|options|schema|hosts|contacts|creds|keys]'
+        print 'Usage: show [modules|options|workspaces|schema|hosts|contacts|creds|keys]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
@@ -674,7 +691,7 @@ class module(cmd.Cmd):
         if len(args) > 1 and args[1].lower() == 'modules':
             if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
             else: return [x for x in __builtin__.loaded_modules]
-        options = ['modules', 'options', 'schema', 'hosts', 'contacts', 'creds', 'keys']
+        options = ['modules', 'options', 'workspaces', 'schema', 'hosts', 'contacts', 'creds', 'keys']
         return [x for x in options if x.startswith(text)]
 
 #=================================================
