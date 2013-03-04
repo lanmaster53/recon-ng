@@ -10,7 +10,6 @@ class Module(framework.module):
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.register_option('wordlist', './data/hostnames.txt', 'yes', 'path to hostname wordlist')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -19,7 +18,6 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
         wordlist = self.options['wordlist']['value']
         q = dns.resolver.get_default_resolver()
@@ -37,7 +35,7 @@ class Module(framework.module):
             self.output('Invalid nameserver.')
             return
         except dns.resolver.NXDOMAIN:
-            if verbose: self.output('No Wildcard DNS entry found. Attempting to brute force DNS records.')
+            self.verbose('No Wildcard DNS entry found. Attempting to brute force DNS records.')
             pass
         if os.path.exists(wordlist):
             words = open(wordlist).read().split()
@@ -48,21 +46,24 @@ class Module(framework.module):
                     print ''
                     break
                 except dns.resolver.NXDOMAIN:
-                    if verbose: self.output('%s => Not a host' % (host))
+                    self.verbose('%s => Not a host' % (host))
                     continue
                 except dns.resolver.NoAnswer:
-                    if verbose: self.output('%s => No answer' % (host))
+                    self.verbose('%s => No answer' % (host))
                     continue
                 for answer in answers.response.answer:
                     for rdata in answer:
                         if rdata.rdtype == 1:
-                            self.alert('%s => Host found!' % (host))
+                            self.alert('%s => (A) %s - Host found!' % (host, host))
                             cnt += self.add_host(host)
                             tot += 1
                         if rdata.rdtype == 5:
                             cname = rdata.target.to_text()[:-1]
-                            self.alert('%s => Host found!' % (cname))
-                            cnt += self.add_host(cname)
+                            self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
+                            if host != cname:
+                                cnt += self.add_host(cname)
+                                tot += 1
+                            cnt += self.add_host(host)
                             tot += 1
             self.output('%d total hosts found.' % (tot))
             if cnt: self.alert('%d NEW hosts found!' % (cnt))

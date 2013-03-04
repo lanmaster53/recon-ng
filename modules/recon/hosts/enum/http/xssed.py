@@ -9,7 +9,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'XSSed Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
@@ -18,11 +17,10 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
 
         url = 'http://xssed.com/search?key=%s' % (domain)
-        if verbose: self.output('URL: %s' % url)
+        self.verbose('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

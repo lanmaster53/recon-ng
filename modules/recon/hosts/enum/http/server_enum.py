@@ -11,7 +11,6 @@ class Module(framework.module):
         self.register_option('host', 'www.google.com', 'yes', 'target host')
         self.register_option('protocol', 'http', 'yes', 'protocol of the host: http, https')
         self.register_option('redirect', False, 'yes', 'follow redirects')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Server Side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53), Kenan Abdullahoglu (@kyabd), Matteo Cantoni (nothink.org)',
@@ -33,7 +32,6 @@ class Module(framework.module):
         host = self.options['host']['value']
         protocol = self.options['protocol']['value']
         redirect = self.options['redirect']['value']
-        verbose = self.options['verbose']['value']
 
         # dictionaries of search terms for each platform and check
         # dictionary for server side scripting technologies
@@ -98,7 +96,7 @@ class Module(framework.module):
             self.error(e.__str__())
             return
         
-        if verbose:
+        if self.goptions['verbose']['value']:
             print 'START'.center(50, self.ruler)
             self.output('ORIG_URL: %s' % (url))
             self.output('DEST_URL: %s' % (resp.url))
@@ -121,7 +119,8 @@ class Module(framework.module):
         path = urlparse(resp.url).path
         if path:
             filename = path.split('/')[-1]
-            if verbose: tdata.append(['FILENAME', filename, '--'])
+            if self.goptions['verbose']['value']:
+                tdata.append(['FILENAME', filename, '--'])
             if '.' in filename:
                 ext = filename.split('.')[-1]
                 platform = self.lookup(ss_script, 'ext', ext)

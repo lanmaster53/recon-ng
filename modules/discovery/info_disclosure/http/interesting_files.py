@@ -9,7 +9,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
         self.register_option('download', True, 'yes', 'download discovered files')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Interesting File Finder',
                      'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), and Jay Turla (@shipcod3)',
@@ -35,7 +34,6 @@ class Module(framework.module):
         return data_ct
 
     def module_run(self):
-        verbose = self.options['verbose']['value']
         download = self.options['download']['value']
         
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
@@ -81,5 +79,5 @@ class Module(framework.module):
                         else:
                             self.output('%s => %s. \'%s\' found but unverified.' % (url, code, filename))
                     else:
-                        if verbose: self.output('%s => %s' % (url, code))
+                        self.verbose('%s => %s' % (url, code))
         self.output('%d interesting files found.' % (cnt))

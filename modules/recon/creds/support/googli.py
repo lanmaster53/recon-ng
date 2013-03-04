@@ -6,7 +6,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', '21232f297a57a5a743894a0e4a801fc3', 'yes', 'source of module input')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Goog.li Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -18,8 +17,6 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        verbose = self.options['verbose']['value']
-        
         hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
         if not hashes: return
 
@@ -46,4 +43,4 @@ class Module(framework.module):
                 self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
                 self.query('UPDATE creds SET password="%s", type="%s" WHERE hash="%s"' % (plaintext, hashtype, hashstr))
             else:
-                if verbose: self.output('Value not found for hash: %s' % (hashstr))
+                self.verbose('Value not found for hash: %s' % (hashstr))
