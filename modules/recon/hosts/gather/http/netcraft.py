@@ -15,16 +15,11 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Netcraft Hostname Enumerator',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Harvests hosts from Netcraft.com. This module updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Harvests hosts from Netcraft.com and updates the \'hosts\' table of the database with the results.',
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.get_hosts()
-    
-    def get_hosts(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
         url = 'http://searchdns.netcraft.com/'        

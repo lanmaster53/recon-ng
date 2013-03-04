@@ -25,14 +25,12 @@ class module(cmd.Cmd):
         self.module_delimiter = '/' # match line ~257 recon-ng.py
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
-        try: self.do_run.__func__.__doc__ = '''Runs the module'''
-        except: pass
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.goptions = __builtin__.goptions
         self.options = {}
 
     #==================================================
-    # OVERRIDE METHODS
+    # CMD OVERRIDE METHODS
     #==================================================
 
     def default(self, line):
@@ -88,20 +86,6 @@ class module(cmd.Cmd):
     # SUPPORT METHODS
     #==================================================
 
-    def register_option(self, name, value, reqd, desc, options=None):
-        # can't use not because empty dictonary would eval as true
-        if options == None: options = self.options
-        options[name.lower()] = {'value':value, 'reqd':reqd, 'desc':desc}
-
-    def validate_options(self):
-        for option in self.options:
-            # if value type is bool or int, then we know the options is set
-            if not type(self.options[option]['value']) in [bool, int]:
-                if self.options[option]['reqd'].lower() == 'yes' and not self.options[option]['value']:
-                    self.error('Value required for the \'%s\' option.' % (option))
-                    return False
-        return True
-
     def boolify(self, s):
         return {'true': True, 'false': False}[s.lower()]
 
@@ -113,30 +97,6 @@ class module(cmd.Cmd):
             except ValueError: pass
             except KeyError: pass
         return s
-
-    def display_options(self, params):
-        '''Lists options'''
-        spacer = self.spacer
-        if params == 'info':
-            spacer = self.spacer*2
-        if self.options:
-            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
-            key_len = len(max(self.options, key=len))
-            val_len = len(max([str(self.options[x]['value']) for x in self.options], key=len))
-            if val_len < 13: val_len = 13
-            print ''
-            print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
-            print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
-            for key in sorted(self.options):
-                value = self.options[key]['value'] if self.options[key]['value'] != None else ''
-                reqd = self.options[key]['reqd']
-                desc = self.options[key]['desc']
-                print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
-            print ''
-        else:
-            if params != 'info': print ''
-            print '%sNo options available for this module.' % (spacer)
-            print ''
 
     def display_modules(self, modules):
         key_len = len(max(modules, key=len)) + len(self.spacer)
@@ -152,35 +112,6 @@ class module(cmd.Cmd):
             # print module
             print '%s%s' % (self.spacer*2, module)
         print ''
-
-    def display_schema(self):
-        '''Displays the database schema'''
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
-        c = conn.cursor()
-        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
-        tables = [x[0] for x in c.fetchall()]
-        for table in tables:
-            print ''
-            print '%s+---------------------+' % (self.spacer)
-            print '%s| %s |' % (self.spacer, table.center(19))
-            print '%s+---------------------+' % (self.spacer)
-            c.execute("PRAGMA table_info(%s)" % (table))
-            columns = [(x[1],x[2]) for x in c.fetchall()]
-            for column in columns:
-                print '%s| %s | %s |' % (self.spacer, column[0].ljust(8), column[1].center(8))
-            print '%s+---------------------+' % (self.spacer)
-        print ''
-
-    def display_keys(self):
-        conn = sqlite3.connect(self.goptions['key_file']['value'])
-        c = conn.cursor()
-        c.execute('SELECT * FROM keys')
-        rows = c.fetchall()
-        conn.close()
-        tdata = [('Name', 'Value')]
-        for row in rows:
-            tdata.append((row[0], row[1]))
-        self.table(tdata, True)
 
     def sanitize(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
@@ -214,7 +145,7 @@ class module(cmd.Cmd):
         return False
 
     #==================================================
-    # CONVENIENCE METHODS
+    # OUTPUT METHODS
     #==================================================
 
     def error(self, line):
@@ -237,7 +168,7 @@ class module(cmd.Cmd):
         lens = []
         cols = len(tdata[0])
         for i in range(0,cols):
-            lens.append(len(max([x[i] if x[i] != None else '' for x in tdata], key=len)))
+            lens.append(len(max([str(x[i]) if x[i] != None else '' for x in tdata], key=len)))
         # build table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
@@ -254,84 +185,107 @@ class module(cmd.Cmd):
                 print data_str % data_sub
                 print separator
             for rdata in tdata:
-                data_sub = tuple([rdata[i].ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
+                data_sub = tuple([str(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
             # bottom of table
             print separator
             print ''
 
-    def add_host(self, host, address=None):
-        '''Adds a host to the database and returns the affected row count.'''
-        host    = self.sanitize(host)
-        address = self.sanitize(address)
+    #==================================================
+    # DATABASE METHODS
+    #==================================================
+
+    def display_schema(self):
+        '''Displays the database schema'''
         conn = sqlite3.connect(self.goptions['db_file']['value'])
         c = conn.cursor()
-        try: c.execute(u'INSERT INTO hosts (host,address) SELECT ?, ? WHERE NOT EXISTS(SELECT * FROM hosts WHERE host=?)', (host, address, host))
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        conn.commit()
-        conn.close()
-        return c.rowcount
+        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
+        tables = [x[0] for x in c.fetchall()]
+        for table in tables:
+            c.execute('PRAGMA table_info(%s)' % (table))
+            columns = [(x[1],x[2]) for x in c.fetchall()]
+            name_len = len(max([x[0] for x in columns], key=len))
+            type_len = len(max([x[1] for x in columns], key=len))
+            print ''
+            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
+            print '%s| %s |' % (self.spacer, table.center(name_len+type_len+3))
+            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
+            for column in columns:
+                print '%s| %s | %s |' % (self.spacer, column[0].ljust(name_len), column[1].center(type_len))
+            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
+        print ''
+
+    def add_host(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
+        '''Adds a host to the database and returns the affected row count.'''
+        data = dict(
+            host = self.sanitize(host),
+            ip_address = self.sanitize(ip_address),
+            region = self.sanitize(region),
+            country = self.sanitize(country),
+            latitude = self.sanitize(latitude),
+            longitude = self.sanitize(longitude),
+        )
+
+        return self.insert('hosts', data, ('host',))
 
     def add_contact(self, fname, lname, title, email=None):
         '''Adds a contact to the database and returns the affected row count.'''
-        fname = self.sanitize(fname)
-        lname = self.sanitize(lname)
-        title = self.sanitize(title)
-        email = self.sanitize(email)
-        conn = sqlite3.connect(self.goptions['db_file']['value'])
-        c = conn.cursor()
-        try: c.execute(u'INSERT INTO contacts (fname,lname,title,email) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM contacts WHERE fname=? and lname=? and title=?)', (fname, lname, title, email, fname, lname, title))
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        conn.commit()
-        conn.close()
-        return c.rowcount
+        data = dict(
+            fname = self.sanitize(fname),
+            lname = self.sanitize(lname),
+            title = self.sanitize(title),
+            email = self.sanitize(email),
+        )
+
+        return self.insert('contacts', data, ('fname', 'lname', 'title'))
 
     def add_cred(self, username, password=None, hashtype=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''
-        username = self.sanitize(username)
-        password = self.sanitize(password)
-        leak   = self.sanitize(leak)
-        query = u'INSERT INTO creds (username,password,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and password=? and type=? and leak=?)'
-        if password:
-            if self.is_hash(password):
-                query = u'INSERT INTO creds (username,hash,type,leak) SELECT ?, ?, ?, ? WHERE NOT EXISTS(SELECT * FROM creds WHERE username=? and hash=? and type=? and leak=?)'
+        data = {}
+        data['username'] = self.sanitize(username)
+        if password and not self.is_hash(password): data['password'] = self.sanitize(password)
+        if password and self.is_hash(password): data['hash'] = self.sanitize(password)
+        if hashtype: data['type'] = self.sanitize(hashtype)
+        if leak: data['leak'] = self.sanitize(leak)
+
+        return self.insert('creds', data, data.keys())
+
+    def insert(self, table, data, unique_columns=None):
+        '''Inserts items into database and returns the affected row count.
+        table - the table to insert the data into
+        data - the information to insert into the database table in the form of a dictionary
+               where the keys are the column names and the values are the column values
+        unique_columns - a list of column names that should be used to determine if the.
+                         information being inserted is unique'''
+
+        columns = data.keys()
+
+        if unique_columns is None:
+            query = u'INSERT INTO %s (%s) VALUES (%s)' % (
+                table,
+                ','.join(columns),
+                ','.join('?'*len(columns))
+            )
+        else:
+            query = u'INSERT INTO %s (%s) SELECT %s WHERE NOT EXISTS(SELECT * FROM %s WHERE %s)' % (
+                table,
+                ','.join(columns),
+                ','.join('?'*len(columns)),
+                table,
+                ' and '.join([column + '=?' for column in unique_columns])
+            )
+
+        values = [data[column] for column in columns] + [data[column] for column in unique_columns]
+
         conn = sqlite3.connect(self.goptions['db_file']['value'])
         c = conn.cursor()
-        try: c.execute(query, (username, password, hashtype, leak, username, password, hashtype, leak))
+        try: c.execute(query, values)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return
         conn.commit()
         conn.close()
         return c.rowcount
-
-    def get_source(self, params, query=None):
-        source = params.split()[0].lower()
-        if source == 'query':
-            query = ' '.join(params.split()[1:])
-            results = self.query(query, True)
-            if not results:
-                self.error('No items found.')
-                return None
-            if len(results[0]) > 1:
-                self.error('Too many columns of data returned.')
-                return None
-            sources = [x[0] for x in results]
-        elif source == 'db' and query:
-            rows = self.query(query)
-            if not rows:
-                self.error('No items found.')
-                return None
-            sources = [x[0] for x in rows]
-        elif os.path.exists(source):
-            sources = open(source).read().split()
-        else:
-            sources = [source]
-        return sources
 
     def query(self, params, return_results=True):
         '''Queries the database and returns the results as a list.'''
@@ -354,6 +308,7 @@ class module(cmd.Cmd):
                 else:
                     tdata.insert(0, header)
                     self.table(tdata, True)
+                    self.output('%d rows returned' % (len(tdata)))
             else:
                 conn.commit()
                 self.output('%d rows affected.' % (c.rowcount))
@@ -370,6 +325,87 @@ class module(cmd.Cmd):
                 result = c.rowcount
             conn.close()
             return result
+
+    #==================================================
+    # OPTIONS METHODS
+    #==================================================
+
+    def display_options(self, params):
+        '''Lists options'''
+        spacer = self.spacer
+        if params == 'info':
+            spacer = self.spacer*2
+        if self.options:
+            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
+            key_len = len(max(self.options, key=len))
+            val_len = len(max([str(self.options[x]['value']) for x in self.options], key=len))
+            if val_len < 13: val_len = 13
+            print ''
+            print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
+            print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
+            for key in sorted(self.options):
+                value = self.options[key]['value'] if self.options[key]['value'] != None else ''
+                reqd = self.options[key]['reqd']
+                desc = self.options[key]['desc']
+                print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
+            print ''
+        else:
+            if params != 'info': print ''
+            print '%sNo options available for this module.' % (spacer)
+            print ''
+
+    def register_option(self, name, value, reqd, desc, options=None):
+        # can't use not because empty dictonary would eval as true
+        if options == None: options = self.options
+        options[name.lower()] = {'value':value, 'reqd':reqd, 'desc':desc}
+
+    def validate_options(self):
+        for option in self.options:
+            # if value type is bool or int, then we know the options is set
+            if not type(self.options[option]['value']) in [bool, int]:
+                if self.options[option]['reqd'].lower() == 'yes' and not self.options[option]['value']:
+                    self.error('Value required for the \'%s\' option.' % (option))
+                    return False
+        return True
+
+    def get_source(self, params, query=None):
+        source = params.split()[0].lower()
+        if source == 'query':
+            query = ' '.join(params.split()[1:])
+            results = self.query(query, True)
+            if not results:
+                self.error('No items found.')
+                sources = []
+            elif len(results[0]) > 1:
+                self.error('Too many columns of data returned.')
+                source = []
+            else: sources = [x[0] for x in results]
+        elif source == 'db' and query:
+            rows = self.query(query)
+            if not rows:
+                self.error('No items found.')
+                sources = []
+            else: sources = [x[0] for x in rows]
+        elif os.path.exists(source):
+            sources = open(source).read().split()
+        else:
+            sources = [source]
+        return sources
+
+    #==================================================
+    # API KEY METHODS
+    #==================================================
+
+    def display_keys(self):
+        conn = sqlite3.connect(self.goptions['key_file']['value'])
+        c = conn.cursor()
+        c.execute('SELECT * FROM keys')
+        rows = c.fetchall()
+        conn.close()
+        tdata = [('Name', 'Value')]
+        for row in rows:
+            tdata.append((row[0], row[1]))
+        self.table(tdata, True)
 
     def manage_key(self, key_name, key_text):
         '''Automates the API key retrieval and storage process.'''
@@ -421,7 +457,11 @@ class module(cmd.Cmd):
         conn.close()
         return True
 
-    def request(self, url, method='GET', payload={}, headers={}, cookies={}, redirect=True):
+    #==================================================
+    # NETWORK METHODS
+    #==================================================
+
+    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, redirect=True):
         '''Makes a web request and returns a response object.'''
         # set request arguments
         # process user-agent header
@@ -433,7 +473,8 @@ class module(cmd.Cmd):
             cookie_value = '; '.join('%s=%s' % (key, cookies[key]) for key in cookies.keys())
             headers['Cookie'] = cookie_value
         # process socket timeout
-        socket.setdefaulttimeout(self.goptions['socket_timeout']['value'])
+        timeout = timeout or self.goptions['socket_timeout']['value']
+        socket.setdefaulttimeout(timeout)
         
         # set handlers
         handlers = [] #urllib2.HTTPHandler(debuglevel=1)
@@ -473,7 +514,7 @@ class module(cmd.Cmd):
         return ResponseObject(resp, cj)
 
     #==================================================
-    # FRAMEWORK METHODS
+    # COMMAND METHODS
     #==================================================
 
     def do_exit(self, params):
@@ -521,14 +562,8 @@ class module(cmd.Cmd):
         '''Shows various framework items'''
         if params:
             arg = params.lower()
-            if arg == 'hosts':
-                self.query('SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host', False)
-                return
-            elif arg == 'contacts':
-                self.query('SELECT * FROM contacts ORDER BY fname', False)
-                return
-            elif arg == 'creds':
-                self.query('SELECT * FROM creds ORDER BY username', False)
+            if arg in ['hosts', 'contacts', 'creds']:
+                self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
                 return
             elif arg == 'options':
                 self.display_options(None)
@@ -558,7 +593,7 @@ class module(cmd.Cmd):
             self.help_search()
             return
         text = params.split()[0]
-        self.output('Searching for \'%s\'' % (text))
+        self.output('Searching for \'%s\'...' % (text))
         modules = [x for x in __builtin__.loaded_modules if text in x]
         if not modules:
             self.error('No modules found containing \'%s\'.' % (text))
@@ -593,6 +628,14 @@ class module(cmd.Cmd):
         stderr = proc.stderr.read()
         if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))
         if stderr: sys.stdout.write('%s%s%s' % (R, stderr, N))
+
+    def do_run(self, params):
+        '''Runs the module'''
+        if not self.validate_options(): return
+        self.module_run()
+
+    def module_run(self):
+        pass
 
     #==================================================
     # HELP METHODS

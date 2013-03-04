@@ -14,16 +14,11 @@ class Module(framework.module):
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Brute forces host names using DNS. This module updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Brute forces host names using DNS and updates the \'hosts\' table of the database with the results.',
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.brute_hosts()
-    
-    def brute_hosts(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
         wordlist = self.options['wordlist']['value']
@@ -37,6 +32,9 @@ class Module(framework.module):
             return
         except KeyboardInterrupt:
             print ''
+            return
+        except dns.resolver.NoNameservers:
+            self.output('Invalid nameserver.')
             return
         except dns.resolver.NXDOMAIN:
             if verbose: self.output('No Wildcard DNS entry found. Attempting to brute force DNS records.')

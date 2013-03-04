@@ -13,13 +13,11 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from Jigsaw.com. This module updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contacts from Jigsaw.com and updates the \'contacts\' table of the database with the results.',
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
+    def module_run(self):
         company_id = self.get_company_id()
         if company_id:
             contact_ids = self.get_contact_ids(company_id)

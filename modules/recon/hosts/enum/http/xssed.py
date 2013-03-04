@@ -13,21 +13,16 @@ class Module(framework.module):
         self.info = {
                      'Name': 'XSSed Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks XSSed.com site for XSS records for given domain and displays first 20 hits.',
+                     'Description': 'Checks XSSed.com for XSS records for the given domain and displays the first 20 results.',
                      'Comments': []
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.xssed()
-
-    def xssed(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
 
         url = 'http://xssed.com/search?key=%s' % (domain)
-        if verbose: self.output('URL for XSSED.com: %s' % url)
+        if verbose: self.output('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''
@@ -43,7 +38,6 @@ class Module(framework.module):
        
         if results:
             rows = re.split('<br>', str(results))
-            print self.ruler*50
             for row in rows:
                 finding = re.findall(r"mirror/([0-9]+)/.+blank\\'>(.+?)</a>", row)
                 if finding:

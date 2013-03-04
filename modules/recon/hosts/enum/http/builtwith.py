@@ -16,19 +16,13 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.builtwith()
-    
-    def builtwith(self):
+    def module_run(self):
         host = self.options['host']['value']
         verbose = self.options['verbose']['value']
         key = self.manage_key('builtwith', 'BuiltWith API key')
         if not key: return
         url = ' http://api.builtwith.com/v1/api.json'
         payload = {'key': key, 'lookup': host}
-        #import pdb;pdb.set_trace()
         try: resp = self.request(url, payload=payload)
         except KeyboardInterrupt:
             print ''

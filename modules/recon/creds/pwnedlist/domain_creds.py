@@ -16,12 +16,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.get_creds()
-
-    def get_creds(self):
+    def module_run(self):
         domain = self.options['domain']['value']
 
         # api key management

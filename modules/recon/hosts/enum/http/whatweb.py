@@ -11,18 +11,13 @@ class Module(framework.module):
         self.info = {
                      'Name': 'WhatWeb Web Technologies scan',
                      'Author': 'thrapt (thrapt@gmail.com) and Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages WhatWeb.net to recognise web technologies being used.',
+                     'Description': 'Leverages WhatWeb.net to determine the web technologies in use on the given host(s).',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
                                  ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.whatweb()
-
-    def whatweb(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
 
         # handle sources

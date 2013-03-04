@@ -12,19 +12,14 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Noisette MD5 Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
+                     'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup and updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
                                   'Hash types supported: MD5'
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.noisette()
-    
-    def noisette(self):
+    def module_run(self):
         verbose = self.options['verbose']['value']
         
         hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')

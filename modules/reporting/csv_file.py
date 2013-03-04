@@ -17,12 +17,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.append_to_csv()
-    
-    def append_to_csv(self):
+    def module_run(self):
         filename = self.options['filename']['value']
         try:
             outfile = open(filename, 'wb')

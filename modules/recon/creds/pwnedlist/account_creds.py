@@ -11,19 +11,14 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for credentials asscoiated with usernames. This module updates the \'creds\' table of the database with the results.',
+                     'Description': 'Queries the PwnedList API for credentials associated with the given usernames and updates the \'creds\' table of the database with the results.',
                      'Comments': [
                                   'Source options: [ db | email.address@domain.com | ./path/to/file | query <sql> ]',
                                   'API Query Cost: 1 query per request.'
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.get_creds()
-
-    def get_creds(self):
+    def module_run(self):
         # api key management
         key = self.manage_key('pwned_key', 'PwnedList API Key')
         if not key: return

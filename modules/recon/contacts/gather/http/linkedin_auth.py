@@ -17,13 +17,11 @@ class Module(framework.module):
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from LinkedIn.com using an authenticated connections network. This module updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contacts from the LinkedIn.com API using an authenticated connections network and updates the \'contacts\' table of the database with the results.',
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
+    def module_run(self):
         consumer_key = self.manage_key('linkedin_key', 'LinkedIn API Key')
         if not consumer_key: return
         consumer_secret = self.manage_key('linkedin_secret', 'LinkedIn Secret Key') 

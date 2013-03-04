@@ -2,7 +2,7 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '1.10'
+__version__   = '1.20'
 
 import datetime
 import os
@@ -96,7 +96,7 @@ class Recon(framework.module):
     def init_db(self):
         conn = sqlite3.connect(self.options['db_file']['value'])
         c = conn.cursor()
-        c.execute('create table if not exists hosts (host text, address text)')
+        c.execute('create table if not exists hosts (host text, ip_address text, region text, country text, latitude text, longitude text)')
         c.execute('create table if not exists contacts (fname text, lname text, email text, title text)')
         c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
         conn.commit()
@@ -108,7 +108,7 @@ class Recon(framework.module):
         conn.close()
 
     #==================================================
-    # FRAMEWORK METHODS
+    # COMMAND METHODS
     #==================================================
 
     def do_reload(self, params):
@@ -145,19 +145,22 @@ class Recon(framework.module):
             name = options[0].lower()
             if name in self.options:
                 value = ' '.join(options[1:])
+                init = False
                 # make sure database file is valid
-                if name in ['db_file', 'key_file', 'rec_file']:
-                    try:
+                try:
+                    if name in ['db_file', 'key_file']:
                         conn = sqlite3.connect(value)
                         conn.close()
+                        init = True
+                    elif name in ['rec_file']:
                         f = open(value)
                         f.close()
-                    except:
-                        self.error('Invalid path or name for \'%s\'.' % (name))
-                        return
-                    self.init_db()
-                print '%s => %s' % (name.upper(), value)
+                except:
+                    self.error('Invalid path or name for \'%s\'.' % (name))
+                    return
                 self.options[name]['value'] = self.autoconvert(value)
+                print '%s => %s' % (name.upper(), value)
+                if init: self.init_db()
             else: self.error('Invalid option.')
 
     def do_load(self, params):
@@ -167,17 +170,28 @@ class Recon(framework.module):
         if len(options) == 0:
             self.help_load()
         else:
+            modules = []
             try:
-                modulename = self.loaded_modules[params]
-                y = sys.modules[modulename].Module('%s [%s] > ' % (self.name, params.split(self.module_delimiter)[-1]))
+                # finds any modules that contain params
+                modules = [params] if params in self.loaded_modules else [x for x in self.loaded_modules if params in x]
+                # raise AssertionError if multiple modules are found
+                assert len(modules) == 1
+                modulename = modules[0]
+                loadedname = self.loaded_modules[modules[0]]
+                y = sys.modules[loadedname].Module('%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1]))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
                 except:
                     print '-'*60
                     traceback.print_exc(file=sys.stdout)
                     print '-'*60
-            except KeyError: self.error('Invalid module name.')
-            except AttributeError: self.error('Invalid module name.')
+            except (KeyError, AttributeError, AssertionError):
+                if not modules:
+                    self.error('Invalid module name.')
+                else:
+                    self.output('Multiple modules match \'%s\'.' % params)
+                    self.display_modules(modules)
+
 
     # alias for load
     def do_use(self, params):
@@ -187,6 +201,10 @@ class Recon(framework.module):
             self.help_use()
         else:
             self.do_load(params)
+
+    def do_run(self, params):
+        '''Not available'''
+        self.output('Command \'run\' not available in this context.')
 
     #==================================================
     # HELP METHODS
