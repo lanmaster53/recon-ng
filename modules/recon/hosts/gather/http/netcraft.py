@@ -11,7 +11,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Netcraft Hostname Enumerator',
                      'Author': 'thrapt (thrapt@gmail.com)',
@@ -20,7 +19,6 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
         url = 'http://searchdns.netcraft.com/'        
         payload = {'restriction': 'site+ends+with', 'host': domain}
@@ -34,7 +32,7 @@ class Module(framework.module):
         # loop until no Next Page is available
         while New:
             content = None
-            if verbose: self.output('URL: %s?%s' % (url, urllib.urlencode(payload)))
+            self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
 
             try: content = self.request(url, payload=payload, cookies=cookies)
             except KeyboardInterrupt:
@@ -85,14 +83,14 @@ class Module(framework.module):
             else:
                 payload['last'] = link[0][1]
                 payload['from'] = link[1][1]
-                if verbose: self.output('Next page available! Requesting again...' )
+                self.verbose('Next page available! Requesting again...' )
                 # sleep script to avoid lock-out
-                if verbose: self.output('Sleeping to Avoid Lock-out...')
+                self.verbose('Sleeping to Avoid Lock-out...')
                 try: time.sleep(random.randint(5,15))
                 except KeyboardInterrupt:
                     print ''
                     break
 
-        if verbose: self.output('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
+        self.verbose('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))

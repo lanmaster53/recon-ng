@@ -6,7 +6,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.register_option('store', False, 'no', 'Add hosts discovered to the database.')
         self.info = {
                      'Name': 'McAfee Mail Host Lookup',
@@ -16,12 +15,11 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        verbose = self.options['verbose']['value']
         domain = self.options['domain']['value']
         add_hosts = self.options['store']['value']
 
         url = 'http://www.mcafee.com/threat-intelligence/jsproxy/domain.ashx?q=mail&f=%s' % (domain)
-        if verbose: self.output('URL: %s' % url)
+        self.verbose('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

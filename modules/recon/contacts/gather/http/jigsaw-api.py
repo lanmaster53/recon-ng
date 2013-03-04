@@ -9,7 +9,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
         self.register_option('keywords', '', 'no', 'additional keywords to identify company')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -34,7 +33,7 @@ class Module(framework.module):
         url = 'https://www.jigsaw.com/rest/searchCompany.json'
         while True:
             payload = {'token': self.api_key, 'name': params, 'offset': cnt, 'pageSize': size}
-            if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
             try: resp = self.request(url, payload=payload, redirect=False)
             except KeyboardInterrupt:
                 print ''

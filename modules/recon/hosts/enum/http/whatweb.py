@@ -7,7 +7,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'WhatWeb Web Technologies scan',
                      'Author': 'thrapt (thrapt@gmail.com) and Tim Tomes (@LaNMaSteR53)',
@@ -18,8 +17,6 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        verbose = self.options['verbose']['value']
-
         # handle sources
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         if not hosts: return

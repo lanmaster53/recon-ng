@@ -8,7 +8,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Web Archive Lookup',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',
@@ -17,12 +16,11 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        verbose = self.options['verbose']['value']
         domain  = self.options['domain']['value']
 
         # Get the first year the domain was archived
         url = 'http://web.archive.org/web/*/%s' % (domain)
-        if verbose: self.output('URL: %s' % url)
+        self.verbose('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''
@@ -45,7 +43,7 @@ class Module(framework.module):
         cnt = 0
         for year in range(int(first_year), date.today().year+1):
             url = 'http://web.archive.org/web/%s*/%s' % (str(year), domain)
-            if verbose: self.output('URL: %s' % url)
+            self.verbose('URL: %s' % url)
             try: resp = self.request(url)
             except KeyboardInterrupt:
                 print ''

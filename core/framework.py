@@ -173,9 +173,9 @@ class module(cmd.Cmd):
         print '%s[*]%s %s' % (G, N, line)
 
     def verbose(self, line):
-	'''Formats and presents output if in verbose mode.'''
-	if self.options['verbose']['value']:
-	    self.output(line)
+        '''Formats and presents output if in verbose mode.'''
+        if self.goptions['verbose']['value']:
+            self.output(line)
 
     def table(self, tdata, header=False):
         '''Accepts a list of rows and outputs a table.'''
