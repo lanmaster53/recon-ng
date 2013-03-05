@@ -283,10 +283,10 @@ if __name__ == '__main__':
         #readline.set_completion_display_matches_hook(display_hook)
     # check for and run script session
     if opts.script_file:
-        try:
+        if os.path.exists(opts.script_file):
             sys.stdin = open(opts.script_file)
             __builtin__.script = 1
-        except:
+        else:
             print '%s[!] %s%s' % (R, 'Script file not found.', N)
             sys.exit()
     x = Recon()

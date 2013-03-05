@@ -659,6 +659,18 @@ class module(cmd.Cmd):
     def module_run(self):
         pass
 
+    def do_resource(self, params):
+        '''Executes commands from a resource file'''
+        if params:
+            if os.path.exists(params):
+                sys.stdin = open(params)
+                __builtin__.script = 1
+                return
+            else:
+                self.error('Script file not found.')
+                return
+        self.help_resource()        
+
     #==================================================
     # HELP METHODS
     #==================================================
@@ -671,8 +683,11 @@ class module(cmd.Cmd):
         print 'Usage: query <sql>'
         print ''
         print 'SQL Examples:'
-        print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename>')
-        print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename> WHERE <columnname>=<string>')
+        print '%s%s' % (self.spacer, 'SELECT columns|* FROM table_name')
+        print '%s%s' % (self.spacer, 'SELECT columns|* FROM table_name WHERE some_column=some_value')
+        print '%s%s' % (self.spacer, 'DELETE FROM table_name WHERE some_column=some_value')
+        print '%s%s' % (self.spacer, 'INSERT INTO table_name (column1, column2,...) VALUES (value1, value2,...)')
+        print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
 
     def help_show(self):
         print 'Usage: show [modules|options|workspaces|schema|hosts|contacts|creds|keys]'
@@ -683,6 +698,9 @@ class module(cmd.Cmd):
 
     def help_record(self):
         print 'Usage: record [start|stop|status]'
+
+    def help_resource(self):
+        print 'Usage: resource <filename>'
 
     #==================================================
     # COMPLETE METHODS
