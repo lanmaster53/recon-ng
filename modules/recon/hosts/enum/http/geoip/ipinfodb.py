@@ -7,7 +7,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of target IP addresses')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'IPInfoDB GeoIP',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -18,7 +17,6 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        verbose = self.options['verbose']['value']
         api_key = self.manage_key('ipinfodb', 'IPInfoDB API key')
         if not api_key: return
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
@@ -27,7 +25,7 @@ class Module(framework.module):
         for host in hosts:
             # request the scan
             url = 'http://api.ipinfodb.com/v3/ip-city/?key=%s&ip=%s&format=json' % (api_key, host)
-            if verbose: self.output('URL: %s' % url)
+            self.verbose('URL: %s' % url)
             try: resp = self.request(url)
             except KeyboardInterrupt:
                 print ''

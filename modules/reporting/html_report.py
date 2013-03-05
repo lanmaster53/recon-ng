@@ -127,7 +127,7 @@ td {
                 row_content += '<tr><td class="spacer"></td></tr>'
             table_content += '<div class="table_container"><table><caption>ASSOCIATED LEAK DATA</caption>%s</table></div>' % (row_content)
 
-        markup = template % (self.options['company']['value'].title(), table_content)
+        markup = template % (self.options['company']['value'], table_content)
         outfile.write(self.sanitize_html(markup))
         outfile.close()
         self.output('Report generated at \'%s\'.' % (filename))

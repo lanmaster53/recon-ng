@@ -39,7 +39,7 @@ class Recon(framework.module):
     def __init__(self):
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
-        framework.module.__init__(self, prompt)
+        framework.module.__init__(self, (prompt, 'core'))
         self.register_option('workspace', 'default', 'yes', 'current workspace name', self.goptions)
         self.register_option('key_file', './data/keys.db', 'yes', 'path to API key database file', self.goptions)
         self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
@@ -100,7 +100,7 @@ class Recon(framework.module):
     def init_keys(self):
         conn = sqlite3.connect(self.options['key_file']['value'])
         c = conn.cursor()
-        c.execute('create table if not exists keys (name text primary key, value text)')
+        c.execute('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
         conn.commit()
         conn.close()
 
@@ -113,14 +113,14 @@ class Recon(framework.module):
             if e.errno != errno.EEXIST:
                 self.error(e.__str__())
                 return False
-        else:
-            conn = sqlite3.connect('%s/data.db' % (workspace))
-            c = conn.cursor()
-            c.execute('create table if not exists hosts (host text, ip_address text, region text, country text, latitude text, longitude text)')
-            c.execute('create table if not exists contacts (fname text, lname text, email text, title text, region text, country text)')
-            c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
-            conn.commit()
-            conn.close()
+        conn = sqlite3.connect('%s/data.db' % (workspace))
+        c = conn.cursor()
+        c.execute('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
+        conn.commit()
+        conn.close()
         self.workspace = __builtin__.workspace = workspace
         self.config_load()
         return True
@@ -156,7 +156,7 @@ class Recon(framework.module):
         else:
             try:
                 modulename = self.loaded_modules[params]
-                y = sys.modules[modulename].Module(None)
+                y = sys.modules[modulename].Module((None, modulename))
                 try: y.do_info(modulename)
                 except KeyboardInterrupt: print ''
                 except:
@@ -203,8 +203,9 @@ class Recon(framework.module):
                 # raise AssertionError if multiple modules are found
                 assert len(modules) == 1
                 modulename = modules[0]
-                loadedname = self.loaded_modules[modules[0]]
-                y = sys.modules[loadedname].Module('%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1]))
+                loadedname = self.loaded_modules[modulename]
+                prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
+                y = sys.modules[loadedname].Module((prompt, modulename))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
                 except:
@@ -283,10 +284,10 @@ if __name__ == '__main__':
         #readline.set_completion_display_matches_hook(display_hook)
     # check for and run script session
     if opts.script_file:
-        try:
+        if os.path.exists(opts.script_file):
             sys.stdin = open(opts.script_file)
             __builtin__.script = 1
-        except:
+        else:
             print '%s[!] %s%s' % (R, 'Script file not found.', N)
             sys.exit()
     x = Recon()

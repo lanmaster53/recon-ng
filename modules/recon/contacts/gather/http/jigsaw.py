@@ -9,7 +9,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
         self.register_option('keywords', '', 'no', 'additional keywords to identify company')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -33,7 +32,7 @@ class Module(framework.module):
         url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml'
         payload = {'opCode': 'search', 'freeText': params}
         while True:
-            if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
             try: resp = self.request(url, payload=payload, redirect=False)
             except KeyboardInterrupt:
                 print ''
@@ -76,7 +75,7 @@ class Module(framework.module):
         payload = {'companyId': company_id, 'opCode': 'showCompDir'}
         while True:
             payload['rpage'] = str(page_cnt)
-            if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
             try: content = self.request(url, payload=payload).text
             except KeyboardInterrupt:
                 print ''

@@ -7,7 +7,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('host', '', 'yes', 'target host')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.register_option('store', False, 'yes', 'add discovered hosts to the database.')
         self.info = {
                      'Name': 'My-IP-Neighbors Lookup',
@@ -17,12 +16,11 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        verbose = self.options['verbose']['value']
         host = self.options['host']['value']
         add_hosts = self.options['store']['value']
 
         url = 'http://www.my-ip-neighbors.com/?domain=%s' % (host)
-        if verbose: self.output('URL: %s' % url)
+        self.verbose('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

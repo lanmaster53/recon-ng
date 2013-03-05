@@ -7,7 +7,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of target IP addresses')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Uniapple GeoIP',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -18,15 +17,13 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        verbose = self.options['verbose']['value']
-
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
         if not hosts: return
 
         for host in hosts:
             # request the scan
             url = 'http://uniapple.net/geoip/?ip=%s' % (host)
-            if verbose: self.output('URL: %s' % url)
+            self.verbose('URL: %s' % url)
             try: resp = self.request(url)
             except KeyboardInterrupt:
                 print ''

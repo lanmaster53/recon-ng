@@ -7,7 +7,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'PwnedList Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -18,8 +17,6 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        verbose = self.options['verbose']['value']
-        
         accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
         if not accounts: return
 
@@ -44,7 +41,7 @@ class Module(framework.module):
                 return
             elif '>NOPE!<' in the_page:
                 status = 'safe'
-                if verbose: self.output('%s => %s.' % (account, status))
+                self.verbose('%s => %s.' % (account, status))
             elif '>YES<' in the_page:
                 status = 'pwned'
                 m = re.search(pattern, the_page)

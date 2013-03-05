@@ -19,7 +19,8 @@ import json
 class module(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
-        self.prompt = (params)
+        self.prompt = (params[0])
+        self.modulename = params[1]
         self.ruler = '-'
         self.spacer = '  '
         self.module_delimiter = '/' # match line ~257 recon-ng.py
@@ -125,6 +126,29 @@ class module(cmd.Cmd):
         self.table(dirnames, header=True)
         self.output('\'*\' denotes the active workspace.')
 
+    def display_dashboard(self):
+        # display activity table
+        print ''
+        print '%sActivity Summary' % (self.spacer)
+        print '%s%s' % (self.spacer, self.ruler*16)
+        rows = self.query('SELECT * FROM dashboard')
+        tdata = [['Module', 'Runs']]
+        for row in rows:
+            tdata.append(row)
+        self.table(tdata, header=True)
+        # display sumary results table
+        print ''
+        print '%sResults Summary' % (self.spacer)
+        print '%s%s' % (self.spacer, self.ruler*15)
+        contacts = self.query('SELECT COUNT(*) FROM CONTACTS')
+        hosts = self.query('SELECT COUNT(*) FROM HOSTS')
+        creds = self.query('SELECT COUNT(*) FROM CREDS')
+        tdata = [['Category', 'Quantity']]
+        tdata.append(['Contacts', contacts[0][0]])
+        tdata.append(['Hosts', hosts[0][0]])
+        tdata.append(['Creds', creds[0][0]])
+        self.table(tdata, header=True)
+
     def sanitize(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
         if isinstance(obj, basestring):
@@ -172,7 +196,12 @@ class module(cmd.Cmd):
         '''Formats and presents important output.'''
         print '%s[*]%s %s' % (G, N, line)
 
-    def table(self, tdata, header=False):
+    def verbose(self, line):
+        '''Formats and presents output if in verbose mode.'''
+        if self.goptions['verbose']['value']:
+            self.output(line)
+
+    def table(self, tdata, header=False, table=None):
         '''Accepts a list of rows and outputs a table.'''
         if len(set([len(x) for x in tdata])) > 1:
             self.error('Row lengths not consistent.')
@@ -181,27 +210,44 @@ class module(cmd.Cmd):
         cols = len(tdata[0])
         for i in range(0,cols):
             lens.append(len(max([unicode(x[i]) if x[i] != None else '' for x in tdata], key=len)))
-        # build table
+        # build ascii table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
             separator_sub = tuple(['-'*x for x in lens])
             separator = separator_str % separator_sub
             data_str = '%s| %s%%s |' % (self.spacer, '%s | '*(cols-1))
-            # top of table
+            # top of ascii table
             print ''
             print separator
-            # table data
+            if table: columns = None
+            # ascii table data
             if header:
                 rdata = tdata.pop(0)
                 data_sub = tuple([rdata[i].center(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
                 print separator
+                # build column names for database table out of header row
+                if table: columns = [self.sanitize(x) for x in rdata]
             for rdata in tdata:
                 data_sub = tuple([unicode(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
-            # bottom of table
+            # bottom of ascii table
             print separator
             print ''
+
+            # build database table
+            if table:
+                # create database table
+                if not columns: columns = ['column_%s' % (i) for i in range(0,len(tdata[0]))]
+                metadata = ','.join(['\'%s\' TEXT' % (x) for x in columns])
+                self.query('CREATE TABLE IF NOT EXISTS %s (%s)' % (table, metadata))
+                # insert rows into database table
+                for rdata in tdata:
+                    data = {}
+                    for i in range(0, len(columns)):
+                        data[columns[i]] = rdata[i]
+                    self.insert(table, data)
+                self.output('\'%s\' table created in the database' % (table))
 
     #==================================================
     # DATABASE METHODS
@@ -210,12 +256,12 @@ class module(cmd.Cmd):
     def display_schema(self):
         '''Displays the database schema'''
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        c = conn.cursor()
-        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
-        tables = [x[0] for x in c.fetchall()]
+        cur = conn.cursor()
+        cur.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
+        tables = [x[0] for x in cur.fetchall()]
         for table in tables:
-            c.execute('PRAGMA table_info(%s)' % (table))
-            columns = [(x[1],x[2]) for x in c.fetchall()]
+            cur.execute('PRAGMA table_info(%s)' % (table))
+            columns = [(x[1],x[2]) for x in cur.fetchall()]
             name_len = len(max([x[0] for x in columns], key=len))
             type_len = len(max([x[1] for x in columns], key=len))
             print ''
@@ -264,7 +310,7 @@ class module(cmd.Cmd):
 
         return self.insert('creds', data, data.keys())
 
-    def insert(self, table, data, unique_columns=None):
+    def insert(self, table, data, unique_columns=[]):
         '''Inserts items into database and returns the affected row count.
         table - the table to insert the data into
         data - the information to insert into the database table in the form of a dictionary
@@ -274,7 +320,7 @@ class module(cmd.Cmd):
 
         columns = data.keys()
 
-        if unique_columns is None:
+        if not unique_columns:
             query = u'INSERT INTO %s (%s) VALUES (%s)' % (
                 table,
                 ','.join(columns),
@@ -292,14 +338,14 @@ class module(cmd.Cmd):
         values = [data[column] for column in columns] + [data[column] for column in unique_columns]
 
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        c = conn.cursor()
-        try: c.execute(query, values)
+        cur = conn.cursor()
+        try: cur.execute(query, values)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return
         conn.commit()
         conn.close()
-        return c.rowcount
+        return cur.rowcount
 
     def query(self, params, return_results=True):
         '''Queries the database and returns the results as a list.'''
@@ -308,15 +354,15 @@ class module(cmd.Cmd):
             self.help_query()
             return
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        c = conn.cursor()
-        try: c.execute(params)
+        cur = conn.cursor()
+        try: cur.execute(params)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return False
         if not return_results:
-            if c.rowcount == -1:
-                header = tuple([x[0] for x in c.description])
-                tdata = c.fetchall()
+            if cur.rowcount == -1 and cur.description:
+                header = tuple([x[0] for x in cur.description])
+                tdata = cur.fetchall()
                 if not tdata:
                     self.output('No data returned.')
                 else:
@@ -325,18 +371,18 @@ class module(cmd.Cmd):
                     self.output('%d rows returned' % (len(tdata)))
             else:
                 conn.commit()
-                self.output('%d rows affected.' % (c.rowcount))
+                self.output('%d rows affected.' % (cur.rowcount))
             conn.close()
             return
         else:
             # a rowcount of -1 typically refers to a select statement
-            if c.rowcount == -1:
-                rows = c.fetchall()
+            if cur.rowcount == -1:
+                rows = cur.fetchall()
                 result = rows
             # a rowcount of 1 == success and 0 == failure
             else:
                 conn.commit()
-                result = c.rowcount
+                result = cur.rowcount
             conn.close()
             return result
 
@@ -412,9 +458,9 @@ class module(cmd.Cmd):
 
     def display_keys(self):
         conn = sqlite3.connect(self.goptions['key_file']['value'])
-        c = conn.cursor()
-        c.execute('SELECT * FROM keys')
-        rows = c.fetchall()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM keys')
+        rows = cur.fetchall()
         conn.close()
         tdata = [('Name', 'Value')]
         for row in rows:
@@ -438,9 +484,9 @@ class module(cmd.Cmd):
     def get_key_from_db(self, key_name):
         '''Retrieves an API key from the API key storage database.'''
         conn = sqlite3.connect(self.goptions['key_file']['value'])
-        c = conn.cursor()
-        c.execute('SELECT value FROM keys WHERE name=?', (key_name,))
-        row = c.fetchone()
+        cur = conn.cursor()
+        cur.execute('SELECT value FROM keys WHERE name=?', (key_name,))
+        row = cur.fetchone()
         conn.close()
         if row:
             return str(row[0])
@@ -459,12 +505,12 @@ class module(cmd.Cmd):
     def add_key_to_db(self, key_name, key_value):
         '''Adds an API key to the API key storage database.'''
         conn = sqlite3.connect(self.goptions['key_file']['value'])
-        c = conn.cursor()
-        try: c.execute('INSERT INTO keys VALUES (?,?)', (key_name, key_value))
+        cur = conn.cursor()
+        try: cur.execute('INSERT INTO keys VALUES (?,?)', (key_name, key_value))
         except sqlite3.OperationalError:
             return False
         except sqlite3.IntegrityError:
-            try: c.execute('UPDATE keys SET value=? WHERE name=?', (key_value, key_name))
+            try: cur.execute('UPDATE keys SET value=? WHERE name=?', (key_value, key_name))
             except sqlite3.OperationalError:
                 return False
         conn.commit()
@@ -576,22 +622,7 @@ class module(cmd.Cmd):
         '''Shows various framework items'''
         if params:
             arg = params.lower()
-            if arg in ['hosts', 'contacts', 'creds']:
-                self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
-                return
-            elif arg == 'options':
-                self.display_options(None)
-                return
-            elif arg == 'schema':
-                self.display_schema()
-                return
-            elif arg == 'keys':
-                self.display_keys()
-                return
-            elif arg == 'workspaces':
-                self.display_workspaces()
-                return
-            elif arg.split()[0] == 'modules':
+            if arg.split()[0] == 'modules':
                 if len(arg.split()) > 1:
                     param = arg.split()[1]
                     modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
@@ -601,6 +632,24 @@ class module(cmd.Cmd):
                 else:
                     modules = __builtin__.loaded_modules
                 self.display_modules(modules)
+                return
+            elif arg == 'options':
+                self.display_options(None)
+                return
+            elif arg == 'workspaces':
+                self.display_workspaces()
+                return
+            elif arg == 'schema':
+                self.display_schema()
+                return
+            elif arg == 'keys':
+                self.display_keys()
+                return
+            elif arg == 'dashboard':
+                self.display_dashboard()
+                return
+            elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
+                self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
                 return
         self.help_show()
 
@@ -650,9 +699,22 @@ class module(cmd.Cmd):
         '''Runs the module'''
         if not self.validate_options(): return
         self.module_run()
+        self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 
     def module_run(self):
         pass
+
+    def do_resource(self, params):
+        '''Executes commands from a resource file'''
+        if params:
+            if os.path.exists(params):
+                sys.stdin = open(params)
+                __builtin__.script = 1
+                return
+            else:
+                self.error('Script file not found.')
+                return
+        self.help_resource()        
 
     #==================================================
     # HELP METHODS
@@ -666,11 +728,14 @@ class module(cmd.Cmd):
         print 'Usage: query <sql>'
         print ''
         print 'SQL Examples:'
-        print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename>')
-        print '%s%s' % (self.spacer, 'SELECT <columns|*> FROM <tablename> WHERE <columnname>=<string>')
+        print '%s%s' % (self.spacer, 'SELECT columns|* FROM table_name')
+        print '%s%s' % (self.spacer, 'SELECT columns|* FROM table_name WHERE some_column=some_value')
+        print '%s%s' % (self.spacer, 'DELETE FROM table_name WHERE some_column=some_value')
+        print '%s%s' % (self.spacer, 'INSERT INTO table_name (column1, column2,...) VALUES (value1, value2,...)')
+        print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
 
     def help_show(self):
-        print 'Usage: show [modules|options|workspaces|schema|hosts|contacts|creds|keys]'
+        print 'Usage: show [modules|options|workspaces|schema|keys|<table>]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
@@ -678,6 +743,9 @@ class module(cmd.Cmd):
 
     def help_record(self):
         print 'Usage: record [start|stop|status]'
+
+    def help_resource(self):
+        print 'Usage: resource <filename>'
 
     #==================================================
     # COMPLETE METHODS
@@ -691,7 +759,9 @@ class module(cmd.Cmd):
         if len(args) > 1 and args[1].lower() == 'modules':
             if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
             else: return [x for x in __builtin__.loaded_modules]
-        options = ['modules', 'options', 'workspaces', 'schema', 'hosts', 'contacts', 'creds', 'keys']
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
+        options = ['modules', 'options', 'workspaces', 'schema', 'keys']
+        options.extend(tables)
         return [x for x in options if x.startswith(text)]
 
 #=================================================

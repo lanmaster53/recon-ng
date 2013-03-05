@@ -10,7 +10,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('username', 'lanmaster53', 'yes', 'username to validate')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'NameChk.com Username Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
@@ -21,7 +20,6 @@ class Module(framework.module):
 
     def module_run(self):
         username = self.options['username']['value']
-        verbose = self.options['verbose']['value']
 
         # retrive list of sites
         url = 'http://namechk.com/Content/sites.min.js'
@@ -38,7 +36,7 @@ class Module(framework.module):
         sites = re.findall(pattern, resp.text)
 
         # output table of sites info
-        if verbose:
+        if self.goptions['verbose']['value']:
             tdata = [['Code', 'Name']]
             for site in sites:
                 tdata.append([site[1], site[0]])
@@ -79,6 +77,6 @@ class Module(framework.module):
                 if int(x) == 2:
                     self.alert('%s: %s' % (name, status))
                 else:
-                    if verbose: self.output('%s: %s' % (name, status))
+                    self.verbose('%s: %s' % (name, status))
             else:
                 self.error('%s: %s' % (name, 'Error'))

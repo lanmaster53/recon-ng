@@ -8,7 +8,6 @@ class Module(framework.module):
         self.register_option('source', 'db', 'yes', 'source of hosts used for module input')
         self.register_option('uri', 'wp-config.php', 'yes', 'URI to the original filename')
         self.register_option('searchstr', '<?php', 'yes', 'string to search for in the response for false positive reduction')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Backup File Finder',
                      'Author': 'Jay Turla (@shipcod3) and Tim Tomes (@LaNMaSteR53)',
@@ -21,7 +20,6 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        verbose = self.options['verbose']['value']
         uri = self.options['uri']['value']
         searchstr = self.options['searchstr']['value']
         
@@ -59,6 +57,6 @@ class Module(framework.module):
                         flag = 1
                         break
                     else:
-                        if verbose: self.output('%s => %s' % (url, code))
+                        self.verbose('%s => %s' % (url, code))
                 if flag: break
         self.output('%d \'%s\' backup pages found' % (cnt, uri))
