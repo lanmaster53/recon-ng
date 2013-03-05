@@ -127,8 +127,27 @@ class module(cmd.Cmd):
         self.output('\'*\' denotes the active workspace.')
 
     def display_dashboard(self):
-        # for future use when the dashboard requires more than simple table output
-        pass
+        # display activity table
+        print ''
+        print '%sActivity Summary' % (self.spacer)
+        print '%s%s' % (self.spacer, self.ruler*16)
+        rows = self.query('SELECT * FROM dashboard')
+        tdata = [['Module', 'Runs']]
+        for row in rows:
+            tdata.append(row)
+        self.table(tdata, header=True)
+        # display sumary results table
+        print ''
+        print '%sResults Summary' % (self.spacer)
+        print '%s%s' % (self.spacer, self.ruler*15)
+        contacts = self.query('SELECT COUNT(*) FROM CONTACTS')
+        hosts = self.query('SELECT COUNT(*) FROM HOSTS')
+        creds = self.query('SELECT COUNT(*) FROM CREDS')
+        tdata = [['Category', 'Quantity']]
+        tdata.append(['Contacts', contacts[0][0]])
+        tdata.append(['Hosts', hosts[0][0]])
+        tdata.append(['Creds', creds[0][0]])
+        self.table(tdata, header=True)
 
     def sanitize(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
@@ -586,7 +605,7 @@ class module(cmd.Cmd):
         '''Shows various framework items'''
         if params:
             arg = params.lower()
-            if arg in ['hosts', 'contacts', 'creds', 'dashboard']:
+            if arg in ['hosts', 'contacts', 'creds']:
                 self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
                 return
             elif arg == 'options':

@@ -156,7 +156,7 @@ class Recon(framework.module):
         else:
             try:
                 modulename = self.loaded_modules[params]
-                y = sys.modules[modulename].Module(None)
+                y = sys.modules[modulename].Module((None, modulename))
                 try: y.do_info(modulename)
                 except KeyboardInterrupt: print ''
                 except:
