@@ -19,7 +19,8 @@ import json
 class module(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
-        self.prompt = (params)
+        self.prompt = (params[0])
+        self.modulename = params[1]
         self.ruler = '-'
         self.spacer = '  '
         self.module_delimiter = '/' # match line ~257 recon-ng.py
@@ -125,6 +126,10 @@ class module(cmd.Cmd):
         self.table(dirnames, header=True)
         self.output('\'*\' denotes the active workspace.')
 
+    def display_dashboard(self):
+        # for future use when the dashboard requires more than simple table output
+        pass
+
     def sanitize(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
         if isinstance(obj, basestring):
@@ -215,12 +220,12 @@ class module(cmd.Cmd):
     def display_schema(self):
         '''Displays the database schema'''
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        c = conn.cursor()
-        c.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
-        tables = [x[0] for x in c.fetchall()]
+        cur = conn.cursor()
+        cur.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
+        tables = [x[0] for x in cur.fetchall()]
         for table in tables:
-            c.execute('PRAGMA table_info(%s)' % (table))
-            columns = [(x[1],x[2]) for x in c.fetchall()]
+            cur.execute('PRAGMA table_info(%s)' % (table))
+            columns = [(x[1],x[2]) for x in cur.fetchall()]
             name_len = len(max([x[0] for x in columns], key=len))
             type_len = len(max([x[1] for x in columns], key=len))
             print ''
@@ -297,14 +302,14 @@ class module(cmd.Cmd):
         values = [data[column] for column in columns] + [data[column] for column in unique_columns]
 
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        c = conn.cursor()
-        try: c.execute(query, values)
+        cur = conn.cursor()
+        try: cur.execute(query, values)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return
         conn.commit()
         conn.close()
-        return c.rowcount
+        return cur.rowcount
 
     def query(self, params, return_results=True):
         '''Queries the database and returns the results as a list.'''
@@ -313,15 +318,15 @@ class module(cmd.Cmd):
             self.help_query()
             return
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        c = conn.cursor()
-        try: c.execute(params)
+        cur = conn.cursor()
+        try: cur.execute(params)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return False
         if not return_results:
-            if c.rowcount == -1:
-                header = tuple([x[0] for x in c.description])
-                tdata = c.fetchall()
+            if cur.rowcount == -1 and cur.description:
+                header = tuple([x[0] for x in cur.description])
+                tdata = cur.fetchall()
                 if not tdata:
                     self.output('No data returned.')
                 else:
@@ -330,18 +335,18 @@ class module(cmd.Cmd):
                     self.output('%d rows returned' % (len(tdata)))
             else:
                 conn.commit()
-                self.output('%d rows affected.' % (c.rowcount))
+                self.output('%d rows affected.' % (cur.rowcount))
             conn.close()
             return
         else:
             # a rowcount of -1 typically refers to a select statement
-            if c.rowcount == -1:
-                rows = c.fetchall()
+            if cur.rowcount == -1:
+                rows = cur.fetchall()
                 result = rows
             # a rowcount of 1 == success and 0 == failure
             else:
                 conn.commit()
-                result = c.rowcount
+                result = cur.rowcount
             conn.close()
             return result
 
@@ -417,9 +422,9 @@ class module(cmd.Cmd):
 
     def display_keys(self):
         conn = sqlite3.connect(self.goptions['key_file']['value'])
-        c = conn.cursor()
-        c.execute('SELECT * FROM keys')
-        rows = c.fetchall()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM keys')
+        rows = cur.fetchall()
         conn.close()
         tdata = [('Name', 'Value')]
         for row in rows:
@@ -443,9 +448,9 @@ class module(cmd.Cmd):
     def get_key_from_db(self, key_name):
         '''Retrieves an API key from the API key storage database.'''
         conn = sqlite3.connect(self.goptions['key_file']['value'])
-        c = conn.cursor()
-        c.execute('SELECT value FROM keys WHERE name=?', (key_name,))
-        row = c.fetchone()
+        cur = conn.cursor()
+        cur.execute('SELECT value FROM keys WHERE name=?', (key_name,))
+        row = cur.fetchone()
         conn.close()
         if row:
             return str(row[0])
@@ -464,12 +469,12 @@ class module(cmd.Cmd):
     def add_key_to_db(self, key_name, key_value):
         '''Adds an API key to the API key storage database.'''
         conn = sqlite3.connect(self.goptions['key_file']['value'])
-        c = conn.cursor()
-        try: c.execute('INSERT INTO keys VALUES (?,?)', (key_name, key_value))
+        cur = conn.cursor()
+        try: cur.execute('INSERT INTO keys VALUES (?,?)', (key_name, key_value))
         except sqlite3.OperationalError:
             return False
         except sqlite3.IntegrityError:
-            try: c.execute('UPDATE keys SET value=? WHERE name=?', (key_value, key_name))
+            try: cur.execute('UPDATE keys SET value=? WHERE name=?', (key_value, key_name))
             except sqlite3.OperationalError:
                 return False
         conn.commit()
@@ -581,7 +586,7 @@ class module(cmd.Cmd):
         '''Shows various framework items'''
         if params:
             arg = params.lower()
-            if arg in ['hosts', 'contacts', 'creds']:
+            if arg in ['hosts', 'contacts', 'creds', 'dashboard']:
                 self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
                 return
             elif arg == 'options':
@@ -595,6 +600,9 @@ class module(cmd.Cmd):
                 return
             elif arg == 'workspaces':
                 self.display_workspaces()
+                return
+            elif arg == 'dashboard':
+                self.display_dashboard()
                 return
             elif arg.split()[0] == 'modules':
                 if len(arg.split()) > 1:
@@ -655,6 +663,7 @@ class module(cmd.Cmd):
         '''Runs the module'''
         if not self.validate_options(): return
         self.module_run()
+        self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 
     def module_run(self):
         pass
@@ -690,7 +699,7 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
 
     def help_show(self):
-        print 'Usage: show [modules|options|workspaces|schema|hosts|contacts|creds|keys]'
+        print 'Usage: show [modules|options|workspaces|dashboard|schema|hosts|contacts|creds|keys]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
@@ -714,7 +723,7 @@ class module(cmd.Cmd):
         if len(args) > 1 and args[1].lower() == 'modules':
             if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
             else: return [x for x in __builtin__.loaded_modules]
-        options = ['modules', 'options', 'workspaces', 'schema', 'hosts', 'contacts', 'creds', 'keys']
+        options = ['modules', 'options', 'workspaces', 'dashboard', 'schema', 'hosts', 'contacts', 'creds', 'keys']
         return [x for x in options if x.startswith(text)]
 
 #=================================================
