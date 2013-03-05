@@ -201,7 +201,7 @@ class module(cmd.Cmd):
         if self.goptions['verbose']['value']:
             self.output(line)
 
-    def table(self, tdata, header=False):
+    def table(self, tdata, header=False, table=None):
         '''Accepts a list of rows and outputs a table.'''
         if len(set([len(x) for x in tdata])) > 1:
             self.error('Row lengths not consistent.')
@@ -210,27 +210,44 @@ class module(cmd.Cmd):
         cols = len(tdata[0])
         for i in range(0,cols):
             lens.append(len(max([unicode(x[i]) if x[i] != None else '' for x in tdata], key=len)))
-        # build table
+        # build ascii table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
             separator_sub = tuple(['-'*x for x in lens])
             separator = separator_str % separator_sub
             data_str = '%s| %s%%s |' % (self.spacer, '%s | '*(cols-1))
-            # top of table
+            # top of ascii table
             print ''
             print separator
-            # table data
+            if table: columns = None
+            # ascii table data
             if header:
                 rdata = tdata.pop(0)
                 data_sub = tuple([rdata[i].center(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
                 print separator
+                # build column names for database table out of header row
+                if table: columns = [self.sanitize(x) for x in rdata]
             for rdata in tdata:
                 data_sub = tuple([unicode(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
-            # bottom of table
+            # bottom of ascii table
             print separator
             print ''
+
+            # build database table
+            if table:
+                # create database table
+                if not columns: columns = ['column_%s' % (i) for i in range(0,len(tdata[0]))]
+                metadata = ','.join(['\'%s\' TEXT' % (x) for x in columns])
+                self.query('CREATE TABLE IF NOT EXISTS %s (%s)' % (table, metadata))
+                # insert rows into database table
+                for rdata in tdata:
+                    data = {}
+                    for i in range(0, len(columns)):
+                        data[columns[i]] = rdata[i]
+                    self.insert(table, data)
+                self.output('\'%s\' table created in the database' % (table))
 
     #==================================================
     # DATABASE METHODS
@@ -293,7 +310,7 @@ class module(cmd.Cmd):
 
         return self.insert('creds', data, data.keys())
 
-    def insert(self, table, data, unique_columns=None):
+    def insert(self, table, data, unique_columns=[]):
         '''Inserts items into database and returns the affected row count.
         table - the table to insert the data into
         data - the information to insert into the database table in the form of a dictionary
@@ -303,7 +320,7 @@ class module(cmd.Cmd):
 
         columns = data.keys()
 
-        if unique_columns is None:
+        if not unique_columns:
             query = u'INSERT INTO %s (%s) VALUES (%s)' % (
                 table,
                 ','.join(columns),
@@ -605,25 +622,7 @@ class module(cmd.Cmd):
         '''Shows various framework items'''
         if params:
             arg = params.lower()
-            if arg in ['hosts', 'contacts', 'creds']:
-                self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
-                return
-            elif arg == 'options':
-                self.display_options(None)
-                return
-            elif arg == 'schema':
-                self.display_schema()
-                return
-            elif arg == 'keys':
-                self.display_keys()
-                return
-            elif arg == 'workspaces':
-                self.display_workspaces()
-                return
-            elif arg == 'dashboard':
-                self.display_dashboard()
-                return
-            elif arg.split()[0] == 'modules':
+            if arg.split()[0] == 'modules':
                 if len(arg.split()) > 1:
                     param = arg.split()[1]
                     modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
@@ -633,6 +632,24 @@ class module(cmd.Cmd):
                 else:
                     modules = __builtin__.loaded_modules
                 self.display_modules(modules)
+                return
+            elif arg == 'options':
+                self.display_options(None)
+                return
+            elif arg == 'workspaces':
+                self.display_workspaces()
+                return
+            elif arg == 'schema':
+                self.display_schema()
+                return
+            elif arg == 'keys':
+                self.display_keys()
+                return
+            elif arg == 'dashboard':
+                self.display_dashboard()
+                return
+            elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
+                self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
                 return
         self.help_show()
 
@@ -718,7 +735,7 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
 
     def help_show(self):
-        print 'Usage: show [modules|options|workspaces|dashboard|schema|hosts|contacts|creds|keys]'
+        print 'Usage: show [modules|options|workspaces|schema|keys|<table>]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
@@ -742,7 +759,9 @@ class module(cmd.Cmd):
         if len(args) > 1 and args[1].lower() == 'modules':
             if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
             else: return [x for x in __builtin__.loaded_modules]
-        options = ['modules', 'options', 'workspaces', 'dashboard', 'schema', 'hosts', 'contacts', 'creds', 'keys']
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
+        options = ['modules', 'options', 'workspaces', 'schema', 'keys']
+        options.extend(tables)
         return [x for x in options if x.startswith(text)]
 
 #=================================================
