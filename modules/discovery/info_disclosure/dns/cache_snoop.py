@@ -10,7 +10,6 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('nameserver', '', 'yes', 'ip address of target\'s nameserver')
         self.register_option('domains', './data/av_domains.lst', 'yes', 'domain or list of domains to snoop for')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'DNS Cache Snooper',
                      'Author': 'thrapt (thrapt@gmail.com)',
@@ -22,13 +21,7 @@ class Module(framework.module):
                                  ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.cachesnoop()
-
-    def cachesnoop(self):
-        verbose = self.options['verbose']['value']
+    def module_run(self):
         domains = self.options['domains']['value']
         nameserver = self.options['nameserver']['value']
         
@@ -63,4 +56,4 @@ class Module(framework.module):
                 status = 'Snooped!'
                 self.alert('%s => %s' % (host, status))
             else:
-                if verbose: self.output('%s => %s' % (host, status))
+                self.verbose('%s => %s' % (host, status))

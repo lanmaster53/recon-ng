@@ -8,7 +8,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('host', 'www.google.com', 'yes', 'target host')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'BuiltWith Server-side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -16,19 +15,12 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.builtwith()
-    
-    def builtwith(self):
+    def module_run(self):
         host = self.options['host']['value']
-        verbose = self.options['verbose']['value']
         key = self.manage_key('builtwith', 'BuiltWith API key')
         if not key: return
         url = ' http://api.builtwith.com/v1/api.json'
         payload = {'key': key, 'lookup': host}
-        #import pdb;pdb.set_trace()
         try: resp = self.request(url, payload=payload)
         except KeyboardInterrupt:
             print ''
@@ -43,7 +35,7 @@ class Module(framework.module):
             self.error(resp.json['error'])
             return
         
-        if verbose:
+        if self.goptions['verbose']['value']:
             for item in resp.json['Technologies']:
                 print self.ruler*50
                 for tag in item:

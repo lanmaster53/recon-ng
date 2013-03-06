@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Contact Name Mangler',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact. This module updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact and updating the \'contacts\' table of the database with the results.',
                      'Comments': [
                                   'Pattern options: <fi>,<fn>,<li>,<ln>',
                                   'Example:         <fi>.<ln> => j.doe@domain.com',
@@ -19,12 +19,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.mutate_contacts()
-
-    def mutate_contacts(self):
+    def module_run(self):
         domain = self.options['domain']['value']
         pattern = self.options['pattern']['value']
         max = self.options['max-length']['value']

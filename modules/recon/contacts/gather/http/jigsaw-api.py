@@ -9,17 +9,14 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
         self.register_option('keywords', '', 'no', 'additional keywords to identify company')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from the Jigsaw.com API. This module updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contacts from the Jigsaw.com API and updates the \'contacts\' table of the database with the results.',
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
+    def module_run(self):
         self.api_key = self.manage_key('jigsaw_key', 'Jigsaw API Key')
         if not self.api_key: return
         company_id = self.get_company_id()
@@ -36,7 +33,7 @@ class Module(framework.module):
         url = 'https://www.jigsaw.com/rest/searchCompany.json'
         while True:
             payload = {'token': self.api_key, 'name': params, 'offset': cnt, 'pageSize': size}
-            if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
             try: resp = self.request(url, payload=payload, redirect=False)
             except KeyboardInterrupt:
                 print ''
@@ -94,8 +91,15 @@ class Module(framework.module):
                 fname = contact['firstname']
                 lname = contact['lastname']
                 title = self.unescape(contact['title'])
-                self.output('%s %s - %s' % (fname, lname, title))
-                new += self.add_contact(fname, lname, title)
+                city = contact['city']
+                state = contact['state']
+                region = []
+                for item in [city, state]:
+                    if item: region.append(item.title())
+                region = ', '.join(region)
+                country = contact['country']
+                self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
+                new += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
                 tot += 1
             cnt += size
             if cnt > jsonobj['totalHits']: break

@@ -7,7 +7,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'all', 'yes', 'data source for the report')
-        self.register_option('filename', './data/results.csv', 'yes', 'path and filename for report output')
+        self.register_option('filename', '%s/results.csv' % (self.workspace), 'yes', 'path and filename for report output')
         self.info = {
                      'Name': 'CSV File Creator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -17,12 +17,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.append_to_csv()
-    
-    def append_to_csv(self):
+    def module_run(self):
         filename = self.options['filename']['value']
         try:
             outfile = open(filename, 'wb')

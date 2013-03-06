@@ -7,24 +7,16 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'WhatWeb Web Technologies scan',
                      'Author': 'thrapt (thrapt@gmail.com) and Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages WhatWeb.net to recognise web technologies being used.',
+                     'Description': 'Leverages WhatWeb.net to determine the web technologies in use on the given host(s).',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
                                  ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.whatweb()
-
-    def whatweb(self):
-        verbose = self.options['verbose']['value']
-
+    def module_run(self):
         # handle sources
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         if not hosts: return

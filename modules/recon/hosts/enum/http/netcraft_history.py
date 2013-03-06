@@ -11,23 +11,16 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of module input')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Checks Netcraft for the Hosting History of given target.',
+                     'Description': 'Checks Netcraft.com for the hosting history of the given target(s).',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
                                  ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.netcraft()
-
-    def netcraft(self):
-        verbose = self.options['verbose']['value']
+    def module_run(self):
         cookies = {}
 
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
@@ -35,7 +28,7 @@ class Module(framework.module):
 
         for host in hosts:
             url = 'http://uptime.netcraft.com/up/graph?site=%s' % (host)
-            if verbose: self.output('URL: %s' % url)
+            self.verbose('URL: %s' % url)
             try: resp = self.request(url, cookies=cookies)
             except KeyboardInterrupt:
                 print ''
@@ -46,7 +39,7 @@ class Module(framework.module):
 
             if 'set-cookie' in resp.headers:
                 # we have a cookie to set!
-                if verbose: self.output('Setting cookie...')
+                self.verbose('Setting cookie...')
                 cookie = resp.headers['set-cookie']
                 # this was taken from the netcraft page's JavaScript, no need to use big parsers just for that
                 # grab the cookie sent by the server, hash it and send the response
@@ -59,7 +52,7 @@ class Module(framework.module):
                           }
 
                 # Now we can request the page again
-                if verbose: self.output('URL: %s' % url)
+                self.verbose('URL: %s' % url)
                 try: resp = self.request(url, cookies=cookies)
                 except KeyboardInterrupt:
                     print ''
@@ -86,7 +79,7 @@ class Module(framework.module):
 
             if len(hosts) > 1:
                 # sleep script to avoid lock-out
-                if verbose: self.output('Sleeping to Avoid Lock-out...')
+                self.verbose('Sleeping to Avoid Lock-out...')
                 try: time.sleep(random.randint(5,15))
                 except KeyboardInterrupt:
                     print ''

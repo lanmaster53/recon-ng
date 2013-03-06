@@ -7,25 +7,18 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'McAfee SiteAdvisor Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks siteadvisor.com site for links and other information with domains.',
+                     'Description': 'Checks siteadvisor.com for links and other information for the given domain.',
                      'Comments': []
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.siteadv_summ()
-
-    def siteadv_summ(self):
-        verbose = self.options['verbose']['value']
+    def module_run(self):
         domain = self.options['domain']['value']
 
         url = 'http://www.siteadvisor.com/sites/%s' % (domain)
-        if verbose: self.output('URL being retrieved: %s' % url)
+        self.verbose('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

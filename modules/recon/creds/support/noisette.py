@@ -8,25 +8,17 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', '21232f297a57a5a743894a0e4a801fc3', 'yes', 'source of module input')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Noisette MD5 Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup. This module updates the \'creds\' table of the database with the positive results.',
+                     'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup and updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
                                   'Hash types supported: MD5'
                                   ]
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.noisette()
-    
-    def noisette(self):
-        verbose = self.options['verbose']['value']
-        
+    def module_run(self):
         hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
         if not hashes: return
 
@@ -51,4 +43,4 @@ class Module(framework.module):
                 self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
                 self.query('UPDATE creds SET password="%s", type="%s" WHERE hash="%s"' % (plaintext, hashtype, hashstr))
             else:
-                if verbose: self.output('Value not found for hash: %s' % (hashstr))
+                self.verbose('Value not found for hash: %s' % (hashstr))

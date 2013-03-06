@@ -2,10 +2,12 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '1.10'
+__version__   = '1.20'
 
 import datetime
 import os
+import errno
+import json
 import sys
 import imp
 import sqlite3
@@ -30,14 +32,15 @@ __builtin__.record = 0
 
 # set global framework options
 __builtin__.goptions = {}
-__builtin__.loaded_modules ={}
+__builtin__.loaded_modules = {}
+__builtin__.workspace = ''
 
 class Recon(framework.module):
     def __init__(self):
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
-        framework.module.__init__(self, prompt)
-        self.register_option('db_file', './data/data.db', 'yes', 'path to main database file', self.goptions)
+        framework.module.__init__(self, (prompt, 'core'))
+        self.register_option('workspace', 'default', 'yes', 'current workspace name', self.goptions)
         self.register_option('key_file', './data/keys.db', 'yes', 'path to API key database file', self.goptions)
         self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
         self.register_option('domain', '', 'no', 'target domain', self.goptions)
@@ -50,7 +53,8 @@ class Recon(framework.module):
         self.options = self.goptions
         self.load_modules()
         self.show_banner()
-        self.init_db()
+        self.init_keys()
+        self.init_workspace()
 
     #==================================================
     # SUPPORT METHODS
@@ -93,19 +97,48 @@ class Recon(framework.module):
             print '%s%s %s modules%s' % (B, count.ljust(4), category, N)
         print ''
 
-    def init_db(self):
-        conn = sqlite3.connect(self.options['db_file']['value'])
-        c = conn.cursor()
-        c.execute('create table if not exists hosts (host text, address text)')
-        c.execute('create table if not exists contacts (fname text, lname text, email text, title text)')
-        c.execute('create table if not exists creds (username text, password text, hash text, type text, leak text)')
-        conn.commit()
-        conn.close()
+    def init_keys(self):
         conn = sqlite3.connect(self.options['key_file']['value'])
         c = conn.cursor()
-        c.execute('create table if not exists keys (name text primary key, value text)')
+        c.execute('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
         conn.commit()
         conn.close()
+
+    def init_workspace(self, workspace=None):
+        workspace = workspace if workspace is not None else self.options['workspace']['value']
+        workspace = './workspaces/%s' % (workspace)
+        try:
+            os.makedirs(workspace)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                self.error(e.__str__())
+                return False
+        conn = sqlite3.connect('%s/data.db' % (workspace))
+        c = conn.cursor()
+        c.execute('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
+        c.execute('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
+        conn.commit()
+        conn.close()
+        self.workspace = __builtin__.workspace = workspace
+        self.config_load()
+        return True
+
+    def config_save(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        config_file = open(config_path, 'wb')
+        json.dump(self.options, config_file)
+        config_file.close()
+
+    def config_load(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        if os.path.exists(config_path):
+            try:
+                config = json.loads(open(config_path, 'rb').read())
+                for key in config: self.options[key] = config[key]
+            except:
+                self.error('Corrupt config file.')
 
     #==================================================
     # COMMAND METHODS
@@ -123,7 +156,7 @@ class Recon(framework.module):
         else:
             try:
                 modulename = self.loaded_modules[params]
-                y = sys.modules[modulename].Module(None)
+                y = sys.modules[modulename].Module((None, modulename))
                 try: y.do_info(modulename)
                 except KeyboardInterrupt: print ''
                 except:
@@ -145,19 +178,15 @@ class Recon(framework.module):
             name = options[0].lower()
             if name in self.options:
                 value = ' '.join(options[1:])
-                # make sure database file is valid
-                if name in ['db_file', 'key_file', 'rec_file']:
-                    try:
-                        conn = sqlite3.connect(value)
-                        conn.close()
-                        f = open(value)
-                        f.close()
-                    except:
-                        self.error('Invalid path or name for \'%s\'.' % (name))
+                init = False
+                # validate workspace
+                if name == 'workspace':
+                    if not self.init_workspace(value):
+                        self.error('Unable to create \'%s\' workspace.' % (value))
                         return
-                    self.init_db()
-                print '%s => %s' % (name.upper(), value)
                 self.options[name]['value'] = self.autoconvert(value)
+                print '%s => %s' % (name.upper(), value)
+                self.config_save()
             else: self.error('Invalid option.')
 
     def do_load(self, params):
@@ -174,8 +203,9 @@ class Recon(framework.module):
                 # raise AssertionError if multiple modules are found
                 assert len(modules) == 1
                 modulename = modules[0]
-                loadedname = self.loaded_modules[modules[0]]
-                y = sys.modules[loadedname].Module('%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1]))
+                loadedname = self.loaded_modules[modulename]
+                prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
+                y = sys.modules[loadedname].Module((prompt, modulename))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
                 except:
@@ -198,6 +228,10 @@ class Recon(framework.module):
             self.help_use()
         else:
             self.do_load(params)
+
+    def do_run(self, params):
+        '''Not available'''
+        self.output('Command \'run\' reserved for future use.')
 
     #==================================================
     # HELP METHODS
@@ -233,6 +267,7 @@ if __name__ == '__main__':
     usage = "%%prog [options]\n\n%%prog - %s %s" % (__author__, __email__)
     parser = optparse.OptionParser(usage=usage, version=__version__)
     parser.add_option('-r', help='resource file for scripted session', metavar='filename', dest='script_file', type='string', action='store')
+    parser.add_option('-w', help='workspace to load/create', metavar='workspace', dest='workspace', type='string', action='store')
     (opts, args) = parser.parse_args()
     # set up command completion
     try:
@@ -250,12 +285,13 @@ if __name__ == '__main__':
         #readline.set_completion_display_matches_hook(display_hook)
     # check for and run script session
     if opts.script_file:
-        try:
+        if os.path.exists(opts.script_file):
             sys.stdin = open(opts.script_file)
             __builtin__.script = 1
-        except:
+        else:
             print '%s[!] %s%s' % (R, 'Script file not found.', N)
             sys.exit()
     x = Recon()
+    if opts.workspace: x.do_set('workspace %s' % (opts.workspace))
     try: x.cmdloop()
     except KeyboardInterrupt: print ''

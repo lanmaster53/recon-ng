@@ -7,25 +7,18 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'URLVoid Domain Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks urlvoid.com site for information about the security of a domain.',
+                     'Description': 'Checks urlvoid.com for information about the security of the given domain.',
                      'Comments': []
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.urlvoid()
-
-    def urlvoid(self):
-        verbose = self.options['verbose']['value']
+    def module_run(self):
         domain = self.options['domain']['value']
 
         url = 'http://www.urlvoid.com/scan/%s/' % (domain)
-        if verbose: self.output('URL being retrieved: %s' % url)
+        self.verbose('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

@@ -7,27 +7,20 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('host', '', 'yes', 'target host')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
-        self.register_option('add_to_db', False, 'yes', 'add discovered hosts to the database.')
+        self.register_option('store', False, 'yes', 'add discovered hosts to the database.')
         self.info = {
                      'Name': 'My-IP-Neighbors Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks my-ip-neighbors.com site for other hosts hosted on the same server. This module can update the \'hosts\' table of the database with the results.',
+                     'Description': 'Checks My-IP-Neighbors.com for other hosts hosted on the same server and can update the \'hosts\' table of the database with the results if desired.',
                      'Comments': ['Knowing what other hosts are hosted on a provider\'s server can sometimes yield interesting results and help identify additional targets for assessment.']
                      }
    
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
-        self.ip_neigh()
-
-    def ip_neigh(self):
-        verbose = self.options['verbose']['value']
+    def module_run(self):
         host = self.options['host']['value']
-        add_hosts = self.options['add_to_db']['value']
+        add_hosts = self.options['store']['value']
 
         url = 'http://www.my-ip-neighbors.com/?domain=%s' % (host)
-        if verbose: self.output('URL being retrieved: %s' % url)
+        self.verbose('URL: %s' % url)
         try: resp = self.request(url)
         except KeyboardInterrupt:
             print ''

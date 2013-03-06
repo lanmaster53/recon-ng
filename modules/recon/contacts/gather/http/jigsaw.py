@@ -9,17 +9,14 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
         self.register_option('keywords', '', 'no', 'additional keywords to identify company')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from Jigsaw.com. This module updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contacts from Jigsaw.com and updates the \'contacts\' table of the database with the results.',
                      'Comments': []
                      }
 
-    def do_run(self, params):
-        if not self.validate_options(): return
-        # === begin here ===
+    def module_run(self):
         company_id = self.get_company_id()
         if company_id:
             contact_ids = self.get_contact_ids(company_id)
@@ -35,7 +32,7 @@ class Module(framework.module):
         url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml'
         payload = {'opCode': 'search', 'freeText': params}
         while True:
-            if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
             try: resp = self.request(url, payload=payload, redirect=False)
             except KeyboardInterrupt:
                 print ''
@@ -78,7 +75,7 @@ class Module(framework.module):
         payload = {'companyId': company_id, 'opCode': 'showCompDir'}
         while True:
             payload['rpage'] = str(page_cnt)
-            if self.options['verbose']['value']: self.output('Query: %s?%s' % (url, urllib.urlencode(payload)))
+            self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
             try: content = self.request(url, payload=payload).text
             except KeyboardInterrupt:
                 print ''
@@ -107,14 +104,18 @@ class Module(framework.module):
                 self.error(e.__str__())
                 break
             if 'Contact Not Found' in content: continue
-            pattern = '<span id="firstname">(.+?)</span>.*?<span id="lastname">(.+?)</span>'
-            names = re.findall(pattern, content)
-            fname = self.unescape(names[0][0])
-            lname = self.unescape(names[0][1])
-            pattern = '<span id="title" title=".*?">(.*?)</span>'
-            title = self.unescape(re.findall(pattern, content)[0])
-            self.output('%s %s - %s' % (fname, lname, title))
+            fname = self.unescape(re.search('<span id="firstname">(.+?)</span>', content).group(1))
+            lname = self.unescape(re.search('<span id="lastname">(.+?)</span>', content).group(1))
+            title = self.unescape(re.search('<span id="title" title=".*?">(.*?)</span>', content).group(1))
+            city = self.unescape(re.search('<span id="city">(.+?)</span>', content).group(1))
+            state = self.unescape(re.search('<span id="state">(.+?)</span>', content).group(1))
+            region = []
+            for item in [city, state]:
+                if item: region.append(item.title())
+            region = ', '.join(region)
+            country = self.unescape(re.search('<span id="country">(.+?)</span>', content).group(1))
+            self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
             tot += 1
-            cnt += self.add_contact(fname, lname, title)
+            cnt += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
         self.output('%d total contacts found.' % (tot))
         if cnt: self.alert('%d NEW contacts found!' % (cnt))
