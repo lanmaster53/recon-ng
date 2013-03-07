@@ -267,6 +267,7 @@ if __name__ == '__main__':
     usage = "%%prog [options]\n\n%%prog - %s %s" % (__author__, __email__)
     parser = optparse.OptionParser(usage=usage, version=__version__)
     parser.add_option('-r', help='resource file for scripted session', metavar='filename', dest='script_file', type='string', action='store')
+    parser.add_option('-w', help='workspace to load/create', metavar='workspace', dest='workspace', type='string', action='store')
     (opts, args) = parser.parse_args()
     # set up command completion
     try:
@@ -291,5 +292,6 @@ if __name__ == '__main__':
             print '%s[!] %s%s' % (R, 'Script file not found.', N)
             sys.exit()
     x = Recon()
+    if opts.workspace: x.do_set('workspace %s' % (opts.workspace))
     try: x.cmdloop()
     except KeyboardInterrupt: print ''
