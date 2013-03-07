@@ -29,10 +29,13 @@ class Module(framework.module):
             except KeyboardInterrupt:
                 print ''
                 return
-            except dns.resolver.NXDOMAIN: address = 'Unknown'
-            except dns.resolver.NoAnswer: address = 'No answer'
             except dns.exception.SyntaxError:
                 self.error('Nameserver must be in IP form.')
                 return
-            except: address = 'Error'
+            except dns.resolver.NXDOMAIN:
+                address = 'Unknown'
+            except dns.resolver.NoAnswer:
+                address = 'No answer'
+            except:
+                address = 'Error'
             self.output('%s => %s' % (host, address))
