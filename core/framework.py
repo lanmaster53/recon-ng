@@ -135,18 +135,20 @@ class module(cmd.Cmd):
         tdata = [['Module', 'Runs']]
         for row in rows:
             tdata.append(row)
-        self.table(tdata, header=True)
+        if rows:
+            self.table(tdata, header=True)
+        else:
+            print '\n%sThis workspace has no record of activity.' % (self.spacer)
         # display sumary results table
         print ''
         print '%sResults Summary' % (self.spacer)
         print '%s%s' % (self.spacer, self.ruler*15)
-        contacts = self.query('SELECT COUNT(*) FROM CONTACTS')
-        hosts = self.query('SELECT COUNT(*) FROM HOSTS')
-        creds = self.query('SELECT COUNT(*) FROM CREDS')
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         tdata = [['Category', 'Quantity']]
-        tdata.append(['Contacts', contacts[0][0]])
-        tdata.append(['Hosts', hosts[0][0]])
-        tdata.append(['Creds', creds[0][0]])
+        for table in tables:
+            if not table in ['leaks', 'dashboard']:
+                count = self.query('SELECT COUNT(*) FROM %s' % (table))[0][0]
+                tdata.append([table.title(), count])
         self.table(tdata, header=True)
 
     def sanitize(self, obj, encoding='utf-8'):
