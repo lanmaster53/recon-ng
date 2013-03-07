@@ -32,7 +32,7 @@ class Module(framework.module):
             print ''
             return
         except dns.resolver.NoNameservers:
-            self.output('Invalid nameserver.')
+            self.error('Invalid nameserver.')
             return
         except dns.resolver.NXDOMAIN:
             self.verbose('No Wildcard DNS entry found. Attempting to brute force DNS records.')
