@@ -17,7 +17,7 @@ class Module(framework.module):
         self.register_option('store', None, 'no', 'name of database table to store search results or data will not be stored.')
         self.info = {
                      'Name': 'punkSPIDER Vulnerabilty Finder',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
                      'Description': 'Leverages punkSPIDER to search for previosuly discovered vulnerabltiies on the given host(s).',
                      'Comments': [
                                   'The default configuration searches for vulnerabilites in the globally set target domain.'
