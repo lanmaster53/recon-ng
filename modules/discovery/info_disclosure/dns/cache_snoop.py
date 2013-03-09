@@ -16,44 +16,36 @@ class Module(framework.module):
                      'Description': 'Uses the DNS cache snooping technique to check for visited domains',
                      'Comments': [
                                   'Nameserver must be in IP form.',
-                                  'Domains options: host.domain.com, <path/to/infile>',
+                                  'Source options: [ <domain> | ./path/to/file | query <sql> ]',
                                   'http://304geeks.blogspot.com/2013/01/dns-scraping-for-corporate-av-detection.html'
                                  ]
                      }
 
     def module_run(self):
-        domains = self.options['domains']['value']
         nameserver = self.options['nameserver']['value']
         
-        if os.path.exists(domains):
-            hosts = open(domains).read().split()
-        else:
-            hosts = [domains]
-        
+        domains = self.get_source(self.options['domains']['value'])
+        if not domains: return
+
         self.output('Starting queries...')
         
-        for host in hosts:
-            status = 'Not found'
+        for domain in domains:
+            response = None
             # prepare our query
-            query = dns.message.make_query(host, dns.rdatatype.A, dns.rdataclass.IN)
+            query = dns.message.make_query(domain, dns.rdatatype.A, dns.rdataclass.IN)
             # unset the Recurse flag 
             query.flags ^= dns.flags.RD
             try:
                 # try the query
                 response = dns.query.udp(query, nameserver)
+                if len(response.answer) > 0:
+                    self.alert('%s => Snooped!' % (domain))
+                else:
+                    self.verbose('%s => Not Found.' % (domain))
+                continue
             except KeyboardInterrupt:
                 print ''
                 return
-            except dns.resolver.NXDOMAIN: status = 'Unknown'
-            except dns.resolver.NoAnswer: status = 'No answer'
-            except dns.exception.SyntaxError:
-                self.error('Nameserver must be in IP form.')
+            except Exception as e:
+                self.error(e.__str__())
                 return
-            except: status = 'Error'
-
-            # searchs the response to find the answer
-            if len(response.answer) > 0:
-                status = 'Snooped!'
-                self.alert('%s => %s' % (host, status))
-            else:
-                self.verbose('%s => %s' % (host, status))

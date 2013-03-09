@@ -128,9 +128,7 @@ class module(cmd.Cmd):
 
     def display_dashboard(self):
         # display activity table
-        print ''
-        print '%sActivity Summary' % (self.spacer)
-        print '%s%s' % (self.spacer, self.ruler*16)
+        self.heading('Activity Summary')
         rows = self.query('SELECT * FROM dashboard')
         tdata = [['Module', 'Runs']]
         for row in rows:
@@ -140,9 +138,7 @@ class module(cmd.Cmd):
         else:
             print '\n%sThis workspace has no record of activity.' % (self.spacer)
         # display sumary results table
-        print ''
-        print '%sResults Summary' % (self.spacer)
-        print '%s%s' % (self.spacer, self.ruler*15)
+        self.heading('Results Summary')
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         tdata = [['Category', 'Quantity']]
         for table in tables:
@@ -203,6 +199,17 @@ class module(cmd.Cmd):
         if self.goptions['verbose']['value']:
             self.output(line)
 
+    def heading(self, line, level=1):
+        '''Formats and presents styled banner text'''
+        print ''
+        if level == 0:
+            print self.ruler*len(line)
+            print line.upper()
+            print self.ruler*len(line)
+        if level == 1:
+            print '%s%s' % (self.spacer, line.title())
+            print '%s%s' % (self.spacer, self.ruler*len(line))
+
     def table(self, tdata, header=False, table=None):
         '''Accepts a list of rows and outputs a table.'''
         if len(set([len(x) for x in tdata])) > 1:
@@ -229,7 +236,7 @@ class module(cmd.Cmd):
                 print data_str % data_sub
                 print separator
                 # build column names for database table out of header row
-                if table: columns = [self.sanitize(x) for x in rdata]
+                if table: columns = [self.sanitize(x).lower() for x in rdata]
             for rdata in tdata:
                 data_sub = tuple([unicode(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
