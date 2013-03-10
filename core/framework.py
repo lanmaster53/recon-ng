@@ -199,14 +199,14 @@ class module(cmd.Cmd):
         if self.goptions['verbose']['value']:
             self.output(line)
 
-    def heading(self, line, level=0):
+    def heading(self, line, level=1):
         '''Formats and presents styled banner text'''
         print ''
-        if level == 1:
+        if level == 0:
             print self.ruler*len(line)
             print line.upper()
             print self.ruler*len(line)
-        if level == 0:
+        if level == 1:
             print '%s%s' % (self.spacer, line.title())
             print '%s%s' % (self.spacer, self.ruler*len(line))
 
