@@ -29,7 +29,7 @@ class Module(framework.module):
             self.error(e.__str__())
             return
         if resp.json == None:
-            self.error('Not a valid JSON response.')
+            self.error('Invalid JSON response for \'%s\'.\n%s' % (host, resp.text))
             return
         if 'error' in resp.json:
             self.error(resp.json['error'])

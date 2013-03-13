@@ -530,7 +530,7 @@ class module(cmd.Cmd):
     # NETWORK METHODS
     #==================================================
 
-    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, redirect=True):
+    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, auth=(), redirect=True):
         '''Makes a web request and returns a response object.'''
         # set request arguments
         # process user-agent header
@@ -541,6 +541,10 @@ class module(cmd.Cmd):
         if len(cookies.keys()) > 0:
             cookie_value = '; '.join('%s=%s' % (key, cookies[key]) for key in cookies.keys())
             headers['Cookie'] = cookie_value
+        # process basic authentication
+        if len(auth) == 2:
+            authorization = ('%s:%s' % (auth[0], auth[1])).encode('base64').replace('\n', '')
+            headers['Authorization'] = 'Basic %s' % (authorization)
         # process socket timeout
         timeout = timeout or self.goptions['socket_timeout']['value']
         socket.setdefaulttimeout(timeout)
