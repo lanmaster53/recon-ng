@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of target IP addresses')
+        self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'w3dt.net NetBIOS Lookup',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',

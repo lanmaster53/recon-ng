@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', '21232f297a57a5a743894a0e4a801fc3', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Noisette MD5 Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

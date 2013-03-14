@@ -37,7 +37,7 @@ class Module(framework.module):
             return
         if resp.json: jsonobj = resp.json
         else:
-            self.error('Invalid JSON returned from the API.')
+            self.error('Invalid JSON response.\n%s' % (resp.text))
             return
 
         # handle output

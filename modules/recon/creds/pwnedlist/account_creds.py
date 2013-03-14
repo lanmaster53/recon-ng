@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -52,7 +52,7 @@ class Module(framework.module):
                 continue
             if resp.json: jsonobj = resp.json
             else:
-                self.error('Invalid JSON returned from the API for \'%s\'.' % (account))
+                self.error('Invalid JSON response for \'%s\'.\n%s' % (account, resp.text))
                 continue
             if len(jsonobj['results']) == 0:
                 self.output('No results returned for \'%s\'.' % (account))

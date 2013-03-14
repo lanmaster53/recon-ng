@@ -45,14 +45,14 @@ class Module(framework.module):
         if resp.json:
             jsonobj = resp.json
         else:
-            self.error('Invalid JSON returned from the API.')
+            self.error('Invalid JSON response.\n%s' % (resp.text))
             return
 
         # add leaks table
         columns = []
         values = []
         for key in jsonobj['leaks'][0].keys():
-            columns.append('%s text' % (key))
+            columns.append('%s TEXT' % (key))
         self.query('CREATE TABLE IF NOT EXISTS leaks (%s)' % (', '.join(columns)))
         self.output('New \'leaks\' table created.')
 

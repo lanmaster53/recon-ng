@@ -6,7 +6,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('source', self.goptions['domain']['value'], 'yes', 'source of domains for module input (see \'info\' for options)')
+        self.register_option('store', None, 'no', 'name of database table to store the results or data will not be stored.')
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -30,6 +31,7 @@ class Module(framework.module):
         # API query guard
         if not pwnedlist.guard(1*len(domains)): return
 
+        tdata = []
         # setup API call
         method = 'domains.info'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
@@ -40,22 +42,21 @@ class Module(framework.module):
             try: resp = self.request(url, payload=payload)
             except KeyboardInterrupt:
                 print ''
-                return
+                break
             except Exception as e:
                 self.error(e.__str__())
                 continue
             if resp.json: jsonobj = resp.json
             else:
-                self.error('Invalid JSON returned from the API.')
+                self.error('Invalid JSON response for \'%s\'.\n%s' % (domain, resp.text))
                 continue
 
             # handle output
             if not jsonobj['domain']:
-                self.output('Domain \'%s\' has no publicly compromised accounts.' % (domain))
+                self.verbose('Domain \'%s\' has no publicly compromised accounts.' % (domain))
                 continue
-            tdata = []
-            tdata.append(('Domain', jsonobj['domain']))
-            tdata.append(('First seen', jsonobj['first_seen']))
-            tdata.append(('Last seen', jsonobj['last_seen']))
-            tdata.append(('Pwned Accounts', str(jsonobj['num_entries'])))
-            self.table(tdata)
+            self.alert('Domain \'%s\' has publicly compromised accounts!' % (domain))
+            tdata.append([jsonobj['domain'], str(jsonobj['num_entries']), jsonobj['first_seen'], jsonobj['last_seen']])
+        if tdata:
+            tdata.insert(0, ['Domain', 'Pwned_Accounts', 'First_Seen', 'Last_Seen'])
+            self.table(tdata, header=True, table=self.options['store']['value'])
