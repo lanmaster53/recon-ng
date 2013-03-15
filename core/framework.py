@@ -527,8 +527,29 @@ class module(cmd.Cmd):
         return True
 
     #==================================================
-    # NETWORK METHODS
+    # REQUEST METHODS
     #==================================================
+
+    def search_bing_api(self, query):
+        key = self.manage_key('bing', 'Bing API key')
+        if not key: return
+        url = 'https://api.datamarket.azure.com/Data.ashx/Bing/Search/v1/Web'
+        payload = {'Query': query, '$format': 'json'}
+        results = []
+        self.verbose('Searching Bing for: %s' % (query))
+        while True:
+            resp = None
+            resp = self.request(url, payload=payload, auth=(key, key))
+            sys.stdout.write('.'); sys.stdout.flush()
+            if resp.json == None:
+                self.error('Invalid JSON response.\n%s' % (resp.text))
+                continue
+            results.extend(resp.json['d']['results'])
+            if '__next' in resp.json['d']:
+                payload['$skip'] = resp.json['d']['__next'].split('=')[-1]
+            else:
+                print ''
+                return results
 
     def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, auth=(), redirect=True):
         '''Makes a web request and returns a response object.'''

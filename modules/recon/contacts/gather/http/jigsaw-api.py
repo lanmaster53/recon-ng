@@ -97,7 +97,7 @@ class Module(framework.module):
                 for item in [city, state]:
                     if item: region.append(item.title())
                 region = ', '.join(region)
-                country = contact['country']
+                country = contact['country'].title()
                 self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
                 new += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
                 tot += 1
