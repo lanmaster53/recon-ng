@@ -5,7 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', '21232f297a57a5a743894a0e4a801fc3', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Goog.li Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -33,7 +33,7 @@ class Module(framework.module):
                 continue
             if resp.json: jsonobj = resp.json
             else:
-                self.error('Invalid JSON returned from the API for \'%s\'.' % (account))
+                self.error('Invalid JSON response for \'%s\'.\n%s' % (account, resp.text))
                 continue
             plaintext = False
             if jsonobj['found'] == "true":

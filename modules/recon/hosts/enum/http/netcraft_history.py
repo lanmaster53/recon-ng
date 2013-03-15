@@ -10,14 +10,14 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',
                      'Description': 'Checks Netcraft.com for the hosting history of the given target(s).',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
-                                 ]
+                                  ]
                      }
 
     def module_run(self):

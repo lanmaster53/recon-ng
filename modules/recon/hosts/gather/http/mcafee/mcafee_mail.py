@@ -28,7 +28,7 @@ class Module(framework.module):
             self.error(e.__str__())
             return
         if not resp.json:
-            self.error('Invalid JSON returned.')
+            self.error('Invalid JSON response.\n%s' % (resp.text))
             return
 
         # Output the results in table format
