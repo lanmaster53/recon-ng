@@ -22,7 +22,7 @@ class Module(framework.module):
         if not addresses: return
         store = self.options['store']['value']
 
-        cnt = 0
+        new = 0
         hosts = []
         for address in addresses:
             query = '\'ip:%s\'' % (address)
@@ -41,7 +41,7 @@ class Module(framework.module):
                     hosts.append(host)
                     self.output(host)
                     # add each host to the database
-                    if store: cnt += self.add_host(host)
+                    if store: new += self.add_host(host)
 
         self.output('%d total hosts found.' % (len(hosts)))
-        if store and cnt: self.alert('%d NEW hosts found!' % (cnt))
+        if store and new: self.alert('%d NEW hosts found!' % (new))
