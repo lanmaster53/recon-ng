@@ -8,12 +8,12 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('target', '@lanmaster53', 'yes', 'twitter handle to target')
+        self.register_option('handle', '@lanmaster53', 'yes', 'target twitter handle')
         self.register_option('dtg', None, 'no', 'date-time group in the form YYYY-MM-DD')
         self.info = {
                      'Name': 'Twitter Handles',
                      'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
-                     'Description': 'Searches Twitter for recent users that contact or were contacted by a given handle.',
+                     'Description': 'Searches Twitter for users that mentioned, or were mentioned by, the given handle.',
                      'Comments': [
                                   'Twitter only saves tweets for 6-8 days at this time.'
                                   ]
@@ -23,18 +23,18 @@ class Module(framework.module):
         header = ['Handle', 'Name', 'Time']
         
         self.tdata = []
-        #Search for tweets sent by target
-        self.output('Searching for users mentioned by your target.')
-        self.search_target_tweets()
+        # search for mentions tweeted by the given handle
+        self.output('Searching for users mentioned by the given handle.')
+        self.search_handle_tweets()
         if self.tdata:
             print ''
             self.tdata.insert(0, header)
             self.table(self.tdata, header=True)
 
         self.tdata = []
-        #Search for tweets sent to target
-        self.output('Searching for users who mentioned your target.')
-        self.search_target_mentions()
+        # search for tweets mentioning the given handle
+        self.output('Searching for users who mentioned the given handle.')
+        self.search_handle_mentions()
         if self.tdata:
             print ''
             self.tdata.insert(0, header)
@@ -46,7 +46,7 @@ class Module(framework.module):
         Sets two properties of this class instance, self.handle and self.dtg.
         '''
         # handle
-        handle = self.options['target']['value']
+        handle = self.options['handle']['value']
         self.handle = handle if not handle.startswith('@') else handle[1:]
         # dtg
         dtg = self.options['dtg']['value']
@@ -108,9 +108,9 @@ class Module(framework.module):
         sys.stdout.flush()
         return jsonobj
 
-    def search_target_tweets(self):
+    def search_handle_tweets(self):
         '''
-        Searches for tweets your target has sent.
+        Searches for mentions tweeted by the given handle.
         Pulls usernames out and sends to get_user_info.
         '''
         resp = self.search_api('from:%s since:%s' % (self.handle, self.dtg))
@@ -119,9 +119,9 @@ class Module(framework.module):
                 if 'to_user' in tweet:
                     self.get_user_info(tweet['to_user'], tweet['created_at'])
 
-    def search_target_mentions(self):
+    def search_handle_mentions(self):
         '''
-        Searches Twitter two different ways for target mentions.
+        Searches for tweets mentioning the given handle.
         Checks using "to:" and "@" operands in the API.
         Passes identified handles to get_user_info.
         '''

@@ -1,7 +1,5 @@
 import framework
 # unique to module
-import urllib
-import json
 from urlparse import urlparse
 
 class Module(framework.module):
@@ -19,41 +17,22 @@ class Module(framework.module):
                                   ]
                      }
 
-    def query_api(self, query):
-        key = self.manage_key('bing', 'Bing API key')
-        if not key: return
-        url = 'https://api.datamarket.azure.com/Data.ashx/Bing/Search/v1/Web'
-        payload = {'Query': query, '$format': 'json'}
-        results = []
-        while True:
-            resp = None
-            self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
-            try: resp = self.request(url, payload=payload, auth=(key, key))
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                continue
-            if resp.json == None:
-                self.error('Invalid JSON response.\n%s' % (resp.text))
-                continue
-            results.extend(resp.json['d']['results'])
-            if '__next' in resp.json['d']:
-                payload['$skip'] = resp.json['d']['__next'].split('=')[-1]
-            else:
-                return results
-
     def module_run(self):
         addresses = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
         if not addresses: return
         store = self.options['store']['value']
 
-        cnt = 0
+        new = 0
         hosts = []
         for address in addresses:
             query = '\'ip:%s\'' % (address)
-            results = self.query_api(query)
+            try: results = self.search_bing_api(query)
+            except KeyboardInterrupt:
+                print ''
+                break
+            except Exception as e:
+                self.error(e.__str__())
+                continue
             if type(results) != list: break
             if not results: self.verbose('No additional hosts discovered at the same IP address.')
             for result in results:
@@ -62,7 +41,7 @@ class Module(framework.module):
                     hosts.append(host)
                     self.output(host)
                     # add each host to the database
-                    if store: cnt += self.add_host(host)
+                    if store: new += self.add_host(host)
 
         self.output('%d total hosts found.' % (len(hosts)))
-        if store and cnt: self.alert('%d NEW hosts found!' % (cnt))
+        if store and new: self.alert('%d NEW hosts found!' % (new))
