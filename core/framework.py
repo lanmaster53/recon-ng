@@ -527,10 +527,72 @@ class module(cmd.Cmd):
         return True
 
     #==================================================
-    # NETWORK METHODS
+    # REQUEST METHODS
     #==================================================
 
-    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, redirect=True):
+    def search_bing_api(self, query, limit=0):
+        api_key = self.manage_key('bing', 'Bing API key')
+        if not api_key: return
+        url = 'https://api.datamarket.azure.com/Data.ashx/Bing/Search/v1/Web'
+        payload = {'Query': query, '$format': 'json'}
+        results = []
+        cnt = 1
+        self.verbose('Searching Bing for: %s' % (query))
+        while True:
+            resp = None
+            resp = self.request(url, payload=payload, auth=(api_key, api_key))
+            sys.stdout.write('.'); sys.stdout.flush()
+            if resp.json == None:
+                self.error('Invalid JSON response.\n%s' % (resp.text))
+                continue
+            # add new results
+            if 'results' in resp.json['d']:
+                results.extend(resp.json['d']['results'])
+            # check limit
+            if limit == cnt:
+                break
+            cnt += 1
+            # check if more pages
+            if '__next' in resp.json['d']:
+                payload['$skip'] = resp.json['d']['__next'].split('=')[-1]
+            else:
+                break
+        print ''
+        return results
+
+    def search_google_api(self, query, limit=0):
+        api_key = self.manage_key('google_api', 'Google API key')
+        if not api_key: return
+        cse_id = self.manage_key('google_cse', 'Google CSE ID')
+        if not cse_id: return
+        url = 'https://www.googleapis.com/customsearch/v1'
+        payload = {'alt': 'json', 'prettyPrint': 'false', 'key': api_key, 'cx': cse_id, 'q': query}
+        results = []
+        cnt = 1
+        self.verbose('Searching Google for: %s' % (query))
+        while True:
+            resp = None
+            resp = self.request(url, payload=payload)
+            sys.stdout.write('.'); sys.stdout.flush()
+            if resp.json == None:
+                self.error('Invalid JSON response.\n%s' % (resp.text))
+                continue
+            # add new results
+            if 'items' in resp.json:
+                results.extend(resp.json['items'])
+            # check limit
+            if limit == cnt:
+                break
+            cnt += 1
+            # check if more pages
+            if 'nextPage' in resp.json['queries']:
+                payload['start'] = resp.json['queries']['nextPage'][0]['startIndex']
+            else:
+                break
+        print ''
+        return results
+
+    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, auth=(), redirect=True):
         '''Makes a web request and returns a response object.'''
         # set request arguments
         # process user-agent header
@@ -541,6 +603,10 @@ class module(cmd.Cmd):
         if len(cookies.keys()) > 0:
             cookie_value = '; '.join('%s=%s' % (key, cookies[key]) for key in cookies.keys())
             headers['Cookie'] = cookie_value
+        # process basic authentication
+        if len(auth) == 2:
+            authorization = ('%s:%s' % (auth[0], auth[1])).encode('base64').replace('\n', '')
+            headers['Authorization'] = 'Basic %s' % (authorization)
         # process socket timeout
         timeout = timeout or self.goptions['socket_timeout']['value']
         socket.setdefaulttimeout(timeout)

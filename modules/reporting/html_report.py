@@ -39,7 +39,7 @@ class Module(framework.module):
                 if table == 'creds' and self.options['sanitize']['value']:
                     values[1] = '%s%s%s' % (values[1][:1], '*'*(len(values[1])-2), values[1][-1:])
                 row_content += '<tr><td>%s</td></tr>' % ('</td><td>'.join(values))
-            table_content += '<div class="table_container"><table><caption>%s</caption>%s%s</table></div>' % (table.upper(), row_headers, row_content)
+            table_content += '<div class="table_container"><table><caption>%s</caption>%s%s</table></div>' % (table.upper().replace('_', ' '), row_headers, row_content)
         return table_content
 
     def module_run(self):
@@ -68,7 +68,7 @@ body {
     display: inline-block;
     margin-left: auto;
     margin-right: auto;
-    width: 1200px;
+    width: 100%%;
 }
 .title {
     font-size: 3em;
@@ -83,6 +83,7 @@ caption {
 table {
     margin-left: auto; 
     margin-right: auto;
+    white-space: nowrap;
 }
 td, th {
     padding: 2px 20px;
@@ -96,6 +97,10 @@ td {
 }
 .table_container {
     margin: 10px 0;
+}
+.leaks {
+    width: 1200px;
+    white-space: normal;
 }
 .spacer {
     height: 1em;
@@ -134,15 +139,18 @@ td {
         # table of leaks associated with creds
         leaks = self.query('SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
         if leaks:
-            row_content = ''
-            for leak in [x[0] for x in leaks]:
-                columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
-                row = self.query('SELECT * FROM leaks WHERE leak_id = \'%s\'' % (leak))[0]
-                values = [x if x != None else '' for x in row]
-                for i in range(0,len(columns)):
-                    row_content += '<tr><td><strong>%s</strong></td><td>%s</td></tr>' % (columns[i], values[i])
-                row_content += '<tr><td class="spacer"></td></tr>'
-            table_content += '<div class="table_container"><table><caption>ASSOCIATED LEAK DATA</caption>%s</table></div>' % (row_content)
+            columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
+            if columns:
+                row_content = ''
+                for leak in [x[0] for x in leaks]:
+                    row = self.query('SELECT * FROM leaks WHERE leak_id = \'%s\'' % (leak))[0]
+                    values = [x if x != None else '' for x in row]
+                    for i in range(0,len(columns)):
+                        row_content += '<tr><td><strong>%s</strong></td><td>%s</td></tr>' % (columns[i], values[i])
+                    row_content += '<tr><td class="spacer"></td></tr>'
+                table_content += '<div class="table_container"><table class="leaks"><caption>ASSOCIATED LEAK DATA</caption>%s</table></div>' % (row_content)
+            else:
+                self.output('Associate leak data omitted. Please run the \'leaks_dump\' module to populate the database and try again.')
 
         # all other tables
         tables.extend(['leaks', 'dashboard'])

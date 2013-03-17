@@ -91,13 +91,13 @@ class Module(framework.module):
                 fname = contact['firstname']
                 lname = contact['lastname']
                 title = self.unescape(contact['title'])
-                city = contact['city']
-                state = contact['state']
+                city = contact['city'].title()
+                state = contact['state'].upper()
                 region = []
                 for item in [city, state]:
-                    if item: region.append(item.title())
+                    if item: region.append(item)
                 region = ', '.join(region)
-                country = contact['country']
+                country = contact['country'].title()
                 self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
                 new += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
                 tot += 1

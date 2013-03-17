@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of target IP addresses')
+        self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'HostIP GeoIP',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -34,7 +34,7 @@ class Module(framework.module):
 
             if resp.json: jsonobj = resp.json
             else:
-                self.error('Invalid JSON returned for \'%s\'.' % (host))
+                self.error('Invalid JSON response for \'%s\'.\n%s' % (host, resp.text))
                 continue
 
             if self.options['source']['value'] == 'db':

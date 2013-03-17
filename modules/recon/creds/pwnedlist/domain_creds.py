@@ -46,7 +46,7 @@ class Module(framework.module):
             return
         if resp.json: jsonobj = resp.json
         else:
-            self.error('Invalid JSON returned from the API.')
+            self.error('Invalid JSON response for \'%s\'.\n%s' % (domain, resp.text))
             return
         if len(jsonobj['accounts']) == 0:
             self.output('No results returned for \'%s\'.' % (domain))
