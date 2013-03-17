@@ -38,8 +38,8 @@ class Module(framework.module):
             return 
         except Exception as e:
             self.error( str(e) )
-            return False
-    
+            return 
+
     def parse(self, data):
         email_expression = re.compile('([^>]*?)\s&lt;(.*?@%s)&gt;' % (self.options['domain']['value']) )
         results = email_expression.findall(data)
