@@ -4,7 +4,6 @@ import re
 class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.register_option('domain', self.goptions['domain']['value'], 'yes', 'Domain to search.')
         self.info = {
                      'Name': 'RedIRIS PGP Key Owner Lookup',
@@ -15,7 +14,7 @@ class Module(framework.module):
                                   ]
                      }
 
-    def do_run(self, params):
+    def module_run(self):
         data = self.search_rediris()
         if not data:
             self.error('No useful data found.')
@@ -42,18 +41,26 @@ class Module(framework.module):
             return False
     
     def parse(self, data):
-        email_expression = r'([^>]*?)\s&lt;(.*?@%s)&gt;' % (self.options['domain']['value']
+        email_expression = re.compile('([^>]*?)\s&lt;(.*?@%s)&gt;' % (self.options['domain']['value']) )
         results = email_expression.findall(data)
-        
+
         self.verbose('Found %i results.' % len(results))
         for item in results:
-            self.verbose('Found results: %s' % ( str(item) )
+            self.verbose('Found results: %s' % ( str(item) ) )
 
         return list( set(results) )
         
     def add_to_db(self, contact):
+        name = contact[0]
+        email = contact[1]
         try:
             names = contact[0].split(' ')
-            self.add_contact(names[0], names[1], contact[1])
+            first = names[0]
+            #Check for a middle initial
+            if '.' in names[1] or len(names[1]) == 1 and len(names) > 2: 
+                last = names[2]
+            else:
+                last = names[1]
+            self.add_contact(first, last, email)
         except:
-            self.add_contact('', contact[0], contact[1])
+            self.add_contact('', name, email)
