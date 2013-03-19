@@ -107,13 +107,13 @@ class Module(framework.module):
             fname = self.unescape(re.search('<span id="firstname">(.+?)</span>', content).group(1))
             lname = self.unescape(re.search('<span id="lastname">(.+?)</span>', content).group(1))
             title = self.unescape(re.search('<span id="title" title=".*?">(.*?)</span>', content).group(1))
-            city = self.unescape(re.search('<span id="city">(.+?)</span>', content).group(1))
-            state = self.unescape(re.search('<span id="state">(.+?)</span>', content).group(1))
+            city = self.unescape(re.search('<span id="city">(.+?)</span>', content).group(1)).title()
+            state = self.unescape(re.search('<span id="state">(.+?)</span>', content).group(1)).upper()
             region = []
             for item in [city, state]:
-                if item: region.append(item.title())
+                if item: region.append(item)
             region = ', '.join(region)
-            country = self.unescape(re.search('<span id="country">(.+?)</span>', content).group(1))
+            country = self.unescape(re.search('<span id="country">(.+?)</span>', content).group(1)).title()
             self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
             tot += 1
             cnt += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
