@@ -106,4 +106,4 @@ class Module(framework.module):
             # jigsaw rate limits requests per second to the api
             time.sleep(.25)
         self.output('%d total contacts found.' % (tot))
-        if cnt: self.alert('%d NEW contacts found!' % (new))
+        if new: self.alert('%d NEW contacts found!' % (new))

@@ -1,5 +1,6 @@
 import framework
 # unique to module
+import hashlib
 import re
 
 class Module(framework.module):
@@ -21,13 +22,12 @@ class Module(framework.module):
         if not accounts: return
 
         # retrieve status
-        pattern = "class='query_result_footer'>... we found your email in our database a total of (\d+?) times. It was last seen on ([\d-]+?). Please read on. <div"
-        i, pwned = 0, 0
-        while i < len(accounts):
+        cnt = 0
+        pwned = 0
+        for account in accounts:
             status = None
-            account = accounts[i].encode('utf-8')
-            url = 'http://pwnedlist.com/query'
-            payload = {'query_input' : account, 'query_input_hash' : 'empty', 'submit' : 'CHECK' }
+            url = 'https://www.pwnedlist.com/query'
+            payload = {'inputEmail': hashlib.sha512(account).hexdigest(), 'form.submitted': ''}
             try: resp = self.request(url, payload=payload, method='POST', redirect=False)
             except KeyboardInterrupt:
                 print ''
@@ -35,23 +35,21 @@ class Module(framework.module):
             except Exception as e:
                 self.error(e.__str__())
                 break
-            the_page = resp.text
-            if 'Gotcha!' in the_page:
-                self.error('Hm... Got a captcha.')
-                return
-            elif '>NOPE!<' in the_page:
+            content = resp.text
+            #if 'Gotcha!' in content:
+            #    self.error('Hm... Got a captcha.')
+            #    return
+            if '<h3>Nope,' in content:
                 status = 'safe'
                 self.verbose('%s => %s.' % (account, status))
-            elif '>YES<' in the_page:
+            elif '<h3>Yes.</h3>' in content:
                 status = 'pwned'
-                m = re.search(pattern, the_page)
-                qty = m.group(1)
-                last = m.group(2)
+                qty  = re.search('<li>We have found this account (\d+?) times since', content).group(1)
+                last = re.search('years ago, on (.+?).</li>', content).group(1)
                 self.alert('%s => %s! Seen %s times as recent as %s.' % (account, status, qty, last))
-                self.add_cred(account)
-                pwned += 1
+                pwned += self.add_cred(account)
             else:
-                self.error('Response not understood.')
-                return
-            i += 1
-        self.output('%d/%d targets pwned.' % (pwned, i))
+                self.error('%s => Response not understood.' % (account))
+                continue
+            cnt += 1
+        self.output('%d/%d targets pwned.' % (pwned, cnt))
