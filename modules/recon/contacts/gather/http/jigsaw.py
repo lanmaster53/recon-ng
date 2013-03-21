@@ -108,7 +108,8 @@ class Module(framework.module):
             lname = self.unescape(re.search('<span id="lastname">(.+?)</span>', content).group(1))
             title = self.unescape(re.search('<span id="title" title=".*?">(.*?)</span>', content).group(1))
             city = self.unescape(re.search('<span id="city">(.+?)</span>', content).group(1)).title()
-            state = self.unescape(re.search('<span id="state">(.+?)</span>', content).group(1)).upper()
+            state = re.search('<span id="state">(.+?)</span>', content)
+            if state: state = self.unescape(state.group(1)).upper()
             region = []
             for item in [city, state]:
                 if item: region.append(item)

@@ -46,15 +46,16 @@ class Module(framework.module):
             except Exception as e:
                 self.error(e.__str__())
                 continue
-            if resp.json: jsonobj = resp.json
-            else:
+            jsonobj = resp.json
+            # compare to None to confirm valid json as empty json is returned when domain not found
+            if jsonobj is None:
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (domain, resp.text))
                 continue
-
-            # handle output
-            if not jsonobj['domain']:
+            # check for positive response
+            if not 'domain' in jsonobj:
                 self.verbose('Domain \'%s\' has no publicly compromised accounts.' % (domain))
                 continue
+            # handle output
             self.alert('Domain \'%s\' has publicly compromised accounts!' % (domain))
             tdata.append([jsonobj['domain'], str(jsonobj['num_entries']), jsonobj['first_seen'], jsonobj['last_seen']])
         if tdata:
