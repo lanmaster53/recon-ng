@@ -179,6 +179,15 @@ class module(cmd.Cmd):
                 return True
         return False
 
+    def api_guard(self, num):
+        try:
+            ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (num))
+            if ans.upper() != 'Y': return False
+        except KeyboardInterrupt:
+            print ''
+            return False
+        return True
+
     #==================================================
     # OUTPUT METHODS
     #==================================================

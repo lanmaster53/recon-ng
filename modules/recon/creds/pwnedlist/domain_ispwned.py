@@ -29,7 +29,7 @@ class Module(framework.module):
         if not secret: return
 
         # API query guard
-        if not pwnedlist.guard(1*len(domains)): return
+        if not self.api_guard(1*len(domains)): return
 
         tdata = []
         # setup API call

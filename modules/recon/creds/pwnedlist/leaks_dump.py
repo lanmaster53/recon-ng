@@ -23,7 +23,7 @@ class Module(framework.module):
         if not secret: return
 
         # API query guard
-        if not pwnedlist.guard(1): return
+        if not self.api_guard(1): return
 
         # delete leaks table
         self.query('DROP TABLE IF EXISTS leaks')
@@ -32,7 +32,7 @@ class Module(framework.module):
         # setup API call
         method = 'leaks.info'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        payload = {}
+        payload = {'daysAgo': 0}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
         try: resp = self.request(url, payload=payload)

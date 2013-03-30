@@ -22,6 +22,7 @@ class Module(framework.module):
         wordlist = self.options['wordlist']['value']
         q = dns.resolver.get_default_resolver()
         q.nameservers = [self.options['nameserver']['value']]
+        q.lifetime = 3
         fake_host = 'sudhfydgssjdue.%s' % (domain)
         cnt, tot = 0, 0
         try:
@@ -31,8 +32,11 @@ class Module(framework.module):
         except KeyboardInterrupt:
             print ''
             return
-        except dns.resolver.NoNameservers:
+        except (dns.resolver.NoNameservers, dns.resolver.Timeout):
             self.error('Invalid nameserver.')
+            return
+        except dns.resolver.NoAnswer:
+            self.verbose('The authoritative resolver is not available. No answer.')
             return
         except dns.resolver.NXDOMAIN:
             self.verbose('No Wildcard DNS entry found. Attempting to brute force DNS records.')
@@ -41,15 +45,12 @@ class Module(framework.module):
             words = open(wordlist).read().split()
             for word in words:
                 host = '%s.%s' % (word, domain)
-                try: answers = q.query(host, 'A')
+                try: answers = q.query(host)
                 except KeyboardInterrupt:
                     print ''
                     break
                 except dns.resolver.NXDOMAIN:
                     self.verbose('%s => Not a host' % (host))
-                    continue
-                except dns.resolver.NoAnswer:
-                    self.verbose('%s => No answer' % (host))
                     continue
                 for answer in answers.response.answer:
                     for rdata in answer:
