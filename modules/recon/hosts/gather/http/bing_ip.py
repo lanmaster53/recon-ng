@@ -34,7 +34,7 @@ class Module(framework.module):
                 self.error(e.__str__())
                 continue
             if type(results) != list: break
-            if not results: self.verbose('No additional hosts discovered at the same IP address.')
+            if not results: self.verbose('No additional hosts discovered at \'%s\'.' % (address))
             for result in results:
                 host = urlparse(result['Url']).netloc
                 if not host in hosts:

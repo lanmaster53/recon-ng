@@ -29,12 +29,12 @@ class Module(framework.module):
         if not iv: return
 
         # API query guard
-        if not pwnedlist.guard(10000): return
+        if not self.api_guard(10000): return
 
         # setup API call
         method = 'domains.query'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        payload = {'domain_identifier': domain}
+        payload = {'domain_identifier': domain, 'daysAgo': 0}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
         try: resp = self.request(url, payload=payload)
