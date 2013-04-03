@@ -82,7 +82,7 @@ class Recon(framework.module):
                         self.loaded_modules[mod_dispname] = mod_loadname
                     except:
                         print '-'*60
-                        traceback.print_exc(file=sys.stdout)
+                        traceback.print_exc()
                         print '-'*60
                         self.error('Unable to load module: %s' % (mod_name))
 
@@ -158,10 +158,9 @@ class Recon(framework.module):
                 modulename = self.loaded_modules[params]
                 y = sys.modules[modulename].Module((None, modulename))
                 try: y.do_info(modulename)
-                except KeyboardInterrupt: print ''
                 except:
                     print '-'*60
-                    traceback.print_exc(file=sys.stdout)
+                    traceback.print_exc()
                     print '-'*60
             except (KeyError, AttributeError):
                 self.error('Invalid module name.')
@@ -210,7 +209,7 @@ class Recon(framework.module):
                 except KeyboardInterrupt: print ''
                 except:
                     print '-'*60
-                    traceback.print_exc(file=sys.stdout)
+                    traceback.print_exc()
                     print '-'*60
             except (KeyError, AttributeError, AssertionError):
                 if not modules:

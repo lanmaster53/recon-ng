@@ -33,15 +33,16 @@ class Module(framework.module):
             row = contact[0]
             fname = contact[1]
             lname = contact[2]
-            fn = fname.lower()
-            fi = fname[:1].lower()
-            ln = lname.lower()
-            li = lname[:1].lower()
             email = pattern
-            email = email.replace('<fn>', fn)
-            email = email.replace('<fi>', fi)
-            email = email.replace('<ln>', ln)
-            email = email.replace('<li>', li)
+            items = {'<fn>': '', '<fi>': '', '<ln>': '', '<li>': ''}
+            if fname:
+                items['<fn>'] = fname.lower()
+                items['<fi>'] = fname[:1].lower()
+            if lname:
+                items['<ln>'] = lname.lower()
+                items['<li>'] = lname[:1].lower()
+            for item in items:
+                email = email.replace(item, items[item])
             email = email[:max_len]
             if domain: email = '%s@%s' % (email, domain)
             self.output('%s %s => %s' % (fname, lname, email))

@@ -32,36 +32,40 @@ class Module(framework.module):
         if not accounts: return
 
         # API query guard
-        if not pwnedlist.guard(len(accounts)): return
+        if not self.api_guard(1): return
 
         # setup API call
         method = 'accounts.query'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
 
-        for account in accounts:
-            # build the payload for each account
-            payload = {'account_identifier': account}
-            payload = pwnedlist.build_payload(payload, method, key, secret)
-            # make request
-            try: resp = self.request(url, payload=payload)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                continue
-            if resp.json: jsonobj = resp.json
-            else:
-                self.error('Invalid JSON response for \'%s\'.\n%s' % (account, resp.text))
-                continue
-            if len(jsonobj['results']) == 0:
-                self.output('No results returned for \'%s\'.' % (account))
-            else:
-                for cred in jsonobj['results']:
-                    username = cred['plain']
-                    password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
-                    password = "".join([i for i in password if ord(i) in range(32, 126)])
-                    leak = cred['leak_id']
-                    self.output('%s:%s' % (username, password))
-                    self.add_cred(username, password, None, leak)
-            self.query('DELETE FROM creds WHERE username = "%s" and password IS NULL and hash IS NULL' % (account))
+        # build the payload
+        payload = {'account_identifier': ','.join(accounts), 'daysAgo': 0}
+        payload = pwnedlist.build_payload(payload, method, key, secret)
+        # make request
+        try: resp = self.request(url, payload=payload)
+        except KeyboardInterrupt:
+            print ''
+            return
+        except Exception as e:
+            self.error(e.__str__())
+            return
+        if resp.json: jsonobj = resp.json
+        else:
+            self.error('Invalid JSON response.\n%s' % (resp.text))
+            return
+        if len(jsonobj['results']) == 0:
+            self.output('No results returned')
+        else:
+            cnt = 0
+            new = 0
+            for cred in jsonobj['results']:
+                username = cred['plain']
+                password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
+                password = "".join([i for i in password if ord(i) in range(32, 126)])
+                leak = cred['leak_id']
+                self.output('%s:%s' % (username, password))
+                cnt += 1
+                new += self.add_cred(username, password, None, leak)
+                self.query("DELETE FROM creds WHERE username = '%s' and password IS NULL and hash IS NULL" % (username))
+            self.output('%d total credentials found.' % (cnt))
+            if new: self.alert('%d NEW credentials found!' % (new))

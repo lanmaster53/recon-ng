@@ -7,6 +7,7 @@ import textwrap
 import socket
 import datetime
 import subprocess
+import traceback
 import __builtin__
 # prep python path for supporting modules
 sys.path.append('./libs/')
@@ -177,6 +178,15 @@ class module(cmd.Cmd):
             if len(hashstr) == hashitem["len"] and re.match(hashitem["pattern"], hashstr):
                 return True
         return False
+
+    def api_guard(self, num):
+        try:
+            ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (num))
+            if ans.upper() != 'Y': return False
+        except KeyboardInterrupt:
+            print ''
+            return False
+        return True
 
     #==================================================
     # OUTPUT METHODS
@@ -773,7 +783,12 @@ class module(cmd.Cmd):
     def do_run(self, params):
         '''Runs the module'''
         if not self.validate_options(): return
-        self.module_run()
+        try:
+            self.module_run()
+        except:
+            print '-'*60
+            traceback.print_exc()
+            print '-'*60
         self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 
     def module_run(self):
