@@ -18,6 +18,7 @@ class Module(framework.module):
     def module_run(self):
         q = dns.resolver.get_default_resolver()
         q.nameservers = [self.options['nameserver']['value']]
+        q.lifetime = 3
         hosts = self.query('SELECT rowid, host FROM hosts ORDER BY host')
         for host in hosts:
             row = host[0]
@@ -36,6 +37,6 @@ class Module(framework.module):
                 address = 'Unknown'
             except dns.resolver.NoAnswer:
                 address = 'No answer'
-            except:
+            except (dns.resolver.NoNameservers, dns.resolver.Timeout):
                 address = 'Error'
             self.output('%s => %s' % (host, address))
