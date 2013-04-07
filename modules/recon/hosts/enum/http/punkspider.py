@@ -10,9 +10,9 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('string', '"%s"' % (self.goptions['domain']['value']), 'yes', 'string to search for')
         self.register_option('type', 'url', 'yes', 'type of search')
-        self.register_option('bsqli', False, 'yes', 'enable blind sqli filter')
-        self.register_option('sqli', False, 'yes', 'enable sqli filter')
-        self.register_option('xss', False, 'yes', 'enable xss filter')
+        self.register_option('bsqli', True, 'yes', 'search for blind sqli')
+        self.register_option('sqli', True, 'yes', 'search for sqli')
+        self.register_option('xss', True, 'yes', 'search for xss')
         self.register_option('vulns', False, 'yes', 'if found, display vulnerabily information')
         self.register_option('store', None, 'no', 'name of database table to store search results or data will not be stored.')
         self.info = {
@@ -20,9 +20,8 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
                      'Description': 'Leverages punkSPIDER to search for previosuly discovered vulnerabltiies on the given host(s).',
                      'Comments': [
-                                  'The default configuration searches for vulnerabilites in the globally set target domain.'
+                                  'The default configuration searches for vulnerabilites in the globally set target domain.',
                                   'Type options: [ url | title ]',
-                                  'Note: filters are additive'
                                   ]
                      }
    
@@ -33,7 +32,7 @@ class Module(framework.module):
             return
         search_str = self.options['string']['value']
         url = 'http://punkspider.hyperiongray.com/service/search/domain/'
-        payload = {'searchkey': search_type, 'searchvalue': search_str}
+        payload = {'searchkey': search_type, 'searchvalue': search_str, 'filtertype': 'OR'}
         for item in ['bsqli', 'sqli', 'xss']:
             if self.options[item]['value']:
                 payload[item] = '1'
