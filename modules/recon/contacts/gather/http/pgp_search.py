@@ -5,6 +5,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', 'Domain to search.')
+        self.register_option('store', False, 'yes', 'add discovered hosts to the database.')
         self.info = {
                      'Name': 'RedIRIS PGP Key Owner Lookup',
                      'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
@@ -15,52 +16,47 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        data = self.search_rediris()
-        if not data:
-            self.error('No useful data found.')
-            return
-        
-        emails = self.parse(data)
-        if not emails:
-            return
-
-        for contact in emails:
-            self.add_to_db(contact)
-
-    def search_rediris(self):
+        store = self.options['store']['value']
         url = 'http://pgp.rediris.es:11371/pks/lookup'
         payload= {'search' : self.options['domain']['value'] }
 
-        try: 
-            return self.request(url, payload = payload).text
+        try: resp = self.request(url, payload=payload)
         except KeyboardInterrupt:
             print ''
             return 
         except Exception as e:
-            self.error( str(e) )
+            self.error(str(e))
             return 
 
-    def parse(self, data):
-        email_expression = re.compile('([^>]*?)\s&lt;(.*?@%s)&gt;' % (self.options['domain']['value']) )
-        results = email_expression.findall(data)
+        results = []
+        results.extend(re.findall('([^>]*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;<' % (self.options['domain']['value']), resp.text))
+        results.extend(re.findall('[\s]{10,}(\w.*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;' % (self.options['domain']['value']), resp.text))
+        results = list(set(results))
+        if not results:
+            self.output('No results found.')
+            return
 
-        self.verbose('Found %i results.' % len(results))
-        for item in results:
-            self.verbose('Found results: %s' % ( str(item) ) )
-
-        return list( set(results) )
-        
-    def add_to_db(self, contact):
-        name = contact[0]
-        email = contact[1]
-        try:
-            names = contact[0].split(' ')
-            first = names[0]
-            #Check for a middle initial
-            if '.' in names[1] or len(names[1]) == 1 and len(names) > 2: 
-                last = names[2]
-            else:
+        cnt = 0
+        new = 0
+        for contact in results:
+            name = contact[0].strip()
+            names = name.split(' ')
+            if len(names) == 2:
+                first = names[0]
                 last = names[1]
-            self.add_contact(first, last, email)
-        except:
-            self.add_contact('', name, email)
+            elif len(names) > 2:
+                if '.' in names[1] or len(names[1]) == 1:
+                    first = names[0]
+                    last = names[2]
+                else:
+                    first = names[0]
+                    last = ' '.join(names[1:])
+            else:
+                first = None
+                last = names[0]
+            email = contact[1]
+            self.output('%s (%s)' % (name, email))
+            cnt += 1
+            if store: new += self.add_contact(first, last, 'PGP key association', email)
+        self.output('%d total contacts found.' % (cnt))
+        if new: self.alert('%d NEW contacts found!' % (new))
