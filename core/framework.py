@@ -316,7 +316,7 @@ class module(cmd.Cmd):
             country = self.sanitize(country),
         )
 
-        return self.insert('contacts', data, ('fname', 'lname', 'title'))
+        return self.insert('contacts', data, ('fname', 'lname', 'title', 'email'))
 
     def add_cred(self, username, password=None, hashtype=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''

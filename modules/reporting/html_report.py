@@ -28,7 +28,7 @@ class Module(framework.module):
 
     def build_table(self, table):
         table_content = ''
-        table_show = '<p><a id="show-%s" href="javascript:showhide(\'%s\');">[+] %s</a></p>' % (table, table, table.upper())
+        table_show = '<p><a id="show-%s" href="javascript:showhide(\'%s\');">[+] %s</a></p>' % (table, table, table.upper().replace('_', ' '))
         table_hide = '<p><a id="hide-%s" href="javascript:showhide(\'%s\');">[-] %s</a></p>' % (table, table, table.upper().replace('_', ' '))
         columns = [x[1] for x in self.query('PRAGMA table_info(%s)' % (table))]
         row_headers = '<tr><th>%s</th></tr>' % ('</th><th>'.join(columns))
