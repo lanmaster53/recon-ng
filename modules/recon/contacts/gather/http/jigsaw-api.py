@@ -25,11 +25,10 @@ class Module(framework.module):
 
     def get_company_id(self):
         self.output('Gathering Company IDs...')
-        company_name = self.options['company']['value']
         all_companies = []
         cnt = 0
         size = 50
-        params = '%s %s' % (company_name, self.options['keywords']['value'])
+        params = '%s %s' % (self.options['company']['value'], self.options['keywords']['value'])
         url = 'https://www.jigsaw.com/rest/searchCompany.json'
         while True:
             payload = {'token': self.api_key, 'name': params, 'offset': cnt, 'pageSize': size}
@@ -57,7 +56,9 @@ class Module(framework.module):
                 time.sleep(.25)
         if len(all_companies) == 1:
             company_id = all_companies[0][0]
-            self.output('Unique Company Match Found: %s' % company_id)
+            company_name = all_companies[0][1]
+            contact_cnt = all_companies[0][2]
+            self.output('Unique Company Match Found: [%s - %s (%s contacts)]' % (company_name, company_id, contact_cnt))
             return company_id
         id_len = len(max([str(x[0]) for x in all_companies], key=len))
         for company in all_companies:
