@@ -256,6 +256,7 @@ class module(cmd.Cmd):
 
             # build database table
             if table:
+                table = table.replace(' ', '_').lower()
                 # create database table
                 if not columns: columns = ['column_%s' % (i) for i in range(0,len(tdata[0]))]
                 metadata = ','.join(['\'%s\' TEXT' % (x) for x in columns])
@@ -316,7 +317,7 @@ class module(cmd.Cmd):
             country = self.sanitize(country),
         )
 
-        return self.insert('contacts', data, ('fname', 'lname', 'title'))
+        return self.insert('contacts', data, ('fname', 'lname', 'title', 'email'))
 
     def add_cred(self, username, password=None, hashtype=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''
@@ -337,7 +338,9 @@ class module(cmd.Cmd):
         unique_columns - a list of column names that should be used to determine if the.
                          information being inserted is unique'''
 
-        columns = data.keys()
+        # sanitize the inputs to remove NoneTypes
+        columns = [x for x in data.keys() if data[x]]
+        unique_columns = [x for x in unique_columns if x in columns]
 
         if not unique_columns:
             query = u'INSERT INTO %s (%s) VALUES (%s)' % (

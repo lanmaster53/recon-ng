@@ -31,6 +31,7 @@ class Module(framework.module):
             self.error('Invalid JSON response.\n%s' % (resp.text))
             return
 
+        new = 0
         # Output the results in table format
         tdata = [] 
         tdata.append(['Domain', 'MX_Data', 'IP_Address', 'Weight'])
@@ -38,7 +39,8 @@ class Module(framework.module):
             tdata.append([col['Domain'], col['MX_Data'], col['IP_Address'], col['Weight']])
             
             # Add each host to the database
-            if add_hosts: self.add_host(col['MX_Data'])
+            if add_hosts: new += self.add_host(col['MX_Data'])
             
         # Print the table            
         self.table(tdata, True)
+        if add_hosts and new: self.alert('%d NEW hosts found!' % (new))
