@@ -62,7 +62,7 @@ class Module(framework.module):
             return company_id
         id_len = len(max([str(x[0]) for x in all_companies], key=len))
         for company in all_companies:
-            self.output('%s %s - %s (%s contacts)' % (str(company[0]).ljust(id_len), company[1], company[3], company[2]))
+            self.output('[%s] %s - %s (%s contacts)' % (str(company[0]).ljust(id_len), company[1], company[3], company[2]))
         try:
             company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
             if not company_id: company_id = all_companies[0][0]
@@ -89,6 +89,7 @@ class Module(framework.module):
                 return
             jsonobj = resp.json
             for contact in jsonobj['contacts']:
+                contact_id = contact['contactId']
                 fname = contact['firstname']
                 lname = contact['lastname']
                 title = self.unescape(contact['title'])
@@ -99,7 +100,7 @@ class Module(framework.module):
                     if item: region.append(item)
                 region = ', '.join(region)
                 country = contact['country'].title()
-                self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
+                self.output('[%s] %s %s - %s (%s - %s)' % (contact_id, fname, lname, title, region, country))
                 new += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
                 tot += 1
             cnt += size

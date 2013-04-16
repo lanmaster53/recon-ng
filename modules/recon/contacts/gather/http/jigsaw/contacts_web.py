@@ -57,8 +57,9 @@ class Module(framework.module):
             self.output('No Company Matches Found.')
             return False
         else:
+            id_len = len(max([str(x[0]) for x in all_companies], key=len))
             for company in all_companies:
-                self.output('%s %s (%s contacts)' % (company[0], company[1], company[2]))
+                self.output('[%s] %s (%s contacts)' % (str(company[0]).ljust(id_len), company[1], company[2]))
             try:
                 company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
                 if not company_id: company_id = all_companies[0][0]
@@ -115,7 +116,7 @@ class Module(framework.module):
                 if item: region.append(item)
             region = ', '.join(region)
             country = self.unescape(re.search('<span id="country">(.+?)</span>', content).group(1)).title()
-            self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
+            self.output('[%s] %s %s - %s (%s - %s)' % (contact_id, fname, lname, title, region, country))
             tot += 1
             cnt += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
         self.output('%d total contacts found.' % (tot))
