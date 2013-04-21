@@ -17,7 +17,7 @@ class Module(framework.module):
 
     def module_run(self):
         store = self.options['store']['value']
-        url = 'http://pgp.rediris.es:11371/pks/lookup'
+        url = 'http://pgp.rediris.es/pks/lookup'
         payload= {'search' : self.options['domain']['value'] }
 
         try: resp = self.request(url, payload=payload)

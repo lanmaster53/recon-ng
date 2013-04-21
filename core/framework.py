@@ -181,7 +181,7 @@ class module(cmd.Cmd):
 
     def api_guard(self, num):
         try:
-            ans = raw_input('This operation will use %d API queries. Do you want to continue? [Y/N]: ' % (num))
+            ans = raw_input('This operation will decrement the allotted quota by %d. Do you want to continue? [Y/N]: ' % (num))
             if ans.upper() != 'Y': return False
         except KeyboardInterrupt:
             print ''
