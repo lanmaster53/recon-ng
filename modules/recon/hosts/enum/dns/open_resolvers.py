@@ -42,5 +42,16 @@ class Module(framework.module):
             except Exception as e:
                 self.error(e.__str__())
                 return
-            
-            self.output(response.text.first)
+            rows = re.findall("<TR>.+</TR>", response.text)
+            # skip the first row since that is the header
+            for row in rows[1:]:
+                # if the rcode (field 4) is 0, there was no error so display
+                fields = re.finditer('<TD>(.*)</TD>', row)
+                self.output(fields.group(1))
+                if fields.group(4) == 0:
+                    self.output(row)
+                
+
+            #try: self.output(rows.group(1))
+            #except Exception as e:
+            #    continue
