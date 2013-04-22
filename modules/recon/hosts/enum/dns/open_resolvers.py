@@ -2,6 +2,7 @@ import framework
 # unique to module
 
 import re
+import time
 class Module(framework.module):
 
     def __init__(self, params):
@@ -29,13 +30,22 @@ class Module(framework.module):
             if classC not in classCs:
                 classCs.append(classC)
 
+        # get the cookie first for all other requests
+        mainUrl = 'http://openresolverproject.org'
+        setupResponse = self.request(mainUrl)
+        hv = ""
+        for cookie in setupResponse.cookies:
+            if cookie.name == 'hv':
+                hv = cookie.value
+        # it seems we need to briefly sleep so the server has time to register the session, otherwise we don't get results back
+        time.sleep(1)
         # for each subnet, look for open resolvers
         for subnet in classCs:
             url = 'http://openresolverproject.org/search.cgi?botnet=yessir&search_for=%s' % (subnet + ".1")
             self.verbose('URL: %s' % url)
 
             # build the request as expected by the open resolver project
-            try: response = self.request(url, cookies={"hv":"7493717392"}, headers={"Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Language":"en-US,en;q=0.5", "Accept-Encoding":"gzip, deflate", "Connection":"keep-alive"})
+            try: response = self.request(url, cookies={"hv":hv}, headers={"Connection":"keep-alive", "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Language":"en-US,en;q=0.5", "Accept-Encoding":"gzip, deflate"})
             except KeyboardInterrupt:
                 print ''
                 return
@@ -43,11 +53,12 @@ class Module(framework.module):
                 self.error(e.__str__())
                 return
             rows = re.findall("<TR>.+</TR>", response.text)
-            # skip the first row since that is the header
+            # skip the first row since that is the table header
             for row in rows[1:]:
+                self.output(row)
                 # if the rcode (field 4) is 0, there was no error so display
-                fields = re.finditer('<TD>(.*)</TD>', row)
-                self.output(fields.group(1))
+                fields = re.findall('<TD>(.*)</TD>', row)
+                self.output(fields.group(0))
                 if fields.group(4) == 0:
                     self.output(row)
                 
