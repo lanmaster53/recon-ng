@@ -19,17 +19,12 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key')
-        if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret')
-        if not secret: return
+        key = self.get_key('pwnedlist_api')
+        secret = self.get_key('pwnedlist_secret')
         decrypt_key = secret[:16]
-        iv = self.manage_key('pwned_iv', 'PwnedList Decryption IV')
-        if not iv: return
+        iv = self.get_key('pwnedlist_iv')
 
         accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')
-        if not accounts: return
 
         # API query guard
         if not self.api_guard(1): return
@@ -42,13 +37,7 @@ class Module(framework.module):
         payload = {'account_identifier': ','.join(accounts), 'daysAgo': 0}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
-        try: resp = self.request(url, payload=payload)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url, payload=payload)
         if resp.json: jsonobj = resp.json
         else:
             self.error('Invalid JSON response.\n%s' % (resp.text))

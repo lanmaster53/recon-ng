@@ -19,13 +19,7 @@ class Module(framework.module):
 
         url = 'http://api.mywot.com/0.4/public_query2?target=%s' % (domain)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
 
         # Get the security results
         findings = re.findall(r'<application name="(\d)" r="(\d+)" c="(\d+)"', resp.text)

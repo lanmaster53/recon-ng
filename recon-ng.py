@@ -2,7 +2,7 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '1.20'
+__version__   = '1.30'
 
 import datetime
 import os
@@ -32,6 +32,7 @@ __builtin__.record = 0
 
 # set global framework options
 __builtin__.goptions = {}
+__builtin__.keys = {}
 __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
 
@@ -41,7 +42,6 @@ class Recon(framework.module):
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, (prompt, 'core'))
         self.register_option('workspace', 'default', 'yes', 'current workspace name', self.goptions)
-        self.register_option('key_file', './data/keys.db', 'yes', 'path to API key database file', self.goptions)
         self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
         self.register_option('domain', '', 'no', 'target domain', self.goptions)
         self.register_option('company', '', 'no', 'target company name', self.goptions)
@@ -52,8 +52,8 @@ class Recon(framework.module):
         self.register_option('verbose', True,  'yes', 'verbose output', self.goptions)
         self.options = self.goptions
         self.load_modules()
+        self.load_keys()
         self.show_banner()
-        self.init_keys()
         self.init_workspace()
 
     #==================================================
@@ -92,17 +92,12 @@ class Recon(framework.module):
         print banner
         print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), banner_len+8) # +8 compensates for the color bytes
         print ''
-        for category in sorted(self.loaded_category.keys(), reverse=True):
-            count = '[%d]' % (len(self.loaded_category[category]))
-            print '%s%s %s modules%s' % (B, count.ljust(4), category, N)
+        counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
+        count_len = len(max([str(x[0]) for x in counts], key=len))
+        for count in sorted(counts, reverse=True):
+            cnt = '[%d]' % (count[0])
+            print '%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N)
         print ''
-
-    def init_keys(self):
-        conn = sqlite3.connect(self.options['key_file']['value'])
-        c = conn.cursor()
-        c.execute('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
-        conn.commit()
-        conn.close()
 
     def init_workspace(self, workspace=None):
         workspace = workspace if workspace is not None else self.options['workspace']['value']
@@ -122,23 +117,23 @@ class Recon(framework.module):
         conn.commit()
         conn.close()
         self.workspace = __builtin__.workspace = workspace
-        self.config_load()
+        self.load_config()
         return True
 
-    def config_save(self):
+    def load_config(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        if os.path.exists(config_path):
+            try:
+                config_data = json.loads(open(config_path, 'rb').read())
+                for key in config_data: self.options[key] = config_data[key]
+            except:
+                self.error('Corrupt config file.')
+
+    def save_config(self):
         config_path = '%s/config.dat' % (self.workspace)
         config_file = open(config_path, 'wb')
         json.dump(self.options, config_file)
         config_file.close()
-
-    def config_load(self):
-        config_path = '%s/config.dat' % (self.workspace)
-        if os.path.exists(config_path):
-            try:
-                config = json.loads(open(config_path, 'rb').read())
-                for key in config: self.options[key] = config[key]
-            except:
-                self.error('Corrupt config file.')
 
     #==================================================
     # COMMAND METHODS
@@ -156,8 +151,8 @@ class Recon(framework.module):
         else:
             try:
                 modulename = self.loaded_modules[params]
-                y = sys.modules[modulename].Module((None, modulename))
-                try: y.do_info(modulename)
+                y = sys.modules[modulename].Module((None, params))
+                try: y.do_info(None)
                 except:
                     print '-'*60
                     traceback.print_exc()
@@ -185,12 +180,15 @@ class Recon(framework.module):
                         return
                 self.options[name]['value'] = self.autoconvert(value)
                 print '%s => %s' % (name.upper(), value)
-                self.config_save()
+                self.save_config()
             else: self.error('Invalid option.')
 
     def do_load(self, params):
         '''Loads selected module'''
-        if not self.validate_options(): return
+        try: self.validate_options()
+        except framework.FrameworkException as e:
+            self.error(e.message)
+            return
         options = params.split()
         if len(options) == 0:
             self.help_load()
@@ -207,10 +205,6 @@ class Recon(framework.module):
                 y = sys.modules[loadedname].Module((prompt, modulename))
                 try: y.cmdloop()
                 except KeyboardInterrupt: print ''
-                except:
-                    print '-'*60
-                    traceback.print_exc()
-                    print '-'*60
             except (KeyError, AttributeError, AssertionError):
                 if not modules:
                     self.error('Invalid module name.')

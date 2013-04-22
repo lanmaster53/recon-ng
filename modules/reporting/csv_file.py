@@ -20,12 +20,8 @@ class Module(framework.module):
     def module_run(self):
         # validate that file can be created
         filename = self.options['filename']['value']
-        try:
-            outfile = open(filename, 'wb')
-            outfile.close()
-        except:
-            self.error('Invalid path or filename.')
-            return
+        outfile = open(filename, 'wb')
+        outfile.close()
         # handle the source of information for the report
         source = self.options['source']['value'].lower()
         rows = []

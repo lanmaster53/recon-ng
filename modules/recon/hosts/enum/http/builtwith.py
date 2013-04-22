@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('host', 'www.google.com', 'yes', 'target host')
+        self.register_option('host', self.goptions['domain']['value'], 'yes', 'target host')
         self.info = {
                      'Name': 'BuiltWith Server-side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -16,18 +16,11 @@ class Module(framework.module):
                      }
 
     def module_run(self):
+        key = self.get_key('builtwith_api')
         host = self.options['host']['value']
-        key = self.manage_key('builtwith', 'BuiltWith API key')
-        if not key: return
         url = ' http://api.builtwith.com/v1/api.json'
         payload = {'key': key, 'lookup': host}
-        try: resp = self.request(url, payload=payload)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url, payload=payload)
         if resp.json == None:
             self.error('Invalid JSON response for \'%s\'.\n%s' % (host, resp.text))
             return

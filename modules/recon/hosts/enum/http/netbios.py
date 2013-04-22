@@ -19,19 +19,12 @@ class Module(framework.module):
    
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        if not hosts: return
 
         for host in hosts:
             # request NetBIOS info
             url = 'https://w3dt.net/tools/netbios/?submit=Scan!&clean_opt=1&host=%s' % (host)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url, timeout=20)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            resp = self.request(url, timeout=20)
 
             # extract and present results
             content = resp.text

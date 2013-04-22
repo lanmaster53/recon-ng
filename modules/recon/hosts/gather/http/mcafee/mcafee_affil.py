@@ -5,7 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('host', 'www.google.com', 'yes', 'target host')
+        self.register_option('host', self.goptions['domain']['value'], 'yes', 'target host')
         self.info = {
                      'Name': 'McAfee Domain Affiliation Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
@@ -18,13 +18,7 @@ class Module(framework.module):
 
         url = 'http://www.mcafee.com/threat-intelligence/jsproxy/domain.ashx?q=affiliation&f=%s' % (host)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
         if not resp.json:
             self.error('Invalid JSON response.\n%s' % (resp.text))
             return

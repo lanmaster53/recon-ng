@@ -64,15 +64,7 @@ class Module(framework.module):
         '''
         url = 'https://api.twitter.com/1/users/show.json'
         payload = {'screen_name': handle, 'include_entities': 'true'}
-        
-        try:
-            resp = self.request(url, payload=payload)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url, payload=payload)
         
         jsonobj = resp.json
         for item in ['error', 'errors']:
@@ -82,21 +74,11 @@ class Module(framework.module):
 
         name = jsonobj['name']
         if not [handle, name, time] in self.tdata: self.tdata.append([handle, name, time])
-        sys.stdout.write('.')
-        sys.stdout.flush()
 
     def search_api(self, query):
         payload = {'q': query}
         url = 'http://search.twitter.com/search.json'
-        
-        try:
-            resp = self.request(url, payload=payload)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url, payload=payload)
         
         jsonobj = resp.json
         for item in ['error', 'errors']:
@@ -104,8 +86,6 @@ class Module(framework.module):
                 self.error(jsonobj[item])
                 return
 
-        sys.stdout.write('.')
-        sys.stdout.flush()
         return jsonobj
 
     def search_handle_tweets(self):

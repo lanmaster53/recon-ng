@@ -19,20 +19,13 @@ class Module(framework.module):
 
     def module_run(self):
         addresses = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        if not addresses: return
         store = self.options['store']['value']
 
         new = 0
         hosts = []
         for address in addresses:
             query = '\'ip:%s\'' % (address)
-            try: results = self.search_bing_api(query)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            results = self.search_bing_api(query)
             if type(results) != list: break
             if not results: self.verbose('No additional hosts discovered at \'%s\'.' % (address))
             for result in results:

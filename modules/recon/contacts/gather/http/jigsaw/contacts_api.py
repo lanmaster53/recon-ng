@@ -17,8 +17,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        self.api_key = self.manage_key('jigsaw_key', 'Jigsaw API Key')
-        if not self.api_key: return
+        self.api_key = self.get_key('jigsaw_api')
         company_id = self.get_company_id()
         if company_id:
             self.get_contacts(company_id)
@@ -33,13 +32,7 @@ class Module(framework.module):
         while True:
             payload = {'token': self.api_key, 'name': params, 'offset': cnt, 'pageSize': size}
             self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
-            try: resp = self.request(url, payload=payload, redirect=False)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
+            resp = self.request(url, payload=payload, redirect=False)
             jsonobj = resp.json
             if jsonobj['totalHits'] == 0:
                 self.output('No Company Matches Found.')
@@ -63,13 +56,9 @@ class Module(framework.module):
         id_len = len(max([str(x[0]) for x in all_companies], key=len))
         for company in all_companies:
             self.output('[%s] %s - %s (%s contacts)' % (str(company[0]).ljust(id_len), company[1], company[3], company[2]))
-        try:
-            company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
-            if not company_id: company_id = all_companies[0][0]
-            return company_id
-        except KeyboardInterrupt:
-            print ''
-            return
+        company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
+        if not company_id: company_id = all_companies[0][0]
+        return company_id
 
     def get_contacts(self, company_id):
         self.output('Gathering Contacts...')
@@ -80,13 +69,7 @@ class Module(framework.module):
         url = 'https://www.jigsaw.com/rest/searchContact.json'
         while True:
             payload = {'token': self.api_key, 'companyId': company_id, 'offset': cnt, 'pageSize': size}
-            try: resp = self.request(url, payload=payload, redirect=False)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
+            resp = self.request(url, payload=payload, redirect=False)
             jsonobj = resp.json
             for contact in jsonobj['contacts']:
                 contact_id = contact['contactId']

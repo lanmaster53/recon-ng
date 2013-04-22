@@ -26,13 +26,7 @@ class Module(framework.module):
             for host in hosts:
                 query += ' -site:%s' % (host)
             query = base_query + query
-            try: results = self.search_google_api(query, limit=1)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            results = self.search_google_api(query, limit=1)
             if not results: break
             for result in results:
                 host = urlparse(result['link']).netloc

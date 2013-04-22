@@ -21,22 +21,13 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        cookies = {}
-
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        if not hosts: return
+        cookies = {}
 
         for host in hosts:
             url = 'http://uptime.netcraft.com/up/graph?site=%s' % (host)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url, cookies=cookies)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-            if not resp: break
-
+            resp = self.request(url, cookies=cookies)
             if 'set-cookie' in resp.headers:
                 # we have a cookie to set!
                 self.verbose('Setting cookie...')
@@ -53,12 +44,7 @@ class Module(framework.module):
 
                 # Now we can request the page again
                 self.verbose('URL: %s' % url)
-                try: resp = self.request(url, cookies=cookies)
-                except KeyboardInterrupt:
-                    print ''
-                except Exception as e:
-                    self.error(e.__str__())
-                if not resp: break
+                resp = self.request(url, cookies=cookies)
 
             content = resp.text
 
@@ -80,7 +66,4 @@ class Module(framework.module):
             if len(hosts) > 1:
                 # sleep script to avoid lock-out
                 self.verbose('Sleeping to Avoid Lock-out...')
-                try: time.sleep(random.randint(5,15))
-                except KeyboardInterrupt:
-                    print ''
-                    break
+                time.sleep(random.randint(5,15))

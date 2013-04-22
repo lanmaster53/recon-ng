@@ -23,21 +23,14 @@ class Module(framework.module):
     def module_run(self):
         username = self.options['username']['value']
         password = self.options['password']['value']
-        key = self.manage_key('jigsaw_key', 'Jigsaw API Key')
-        if not key: return
+        key = self.get_key('jigsaw_api')
 
         # point guard
         if not self.api_guard(5): return
 
         url = 'https://www.jigsaw.com/rest/contacts/%s.json' % (self.options['contact']['value'])
         payload = {'token': key, 'username': username, 'password': password, 'purchaseFlag': 'true'}
-        try: resp = self.request(url, payload=payload, redirect=False)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url, payload=payload, redirect=False)
         if resp.json: jsonobj = resp.json
         else:
             self.error('Invalid JSON response.\n%s' % (resp.text))

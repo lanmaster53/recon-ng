@@ -19,7 +19,6 @@ class Module(framework.module):
 
     def module_run(self):
         accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
-        if not accounts: return
 
         # retrieve status
         cnt = 0
@@ -29,17 +28,8 @@ class Module(framework.module):
             status = None
             url = 'https://www.pwnedlist.com/query'
             payload = {'inputEmail': hashlib.sha512(account).hexdigest(), 'form.submitted': ''}
-            try: resp = self.request(url, payload=payload, method='POST', redirect=False)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                break
+            resp = self.request(url, payload=payload, method='POST', redirect=False)
             content = resp.text
-            #if 'Gotcha!' in content:
-            #    self.error('Hm... Got a captcha.')
-            #    return
             if '<h3>Nope,' in content:
                 status = 'safe'
                 self.verbose('%s => %s.' % (account, status))

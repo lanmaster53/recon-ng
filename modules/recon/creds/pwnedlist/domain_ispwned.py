@@ -19,14 +19,10 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        domains = self.get_source(self.options['source']['value'])
-        if not domains: return
+        key = self.get_key('pwnedlist_api')
+        secret = self.get_key('pwnedlist_secret')
 
-        # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
-        if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
-        if not secret: return
+        domains = self.get_source(self.options['source']['value'])
 
         # API query guard
         if not self.api_guard(1*len(domains)): return
@@ -39,13 +35,7 @@ class Module(framework.module):
             payload = {'domain_identifier': domain}
             payload = pwnedlist.build_payload(payload, method, key, secret)
             # make request
-            try: resp = self.request(url, payload=payload)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            resp = self.request(url, payload=payload)
             jsonobj = resp.json
             # compare to None to confirm valid json as empty json is returned when domain not found
             if jsonobj is None:

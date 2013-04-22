@@ -20,13 +20,7 @@ class Module(framework.module):
         # request the author's age
         url = 'http://ageanalyzer.com/?url=%s' % (host)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
 
         # extract and present results
         content = resp.text

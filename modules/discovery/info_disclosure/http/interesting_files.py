@@ -34,10 +34,8 @@ class Module(framework.module):
         return data_ct
 
     def module_run(self):
-        download = self.options['download']['value']
-        
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        if not hosts: return
+        download = self.options['download']['value']
 
         protocols = ['http', 'https']
         # (filename, string to search for to prevent false positive)
@@ -60,8 +58,7 @@ class Module(framework.module):
                         resp = self.request(url, timeout=2, redirect=False)
                         code = resp.status_code
                     except KeyboardInterrupt:
-                        print ''
-                        return
+                        raise KeyboardInterrupt
                     except:
                         code = 'Error'
                     if code == 200:

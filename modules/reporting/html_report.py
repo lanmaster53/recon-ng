@@ -45,11 +45,7 @@ class Module(framework.module):
 
     def module_run(self):
         filename = self.options['filename']['value']
-        try:
-            outfile = open(filename, 'wb')
-        except:
-            self.error('Invalid path or filename.')
-            return
+        outfile = open(filename, 'wb')
 
         # template
         template = """

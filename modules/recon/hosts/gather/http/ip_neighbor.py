@@ -20,7 +20,6 @@ class Module(framework.module):
    
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        if not hosts: return
         store = self.options['store']['value']
 
         cnt = 0
@@ -28,13 +27,7 @@ class Module(framework.module):
         for host in hosts:
             url = 'http://www.my-ip-neighbors.com/?domain=%s' % (host)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            resp = self.request(url)
             # get the sites this host's web site links to
             results = re.findall(r'a href="http://whois.domaintools.com/(.+?)"', resp.text)
             if not results:

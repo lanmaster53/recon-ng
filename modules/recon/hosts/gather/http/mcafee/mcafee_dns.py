@@ -20,13 +20,7 @@ class Module(framework.module):
 
         url = 'http://www.mcafee.com/threat-intelligence/jsproxy/domain.ashx?q=dns&f=%s' % (domain)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
         if not resp.json:
             self.error('Invalid JSON response.\n%s' % (resp.text))
             return

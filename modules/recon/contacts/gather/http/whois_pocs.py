@@ -26,13 +26,7 @@ class Module(framework.module):
         new = 0
         url = 'http://whois.arin.net/rest/pocs;domain=%s' % (domain)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url, headers=headers)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url, headers=headers)
         if 'Your search did not yield any results.' in resp.text:
             self.output('No contacts found.')
             return
@@ -43,13 +37,7 @@ class Module(framework.module):
         for handle in handles:
             url = 'http://whois.arin.net/rest/poc/%s' % (handle)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url, headers=headers)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            resp = self.request(url, headers=headers)
             if resp.json: jsonobj = resp.json
             else:
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (handle, resp.text))

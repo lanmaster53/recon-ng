@@ -48,11 +48,7 @@ class Module(framework.module):
         print 'Type \'help\' or \'?\' for assistance.'
         while True:
             # get command from the terminal
-            try:
-                cmd = raw_input("cmd> ")
-            except KeyboardInterrupt:
-                print ''
-                return
+            cmd = raw_input("cmd> ")
             if cmd.lower() == 'exit': return
             elif cmd.lower() in ['help', '?']:
                 print self.help()
@@ -63,13 +59,7 @@ class Module(framework.module):
             for param in params:
                 payload[param[0]] = param[1]
             # send the request
-            try: resp = self.request(base_url, method=method, payload=payload, headers=headers, auth=auth)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            resp = self.request(base_url, method=method, payload=payload, headers=headers, auth=auth)
             # process the response
             output = resp.text
             if start and end:

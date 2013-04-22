@@ -33,13 +33,7 @@ class Module(framework.module):
         payload = {'opCode': 'search', 'freeText': params}
         while True:
             self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
-            try: resp = self.request(url, payload=payload, redirect=False)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                break
+            resp = self.request(url, payload=payload, redirect=False)
             if resp.status_code == 301:
                 header = resp.headers['location']
                 company_id = re.search('\/(\d+?)\/', resp.headers['location']).group(1)
@@ -60,12 +54,8 @@ class Module(framework.module):
             id_len = len(max([str(x[0]) for x in all_companies], key=len))
             for company in all_companies:
                 self.output('[%s] %s (%s contacts)' % (str(company[0]).ljust(id_len), company[1], company[2]))
-            try:
-                company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
-                if not company_id: company_id = all_companies[0][0]
-            except KeyboardInterrupt:
-                print ''
-                company_id = ''
+            company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
+            if not company_id: company_id = all_companies[0][0]
             return company_id
 
     def get_contact_ids(self, company_id):
@@ -77,13 +67,7 @@ class Module(framework.module):
         while True:
             payload['rpage'] = str(page_cnt)
             self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
-            try: content = self.request(url, payload=payload).text
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                break
+            content = self.request(url, payload=payload).text
             pattern = "showContact\('(\d+?)'\)"
             contacts = re.findall(pattern, content)
             if not contacts: break
@@ -97,13 +81,7 @@ class Module(framework.module):
         for contact_id in contact_ids:
             url = 'http://www.jigsaw.com/BC.xhtml'
             payload = {'contactId': contact_id}
-            try: content = self.request(url, payload=payload).text
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                break
+            content = self.request(url, payload=payload).text
             if 'Contact Not Found' in content: continue
             fname = self.unescape(re.search('<span id="firstname">(.+?)</span>', content).group(1))
             lname = self.unescape(re.search('<span id="lastname">(.+?)</span>', content).group(1))

@@ -18,19 +18,12 @@ class Module(framework.module):
 
     def module_run(self):
         hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
-        if not hashes: return
 
         # lookup each hash
         url = 'https://goog.li'
         for hashstr in hashes:
             payload = {'j': hashstr}
-            try: resp = self.request(url, payload=payload)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            resp = self.request(url, payload=payload)
             if resp.json: jsonobj = resp.json
             else:
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (account, resp.text))

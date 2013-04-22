@@ -17,16 +17,10 @@ class Module(framework.module):
 
     def module_run(self):
         store = self.options['store']['value']
+
         url = 'http://pgp.rediris.es/pks/lookup'
         payload= {'search' : self.options['domain']['value'] }
-
-        try: resp = self.request(url, payload=payload)
-        except KeyboardInterrupt:
-            print ''
-            return 
-        except Exception as e:
-            self.error(str(e))
-            return 
+        resp = self.request(url, payload=payload)
 
         results = []
         results.extend(re.findall('([^>]*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;<' % (self.options['domain']['value']), resp.text))

@@ -17,23 +17,14 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        api_key = self.manage_key('ipinfodb', 'IPInfoDB API key')
-        if not api_key: return
+        api_key = self.get_key('ipinfodb_api')
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        if not hosts: return
 
         for host in hosts:
             # request the scan
             url = 'http://api.ipinfodb.com/v3/ip-city/?key=%s&ip=%s&format=json' % (api_key, host)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                continue
-
+            resp = self.request(url)
             if resp.json: jsonobj = resp.json
             else:
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (host, resp.text))

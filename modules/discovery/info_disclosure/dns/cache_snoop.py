@@ -22,10 +22,8 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        nameserver = self.options['nameserver']['value']
-        
         domains = self.get_source(self.options['domains']['value'])
-        if not domains: return
+        nameserver = self.options['nameserver']['value']
 
         self.output('Starting queries...')
         
@@ -35,17 +33,9 @@ class Module(framework.module):
             query = dns.message.make_query(domain, dns.rdatatype.A, dns.rdataclass.IN)
             # unset the Recurse flag 
             query.flags ^= dns.flags.RD
-            try:
-                # try the query
-                response = dns.query.udp(query, nameserver)
-                if len(response.answer) > 0:
-                    self.alert('%s => Snooped!' % (domain))
-                else:
-                    self.verbose('%s => Not Found.' % (domain))
-                continue
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
+            response = dns.query.udp(query, nameserver)
+            if len(response.answer) > 0:
+                self.alert('%s => Snooped!' % (domain))
+            else:
+                self.verbose('%s => Not Found.' % (domain))
+            continue

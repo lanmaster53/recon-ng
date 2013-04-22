@@ -31,19 +31,12 @@ class Module(framework.module):
         # execute search engine queries and scrape results storing subdomains in a list
         # loop until no Next Page is available
         while New:
-            content = None
             self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
 
-            try: content = self.request(url, payload=payload, cookies=cookies)
-            except KeyboardInterrupt:
-                print ''
-            except Exception as e:
-                self.error(e.__str__())
-            if not content: break
-            
-            if 'set-cookie' in content.headers:
+            resp = self.request(url, payload=payload, cookies=cookies)
+            if 'set-cookie' in resp.headers:
                 # we have a cookie to set!
-                cookie = content.headers['set-cookie']
+                cookie = resp.headers['set-cookie']
                 # this was taken from the netcraft page's JavaScript, no need to use big parsers just for that
                 # grab the cookie sent by the server, hash it and send the response
                 challenge_token = (cookie.split('=')[1].split(';')[0])
@@ -55,13 +48,9 @@ class Module(framework.module):
                       }
 
                 # Now we can request the page again
-                try: content = self.request(url, payload=payload, cookies=cookies)
-                except KeyboardInterrupt:
-                    print ''
-                except Exception as e:
-                    self.error(e.__str__())
+                resp = self.request(url, payload=payload, cookies=cookies)
 
-            content = content.text
+            content = resp.text
 
             sites = re.findall(pattern, content)
             # create a unique list
@@ -86,10 +75,7 @@ class Module(framework.module):
                 self.verbose('Next page available! Requesting again...' )
                 # sleep script to avoid lock-out
                 self.verbose('Sleeping to Avoid Lock-out...')
-                try: time.sleep(random.randint(5,15))
-                except KeyboardInterrupt:
-                    print ''
-                    break
+                time.sleep(random.randint(5,15))
 
         self.verbose('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))

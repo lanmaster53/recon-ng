@@ -21,13 +21,7 @@ class Module(framework.module):
         details = [['Check', 'Status']]
         url = 'https://asafaweb.com/Scan?Url=%s' % (host)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
 
         # extract results
         content = resp.text

@@ -21,52 +21,29 @@ class Module(framework.module):
 
         url = 'http://xssed.com/search?key=%s' % (domain)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
-        
+        resp = self.request(url)
         content = resp.text
 
-        # Find if there are any results for the domain search
-        results = re.findall(r"Results for.*", content)
-       
-        if results:
-            rows = re.split('<br>', str(results))
-            for row in rows:
-                finding = re.findall(r"mirror/([0-9]+)/.+blank\\'>(.+?)</a>", row)
-                if finding:
-                    # Go fetch and parse the specific page for this item
-                    urlDetail = 'http://xssed.com/mirror/%s/' % finding[0][0]
-                    try: respDetail = self.request(urlDetail)
-                    except KeyboardInterrupt:
-                        print ''
-                        return
-                    except Exception as e:
-                        self.error(e.__str__())
-                        continue
-                    
-                    # Parse the response and get the details
-                    details = []
-                    for line in respDetail.text.split('\n'):
-                        if "row3" in line:
-                            try: 
-                                a = re.search(r'">(.+)</th', line.strip())
-                                details.append(a.group(1))
-                            except: pass
-                    # Output the results in table format
-                    status = re.search(r';([UNFIXED]+)',details[2]).group(1)
-                    self.output('Mirror: %s' % (urlDetail))
-                    self.output(details[4])
-                    self.output(textwrap.fill(details[7], 100, initial_indent='', subsequent_indent=self.spacer*2))
-                    self.output(details[0])
-                    self.output(details[1])
-                    self.output(details[5])
-                    self.output('Status: %s' % (status))
-                    print self.ruler*50
-                    time.sleep(1) # results in 503 errors if not throttled
+        if re.search('<b>XSS:</b>', content):
+            vulns = re.findall('mirror/([0-9]+)/\' target=\'_blank\'>', content)
+            for vuln in vulns:
+                # Go fetch and parse the specific page for this item
+                urlDetail = 'http://xssed.com/mirror/%s/' % vuln
+                respDetail = self.request(urlDetail)
+                # Parse the response and get the details
+                details = re.findall('<th class="row3"[^>]*>(.*?)</th>', respDetail.text)#.replace('&nbsp;', ' '))
+                details = [self.unescape(x) for x in details]
+                status = re.search('([UNFIXED]+)',details[3]).group(1)
+                print self.ruler*50
+                self.output('Mirror: %s' % (urlDetail))
+                self.output(details[5])
+                self.output(textwrap.fill(details[8], 100, initial_indent='', subsequent_indent=self.spacer*2))
+                self.output(details[0])
+                self.output(details[1])
+                self.output(details[6])
+                self.output('Status: %s' % (status))
+                # results in 503 errors if not throttled
+                time.sleep(1)
+            print self.ruler*50
         else:
             self.output('No results found')

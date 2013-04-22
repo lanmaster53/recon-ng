@@ -18,19 +18,11 @@ class Module(framework.module):
 
     def module_run(self):
         addresses = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        if not addresses: return
 
         for address in addresses:
             url = 'http://whois.arin.net/rest/ip/%s/pft.txt' % (address)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                continue
-            #print resp.text.strip()
+            resp = self.request(url)
             lines = resp.text.strip().split('\n')
             tdata = []
             for line in lines:

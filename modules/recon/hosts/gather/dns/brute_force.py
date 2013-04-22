@@ -30,9 +30,6 @@ class Module(framework.module):
             answers = q.query(fake_host)
             self.output('Wildcard DNS entry found. Cannot brute force hostnames.')
             return
-        except KeyboardInterrupt:
-            print ''
-            return
         except (dns.resolver.NoNameservers, dns.resolver.Timeout):
             self.error('Invalid nameserver.')
             return
@@ -43,10 +40,8 @@ class Module(framework.module):
             words = open(wordlist).read().split()
             for word in words:
                 host = '%s.%s' % (word, domain)
-                try: answers = q.query(host)
-                except KeyboardInterrupt:
-                    print ''
-                    break
+                try:
+                    answers = q.query(host)
                 except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                     self.verbose('%s => Not a host.' % (host))
                     continue

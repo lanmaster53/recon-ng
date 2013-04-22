@@ -21,14 +21,7 @@ class Module(framework.module):
         # Get the first year the domain was archived
         url = 'http://web.archive.org/web/*/%s' % (domain)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
-
+        resp = self.request(url)
         content = resp.text
         match = re.search(r'way back to <[^>]+>[A-Z][a-z]+ \d+, ([\d]{4})<\/a>', content)
 
@@ -44,14 +37,7 @@ class Module(framework.module):
         for year in range(int(first_year), date.today().year+1):
             url = 'http://web.archive.org/web/%s*/%s' % (str(year), domain)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
-        
+            resp = self.request(url)
             content = resp.text
             results = re.findall(r'<div class="day">\s+<a (href="[^>]+>)', content)
 

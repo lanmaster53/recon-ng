@@ -17,7 +17,6 @@ class Module(framework.module):
 
     def module_run(self):
         emails = self.get_source(self.options['source']['value'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
-        if not emails: return
         
         total = 0
         emailsFound = 0
@@ -26,14 +25,7 @@ class Module(framework.module):
         for emailstr in emails:
             # build the request
             payload = {'email': emailstr}
-            try: resp = self.request(url, method="POST", payload=payload)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                continue
-
+            resp = self.request(url, method="POST", payload=payload)
             # retrieve the json response
             jsonobj = resp.json
             numFound = jsonobj['num']

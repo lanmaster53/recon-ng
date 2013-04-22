@@ -19,13 +19,7 @@ class Module(framework.module):
 
         url = 'http://www.siteadvisor.com/sites/%s' % (domain)
         self.verbose('URL: %s' % url)
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
 
         # Get the overall security results
         

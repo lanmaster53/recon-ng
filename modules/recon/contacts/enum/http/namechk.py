@@ -23,13 +23,7 @@ class Module(framework.module):
 
         # retrive list of sites
         url = 'http://namechk.com/Content/sites.min.js'
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
         
         # extract sites info from the js file
         pattern = 'n:"(.+?)",r:\d+,i:(\d+)'
@@ -66,8 +60,7 @@ class Module(framework.module):
             # build and send the request
             try: resp = self.request(url, method='POST', headers=headers, payload=payload)
             except KeyboardInterrupt:
-                print ''
-                return
+                raise KeyboardInterrupt
             except Exception as e:
                 self.error('%s: %s' % (name, e.__str__()))
                 continue

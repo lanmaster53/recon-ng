@@ -18,18 +18,11 @@ class Module(framework.module):
    
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        if not hosts: return
 
         for host in hosts:
             url = 'http://www.urlvoid.com/scan/%s/' % (host)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
+            resp = self.request(url)
 
             if '<h1>AN ERROR OCCURRED</h1>' in resp.text:
                 self.output('No data returned for \'%s\'' % (host))

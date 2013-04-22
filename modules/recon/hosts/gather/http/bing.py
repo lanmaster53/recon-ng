@@ -43,13 +43,8 @@ class Module(framework.module):
             cookies = {'SRCHHPGUSR': 'NEWWND=0&NRSLT=%d&SRCHLANG=&AS=1' % (nr)}
             self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
             # send query to search engine
-            try: content = self.request(url, payload=payload, cookies=cookies)
-            except KeyboardInterrupt:
-                print ''
-            except Exception as e:
-                self.error(e.__str__())
-            if not content: break
-            content = content.text
+            resp = self.request(url, payload=payload, cookies=cookies)
+            content = resp.text
             sites = re.findall(pattern, content)
             # create a unique list
             sites = list(set(sites))
@@ -72,10 +67,7 @@ class Module(framework.module):
                     new = True
             # sleep script to avoid lock-out
             self.verbose('Sleeping to Avoid Lock-out...')
-            try: time.sleep(random.randint(5,15))
-            except KeyboardInterrupt:
-                print ''
-                break
+            time.sleep(random.randint(5,15))
         self.verbose('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))

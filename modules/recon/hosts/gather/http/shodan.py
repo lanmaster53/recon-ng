@@ -19,10 +19,9 @@ class Module(framework.module):
                      }
 
     def module_run(self):
+        key = self.get_key('shodan_api')
         domain = self.options['domain']['value']
         subs = []
-        key = self.manage_key('shodan', 'Shodan API key')
-        if not key: return
         url = 'http://www.shodanhq.com/api/search'
         query = 'hostname:%s' % (domain)
         payload = {'q': query, 'key': key}
@@ -32,13 +31,7 @@ class Module(framework.module):
         while True:
             new = False
             resp = None
-            try: resp = self.request(url, payload=payload)
-            except KeyboardInterrupt:
-                print ''
-                break
-            except Exception as e:
-                self.error(e.__str__())
-                break
+            resp = self.request(url, payload=payload)
             if resp.json == None:
                 self.error('Invalid JSON response.\n%s' % (resp.text))
                 break

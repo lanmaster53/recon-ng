@@ -19,19 +19,11 @@ class Module(framework.module):
     def module_run(self):
         # handle sources
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        if not hosts: return
         
         url = 'http://whatweb.net/whatweb.php'
         for host in hosts:
             payload = {'target': host, 'format': 'json' }
-            
-            try: resp = self.request(url, method='POST', payload=payload)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
+            resp = self.request(url, method='POST', payload=payload)
 
             # parse returned json objects
             jsonobj = resp.json

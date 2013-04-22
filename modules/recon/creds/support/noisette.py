@@ -20,19 +20,12 @@ class Module(framework.module):
 
     def module_run(self):
         hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
-        if not hashes: return
 
         # lookup each hash
         url = 'http://md5.noisette.ch/md5.php'
         for hashstr in hashes:
             payload = {'hash': hashstr}
-            try: resp = self.request(url, payload=payload)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                continue
+            resp = self.request(url, payload=payload)
             dom = parseString(resp.text)
             plaintext = False
             hashtype = "MD5"

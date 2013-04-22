@@ -47,13 +47,7 @@ class Module(framework.module):
         while True:
             payload['pagenumber'] = page
             self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
-            try: resp = self.request(url, payload=payload)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
+            resp = self.request(url, payload=payload)
 
             jsonobj = resp.json
             results = jsonobj['data']['domainSummaryDTOs']
@@ -82,13 +76,7 @@ class Module(framework.module):
             self.heading('Vulnerabilties', 1)
             for domain in vuln_domains:
                 url = 'http://punkspider.hyperiongray.com/service/search/detail/%s' % vuln_domains[domain]
-                try: resp = self.request(url, payload=payload)
-                except KeyboardInterrupt:
-                    print ''
-                    return
-                except Exception as e:
-                    self.error(e.__str__())
-                    return
+                resp = self.request(url, payload=payload)
 
                 jsonobj = resp.json
                 results = jsonobj['data']

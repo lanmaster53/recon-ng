@@ -16,11 +16,8 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        # api key management
-        key = self.manage_key('pwned_key', 'PwnedList API Key').encode('ascii')
-        if not key: return
-        secret = self.manage_key('pwned_secret', 'PwnedList API Secret').encode('ascii')
-        if not secret: return
+        key = self.get_key('pwnedlist_api')
+        secret = self.get_key('pwnedlist_secret')
 
         # API query guard
         if not self.api_guard(1): return
@@ -35,13 +32,7 @@ class Module(framework.module):
         payload = {'daysAgo': 0}
         payload = pwnedlist.build_payload(payload, method, key, secret)
         # make request
-        try: resp = self.request(url, payload=payload)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url, payload=payload)
         if resp.json:
             jsonobj = resp.json
         else:

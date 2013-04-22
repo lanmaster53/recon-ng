@@ -6,6 +6,7 @@ import sys
 import textwrap
 import socket
 import datetime
+import HTMLParser
 import subprocess
 import traceback
 import __builtin__
@@ -29,6 +30,7 @@ class module(cmd.Cmd):
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.goptions = __builtin__.goptions
+        self.keys = __builtin__.keys
         self.workspace = __builtin__.workspace
         self.options = {}
 
@@ -108,10 +110,8 @@ class module(cmd.Cmd):
             category = module.split(self.module_delimiter)[0]
             if category != last_category:
                 # print header
-                print ''
                 last_category = category
-                print '%s%s:' % (self.spacer, last_category.title())
-                print '%s%s' % (self.spacer, self.ruler*key_len)
+                self.heading(last_category)
             # print module
             print '%s%s' % (self.spacer*2, module)
         print ''
@@ -157,11 +157,12 @@ class module(cmd.Cmd):
 
     def unescape(self, s):
         '''Unescapes HTML markup and returns an unescaped string.'''
-        import htmllib
-        p = htmllib.HTMLParser(None)
-        p.save_bgn()
-        p.feed(s)
-        return p.save_end()
+        h = HTMLParser.HTMLParser()
+        return h.unescape(s)
+        #p = htmllib.HTMLParser(None)
+        #p.save_bgn()
+        #p.feed(s)
+        #return p.save_end()
 
     def is_hash(self, hashstr):
         hashdict = [
@@ -223,8 +224,7 @@ class module(cmd.Cmd):
     def table(self, tdata, header=False, table=None):
         '''Accepts a list of rows and outputs a table.'''
         if len(set([len(x) for x in tdata])) > 1:
-            self.error('Row lengths not consistent.')
-            return
+            raise FrameworkException('Row lengths not consistent.')
         lens = []
         cols = len(tdata[0])
         for i in range(0,cols):
@@ -361,52 +361,26 @@ class module(cmd.Cmd):
 
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
-        try: cur.execute(query, values)
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
+        cur.execute(query, values)
         conn.commit()
         conn.close()
         return cur.rowcount
 
-    def query(self, params, return_results=True):
+    def query(self, query):
         '''Queries the database and returns the results as a list.'''
-        # based on the do_ouput method
-        if not params:
-            self.help_query()
-            return
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
-        try: cur.execute(params)
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return False
-        if not return_results:
-            if cur.rowcount == -1 and cur.description:
-                header = tuple([x[0] for x in cur.description])
-                tdata = cur.fetchall()
-                if not tdata:
-                    self.output('No data returned.')
-                else:
-                    tdata.insert(0, header)
-                    self.table(tdata, True)
-                    self.output('%d rows returned' % (len(tdata)))
-            else:
-                conn.commit()
-                self.output('%d rows affected.' % (cur.rowcount))
-            conn.close()
-            return
+        cur.execute(query)
+        # a rowcount of -1 typically refers to a select statement
+        if cur.rowcount == -1:
+            rows = cur.fetchall()
+            results = rows
+        # a rowcount of 1 == success and 0 == failure
         else:
-            # a rowcount of -1 typically refers to a select statement
-            if cur.rowcount == -1:
-                rows = cur.fetchall()
-                result = rows
-            # a rowcount of 1 == success and 0 == failure
-            else:
-                conn.commit()
-                result = cur.rowcount
-            conn.close()
-            return result
+            conn.commit()
+            results = cur.rowcount
+        conn.close()
+        return results
 
     #==================================================
     # OPTIONS METHODS
@@ -446,28 +420,21 @@ class module(cmd.Cmd):
             # if value type is bool or int, then we know the options is set
             if not type(self.options[option]['value']) in [bool, int]:
                 if self.options[option]['reqd'].lower() == 'yes' and not self.options[option]['value']:
-                    self.error('Value required for the \'%s\' option.' % (option))
-                    return False
-        return True
+                    raise FrameworkException('Value required for the \'%s\' option.' % (option))
+        return
 
     def get_source(self, params, query=None):
         source = params.split()[0].lower()
-        if source == 'query':
-            query = ' '.join(params.split()[1:])
-            results = self.query(query, True)
+        if source in ['query', 'db']:
+            query = ' '.join(params.split()[1:]) if source == 'query' else query
+            try: results = self.query(query)
+            except sqlite3.OperationalError as e:
+                raise FrameworkException('Invalid source query. %s %s' % (type(e).__name__, e.message))
             if not results:
-                self.error('No items found.')
                 sources = []
             elif len(results[0]) > 1:
-                self.error('Too many columns of data returned.')
-                source = []
+                raise FrameworkException('Too many columns of data as source input.')
             else: sources = [x[0] for x in results]
-        elif source == 'db' and query:
-            rows = self.query(query)
-            if not rows:
-                self.error('No items found.')
-                sources = []
-            else: sources = [x[0] for x in rows]
         elif os.path.exists(source):
             sources = open(source).read().split()
         else:
@@ -479,73 +446,49 @@ class module(cmd.Cmd):
     #==================================================
 
     def display_keys(self):
-        conn = sqlite3.connect(self.goptions['key_file']['value'])
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM keys')
-        rows = cur.fetchall()
-        conn.close()
-        tdata = [('Name', 'Value')]
-        for row in rows:
-            tdata.append((row[0], row[1]))
-        self.table(tdata, True)
+        tdata = []
+        for key in sorted(self.keys):
+            tdata.append([key, self.keys[key]])
+        if tdata:
+            tdata.insert(0, ['Name', 'Value'])
+            self.table(tdata, header=True)
+        else: self.output('No API keys stored.')
 
-    def manage_key(self, key_name, key_text):
-        '''Automates the API key retrieval and storage process.'''
-        key = self.get_key_from_db(key_name)
-        if not key:
-            key = self.get_key_from_user(key_text)
-            if not key:
-                self.error('No %s.' % (key_text))
-                return False
-            if self.add_key_to_db(key_name, key):
-                self.output('%s added.' % (key_text))
-            else:
-                self.output('Error adding %s.' % (key_text))
-        return key
+    def load_keys(self):
+        key_path = './data/keys.dat'
+        if os.path.exists(key_path):
+            try:
+                key_data = json.loads(open(key_path, 'rb').read())
+                for key in key_data: self.keys[key] = key_data[key]
+            except:
+                self.error('Corrupt key file.')
 
-    def get_key_from_db(self, key_name):
-        '''Retrieves an API key from the API key storage database.'''
-        conn = sqlite3.connect(self.goptions['key_file']['value'])
-        cur = conn.cursor()
-        cur.execute('SELECT value FROM keys WHERE name=?', (key_name,))
-        row = cur.fetchone()
-        conn.close()
-        if row:
-            return str(row[0])
-        else:
-            return False
+    def save_keys(self):
+        key_path = './data/keys.dat'
+        key_file = open(key_path, 'wb')
+        json.dump(self.keys, key_file)
+        key_file.close()
 
-    def get_key_from_user(self, key_text='API Key'):
-        '''Retrieves an API key from the user.'''
+    def get_key(self, key_name):
         try:
-            key = raw_input("Enter %s (blank to skip): " % (key_text))
-            return str(key)
-        except KeyboardInterrupt:
-            print ''
-            return False
+            return self.keys[key_name]
+        except KeyError:
+            raise FrameworkException('API key \'%s\' not found. Add API keys with the \'key add\' command.' % (key_name))
 
-    def add_key_to_db(self, key_name, key_value):
-        '''Adds an API key to the API key storage database.'''
-        conn = sqlite3.connect(self.goptions['key_file']['value'])
-        cur = conn.cursor()
-        try: cur.execute('INSERT INTO keys VALUES (?,?)', (key_name, key_value))
-        except sqlite3.OperationalError:
-            return False
-        except sqlite3.IntegrityError:
-            try: cur.execute('UPDATE keys SET value=? WHERE name=?', (key_value, key_name))
-            except sqlite3.OperationalError:
-                return False
-        conn.commit()
-        conn.close()
-        return True
+    def add_key(self, name, value):
+        self.keys[name] = value
+        self.save_keys()
+
+    def delete_key(self, name):
+        del self.keys[name]
+        self.save_keys()
 
     #==================================================
     # REQUEST METHODS
     #==================================================
 
     def search_bing_api(self, query, limit=0):
-        api_key = self.manage_key('bing', 'Bing API key')
-        if not api_key: return
+        api_key = self.get_key('bing_api')
         url = 'https://api.datamarket.azure.com/Data.ashx/Bing/Search/v1/Web'
         payload = {'Query': query, '$format': 'json'}
         results = []
@@ -554,10 +497,8 @@ class module(cmd.Cmd):
         while True:
             resp = None
             resp = self.request(url, payload=payload, auth=(api_key, api_key))
-            sys.stdout.write('.'); sys.stdout.flush()
             if resp.json == None:
-                self.error('Invalid JSON response.\n%s' % (resp.text))
-                continue
+                raise FrameworkException('Invalid JSON response.\n%s' % (resp.text))
             # add new results
             if 'results' in resp.json['d']:
                 results.extend(resp.json['d']['results'])
@@ -570,14 +511,11 @@ class module(cmd.Cmd):
                 payload['$skip'] = resp.json['d']['__next'].split('=')[-1]
             else:
                 break
-        print ''
         return results
 
     def search_google_api(self, query, limit=0):
-        api_key = self.manage_key('google_api', 'Google API key')
-        if not api_key: return
-        cse_id = self.manage_key('google_cse', 'Google CSE ID')
-        if not cse_id: return
+        api_key = self.get_key('google_api')
+        cse_id = self.get_key('google_cse')
         url = 'https://www.googleapis.com/customsearch/v1'
         payload = {'alt': 'json', 'prettyPrint': 'false', 'key': api_key, 'cx': cse_id, 'q': query}
         results = []
@@ -586,10 +524,8 @@ class module(cmd.Cmd):
         while True:
             resp = None
             resp = self.request(url, payload=payload)
-            sys.stdout.write('.'); sys.stdout.flush()
             if resp.json == None:
-                self.error('Invalid JSON response.\n%s' % (resp.text))
-                continue
+                raise FrameworkException('Invalid JSON response.\n%s' % (resp.text))
             # add new results
             if 'items' in resp.json:
                 results.extend(resp.json['items'])
@@ -602,7 +538,6 @@ class module(cmd.Cmd):
                 payload['start'] = resp.json['queries']['nextPage'][0]['startIndex']
             else:
                 break
-        print ''
         return results
 
     def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, auth=(), redirect=True):
@@ -677,7 +612,8 @@ class module(cmd.Cmd):
     def do_info(self, params):
         '''Displays module information'''
         pattern = '%s%s:'
-        for item in ['Name', 'Author', 'Description']:
+        self.info['Path'] = 'modules/%s.py' % (self.modulename)
+        for item in ['Name', 'Path', 'Author', 'Description']:
             print ''
             print pattern % (self.spacer, item)
             print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, initial_indent='', subsequent_indent=self.spacer*2))
@@ -702,9 +638,50 @@ class module(cmd.Cmd):
                 self.options[name]['value'] = self.autoconvert(value)
             else: self.error('Invalid option.')
 
+    def do_keys(self, params):
+        '''Manages framework API keys'''
+        if params:
+            params = params.split()
+            arg = params.pop(0).lower()
+            if arg in ['add', 'update']:
+                if len(params) == 2:
+                    self.add_key(params[0], params[1])
+                    self.output('Key \'%s\' added.' % (params[0]))
+                else: print 'Usage: keys [add|update] <name> <value>'
+                return
+            elif arg == 'delete':
+                if len(params) == 1:
+                    self.delete_key(params[0])
+                    self.output('Key \'%s\' deleted.' % (params[0]))
+                else: print 'Usage: keys delete <name>'
+                return
+        self.help_keys()
+
     def do_query(self, params):
         '''Queries the database'''
-        self.query(params, False)
+        if not params:
+            self.help_query()
+            return
+        conn = sqlite3.connect('%s/data.db' % (self.workspace))
+        cur = conn.cursor()
+        try: cur.execute(params)
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        if cur.rowcount == -1 and cur.description:
+            header = tuple([x[0] for x in cur.description])
+            tdata = cur.fetchall()
+            if not tdata:
+                self.output('No data returned.')
+            else:
+                tdata.insert(0, header)
+                self.table(tdata, True)
+                self.output('%d rows returned' % (len(tdata)))
+        else:
+            conn.commit()
+            self.output('%d rows affected.' % (cur.rowcount))
+        conn.close()
+        return
 
     def do_show(self, params):
         '''Shows various framework items'''
@@ -737,7 +714,7 @@ class module(cmd.Cmd):
                 self.display_dashboard()
                 return
             elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
-                self.query('SELECT * FROM %s ORDER BY 1' % (arg), False)
+                self.do_query('SELECT * FROM %s ORDER BY 1' % (arg))
                 return
         self.help_show()
 
@@ -785,14 +762,15 @@ class module(cmd.Cmd):
 
     def do_run(self, params):
         '''Runs the module'''
-        if not self.validate_options(): return
         try:
+            self.validate_options()
             self.module_run()
-        except:
-            print '-'*60
-            traceback.print_exc()
-            print '-'*60
-        self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
+        except Exception as e:
+            self.error(e.__str__())
+        except KeyboardInterrupt:
+            print ''
+        else:
+            self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 
     def module_run(self):
         pass
@@ -816,6 +794,9 @@ class module(cmd.Cmd):
     def help_set(self):
         print 'Usage: set <option> <value>'
         self.display_options(None)
+
+    def help_keys(self):
+        print 'Usage: key [add|delete|update]'
 
     def help_query(self):
         print 'Usage: query <sql>'
@@ -846,6 +827,13 @@ class module(cmd.Cmd):
 
     def complete_set(self, text, *ignored):
         return [x for x in self.options if x.startswith(text)]
+
+    def complete_keys(self, text, line, *ignored):
+        args = line.split()
+        options = ['add', 'delete', 'update']
+        if len(args) > 1 and args[1].lower() in options:
+            return [x for x in self.keys.keys() if x.startswith(text)]
+        return [x for x in options if x.startswith(text)]
 
     def complete_show(self, text, line, *ignored):
         args = line.split()
@@ -894,3 +882,6 @@ class ResponseObject(object):
             return json.loads(self.text)
         except ValueError:
             return None
+
+class FrameworkException(Exception):
+    pass

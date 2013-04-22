@@ -18,18 +18,11 @@ class Module(framework.module):
    
     def module_run(self):
         addresses = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        if not addresses: return
 
         for address in addresses:
             url = 'http://www.ipvoid.com/scan/%s/' % (address)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
+            resp = self.request(url)
 
             if '<h1>AN ERROR OCCURRED</h1>' in resp.text:
                 self.output('No data returned for \'%s\'' % (address))

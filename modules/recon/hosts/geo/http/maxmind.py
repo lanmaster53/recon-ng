@@ -19,20 +19,12 @@ class Module(framework.module):
    
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        if not hosts: return
 
         for host in hosts:
             # request the scan
             url = 'http://www.maxmind.com/geoip/city_isp_org/%s?demo=1' % (host)
             self.verbose('URL: %s' % url)
-            try: resp = self.request(url)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                continue
-
+            resp = self.request(url)
             if resp.json: jsonobj = resp.json
             else:
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (host, resp.text))

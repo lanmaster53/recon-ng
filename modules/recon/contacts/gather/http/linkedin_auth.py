@@ -21,23 +21,20 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        consumer_key = self.manage_key('linkedin_key', 'LinkedIn API Key')
-        if not consumer_key: return
-        consumer_secret = self.manage_key('linkedin_secret', 'LinkedIn Secret Key') 
-        if not consumer_secret: return
+        consumer_key = self.get_key('linkedin_api')
+        consumer_secret = self.get_key('linkedin_secret')
         # Use API key and secret to instantiate consumer object
         self.consumer = oauth.Consumer(consumer_key, consumer_secret)
-        self.access_token = {'oauth_token': self.get_key_from_db('linkedin_token'),'oauth_token_secret': self.get_key_from_db('linkedin_token_secret')}
-        if not self.access_token['oauth_token']: self.get_access_tokens()
-        if self.access_token['oauth_token']: self.get_contacts()
+        self.access_token = {}
+        try: self.access_token = {'oauth_token': self.get_key('linkedin_token'),'oauth_token_secret': self.get_key('linkedin_token_secret')}
+        except framework.FrameworkException: pass
+        if not self.access_token: self.get_access_tokens()
+        if self.access_token: self.get_contacts()
 
     def get_access_tokens(self):
         client = oauth.Client(self.consumer)
         request_token_url = 'https://api.linkedin.com/uas/oauth/requestToken?scope=r_basicprofile+r_network'
-        try: resp, content = client.request(request_token_url, "POST")
-        except KeyboardInterrupt:
-            print ''
-            return None
+        resp, content = client.request(request_token_url, "POST")
         if resp['status'] != '200':
             raise Exception(self.error('Error: Invalid Response %s.' % resp['status']))
         request_token = dict(urlparse.parse_qsl(content))
@@ -48,20 +45,16 @@ class Module(framework.module):
         w = webbrowser.get()
         w.open(authorize_url)
         oauth_verifier = ''
-        try: oauth_verifier = raw_input('Enter PIN: ')
-        except KeyboardInterrupt: print ''
+        oauth_verifier = raw_input('Enter PIN: ')
         if not oauth_verifier: return None
         access_token_url = 'https://api.linkedin.com/uas/oauth/accessToken'
         token = oauth.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
         token.set_verifier(oauth_verifier)
         client = oauth.Client(self.consumer, token)
-        try: resp, content = client.request(access_token_url, "POST")
-        except KeyboardInterrupt:
-            print ''
-            return None
+        resp, content = client.request(access_token_url, "POST")
         self.access_token = dict(urlparse.parse_qsl(content))
-        self.add_key_to_db('linkedin_token', self.access_token['oauth_token'])
-        self.add_key_to_db('linkedin_token_secret', self.access_token['oauth_token_secret'])
+        self.add_key('linkedin_token', self.access_token['oauth_token'])
+        self.add_key('linkedin_token_secret', self.access_token['oauth_token_secret'])
     
     def get_contacts(self):
         if not hasattr(self, 'access_token'): return
@@ -74,10 +67,7 @@ class Module(framework.module):
         cnt, tot = 0, 0
         page = 1
         while True:
-            try: resp, content = client.request(url)
-            except KeyboardInterrupt:
-                print ''
-                break
+            resp, content = client.request(url)
             jsonstr = content
             try: jsonobj = json.loads(jsonstr)
             except ValueError as e:
