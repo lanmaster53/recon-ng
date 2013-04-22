@@ -701,6 +701,9 @@ class module(cmd.Cmd):
             elif arg == 'options':
                 self.display_options(None)
                 return
+            elif arg == 'dashboard':
+                self.display_dashboard()
+                return
             elif arg == 'workspaces':
                 self.display_workspaces()
                 return
@@ -709,9 +712,6 @@ class module(cmd.Cmd):
                 return
             elif arg == 'keys':
                 self.display_keys()
-                return
-            elif arg == 'dashboard':
-                self.display_dashboard()
                 return
             elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
                 self.do_query('SELECT * FROM %s ORDER BY 1' % (arg))
@@ -796,7 +796,7 @@ class module(cmd.Cmd):
         self.display_options(None)
 
     def help_keys(self):
-        print 'Usage: key [add|delete|update]'
+        print 'Usage: keys [add|delete|update]'
 
     def help_query(self):
         print 'Usage: query <sql>'
@@ -809,7 +809,7 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
 
     def help_show(self):
-        print 'Usage: show [modules|options|workspaces|schema|keys|<table>]'
+        print 'Usage: show [modules|options|dashboard|workspaces|schema|keys|<table>]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
