@@ -473,7 +473,7 @@ class module(cmd.Cmd):
         try:
             return self.keys[key_name]
         except KeyError:
-            raise FrameworkException('API key \'%s\' not found. Add API keys with the \'key add\' command.' % (key_name))
+            raise FrameworkException('API key \'%s\' not found. Add API keys with the \'keys add\' command.' % (key_name))
 
     def add_key(self, name, value):
         self.keys[name] = value
@@ -560,7 +560,8 @@ class module(cmd.Cmd):
         socket.setdefaulttimeout(timeout)
         
         # set handlers
-        handlers = [] #urllib2.HTTPHandler(debuglevel=1)
+        # declare handlers list according to debug setting
+        handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1)] if self.goptions['debug']['value'] else []
         # process redirect and add handler
         if redirect == False:
             handlers.append(NoRedirectHandler)
@@ -587,7 +588,7 @@ class module(cmd.Cmd):
             req = urllib2.Request(url, headers=headers)
             req.get_method = lambda : 'HEAD'
         else:
-            raise Exception('Request method \'%s\' is not a supported method.' % (method))
+            raise FrameworkException('Request method \'%s\' is not a supported method.' % (method))
         try:
             resp = urllib2.urlopen(req)
         except urllib2.HTTPError as e:
@@ -643,7 +644,10 @@ class module(cmd.Cmd):
         if params:
             params = params.split()
             arg = params.pop(0).lower()
-            if arg in ['add', 'update']:
+            if arg == 'list':
+                self.display_keys()
+                return
+            elif arg in ['add', 'update']:
                 if len(params) == 2:
                     self.add_key(params[0], params[1])
                     self.output('Key \'%s\' added.' % (params[0]))
@@ -710,9 +714,6 @@ class module(cmd.Cmd):
             elif arg == 'schema':
                 self.display_schema()
                 return
-            elif arg == 'keys':
-                self.display_keys()
-                return
             elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
                 self.do_query('SELECT * FROM %s ORDER BY 1' % (arg))
                 return
@@ -765,10 +766,18 @@ class module(cmd.Cmd):
         try:
             self.validate_options()
             self.module_run()
-        except Exception as e:
-            self.error(e.__str__())
         except KeyboardInterrupt:
             print ''
+        except Exception as e:
+            if self.goptions['debug']['value']:
+                print '%s%s' % (R, '-'*60)
+                traceback.print_exc()
+                print '%s%s' % ('-'*60, N)
+            else:
+                error = e.__str__()
+                if not re.search('[.,;!?]$', error):
+                    error += '.'
+                self.error(error.capitalize())
         else:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 
@@ -796,7 +805,7 @@ class module(cmd.Cmd):
         self.display_options(None)
 
     def help_keys(self):
-        print 'Usage: keys [add|delete|update]'
+        print 'Usage: keys [list|add|delete|update]'
 
     def help_query(self):
         print 'Usage: query <sql>'
@@ -809,7 +818,7 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
 
     def help_show(self):
-        print 'Usage: show [modules|options|dashboard|workspaces|schema|keys|<table>]'
+        print 'Usage: show [modules|options|dashboard|workspaces|schema|<table>]'
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
@@ -830,7 +839,7 @@ class module(cmd.Cmd):
 
     def complete_keys(self, text, line, *ignored):
         args = line.split()
-        options = ['add', 'delete', 'update']
+        options = ['list', 'add', 'delete', 'update']
         if len(args) > 1 and args[1].lower() in options:
             return [x for x in self.keys.keys() if x.startswith(text)]
         return [x for x in options if x.startswith(text)]
@@ -841,7 +850,7 @@ class module(cmd.Cmd):
             if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
             else: return [x for x in __builtin__.loaded_modules]
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        options = ['modules', 'options', 'workspaces', 'schema', 'keys']
+        options = ['modules', 'options', 'workspaces', 'schema']
         options.extend(tables)
         return [x for x in options if x.startswith(text)]
 

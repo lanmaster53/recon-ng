@@ -11,7 +11,7 @@ def build_payload(payload, method, key, secret):
     payload['ts'] = timestamp
     payload['key'] = key
     msg = '%s%s%s%s' % (key, timestamp, method, secret)
-    hm = hmac.new(secret, msg, hashlib.sha1)
+    hm = hmac.new(str(secret), msg, hashlib.sha1)
     payload['hmac'] = hm.hexdigest() 
     return payload
 

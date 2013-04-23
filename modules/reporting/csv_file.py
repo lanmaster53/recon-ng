@@ -20,7 +20,7 @@ class Module(framework.module):
     def module_run(self):
         # validate that file can be created
         filename = self.options['filename']['value']
-        outfile = open(filename, 'wb')
+        outfile = open(filename, 'w')
         outfile.close()
         # handle the source of information for the report
         source = self.options['source']['value'].lower()
@@ -40,7 +40,7 @@ class Module(framework.module):
             self.output('No data returned.')
             return
         cnt = 0
-        outfile = open(filename, 'wb')
+        outfile = open(filename, 'w')
         for row in rows:
             row = [x if x else '' for x in row]
             if any(row):

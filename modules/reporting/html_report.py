@@ -45,7 +45,7 @@ class Module(framework.module):
 
     def module_run(self):
         filename = self.options['filename']['value']
-        outfile = open(filename, 'wb')
+        outfile = open(filename, 'w')
 
         # template
         template = """

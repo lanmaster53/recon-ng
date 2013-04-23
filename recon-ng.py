@@ -49,7 +49,8 @@ class Recon(framework.module):
         self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
         self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
         self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
-        self.register_option('verbose', True,  'yes', 'verbose output', self.goptions)
+        self.register_option('verbose', True,  'yes', 'enable verbose output', self.goptions)
+        self.register_option('debug', False,  'yes', 'enable debugging output', self.goptions)
         self.options = self.goptions
         self.load_modules()
         self.load_keys()
@@ -152,11 +153,7 @@ class Recon(framework.module):
             try:
                 modulename = self.loaded_modules[params]
                 y = sys.modules[modulename].Module((None, params))
-                try: y.do_info(None)
-                except:
-                    print '-'*60
-                    traceback.print_exc()
-                    print '-'*60
+                y.do_info(None)
             except (KeyError, AttributeError):
                 self.error('Invalid module name.')
 

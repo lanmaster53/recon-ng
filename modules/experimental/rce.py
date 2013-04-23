@@ -15,7 +15,7 @@ class Module(framework.module):
         self.register_option('mark_start', None, 'no', 'string to match page content preceding the command output')
         self.register_option('mark_end', None, 'no', 'string to match page content following the command output')
         self.info = {
-                     'Name': 'Remote Commnd Execution Shell Interface',
+                     'Name': 'Remote Command Execution Shell Interface',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Provides a shell interface for remote command execution flaws in web applications.',
                      'Comments': []
