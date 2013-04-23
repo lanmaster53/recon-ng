@@ -3,6 +3,7 @@ import framework
 
 import re
 import time
+import datetime
 class Module(framework.module):
 
     def __init__(self, params):
@@ -22,7 +23,7 @@ class Module(framework.module):
         if not ips: return
         classCs = list()
 
-        # for each ip, get it's subnet and add to a list
+        # for each ip, get it's class C and add to a list
         for ip in ips:
             indexOfLastOctet = ip.rfind(".")
             classC = ip[:indexOfLastOctet]
@@ -39,6 +40,9 @@ class Module(framework.module):
                 hv = cookie.value
         # it seems we need to briefly sleep so the server has time to register the session, otherwise we don't get results back
         time.sleep(1)
+
+        allFound = list()
+        self.output("Open resolvers and last checked time:")
         # for each subnet, look for open resolvers
         for subnet in classCs:
             url = 'http://openresolverproject.org/search.cgi?botnet=yessir&search_for=%s' % (subnet + ".1")
@@ -52,17 +56,18 @@ class Module(framework.module):
             except Exception as e:
                 self.error(e.__str__())
                 return
+
             rows = re.findall("<TR>.+</TR>", response.text)
             # skip the first row since that is the table header
             for row in rows[1:]:
-                self.output(row)
                 # if the rcode (field 4) is 0, there was no error so display
-                fields = re.findall('<TD>(.*)</TD>', row)
-                self.output(fields.group(0))
-                if fields.group(4) == 0:
-                    self.output(row)
-                
-
-            #try: self.output(rows.group(1))
-            #except Exception as e:
-            #    continue
+                fields = re.search(r'<TD>(.*)</TD><TD>(.*)</TD><TD>(.*)</TD><TD>(.*)</TD><TD>(.*)</TD>', row)
+                if fields.group(4) == "0":
+                    allFound.append(fields)
+        if len(allFound) > 0:
+            self.output("%-16s| %-24s| %-25s| %s" % ("IP Queried", "Responding IP (if diff)", "Time Detected", "RCode"))
+            for host in allFound:
+                self.output("%-16s| %-24s| %-25s| %-16s" % (host.group(1), host.group(2), time.ctime( float( host.group(3) )), host.group(4)))
+            self.output("")
+            self.output("Total open resolvers: %d" % len(allFound))
+        else: self.output("No open resolvers found.")
