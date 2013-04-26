@@ -34,7 +34,7 @@ class Module(framework.module):
             
         # print the table
         if tdata:
-            tdata.insert(0, resp.json['columns'])
+            tdata.insert(0, ['domain', 'hostname', 'ip_address', 'weight'])
             self.table(tdata, True)
         else:
             self.output('No results found.')

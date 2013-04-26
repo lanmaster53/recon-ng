@@ -1,5 +1,6 @@
 import framework
 # unique to module
+import time
 
 class Module(framework.module):
 
@@ -20,10 +21,18 @@ class Module(framework.module):
 
         url = 'http://www.mcafee.com/threat-intelligence/jsproxy/domain.ashx?q=dns&f=%s' % (domain)
         self.verbose('URL: %s' % url)
-        resp = self.request(url)
-        if not resp.json:
-            self.error('Invalid JSON response.\n%s' % (resp.text))
-            return
+        # fixes timing error caused by mcafee dns ttl
+        while True:
+            resp = self.request(url)
+            if not resp.json:
+                if resp.text == '':
+                    self.output('Sleeping...')
+                    time.sleep(3)
+                    continue
+                else:
+                    self.error('Invalid JSON response.\n%s' % (resp.text))
+                    return
+            break
 
         new = 0
         tdata = [] 
@@ -35,7 +44,7 @@ class Module(framework.module):
             
         # print the table
         if tdata:
-            tdata.insert(0, resp.json['columns'])
+            tdata.insert(0, ['domain', 'hostname', 'ip_address', 'first_seen', 'last_seen', 'risk', 'type'])
             self.table(tdata, True)
         else:
             self.output('No results found.')

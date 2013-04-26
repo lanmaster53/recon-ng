@@ -28,7 +28,7 @@ class Module(framework.module):
         for col in resp.json:
             tdata.append([col['label'], col['hover'], str(col['link'])]) 
         if tdata:
-            tdata.insert(0, ['Domain/URL', 'Category', 'Links'])
+            tdata.insert(0, ['domain/url', 'category', 'links'])
             self.table(tdata, True)
         else:
             self.output('No results found.')
