@@ -45,7 +45,7 @@ class Recon(framework.module):
         self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
         self.register_option('domain', '', 'no', 'target domain', self.goptions)
         self.register_option('company', '', 'no', 'target company name', self.goptions)
-        self.register_option('user-agent', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)', 'yes', 'user-agent string', self.goptions)
+        self.register_option('user-agent', 'Recon-ng/%s' % (__version__), 'yes', 'user-agent string', self.goptions)
         self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
         self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
         self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
@@ -182,6 +182,12 @@ class Recon(framework.module):
 
     def do_load(self, params):
         '''Loads selected module'''
+        if params.lower() == 'useless':
+            self.output('Thank you, Kevin Fiscus!')
+            import webbrowser
+            w = webbrowser.get()
+            w.open('http://www.theuselessweb.com/')
+            return
         try: self.validate_options()
         except framework.FrameworkException as e:
             self.error(e.message)

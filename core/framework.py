@@ -778,7 +778,7 @@ class module(cmd.Cmd):
                 if not re.search('[.,;!?]$', error):
                     error += '.'
                 self.error(error.capitalize())
-        else:
+        finally:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 
     def module_run(self):

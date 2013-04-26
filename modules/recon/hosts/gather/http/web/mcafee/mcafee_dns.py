@@ -26,16 +26,17 @@ class Module(framework.module):
             return
 
         new = 0
-        # Output the results in table format
         tdata = [] 
-        tdata.append(['Domain', 'Hostname', 'IP', 'First Seen', 'Last Seen', 'Risk', 'Type'])
         for col in resp.json['data']:
             address = col['IP'] if col.has_key('IP') else ''
             tdata.append([col['Domain'], col['Hostname'], address, col['First_Seen'], col['Last_Seen'],col['Risk'], col['Type']])
-            
-            # Add each host to the database
+            # add each host to the database
             if add_hosts: new += self.add_host(col['Hostname'])
             
-        # Print the table  
-        self.table(tdata, True)
+        # print the table
+        if tdata:
+            tdata.insert(0, resp.json['columns'])
+            self.table(tdata, True)
+        else:
+            self.output('No results found.')
         if add_hosts and new: self.alert('%d NEW hosts found!' % (new))

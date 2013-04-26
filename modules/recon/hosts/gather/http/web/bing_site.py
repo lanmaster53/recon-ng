@@ -19,9 +19,9 @@ class Module(framework.module):
 
     def module_run(self):
         domain = self.options['domain']['value']
-        url = 'http://www.bing.com/search'
+        base_url = 'http://www.bing.com/search'
         base_query = 'site:' + domain
-        pattern = '"sb_tlst"><h3><a href="\w+://(\S+?)\.%s' % (domain)
+        pattern = '"sb_tlst"><h3><a href="(?:\w*://)*(\S+?)\.%s[^"]*"' % (domain)
         subs = []
         cnt = 0
         # control variables
@@ -37,13 +37,16 @@ class Module(framework.module):
             for sub in subs:
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
-            payload = {'first': str(page*nr), 'q': full_query}
-            #
-            #
+            url = '%s?first=%d&q=%s' % (base_url, (page*nr), urllib.quote_plus(full_query))
+            # bing errors out at > 2059 characters not including the protocol
+            if len(url) > 2066: url = url[:2066]
+            self.verbose('URL: %s' % (url))
             cookies = {'SRCHHPGUSR': 'NEWWND=0&NRSLT=%d&SRCHLANG=&AS=1' % (nr)}
-            self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
             # send query to search engine
-            resp = self.request(url, payload=payload, cookies=cookies)
+            resp = self.request(url, cookies=cookies)
+            if resp.status_code != 200:
+                self.alert('Bing has encountered an error. Please submit an issue for debugging.')
+                break
             content = resp.text
             sites = re.findall(pattern, content)
             # create a unique list
@@ -66,8 +69,7 @@ class Module(framework.module):
                     self.verbose('No New Subdomains Found on the Current Page. Jumping to Result %d.' % ((page*nr)+1))
                     new = True
             # sleep script to avoid lock-out
-            self.verbose('Sleeping to Avoid Lock-out...')
+            self.verbose('Sleeping to avoid lockout...')
             time.sleep(random.randint(5,15))
-        self.verbose('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))

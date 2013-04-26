@@ -23,9 +23,12 @@ class Module(framework.module):
             self.error('Invalid JSON response.\n%s' % (resp.text))
             return
 
-        # Output the results in table format
+        # output the results in table format
         tdata = [] 
-        tdata.append(['Domain/URL', 'Category', 'Links'])
         for col in resp.json:
             tdata.append([col['label'], col['hover'], str(col['link'])]) 
-        self.table(tdata, True)
+        if tdata:
+            tdata.insert(0, ['Domain/URL', 'Category', 'Links'])
+            self.table(tdata, True)
+        else:
+            self.output('No results found.')

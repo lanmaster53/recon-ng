@@ -19,9 +19,9 @@ class Module(framework.module):
 
     def module_run(self):
         domain = self.options['domain']['value']
-        url = 'http://www.google.com/search'
+        base_url = 'http://www.google.com/search'
         base_query = 'site:' + domain
-        pattern = '<a\shref="\w+://(\S+?)\.%s\S+?"\sclass=l'  % (domain)
+        pattern = '<cite>(?:\w*://)*(\S*?)\.%s[^<]*</cite>'  % (domain)
         subs = []
         cnt = 0
         # control variables
@@ -37,13 +37,18 @@ class Module(framework.module):
             for sub in subs:
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
-            payload = {'start': page*nr, 'q': full_query, 'filter' : 0}
-            # note: query character limit is passive in mobile, but seems to be ~794
-            # note: query character limit seems to be 852 for desktop queries
-            # note: typical URI max length is 2048 (starts after top level domain)
-            self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
+            url = '%s?start=%d&filter=0&q=%s' % (base_url, (page*nr), urllib.quote_plus(full_query))
+            # google errors out at > 2061 characters not including the protocol
+            if len(url) > 2068: url = url[:2068]
+            self.verbose('URL: %s' % (url))
             # send query to search engine
-            resp = self.request(url, payload=payload)
+            resp = self.request(url, redirect=False)
+            if resp.status_code != 200:
+                if resp.status_code == 302:
+                    self.alert('You\'ve been temporarily banned by Google for violating the terms of service.')
+                else:
+                    self.alert('Google has encountered an error. Please submit an issue for debugging.')
+                break
             content = resp.text
             sites = re.findall(pattern, content)
             # create a unique list
@@ -66,8 +71,7 @@ class Module(framework.module):
                     self.verbose('No New Subdomains Found on the Current Page. Jumping to Result %d.' % ((page*nr)+1))
                     new = True
             # sleep script to avoid lock-out
-            self.verbose('Sleeping to Avoid Lock-out...')
+            self.verbose('Sleeping to avoid lockout...')
             time.sleep(random.randint(5,15))
-        self.verbose('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))

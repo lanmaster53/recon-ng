@@ -19,9 +19,9 @@ class Module(framework.module):
 
     def module_run(self):
         domain = self.options['domain']['value']
-        url = 'http://www.baidu.com/s'
+        base_url = 'http://www.baidu.com/s'
         base_query = 'site:' + domain
-        pattern = '<span class="g">\s\s(\S*?)\.%s.*?</span>'  % (domain)
+        pattern = '<span class="g">\s*(?:\w*://)*(\S*?)\.%s[^<]*</span>'  % (domain)
         subs = []
         cnt = 0
         # control variables
@@ -37,13 +37,15 @@ class Module(framework.module):
             for sub in subs:
                 query += ' -site:%s.%s' % (sub, domain)
             full_query = base_query + query
-            payload = {'pn': page*nr, 'wd': full_query}
-            #rn=10
-            #cl=3
-            #
-            self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
+            url = '%s?pn=%d&wd=%s' % (base_url, (page*nr), urllib.quote_plus(full_query))
+            # baidu errors out at > 2054 characters not including the protocol
+            if len(url) > 2061: url = url[:2061]
+            self.verbose('URL: %s' % (url))
             # send query to search engine
-            resp = self.request(url, payload=payload)
+            resp = self.request(url, redirect=False)
+            if resp.status_code != 200:
+                self.alert('Baidu has encountered an error. Please submit an issue for debugging.')
+                break
             content = resp.text
             sites = re.findall(pattern, content)
             # create a unique list
@@ -51,7 +53,7 @@ class Module(framework.module):
             new = False
             # add subdomain to list if not already exists
             for site in sites:
-               if site not in subs:
+                if site not in subs:
                     subs.append(site)
                     new = True
                     host = '%s.%s' % (site, domain)
@@ -66,8 +68,7 @@ class Module(framework.module):
                     self.verbose('No New Subdomains Found on the Current Page. Jumping to Result %d.' % ((page*nr)+1))
                     new = True
             # sleep script to avoid lock-out
-            self.verbose('Sleeping to Avoid Lock-out...')
+            self.verbose('Sleeping to avoid lockout...')
             time.sleep(random.randint(5,15))
-        self.verbose('Final Query String: %s?%s' % (url, urllib.urlencode(payload)))
         self.output('%d total hosts found.' % (len(subs)))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))
