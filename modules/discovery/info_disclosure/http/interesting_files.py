@@ -1,5 +1,6 @@
 import framework
 # unique to module
+import warnings
 import gzip
 from StringIO import StringIO
 
@@ -36,7 +37,8 @@ class Module(framework.module):
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         download = self.options['download']['value']
-
+        # ignore unicode warnings when trying to ungzip text type 200 repsonses
+        warnings.simplefilter("ignore")
         protocols = ['http', 'https']
         # (filename, string to search for to prevent false positive)
         filetypes = [
@@ -64,7 +66,7 @@ class Module(framework.module):
                     if code == 200:
                         # uncompress if necessary
                         text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text
-                        # check for file type since many custom 404s are returned as 200s 
+                        # check for file type since many custom 404s are returned as 200s
                         if verify.lower() in text.lower():
                             self.alert('%s => %s. \'%s\' found!' % (url, code, filename))
                             if download:
