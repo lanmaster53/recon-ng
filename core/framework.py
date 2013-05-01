@@ -410,7 +410,7 @@ class module(cmd.Cmd):
         if self.options:
             pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
             key_len = len(max(self.options, key=len))
-            val_len = len(max([str(self.options[x]['value']) for x in self.options], key=len))
+            val_len = len(max([self.to_unicode(self.options[x]['value']) for x in self.options], key=len))
             if val_len < 13: val_len = 13
             print ''
             print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
@@ -419,7 +419,7 @@ class module(cmd.Cmd):
                 value = self.options[key]['value'] if self.options[key]['value'] != None else ''
                 reqd = self.options[key]['reqd']
                 desc = self.options[key]['desc']
-                print pattern % (key.upper().ljust(key_len), str(value).ljust(val_len), reqd.ljust(3), desc)
+                print pattern % (key.upper().ljust(key_len), self.to_unicode(value).ljust(val_len), reqd.ljust(3), desc)
             print ''
         else:
             if params != 'info': print ''
