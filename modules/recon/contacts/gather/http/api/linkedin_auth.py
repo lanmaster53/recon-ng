@@ -84,11 +84,11 @@ class Module(framework.module):
             if not 'values' in jsonobj['people']: break
             for contact in jsonobj['people']['values']:
                 if 'headline' in contact:
-                    fname = self.unescape(re.split('[\s]',contact['firstName'])[0])
-                    lname = self.unescape(re.split('[,;]',contact['lastName'])[0])
-                    title = self.unescape(contact['headline'])
-                    region = re.sub('(?:Greater\s|\sArea)', '', self.unescape(contact['location']['name']).title())
-                    country = self.unescape(contact['location']['country']['code']).upper()
+                    fname = self.html_unescape(re.split('[\s]',contact['firstName'])[0])
+                    lname = self.html_unescape(re.split('[,;]',contact['lastName'])[0])
+                    title = self.html_unescape(contact['headline'])
+                    region = re.sub('(?:Greater\s|\sArea)', '', self.html_unescape(contact['location']['name']).title())
+                    country = self.html_unescape(contact['location']['country']['code']).upper()
                     self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
                     tot += 1
                     cnt += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)

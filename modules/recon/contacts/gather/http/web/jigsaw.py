@@ -83,17 +83,17 @@ class Module(framework.module):
             payload = {'contactId': contact_id}
             content = self.request(url, payload=payload).text
             if 'Contact Not Found' in content: continue
-            fname = self.unescape(re.search('<span id="firstname">(.+?)</span>', content).group(1))
-            lname = self.unescape(re.search('<span id="lastname">(.+?)</span>', content).group(1))
-            title = self.unescape(re.search('<span id="title" title=".*?">(.*?)</span>', content).group(1))
-            city = self.unescape(re.search('<span id="city">(.+?)</span>', content).group(1)).title()
-            state = re.search('<span id="state">(.+?)</span>', content)
-            if state: state = self.unescape(state.group(1)).upper()
+            fname = self.html_unescape(re.search('<span id="firstname">(.+?)</span>', content).group(1))
+            lname = self.html_unescape(re.search('<span id="lastname">(.+?)</span>', content).group(1))
+            title = self.html_unescape(re.search('<span id="title" title=".*?">(.*?)</span>', content).group(1))
+            city = self.html_unescape(re.search('<span id="city">(.+?)</span>', content).group(1)).title()
+            state = self.html_unescape(re.search('<span id="state">(.+?)</span>', content))
+            if state: state = self.html_unescape(state.group(1)).upper()
             region = []
             for item in [city, state]:
                 if item: region.append(item)
             region = ', '.join(region)
-            country = self.unescape(re.search('<span id="country">(.+?)</span>', content).group(1)).title()
+            country = self.html_unescape(re.search('<span id="country">(.+?)</span>', content).group(1)).title()
             self.output('[%s] %s %s - %s (%s - %s)' % (contact_id, fname, lname, title, region, country))
             tot += 1
             cnt += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)

@@ -32,7 +32,7 @@ class Module(framework.module):
         rows = self.query(query)
         for row in [x[0] for x in rows]:
             row = row if row else ''
-            outfile.write('%s\n' % (row))
+            outfile.write(('%s\n' % (row)).encode('utf-8'))
             print row
         outfile.close()
         self.output('%d items added to \'%s\'.' % (len(rows), filename))

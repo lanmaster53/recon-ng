@@ -24,9 +24,10 @@ class Module(framework.module):
         cnt = 0
         pwned = 0
         for account in accounts:
-            account = "".join([i for i in account if ord(i) in range(32, 126)])
             status = None
             url = 'https://www.pwnedlist.com/query'
+            # hashlib will only work with ascii encoded strings
+            account = account.encode('utf-8')
             payload = {'inputEmail': hashlib.sha512(account).hexdigest(), 'form.submitted': ''}
             resp = self.request(url, payload=payload, method='POST', redirect=False)
             content = resp.text

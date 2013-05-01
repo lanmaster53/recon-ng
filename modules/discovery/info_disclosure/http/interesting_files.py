@@ -72,7 +72,8 @@ class Module(framework.module):
                             if download:
                                 filepath = '%s/%s_%s_%s' % (self.workspace, proto, host, filename)
                                 dl = open(filepath, 'wb')
-                                dl.write(resp.text)
+                                content = resp.text.encode(resp.encoding) if resp.encoding else resp.text
+                                dl.write(content)
                                 dl.close()
                             cnt += 1
                         else:
@@ -80,3 +81,4 @@ class Module(framework.module):
                     else:
                         self.verbose('%s => %s' % (url, code))
         self.output('%d interesting files found.' % (cnt))
+        if download: self.output('...downloaded to \'%s/\'' % (self.workspace))

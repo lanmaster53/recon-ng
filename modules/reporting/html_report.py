@@ -15,17 +15,6 @@ class Module(framework.module):
                      'Comments': []
                      }
 
-    def sanitize_html(self, htmlstring):
-        # escape HTML with entities
-        escapes = {'"': '&quot;',
-                   "'": '&#39;',
-                   '<': '&lt;',
-                   '>': '&gt;'}
-        #for seq, esc in escapes.iteritems():
-        #    htmlstring = htmlstring.replace(seq, esc)
-        htmlstring = ''.join([char for char in htmlstring if ord(char) == 10 or ord(char) >= 32 and ord(char) <= 126])
-        return htmlstring
-
     def build_table(self, table):
         table_content = ''
         table_show = '<p><a id="show-%s" href="javascript:showhide(\'%s\');">[+] %s</a></p>' % (table, table, table.upper().replace('_', ' '))
@@ -36,7 +25,7 @@ class Module(framework.module):
         if not rows: return ''
         row_content = ''
         for row in rows:
-            values = [unicode(x) if x != None else u'' for x in row]
+            values = [self.to_unicode(x) if x != None else u'' for x in row]
             if table == 'creds' and self.options['sanitize']['value']:
                 values[1] = '%s%s%s' % (values[1][:1], '*'*(len(values[1])-2), values[1][-1:])
             row_content += '<tr><td>%s</td></tr>\n' % ('</td><td>'.join(values))
@@ -44,14 +33,15 @@ class Module(framework.module):
         return table_content
 
     def module_run(self):
+        # validate that file can be created
         filename = self.options['filename']['value']
         outfile = open(filename, 'w')
-
-        # template
+        # html template
         template = """
 <!DOCTYPE HTML>
 <html>
 <head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>Recon-ng Reconnaissance Report</title>
 <script type="text/javascript">
 function showhide(id) {
@@ -59,9 +49,9 @@ function showhide(id) {
     hide = document.getElementById("hide-" + id);
     show = document.getElementById("show-" + id);
     if (obj.style.display == "none") {
-        show.style.display = "none";
-        hide.style.display = "inline";
-        obj.style.display = "inline";
+        show.removeAttribute('style');
+        hide.removeAttribute('style');
+        obj.removeAttribute('style');
     } else {
         obj.style.display = "none";
         hide.style.display = "none";
@@ -185,6 +175,6 @@ a[id*="show-"] {
             table_content += self.build_table(table)
 
         markup = template % (self.options['company']['value'].title(), table_content)
-        outfile.write(self.sanitize_html(markup))
+        outfile.write(markup.encode('utf-8'))
         outfile.close()
         self.output('Report generated at \'%s\'.' % (filename))

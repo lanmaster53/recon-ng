@@ -32,7 +32,7 @@ class Module(framework.module):
                 respDetail = self.request(urlDetail)
                 # Parse the response and get the details
                 details = re.findall('<th class="row3"[^>]*>(.*?)</th>', respDetail.text)#.replace('&nbsp;', ' '))
-                details = [self.unescape(x) for x in details]
+                details = [self.html_unescape(x) for x in details]
                 status = re.search('([UNFIXED]+)',details[3]).group(1)
                 print self.ruler*50
                 self.output('Mirror: %s' % (urlDetail))

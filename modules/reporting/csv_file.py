@@ -21,7 +21,6 @@ class Module(framework.module):
         # validate that file can be created
         filename = self.options['filename']['value']
         outfile = open(filename, 'w')
-        outfile.close()
         # handle the source of information for the report
         source = self.options['source']['value'].lower()
         rows = []
@@ -40,12 +39,11 @@ class Module(framework.module):
             self.output('No data returned.')
             return
         cnt = 0
-        outfile = open(filename, 'w')
         for row in rows:
             row = [x if x else '' for x in row]
             if any(row):
                 cnt += 1
                 csvwriter = csv.writer(outfile, quoting=csv.QUOTE_ALL)
-                csvwriter.writerow([unicode(s).encode("utf-8") for s in row])
+                csvwriter.writerow([s.encode("utf-8") for s in row])
         outfile.close()
         self.output('%d records added to \'%s\'.' % (cnt, filename))

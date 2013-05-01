@@ -11,10 +11,11 @@ def build_payload(payload, method, key, secret):
     payload['ts'] = timestamp
     payload['key'] = key
     msg = '%s%s%s%s' % (key, timestamp, method, secret)
-    hm = hmac.new(str(secret), msg, hashlib.sha1)
-    payload['hmac'] = hm.hexdigest() 
+    hm = hmac.new(secret.encode('utf-8'), msg, hashlib.sha1)
+    payload['hmac'] = hm.hexdigest()
     return payload
 
 def decrypt(ciphertext, key, iv):
     decoded = base64.b64decode(ciphertext)
-    return aes.decryptData(key, str(iv) + decoded)
+    password = aes.decryptData(key, iv.encode('utf-8') + decoded)
+    return unicode(password, 'utf-8')

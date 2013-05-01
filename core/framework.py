@@ -51,7 +51,7 @@ class module(cmd.Cmd):
             sys.stdout.write('%s\n' % (line))
         if __builtin__.record:
             recorder = open(self.goptions['rec_file']['value'], 'ab')
-            recorder.write('%s\n' % (line))
+            recorder.write(('%s\n' % (line)).encode('utf-8'))
             recorder.flush()
             recorder.close()
         return line
@@ -148,14 +148,19 @@ class module(cmd.Cmd):
                 tdata.append([table.title(), count])
         self.table(tdata, header=True)
 
-    def sanitize(self, obj, encoding='utf-8'):
+    def to_unicode(self, obj, encoding='utf-8'):
         # checks if obj is unicode and converts if not
-        if isinstance(obj, basestring):
-            if not isinstance(obj, unicode):
-                obj = unicode(obj, encoding)
+        if isinstance(obj, (int, long, float)):
+            obj = str(obj)
+        #if isinstance(obj, basestring):
+        if not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
         return obj
 
-    def unescape(self, s):
+    def ascii_sanitize(self, s):
+        return ''.join([char for char in s if ord(char) == 10 or ord(char) in range(32, 126)])
+
+    def html_unescape(self, s):
         '''Unescapes HTML markup and returns an unescaped string.'''
         h = HTMLParser.HTMLParser()
         return h.unescape(s)
@@ -163,6 +168,16 @@ class module(cmd.Cmd):
         #p.save_bgn()
         #p.feed(s)
         #return p.save_end()
+
+    def html_escape(self, s):
+        escapes = {
+            "&": "&amp;",
+            '"': "&quot;",
+            "'": "&apos;",
+            ">": "&gt;",
+            "<": "&lt;",
+            }
+        return "".join(escapes.get(c,c) for c in text)
 
     def is_hash(self, hashstr):
         hashdict = [
@@ -195,15 +210,15 @@ class module(cmd.Cmd):
 
     def error(self, line):
         '''Formats and presents errors.'''
-        print '%s[!] %s%s' % (R, line, N)
+        print '%s[!] %s%s' % (R, self.to_unicode(line), N)
 
     def output(self, line):
         '''Formats and presents normal output.'''
-        print '%s[*]%s %s' % (B, N, line)
+        print '%s[*]%s %s' % (B, N, self.to_unicode(line))
 
     def alert(self, line):
         '''Formats and presents important output.'''
-        print '%s[*]%s %s' % (G, N, line)
+        print '%s[*]%s %s' % (G, N, self.to_unicode(line))
 
     def verbose(self, line):
         '''Formats and presents output if in verbose mode.'''
@@ -212,6 +227,7 @@ class module(cmd.Cmd):
 
     def heading(self, line, level=1):
         '''Formats and presents styled banner text'''
+        line = self.to_unicode(line)
         print ''
         if level == 0:
             print self.ruler*len(line)
@@ -228,7 +244,7 @@ class module(cmd.Cmd):
         lens = []
         cols = len(tdata[0])
         for i in range(0,cols):
-            lens.append(len(max([unicode(x[i]) if x[i] != None else '' for x in tdata], key=len)))
+            lens.append(len(max([self.to_unicode(x[i]) if x[i] != None else '' for x in tdata], key=len)))
         # build ascii table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
@@ -246,9 +262,9 @@ class module(cmd.Cmd):
                 print data_str % data_sub
                 print separator
                 # build column names for database table out of header row
-                if table: columns = [self.sanitize(x).lower() for x in rdata]
+                if table: columns = [self.to_unicode(x).lower() for x in rdata]
             for rdata in tdata:
-                data_sub = tuple([unicode(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
+                data_sub = tuple([self.to_unicode(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
             # bottom of ascii table
             print separator
@@ -265,7 +281,7 @@ class module(cmd.Cmd):
                 for rdata in tdata:
                     data = {}
                     for i in range(0, len(columns)):
-                        data[columns[i]] = rdata[i]
+                        data[columns[i]] = self.to_unicode(rdata[i])
                     self.insert(table, data)
                 self.output('\'%s\' table created in the database' % (table))
 
@@ -296,12 +312,12 @@ class module(cmd.Cmd):
     def add_host(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
         '''Adds a host to the database and returns the affected row count.'''
         data = dict(
-            host = self.sanitize(host),
-            ip_address = self.sanitize(ip_address),
-            region = self.sanitize(region),
-            country = self.sanitize(country),
-            latitude = self.sanitize(latitude),
-            longitude = self.sanitize(longitude),
+            host = self.to_unicode(host),
+            ip_address = self.to_unicode(ip_address),
+            region = self.to_unicode(region),
+            country = self.to_unicode(country),
+            latitude = self.to_unicode(latitude),
+            longitude = self.to_unicode(longitude),
         )
 
         return self.insert('hosts', data, ('host',))
@@ -309,12 +325,12 @@ class module(cmd.Cmd):
     def add_contact(self, fname, lname, title, email=None, region=None, country=None):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
-            fname = self.sanitize(fname),
-            lname = self.sanitize(lname),
-            title = self.sanitize(title),
-            email = self.sanitize(email),
-            region = self.sanitize(region),
-            country = self.sanitize(country),
+            fname = self.to_unicode(fname),
+            lname = self.to_unicode(lname),
+            title = self.to_unicode(title),
+            email = self.to_unicode(email),
+            region = self.to_unicode(region),
+            country = self.to_unicode(country),
         )
 
         return self.insert('contacts', data, ('fname', 'lname', 'title', 'email'))
@@ -322,11 +338,11 @@ class module(cmd.Cmd):
     def add_cred(self, username, password=None, hashtype=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''
         data = {}
-        data['username'] = self.sanitize(username)
-        if password and not self.is_hash(password): data['password'] = self.sanitize(password)
-        if password and self.is_hash(password): data['hash'] = self.sanitize(password)
-        if hashtype: data['type'] = self.sanitize(hashtype)
-        if leak: data['leak'] = self.sanitize(leak)
+        data['username'] = self.to_unicode(username)
+        if password and not self.is_hash(password): data['password'] = self.to_unicode(password)
+        if password and self.is_hash(password): data['hash'] = self.to_unicode(password)
+        if hashtype: data['type'] = self.to_unicode(hashtype)
+        if leak: data['leak'] = self.to_unicode(leak)
 
         return self.insert('creds', data, data.keys())
 
@@ -439,7 +455,7 @@ class module(cmd.Cmd):
             sources = open(source).read().split()
         else:
             sources = [source]
-        return sources
+        return [self.to_unicode(x) for x in sources]
 
     #==================================================
     # API KEY METHODS
@@ -792,9 +808,9 @@ class module(cmd.Cmd):
                 __builtin__.script = 1
                 return
             else:
-                self.error('Script file not found.')
+                self.error('Script file \'%s\' not found.' % (params))
                 return
-        self.help_resource()        
+        self.help_resource()
 
     #==================================================
     # HELP METHODS

@@ -44,7 +44,7 @@ class Module(framework.module):
             for cred in jsonobj['accounts']:
                 username = cred['plain']
                 password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
-                password = "".join([i for i in password if ord(i) in range(32, 126)])
+                #password = self.ascii_sanitize(password)
                 leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))
                 self.add_cred(username, password, None, leak)

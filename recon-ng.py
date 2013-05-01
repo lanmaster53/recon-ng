@@ -279,15 +279,10 @@ if __name__ == '__main__':
         readline.set_completer_delims(readline.get_completer_delims().replace('/', ''))
         # for possible future use to format command completion output
         #readline.set_completion_display_matches_hook(display_hook)
-    # check for and run script session
-    if opts.script_file:
-        if os.path.exists(opts.script_file):
-            sys.stdin = open(opts.script_file)
-            __builtin__.script = 1
-        else:
-            print '%s[!] %s%s' % (R, 'Script file not found.', N)
-            sys.exit()
     x = Recon()
+    # check for and run script session
+    if opts.script_file: x.do_resource(opts.script_file)
+    # check for and load workspace
     if opts.workspace: x.do_set('workspace %s' % (opts.workspace))
     try: x.cmdloop()
     except KeyboardInterrupt: print ''

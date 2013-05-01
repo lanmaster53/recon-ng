@@ -73,16 +73,16 @@ class Module(framework.module):
             jsonobj = resp.json
             for contact in jsonobj['contacts']:
                 contact_id = contact['contactId']
-                fname = contact['firstname']
-                lname = contact['lastname']
-                title = self.unescape(contact['title'])
-                city = contact['city'].title()
-                state = contact['state'].upper()
+                fname = self.html_unescape(contact['firstname'])
+                lname = self.html_unescape(contact['lastname'])
+                title = self.html_unescape(contact['title'])
+                city = self.html_unescape(contact['city']).title()
+                state = self.html_unescape(contact['state']).upper()
                 region = []
                 for item in [city, state]:
                     if item: region.append(item)
                 region = ', '.join(region)
-                country = contact['country'].title()
+                country = self.html_unescape(contact['country']).title()
                 self.output('[%s] %s %s - %s (%s - %s)' % (contact_id, fname, lname, title, region, country))
                 new += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
                 tot += 1
