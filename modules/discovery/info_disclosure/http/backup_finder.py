@@ -20,11 +20,9 @@ class Module(framework.module):
                      }
 
     def module_run(self):
+        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         uri = self.options['uri']['value']
         searchstr = self.options['searchstr']['value']
-        
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        if not hosts: return
 
         protocols = ['http', 'https']
 
@@ -47,8 +45,7 @@ class Module(framework.module):
                         resp = self.request(url, redirect=False)
                         code = resp.status_code
                     except KeyboardInterrupt:
-                        print ''
-                        return
+                        raise KeyboardInterrupt
                     except:
                         code = 'Error'
                     if code == 200 and searchstr in resp.text:

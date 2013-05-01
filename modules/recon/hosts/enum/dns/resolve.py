@@ -27,9 +27,6 @@ class Module(framework.module):
                 answers = q.query(host)
                 address = answers[0].address
                 self.query('UPDATE hosts SET ip_address=\'%s\' WHERE rowid=\'%s\'' % (address, row))
-            except KeyboardInterrupt:
-                print ''
-                return
             except dns.exception.SyntaxError:
                 self.error('Nameserver must be in IP form.')
                 return
