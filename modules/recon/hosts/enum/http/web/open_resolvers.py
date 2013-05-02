@@ -1,17 +1,17 @@
 import framework
 # unique to module
-
 import re
 import time
+
 class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
+        self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Open Recursive DNS Resolvers Check',
                      'Author': 'Dan Woodruff (@dewoodruff)',
-                     'Description': 'Leverages the Open DNS Resolver Project data at openresolverproject.org to check the class C subnets for open recursive DNS resolvers.',
+                     'Description': 'Leverages data ptovided by the Open DNS Resolver Project at openresolverproject.org to check class C subnets for open recursive DNS resolvers.',
                      'Comments': [
                                   'Source options: [ db | <address> | ./path/to/file | query <sql> ]',
                                   ]
@@ -39,10 +39,9 @@ class Module(framework.module):
         time.sleep(1)
 
         allFound = []
-        self.output("Open resolvers and last checked time:")
         # for each subnet, look for open resolvers
         for subnet in classCs:
-            url = 'http://openresolverproject.org/search.cgi?botnet=yessir&search_for=%s' % (subnet + ".0")
+            url = 'http://openresolverproject.org/search.cgi?botnet=yessir&search_for=%s.0/24' % (subnet)
             self.verbose('URL: %s' % url)
 
             # build the request as expected by the open resolver project
@@ -53,13 +52,13 @@ class Module(framework.module):
             for row in rows[1:]:
                 # if the rcode (field 4) is 0, there was no error so display
                 fields = re.search(r'<TD>(.*)</TD><TD>(.*)</TD><TD>(.*)</TD><TD>(.*)</TD><TD>(.*)</TD><TD>(.*)</TD>', row)
-                if fields.group(4) == "0":
+                if fields.group(4) == '0' and fields.group(5) == '1':
                     allFound.append(fields)
 
         if len(allFound) > 0:
-            tableData = [["IP Queried", "Responding IP (if different)", "Time Detected", "RCode"]]
+            tableData = [["IP Queried", "Responding IP (if different)", "Time Detected"]]
             for host in allFound:
-                tableData.append([host.group(1), host.group(2), time.ctime( float( host.group(3) )), host.group(4)])
+                tableData.append([host.group(1), host.group(2), time.ctime(float(host.group(3)))])
             self.table(tableData, header=True)
             self.output("Total open resolvers: %d" % len(allFound))
         else: self.output("No open resolvers found.")
