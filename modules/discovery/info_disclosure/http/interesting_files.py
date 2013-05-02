@@ -72,8 +72,7 @@ class Module(framework.module):
                             if download:
                                 filepath = '%s/%s_%s_%s' % (self.workspace, proto, host, filename)
                                 dl = open(filepath, 'wb')
-                                content = resp.text.encode(resp.encoding) if resp.encoding else resp.text
-                                dl.write(content)
+                                dl.write(resp.text.encode(resp.encoding) if resp.encoding else resp.text)
                                 dl.close()
                             cnt += 1
                         else:

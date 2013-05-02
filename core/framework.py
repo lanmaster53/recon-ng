@@ -148,13 +148,18 @@ class module(cmd.Cmd):
                 tdata.append([table.title(), count])
         self.table(tdata, header=True)
 
-    def to_unicode(self, obj, encoding='utf-8'):
-        # checks if obj is unicode and converts if not
-        if isinstance(obj, (int, long, float)):
+    def to_unicode_str(self, obj, encoding='utf-8'):
+        # checks if obj is a string and converts if not
+        if not isinstance(obj, basestring):
             obj = str(obj)
-        #if isinstance(obj, basestring):
-        if not isinstance(obj, unicode):
-            obj = unicode(obj, encoding)
+        obj = self.to_unicode(obj, encoding)
+        return obj
+
+    def to_unicode(self, obj, encoding='utf-8'):
+        # checks if obj is a unicode string and converts if not
+        if isinstance(obj, basestring):
+            if not isinstance(obj, unicode):
+                obj = unicode(obj, encoding)
         return obj
 
     def ascii_sanitize(self, s):
@@ -244,7 +249,7 @@ class module(cmd.Cmd):
         lens = []
         cols = len(tdata[0])
         for i in range(0,cols):
-            lens.append(len(max([self.to_unicode(x[i]) if x[i] != None else '' for x in tdata], key=len)))
+            lens.append(len(max([self.to_unicode_str(x[i]) if x[i] != None else '' for x in tdata], key=len)))
         # build ascii table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
@@ -262,9 +267,9 @@ class module(cmd.Cmd):
                 print data_str % data_sub
                 print separator
                 # build column names for database table out of header row
-                if table: columns = [self.to_unicode(x).lower() for x in rdata]
+                if table: columns = [self.to_unicode_str(x).lower() for x in rdata]
             for rdata in tdata:
-                data_sub = tuple([self.to_unicode(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
+                data_sub = tuple([self.to_unicode_str(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
             # bottom of ascii table
             print separator
@@ -410,7 +415,7 @@ class module(cmd.Cmd):
         if self.options:
             pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
             key_len = len(max(self.options, key=len))
-            val_len = len(max([self.to_unicode(self.options[x]['value']) for x in self.options], key=len))
+            val_len = len(max([self.to_unicode_str(self.options[x]['value']) for x in self.options], key=len))
             if val_len < 13: val_len = 13
             print ''
             print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
@@ -419,7 +424,7 @@ class module(cmd.Cmd):
                 value = self.options[key]['value'] if self.options[key]['value'] != None else ''
                 reqd = self.options[key]['reqd']
                 desc = self.options[key]['desc']
-                print pattern % (key.upper().ljust(key_len), self.to_unicode(value).ljust(val_len), reqd.ljust(3), desc)
+                print pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc)
             print ''
         else:
             if params != 'info': print ''
