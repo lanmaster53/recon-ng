@@ -490,11 +490,11 @@ class module(cmd.Cmd):
         json.dump(self.keys, key_file)
         key_file.close()
 
-    def get_key(self, key_name):
+    def get_key(self, name):
         try:
-            return self.keys[key_name]
+            return self.keys[name]
         except KeyError:
-            raise FrameworkException('API key \'%s\' not found. Add API keys with the \'keys add\' command.' % (key_name))
+            raise FrameworkException('API key \'%s\' not found. Add API keys with the \'keys add\' command.' % (name))
 
     def add_key(self, name, value):
         self.keys[name] = value
