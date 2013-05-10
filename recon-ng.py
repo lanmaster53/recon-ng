@@ -87,6 +87,15 @@ class Recon(framework.module):
                         print '-'*60
                         self.error('Unable to load module: %s' % (mod_name))
 
+    def load_keys(self):
+        key_path = './data/keys.dat'
+        if os.path.exists(key_path):
+            try:
+                key_data = json.loads(open(key_path, 'rb').read())
+                for key in key_data: self.keys[key] = key_data[key]
+            except:
+                self.error('Corrupt key file.')
+
     def show_banner(self):
         banner = open('./core/banner').read()
         banner_len = len(max(banner.split('\n'), key=len))

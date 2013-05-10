@@ -475,15 +475,6 @@ class module(cmd.Cmd):
             self.table(tdata, header=True)
         else: self.output('No API keys stored.')
 
-    def load_keys(self):
-        key_path = './data/keys.dat'
-        if os.path.exists(key_path):
-            try:
-                key_data = json.loads(open(key_path, 'rb').read())
-                for key in key_data: self.keys[key] = key_data[key]
-            except:
-                self.error('Corrupt key file.')
-
     def save_keys(self):
         key_path = './data/keys.dat'
         key_file = open(key_path, 'wb')
@@ -501,8 +492,12 @@ class module(cmd.Cmd):
         self.save_keys()
 
     def delete_key(self, name):
-        del self.keys[name]
-        self.save_keys()
+        try:
+            del self.keys[name]
+        except KeyError:
+            raise FrameworkException('API key \'%s\' not found.' % (name))
+        else:
+            self.save_keys()
 
     #==================================================
     # REQUEST METHODS
@@ -676,8 +671,12 @@ class module(cmd.Cmd):
                 return
             elif arg == 'delete':
                 if len(params) == 1:
-                    self.delete_key(params[0])
-                    self.output('Key \'%s\' deleted.' % (params[0]))
+                    try:
+                        self.delete_key(params[0])
+                    except FrameworkException as e:
+                        self.error(e.__str__())
+                    else:
+                        self.output('Key \'%s\' deleted.' % (params[0]))
                 else: print 'Usage: keys delete <name>'
                 return
         self.help_keys()
