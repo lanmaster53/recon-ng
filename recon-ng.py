@@ -262,6 +262,12 @@ class Recon(framework.module):
     # COMPLETE METHODS
     #==================================================
 
+    def complete_set(self, text, line, *ignored):
+        args = line.split()
+        if len(args) > 1 and args[1].lower() == 'workspace':
+            return [name for name in os.listdir('./workspaces') if name.startswith(text) and os.path.isdir('./workspaces/%s' % (name))]
+        return [x for x in self.options if x.startswith(text)]
+
     def complete_load(self, text, *ignored):
         return [x for x in self.loaded_modules if x.startswith(text)]
     complete_info = complete_use = complete_load
