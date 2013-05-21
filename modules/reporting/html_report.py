@@ -25,7 +25,7 @@ class Module(framework.module):
         if not rows: return ''
         row_content = ''
         for row in rows:
-            values = [self.to_unicode(x) if x != None else u'' for x in row]
+            values = [self.to_unicode_str(x) if x != None else u'' for x in row]
             if table == 'creds' and self.options['sanitize']['value']:
                 values[1] = '%s%s%s' % (values[1][:1], '*'*(len(values[1])-2), values[1][-1:])
             row_content += '<tr><td>%s</td></tr>\n' % ('</td><td>'.join(values))

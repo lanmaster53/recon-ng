@@ -130,7 +130,7 @@ class module(cmd.Cmd):
     def display_dashboard(self):
         # display activity table
         self.heading('Activity Summary')
-        rows = self.query('SELECT * FROM dashboard')
+        rows = self.query('SELECT * FROM dashboard ORDER BY 1')
         tdata = [['Module', 'Runs']]
         for row in rows:
             tdata.append(row)

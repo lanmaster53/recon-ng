@@ -47,6 +47,9 @@ class Module(framework.module):
                 if cnt > jsonobj['totalHits']: break
                 # jigsaw rate limits requests per second to the api
                 time.sleep(.25)
+        if len(all_companies) == 0:
+            self.output('No Contacts Available for Companies Matching \'%s\'.' % (self.options['company']['value']))
+            return
         if len(all_companies) == 1:
             company_id = all_companies[0][0]
             company_name = all_companies[0][1]

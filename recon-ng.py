@@ -41,6 +41,18 @@ class Recon(framework.module):
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, (prompt, 'core'))
+        self.init_goptions()
+        self.options = self.goptions
+        self.load_modules()
+        self.load_keys()
+        self.show_banner()
+        self.init_workspace()
+
+    #==================================================
+    # SUPPORT METHODS
+    #==================================================
+
+    def init_goptions(self):
         self.register_option('workspace', 'default', 'yes', 'current workspace name', self.goptions)
         self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
         self.register_option('domain', '', 'no', 'target domain', self.goptions)
@@ -51,15 +63,6 @@ class Recon(framework.module):
         self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
         self.register_option('verbose', True,  'yes', 'enable verbose output', self.goptions)
         self.register_option('debug', False,  'yes', 'enable debugging output', self.goptions)
-        self.options = self.goptions
-        self.load_modules()
-        self.load_keys()
-        self.show_banner()
-        self.init_workspace()
-
-    #==================================================
-    # SUPPORT METHODS
-    #==================================================
 
     def load_modules(self, reload=False):
         self.loaded_category = {}
@@ -127,6 +130,7 @@ class Recon(framework.module):
         conn.commit()
         conn.close()
         self.workspace = __builtin__.workspace = workspace
+        self.init_goptions()
         self.load_config()
         return True
 
