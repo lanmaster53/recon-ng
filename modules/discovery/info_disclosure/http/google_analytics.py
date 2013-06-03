@@ -21,12 +21,11 @@ class Module(framework.module):
             self.verbose('Retrieving source for: %s' % url_target_site)
             resp = self.request(url_target_site)
             content = resp.text
-            if re.search("'UA-\d+", content):
-                code = re.search("'(UA-\d+)", content)
+            code = re.search('["\'](UA-\d+)', content)
+            if code:
                 self.alert('Found Analytics Code: %s' % code.group(1))
-                
                 # Now go look up the code in the ewhois site and scrape results
-                ewhois_url = "http://www.ewhois.com/analytics-id/%s/" % code.group(1)
+                ewhois_url = 'http://www.ewhois.com/analytics-id/%s/' % code.group(1)
                 self.verbose('Searching %s for other domains' % ewhois_url)
                 ewhois_resp = self.request(ewhois_url)
                 ewhois_content = ewhois_resp.text
