@@ -97,7 +97,7 @@ td {
 .table_container {
     margin: 10px 0;
 }
-.leaks {
+.leak {
     width: 1200px;
     white-space: normal;
 }
@@ -163,7 +163,7 @@ a[id*="show-"] {
                     for i in range(0,len(columns)):
                         row_content += '<tr><td><strong>%s</strong></td><td>%s</td></tr>\n' % (columns[i], values[i])
                     row_content += '<tr><td class="spacer"></td></tr>\n'
-                    table_content += '<div class="table_container">\n<table class="leaks">\n%s</table>\n</div>\n' % (row_content)
+                    table_content += '<div class="table_container">\n<table class="leak">\n%s</table>\n</div>\n' % (row_content)
                 table_content += '</div>\n'
             else:
                 self.output('Associate leak data omitted. Please run the \'leaks_dump\' module to populate the database and try again.')
