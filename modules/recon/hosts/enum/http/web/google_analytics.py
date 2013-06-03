@@ -17,7 +17,7 @@ class Module(framework.module):
     def module_run(self):
         # Visit Target URL and scrape for UA- code
         url_target_site = self.options['url']['value']
-        if url_target_site.startswith('http://') or url_target_site.startswith('https://'):
+        if re.search('^https*://', url_target_site):
             self.verbose('Retrieving source for: %s' % url_target_site)
             resp = self.request(url_target_site)
             content = resp.text
@@ -27,16 +27,14 @@ class Module(framework.module):
                 
                 # Now go look up the code in the ewhois site and scrape results
                 ewhois_url = "http://www.ewhois.com/analytics-id/%s/" % code.group(1)
-                self.output('Searching %s for other domains' % ewhois_url)
+                self.verbose('Searching %s for other domains' % ewhois_url)
                 ewhois_resp = self.request(ewhois_url)
                 ewhois_content = ewhois_resp.text
-                domains = re.findall('<div class="row"><a href="/(.+?)/">', ewhois_content)
+                domains = re.findall('<div class="row"><a[^>]*>(.+?)</a>', ewhois_content)
                 domains.sort()
                 for domain in domains:
                     self.alert(domain)        
             else:
-                self.error('No Google Analytics code found in target URL source.')
+                self.output('No Google Analytics code found in target URL source.')
         else:
-            self.error('Could not retrieve the web site.')
-            
-        
+            self.output('The URL parameter (%s) is not a recognized URL. Please re-enter one in the "http[s]://example.com" format.' % url_target_site)
