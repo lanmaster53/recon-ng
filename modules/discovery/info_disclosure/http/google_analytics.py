@@ -24,6 +24,10 @@ class Module(framework.module):
         self.verbose('Searching %s for other domains' % ewhois_url)
         ewhois_resp = self.request(ewhois_url)
         ewhois_content = ewhois_resp.text
+        multi_pages = re.search('page:2', ewhois_content)
+        if multi_pages:
+        	self.error("More than one page of results returned on the %s site." % ewhois_url)
+        	self.error("Please visit manually to retrieve other entries.")
         return re.findall('<div class="row"><a[^>]*>(.+?)</a>', ewhois_content)
    
     def module_run(self):
