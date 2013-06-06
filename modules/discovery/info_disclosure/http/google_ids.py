@@ -6,11 +6,11 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('url', '', 'yes', 'The URL of the website with the Analytics code.')
+        self.register_option('url', None, 'yes', 'The URL of the website with the Analytics/AdSense code.')
         self.info = {
-                     'Name': 'Google Analytics Host Lookup',
+                     'Name': 'Google Analytics/AdSense Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Provide this module with a URL (or domain) and it will visit that page and look for a Google Analytics "UA-#####" and Google AdSense ID "pub-####" number in the page source. Then it will look up other sites that use that same code. This can show you sites that may be administered or coded by a single group.',
+                     'Description': 'Provide this module with a URL (or domain) and it will visit that page and look for a Google Analytics "UA-#####" and Google AdSense "pub-####" ID in the page source. Then it will look up other sites that use that same code. This can show you sites that may be administered or coded by a single group.',
                      'Comments': []
                      }
                      
@@ -18,20 +18,20 @@ class Module(framework.module):
         self.alert('Found Code: %s' % code)
         # Now go look up the code in the ewhois site and scrape results
         if code.startswith("UA"):
-        	ewhois_url = 'http://www.ewhois.com/analytics-id/%s/' % code ### Analytics
+            ewhois_url = 'http://www.ewhois.com/analytics-id/%s/' % code ### Analytics
         else:
-        	ewhois_url = 'http://www.ewhois.com/adsense-id/%s/' % code   ### AdSense
+            ewhois_url = 'http://www.ewhois.com/adsense-id/%s/' % code   ### AdSense
         self.verbose('Searching %s for other domains' % ewhois_url)
         ewhois_resp = self.request(ewhois_url)
         ewhois_content = ewhois_resp.text
         multi_pages = re.search('page:2', ewhois_content)
         if multi_pages:
-        	self.error("More than one page of results returned on the %s site." % ewhois_url)
-        	self.error("Please visit manually to retrieve other entries.")
+            self.error("More than one page of results returned on the %s site." % ewhois_url)
+            self.error("Please visit manually to retrieve other entries.")
         return re.findall('<div class="row"><a[^>]*>(.+?)</a>', ewhois_content)
    
     def module_run(self):
-    	results_ana = results_ad = set()
+        results_ana = results_ad = set()
         # Visit Target URL and scrape for codes
         url_target_site = self.options['url']['value']
         if re.search('^https*://', url_target_site):
@@ -44,10 +44,10 @@ class Module(framework.module):
             if code_ana: results_ana = set(self.lookup_ewhois(code_ana.group(1)))
             if code_ad:  results_ad  = set(self.lookup_ewhois(code_ad.group(1)))
             if not code_ana and not code_ad:
-                self.output('No Google Analytics or Google AdSense code found in target URL source.')
+                self.output('No Google Analytics or AdSense ID found in target URL source.')
             else:
-            	total_results = results_ana.union(results_ad)
-            	for domain in sorted(total_results):
-            		self.alert(domain)
+                total_results = results_ana.union(results_ad)
+                for domain in sorted(total_results):
+                    self.alert(domain)
         else:
-            self.output('The URL parameter (%s) is not a recognized URL. Please re-enter one in the "http[s]://example.com" format.' % url_target_site)
+            self.error('The URL parameter (%s) is not a recognized URL. Please re-enter one in the "http[s]://example.com" format.' % url_target_site)
