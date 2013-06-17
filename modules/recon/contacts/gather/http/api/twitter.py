@@ -19,6 +19,7 @@ class Module(framework.module):
                                   ]
                      }
     def module_run(self):
+        self.get_oauth_token()
         self.handle_options()
         header = ['Handle', 'Name', 'Time']
         
@@ -27,7 +28,6 @@ class Module(framework.module):
         self.output('Searching for users mentioned by the given handle.')
         self.search_handle_tweets()
         if self.tdata:
-            print ''
             self.tdata.insert(0, header)
             self.table(self.tdata, header=True)
 
@@ -36,9 +36,18 @@ class Module(framework.module):
         self.output('Searching for users who mentioned the given handle.')
         self.search_handle_mentions()
         if self.tdata:
-            print ''
             self.tdata.insert(0, header)
             self.table(self.tdata, header=True)
+
+    def get_oauth_token(self):
+        twitter_key = self.get_key('twitter_key')
+        twitter_secret = self.get_key('twitter_secret')
+        url = 'https://api.twitter.com/oauth2/token'
+        auth = (twitter_key, twitter_secret)
+        headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+        payload = {'grant_type': 'client_credentials'}
+        resp = self.request(url, method='POST', auth=auth, headers=headers, payload=payload)
+        self.bearer_token = resp.json['access_token']
 
     def handle_options(self):
         '''
@@ -57,57 +66,43 @@ class Module(framework.module):
             self.output('DTG should be in the format: YYYY-MM-DD. Using the default value of \'%s\'.' % (dtg))
         self.dtg = dtg
 
-    def get_user_info(self, handle, time):
-        '''
-        Queries twitter for information on a given twitter handle.
-        Twitter API returns ALOT of good info, database does not currently handle most of it.
-        '''
-        url = 'https://api.twitter.com/1/users/show.json'
-        payload = {'screen_name': handle, 'include_entities': 'true'}
-        resp = self.request(url, payload=payload)
-        
-        jsonobj = resp.json
-        for item in ['error', 'errors']:
-            if item in jsonobj:
-                self.error(jsonobj[item])
-                return
-
-        name = jsonobj['name']
-        if not [handle, name, time] in self.tdata: self.tdata.append([handle, name, time])
-
     def search_api(self, query):
         payload = {'q': query}
-        url = 'http://search.twitter.com/search.json'
-        resp = self.request(url, payload=payload)
-        
+        headers = {'Authorization': 'Bearer %s' % (self.bearer_token)}
+        url = 'https://api.twitter.com/1.1/search/tweets.json'
+        resp = self.request(url, payload=payload, headers=headers)
         jsonobj = resp.json
         for item in ['error', 'errors']:
             if item in jsonobj:
                 self.error(jsonobj[item])
                 return
-
         return jsonobj
 
     def search_handle_tweets(self):
         '''
         Searches for mentions tweeted by the given handle.
-        Pulls usernames out and sends to get_user_info.
         '''
         resp = self.search_api('from:%s since:%s' % (self.handle, self.dtg))
         if resp:
-            for tweet in resp['results']:
-                if 'to_user' in tweet:
-                    self.get_user_info(tweet['to_user'], tweet['created_at'])
+            for tweet in resp['statuses']:
+                if 'entities' in tweet:
+                    if 'user_mentions' in tweet['entities']:
+                        for mention in tweet['entities']['user_mentions']:
+                            handle = mention['screen_name']
+                            name = mention['name']
+                            time = tweet['created_at']
+                            if not [handle, name, time] in self.tdata: self.tdata.append([handle, name, time])
 
     def search_handle_mentions(self):
         '''
         Searches for tweets mentioning the given handle.
         Checks using "to:" and "@" operands in the API.
-        Passes identified handles to get_user_info.
         '''
         for operand in ['to:', '@']:
             resp = self.search_api('%s%s since:%s' % (operand, self.handle, self.dtg))
             if resp:
-                for tweet in resp['results']:
-                    if 'to_user' in tweet:
-                        self.get_user_info(tweet['from_user'], tweet['created_at'])
+                for tweet in resp['statuses']:
+                    handle = tweet['user']['screen_name']
+                    name = tweet['user']['name']
+                    time = tweet['created_at']
+                    if not [handle, name, time] in self.tdata: self.tdata.append([handle, name, time])
