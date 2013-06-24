@@ -39,9 +39,11 @@ class Module(framework.module):
             resp = self.request(url_target_site)
             content = resp.text
             
-            code_ana = re.search('["\'](UA-\d+)', content) ### Analytics ID
+            code_ana = re.findall('["\'](UA-\d+)', content) ### Analytics ID
             code_ad  = re.search('["\'](pub-\d+)', content) ### AdSense ID
-            if code_ana: results_ana = set(self.lookup_ewhois(code_ana.group(1)))
+            if code_ana:
+                for code in code_ana:
+                    results_ana = results_ana.union(self.lookup_ewhois(code))
             if code_ad:  results_ad  = set(self.lookup_ewhois(code_ad.group(1)))
             if not code_ana and not code_ad:
                 self.output('No Google Analytics or AdSense ID found in target URL source.')
