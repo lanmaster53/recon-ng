@@ -27,12 +27,10 @@ class Module(framework.module):
             payload = {'hash': hashstr}
             resp = self.request(url, payload=payload)
             dom = parseString(resp.text)
-            plaintext = False
             hashtype = "MD5"
             nodes = dom.getElementsByTagName('string')
             if len(nodes) > 0:
                 plaintext = nodes[0].firstChild.wholeText
-            if plaintext:
                 self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
                 self.query('UPDATE creds SET password="%s", type="%s" WHERE hash="%s"' % (plaintext, hashtype, hashstr))
             else:
