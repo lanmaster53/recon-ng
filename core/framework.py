@@ -351,6 +351,23 @@ class module(cmd.Cmd):
 
         return self.insert('creds', data, data.keys())
 
+    def add_pushpin(self, source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time):
+        '''Adds a contact to the database and returns the affected row count.'''
+        data = dict(
+            source = self.to_unicode(source),
+            screen_name = self.to_unicode(screen_name),
+            profile_name = self.to_unicode(profile_name),
+            profile_url = self.to_unicode(profile_url),
+            media_url = self.to_unicode(media_url),
+            thumb_url = self.to_unicode(thumb_url),
+            message = self.to_unicode(message),
+            latitude = self.to_unicode(latitude),
+            longitude = self.to_unicode(longitude),
+            time = self.to_unicode(time),
+        )
+
+        return self.insert('pushpin', data, data.keys())
+
     def insert(self, table, data, unique_columns=[]):
         '''Inserts items into database and returns the affected row count.
         table - the table to insert the data into
@@ -500,8 +517,45 @@ class module(cmd.Cmd):
             self.save_keys()
 
     #==================================================
-    # REQUEST METHODS
+    # 3RD PARTY API METHODS
     #==================================================
+
+    def get_twitter_oauth_token(self):
+        twitter_key = self.get_key('twitter_key')
+        twitter_secret = self.get_key('twitter_secret')
+        url = 'https://api.twitter.com/oauth2/token'
+        auth = (twitter_key, twitter_secret)
+        headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+        payload = {'grant_type': 'client_credentials'}
+        resp = self.request(url, method='POST', auth=auth, headers=headers, payload=payload)
+        return resp.json['access_token']
+
+    def search_shodan_api(self, query, limit=0):
+        api_key = self.get_key('shodan_api')
+        url = 'http://www.shodanhq.com/api/search'
+        payload = {'q': query, 'key': api_key}
+        results = []
+        cnt = 1
+        page = 1
+        self.verbose('Searching Shodan API for: %s' % (query))
+        while True:
+            resp = self.request(url, payload=payload)
+            if resp.json == None:
+                raise FrameworkException('Invalid JSON response.\n%s' % (resp.text))
+            if 'error' in resp.json:
+                raise FrameworkException(resp.json['error'])
+            if not resp.json['matches']:
+                break
+            # add new results
+            results.extend(resp.json['matches'])
+            # check limit
+            if limit == cnt:
+                break
+            cnt += 1
+            # next page
+            page += 1
+            payload['page'] = page
+        return results
 
     def search_bing_api(self, query, limit=0):
         api_key = self.get_key('bing_api')
@@ -509,7 +563,7 @@ class module(cmd.Cmd):
         payload = {'Query': query, '$format': 'json'}
         results = []
         cnt = 1
-        self.verbose('Searching Bing for: %s' % (query))
+        self.verbose('Searching Bing API for: %s' % (query))
         while True:
             resp = None
             resp = self.request(url, payload=payload, auth=(api_key, api_key))
@@ -522,11 +576,10 @@ class module(cmd.Cmd):
             if limit == cnt:
                 break
             cnt += 1
-            # check if more pages
-            if '__next' in resp.json['d']:
-                payload['$skip'] = resp.json['d']['__next'].split('=')[-1]
-            else:
+            # check for more pages
+            if not '__next' in resp.json['d']:
                 break
+            payload['$skip'] = resp.json['d']['__next'].split('=')[-1]
         return results
 
     def search_google_api(self, query, limit=0):
@@ -536,7 +589,7 @@ class module(cmd.Cmd):
         payload = {'alt': 'json', 'prettyPrint': 'false', 'key': api_key, 'cx': cse_id, 'q': query}
         results = []
         cnt = 1
-        self.verbose('Searching Google for: %s' % (query))
+        self.verbose('Searching Google API for: %s' % (query))
         while True:
             resp = None
             resp = self.request(url, payload=payload)
@@ -549,12 +602,15 @@ class module(cmd.Cmd):
             if limit == cnt:
                 break
             cnt += 1
-            # check if more pages
-            if 'nextPage' in resp.json['queries']:
-                payload['start'] = resp.json['queries']['nextPage'][0]['startIndex']
-            else:
+            # check for more pages
+            if not 'nextPage' in resp.json['queries']:
                 break
+            payload['start'] = resp.json['queries']['nextPage'][0]['startIndex']
         return results
+
+    #==================================================
+    # REQUEST METHODS
+    #==================================================
 
     def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, auth=(), redirect=True):
         '''Makes a web request and returns a response object.'''
