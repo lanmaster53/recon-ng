@@ -14,7 +14,7 @@ class Module(framework.module):
                      'Comments': [
                                   'Source options: [ db | <address> | ./path/to/file | query <sql> ]',
                                   'Shodan: http://www.shodanhq.com/?q=netbios%%20workgroup'
-                                 ]
+                                  ]
                      }
    
     def module_run(self):

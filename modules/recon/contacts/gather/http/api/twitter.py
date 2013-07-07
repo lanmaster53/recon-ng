@@ -19,7 +19,7 @@ class Module(framework.module):
                                   ]
                      }
     def module_run(self):
-        self.get_oauth_token()
+        self.bearer_token = self.get_twitter_oauth_token()
         self.handle_options()
         header = ['Handle', 'Name', 'Time']
         
@@ -38,16 +38,6 @@ class Module(framework.module):
         if self.tdata:
             self.tdata.insert(0, header)
             self.table(self.tdata, header=True)
-
-    def get_oauth_token(self):
-        twitter_key = self.get_key('twitter_key')
-        twitter_secret = self.get_key('twitter_secret')
-        url = 'https://api.twitter.com/oauth2/token'
-        auth = (twitter_key, twitter_secret)
-        headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
-        payload = {'grant_type': 'client_credentials'}
-        resp = self.request(url, method='POST', auth=auth, headers=headers, payload=payload)
-        self.bearer_token = resp.json['access_token']
 
     def handle_options(self):
         '''

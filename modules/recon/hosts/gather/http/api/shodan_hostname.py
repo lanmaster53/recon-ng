@@ -1,13 +1,12 @@
 import framework
 # unique to module
-import json
 
 class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option('restrict', False, 'yes', 'limit number of api requests to \'requests\'')
+        self.register_option('restrict', True, 'yes', 'limit number of api requests to \'REQUESTS\'')
         self.register_option('requests', 1, 'yes', 'maximum number of api requets to make')
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
@@ -19,43 +18,22 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        key = self.get_key('shodan_api')
         domain = self.options['domain']['value']
         subs = []
-        url = 'http://www.shodanhq.com/api/search'
-        query = 'hostname:%s' % (domain)
-        payload = {'q': query, 'key': key}
         cnt = 0
-        page = 1
-        # loop until no results are returned
-        while True:
-            new = False
-            resp = None
-            resp = self.request(url, payload=payload)
-            if resp.json == None:
-                self.error('Invalid JSON response.\n%s' % (resp.text))
-                break
-            if 'error' in resp.json:
-                self.error(resp.json['error'])
-                break
-            # returns an empty json when no matches are found
-            if not 'matches' in resp.json:
-                break
-            for result in resp.json['matches']:
-                if not 'hostnames' in result.keys(): continue
-                hostnames = result['hostnames']
-                for hostname in hostnames:
-                    site = '.'.join(hostname.split('.')[:-2])
-                    if site and site not in subs:
-                        subs.append(site)
-                        new = True
-                        host = '%s.%s' % (site, domain)
-                        self.output('%s' % (host))
-                        cnt += self.add_host(host)
-            if self.options['restrict']['value']:
-                if page == self.options['requests']['value']: break
-            if not new: break
-            page += 1
-            payload['page'] = str(page)
+        query = 'hostname:%s' % (domain)
+        limit = self.options['requests']['value'] if self.options['restrict']['value'] else 0
+        results = self.search_shodan_api(query, limit)
+        for host in results:
+            if not 'hostnames' in host.keys():
+                continue
+            for hostname in host['hostnames']:
+                site = '.'.join(hostname.split('.')[:-2])
+                if site and site not in subs:
+                    subs.append(site)
+                    new = True
+                    host = '%s.%s' % (site, domain)
+                    self.output('%s' % (host))
+                    cnt += self.add_host(host)
         self.output('%d total hosts found.' % (len(subs)))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))
