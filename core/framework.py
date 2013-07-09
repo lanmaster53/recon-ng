@@ -384,9 +384,11 @@ class module(cmd.Cmd):
         unique_columns - a list of column names that should be used to determine if the.
                          information being inserted is unique'''
 
-        # sanitize the inputs to remove NoneTypes
+        # sanitize the inputs to remove NoneTypes, blank strings, and zeros
         columns = [x for x in data.keys() if data[x]]
         unique_columns = [x for x in unique_columns if x in columns]
+        # exit if there is nothing left to insert
+        if not columns: return 0
 
         if not unique_columns:
             query = u'INSERT INTO %s (%s) VALUES (%s)' % (
