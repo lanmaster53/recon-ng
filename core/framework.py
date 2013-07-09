@@ -5,18 +5,21 @@ import os
 import sys
 import textwrap
 import socket
-import datetime
+import time
+import hmac
+import hashlib
 import HTMLParser
 import subprocess
 import traceback
-import __builtin__
-# prep python path for supporting modules
-sys.path.append('./libs/')
-#import requests
+import webbrowser
 import urllib
 import urllib2
 import cookielib
 import json
+import __builtin__
+# prep python path for supporting modules
+sys.path.append('./libs/')
+import aes
 
 class module(cmd.Cmd):
     def __init__(self, params):
@@ -200,6 +203,11 @@ class module(cmd.Cmd):
                 return True
         return False
 
+    def aes_decrypt(self, ciphertext, key, iv):
+        decoded = ciphertext.decode('base64')
+        password = aes.decryptData(key, iv.encode('utf-8') + decoded)
+        return unicode(password, 'utf-8')
+
     def api_guard(self, num):
         try:
             ans = raw_input('This operation will decrement the allotted quota by %d. Do you want to continue? [Y/N]: ' % (num))
@@ -376,9 +384,11 @@ class module(cmd.Cmd):
         unique_columns - a list of column names that should be used to determine if the.
                          information being inserted is unique'''
 
-        # sanitize the inputs to remove NoneTypes
+        # sanitize the inputs to remove NoneTypes, blank strings, and zeros
         columns = [x for x in data.keys() if data[x]]
         unique_columns = [x for x in unique_columns if x in columns]
+        # exit if there is nothing left to insert
+        if not columns: return 0
 
         if not unique_columns:
             query = u'INSERT INTO %s (%s) VALUES (%s)' % (
@@ -521,14 +531,62 @@ class module(cmd.Cmd):
     #==================================================
 
     def get_twitter_oauth_token(self):
-        twitter_key = self.get_key('twitter_key')
+        token_name = 'twitter_token'
+        try:
+            return self.get_key(token_name)
+        except:
+            pass
+        twitter_key = self.get_key('twitter_api')
         twitter_secret = self.get_key('twitter_secret')
         url = 'https://api.twitter.com/oauth2/token'
         auth = (twitter_key, twitter_secret)
         headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
         payload = {'grant_type': 'client_credentials'}
         resp = self.request(url, method='POST', auth=auth, headers=headers, payload=payload)
-        return resp.json['access_token']
+        if 'errors' in resp.json:
+            raise FrameworkException('%s, %s' % (resp.json['errors'][0]['message'], resp.json['errors'][0]['label']))
+        access_token = resp.json['access_token']
+        self.add_key(token_name, access_token)
+        return access_token
+
+    def get_linkedin_access_token(self):
+        token_name = 'linkedin_token'
+        try:
+            return self.get_key(token_name)
+        except:
+            pass
+        linkedin_key = self.get_key('linkedin_api')
+        linkedin_secret = self.get_key('linkedin_secret')
+        redirect_uri = 'http://127.0.0.1'
+        url = 'https://www.linkedin.com/uas/oauth2/authorization'
+        payload = {'response_type': 'code', 'client_id': linkedin_key, 'scope': 'r_basicprofile r_network', 'state': 'thisisaverylongstringusedforstate', 'redirect_uri': redirect_uri}
+        authorize_url = '%s?%s' % (url, urllib.urlencode(payload))
+        self.output(authorize_url)
+        self.output('Copy the above URL and paste it into a browser.')
+        self.output('Sign in and authorize the application to access your profile and connections.')
+        self.output('Once authorized, you\'ll be redirected to a webpage that is not available.')
+        self.output('Copy the value of the \'code\' parameter from the URL and paste it into the prompt below.')
+        self.output('You will need to do this the first time the module is ran and each time the access token expires (60 days).')
+        w = webbrowser.get()
+        w.open(authorize_url)
+        authorization_code = raw_input('\'CODE\' parameter value => ')
+        url = 'https://www.linkedin.com/uas/oauth2/accessToken'
+        payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': linkedin_key, 'client_secret': linkedin_secret}
+        resp = self.request(url, payload=payload)
+        if 'error' in resp.json:
+            raise FrameworkException(resp.json['error_description'])
+        access_token = resp.json['access_token']
+        self.add_key(token_name, access_token)
+        return access_token
+
+    def build_pwnedlist_payload(self, payload, method, key, secret):
+        timestamp = int(time.time())
+        payload['ts'] = timestamp
+        payload['key'] = key
+        msg = '%s%s%s%s' % (key, timestamp, method, secret)
+        hm = hmac.new(secret.encode('utf-8'), msg, hashlib.sha1)
+        payload['hmac'] = hm.hexdigest()
+        return payload
 
     def search_shodan_api(self, query, limit=0):
         api_key = self.get_key('shodan_api')
