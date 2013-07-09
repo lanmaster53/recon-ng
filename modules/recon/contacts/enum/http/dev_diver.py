@@ -22,14 +22,9 @@ class Module(framework.module):
         ################
         # Github Check
         ################
+        self.verbose('Checking Github...')
         url = 'https://github.com/%s' % username
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
        
         # Parse the results
         gitName = re.search('<span itemprop="name">(.+)</span>', resp.text)
@@ -51,44 +46,27 @@ class Module(framework.module):
             self.output('Github username not found')
         
         ##################
-        #Bitbucket Check
+        # Bitbucket Check
         ##################
-        
+        self.verbose('Checking Bitbucket...')
         # Bitbucket usernames are case sensitive, or at least will do a redirect if not using correct case
         # First we just use the username entered by the recon-ng user
         url = 'https://bitbucket.org/%s' % username
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return 
+        resp = self.request(url)
         
         # Parse the results
         bbName = re.search('<h1 title="Username:.+">(.+)</h1>', resp.text)      
         if not bbName:
             # Before we give up on the user not being on Bitbucket, let's search
             urlSearch = 'https://bitbucket.org/repo/all?name=%s' % username
-            try: respSearch = self.request(url)
-            except KeyboardInterrupt:
-                print ''
-                return
-            except Exception as e:
-                self.error(e.__str__())
-                return
+            respSearch = self.request(url)
                 
             # Parse the results
             bbUserName = re.search('<a class="repo-link" href="/(.+)/', respSearch.text)
             if bbUserName:
                 url = 'https://bitbucket.org/%s' % bbUserName
-                try: resp = self.request(url)
-                except KeyboardInterrupt:
-                    print ''
-                    return
-                except Exception as e:
-                    self.error(e.__str__())
-                    return 
+                resp = self.request(url)
+                
                 # At least one repository found. Capture username case
                 bbName = re.search('<h1 title="Username:.+">(.+)</h1>', resp.text)
                 
@@ -113,14 +91,9 @@ class Module(framework.module):
         #####################
         # Sourceforge Check
         #####################
+        self.verbose('Checking SourceForge...')
         url = 'http://sourceforge.net/users/%s' % username
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
         
         # Parse the results
         sfName = re.search('<label>Public Name:</label> (.+) </li>', resp.text)
@@ -139,14 +112,9 @@ class Module(framework.module):
         #####################
         # CodePlex Check
         #####################
+        self.verbose('Checking CodePlex...')
         url = 'http://www.codeplex.com/site/users/view/%s' % username
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
         
         # Parse the results
         cpName = re.search('<h1 class="user_name" style="display: inline">(.+)</h1>', resp.text)
@@ -171,14 +139,9 @@ class Module(framework.module):
         #####################
         # Freecode Check
         #####################
+        self.verbose('Checking Freecode...')
         url = 'http://freecode.com/users/%s' % username
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
         
         # Parse the results
         fcCreated = re.search('(?s)<dt>Created</dt>.+?<dd>(\d\d.+:\d\d)</dd>', resp.text)
@@ -194,14 +157,9 @@ class Module(framework.module):
         #####################
         # Google Code Check
         #####################
+        self.verbose('Checking Google Code...')
         url = 'https://code.google.com/u/%s/' % username
-        try: resp = self.request(url)
-        except KeyboardInterrupt:
-            print ''
-            return
-        except Exception as e:
-            self.error(e.__str__())
-            return
+        resp = self.request(url)
         
         # Parse the results
         gooEmail = re.search('(?s)<b>Username: </b>\s.+<span>\s+(.+?)\s+</span>', resp.text)
@@ -212,10 +170,7 @@ class Module(framework.module):
             gooRepositoriesCommit = re.findall('(?s)name="committer">.+?<a href="/p/(.+?)/"', resp.text)
             if gooPlusUrl: 
                 # Go get user's full name
-                try: respGPlus = self.request(gooPlusUrl.group(1)+'/about')
-                except Exception as e:
-                    self.error(e.__str__())
-                    return
+                respGPlus = self.request(gooPlusUrl.group(1)+'/about')
                 gooName = re.search('<title>(.+?) -.+</title>', respGPlus.text)
                 # TODO - Since we are now on this user's G+ page we could scrape a lot more information
                 if gooName: tdata.append(['Google Code', 'Full Name', gooName.group(1)])
