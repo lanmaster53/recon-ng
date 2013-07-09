@@ -24,10 +24,12 @@ class Module(framework.module):
 
     def get_company_id(self):
         self.output('Gathering Company IDs...')
+        company_name = self.options['company']['value']
+        keywords = self.options['keywords']['value']
         all_companies = []
         cnt = 0
         size = 50
-        params = '%s %s' % (self.options['company']['value'], self.options['keywords']['value'])
+        params = ' '.join([x for x in [company_name, keywords] if x])
         url = 'https://www.jigsaw.com/rest/searchCompany.json'
         while True:
             payload = {'token': self.api_key, 'name': params, 'offset': cnt, 'pageSize': size}

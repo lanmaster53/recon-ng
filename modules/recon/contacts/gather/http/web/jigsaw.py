@@ -26,9 +26,10 @@ class Module(framework.module):
     def get_company_id(self):
         self.output('Gathering Company IDs...')
         company_name = self.options['company']['value']
+        keywords = self.options['keywords']['value']
         all_companies = []
         page_cnt = 1
-        params = '%s %s' % (company_name, self.options['keywords']['value'])
+        params = ' '.join([x for x in [company_name, keywords] if x])
         url = 'http://www.jigsaw.com/FreeTextSearchCompany.xhtml'
         payload = {'opCode': 'search', 'freeText': params}
         while True:

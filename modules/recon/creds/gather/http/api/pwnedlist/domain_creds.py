@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import pwnedlist
 
 class Module(framework.module):
 
@@ -31,7 +30,7 @@ class Module(framework.module):
         method = 'domains.query'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
         payload = {'domain_identifier': domain, 'daysAgo': 0}
-        payload = pwnedlist.build_payload(payload, method, key, secret)
+        payload = self.build_pwnedlist_payload(payload, method, key, secret)
         # make request
         resp = self.request(url, payload=payload)
         if resp.json: jsonobj = resp.json
@@ -43,7 +42,7 @@ class Module(framework.module):
         else:
             for cred in jsonobj['accounts']:
                 username = cred['plain']
-                password = pwnedlist.decrypt(cred['password'], decrypt_key, iv)
+                password = self.aes_decrypt(cred['password'], decrypt_key, iv)
                 #password = self.ascii_sanitize(password)
                 leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))

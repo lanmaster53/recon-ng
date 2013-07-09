@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import pwnedlist
 
 class Module(framework.module):
 

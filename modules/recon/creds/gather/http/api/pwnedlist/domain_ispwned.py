@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import pwnedlist
 
 class Module(framework.module):
 
@@ -33,7 +32,7 @@ class Module(framework.module):
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
         for domain in domains:
             payload = {'domain_identifier': domain}
-            payload = pwnedlist.build_payload(payload, method, key, secret)
+            payload = self.build_pwnedlist_payload(payload, method, key, secret)
             # make request
             resp = self.request(url, payload=payload)
             jsonobj = resp.json

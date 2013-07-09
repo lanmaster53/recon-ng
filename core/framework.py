@@ -5,19 +5,21 @@ import os
 import sys
 import textwrap
 import socket
-import datetime
+import time
+import hmac
+import hashlib
 import HTMLParser
 import subprocess
 import traceback
 import webbrowser
-import __builtin__
-# prep python path for supporting modules
-sys.path.append('./libs/')
-#import requests
 import urllib
 import urllib2
 import cookielib
 import json
+import __builtin__
+# prep python path for supporting modules
+sys.path.append('./libs/')
+import aes
 
 class module(cmd.Cmd):
     def __init__(self, params):
@@ -200,6 +202,11 @@ class module(cmd.Cmd):
             if len(hashstr) == hashitem["len"] and re.match(hashitem["pattern"], hashstr):
                 return True
         return False
+
+    def aes_decrypt(self, ciphertext, key, iv):
+        decoded = ciphertext.decode('base64')
+        password = aes.decryptData(key, iv.encode('utf-8') + decoded)
+        return unicode(password, 'utf-8')
 
     def api_guard(self, num):
         try:
@@ -569,6 +576,15 @@ class module(cmd.Cmd):
         access_token = resp.json['access_token']
         self.add_key(token_name, access_token)
         return access_token
+
+    def build_pwnedlist_payload(self, payload, method, key, secret):
+        timestamp = int(time.time())
+        payload['ts'] = timestamp
+        payload['key'] = key
+        msg = '%s%s%s%s' % (key, timestamp, method, secret)
+        hm = hmac.new(secret.encode('utf-8'), msg, hashlib.sha1)
+        payload['hmac'] = hm.hexdigest()
+        return payload
 
     def search_shodan_api(self, query, limit=0):
         api_key = self.get_key('shodan_api')
