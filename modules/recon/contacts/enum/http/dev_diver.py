@@ -14,14 +14,9 @@ class Module(framework.module):
                      'Description': 'This module takes a username and searches common, public code repositories for information about that username.',
                      'Comments': []
                      }
-    
-    def module_run(self):
-        username = self.options['username']['value']
-        tdata = [['Site', 'Parameter', 'Value']]
-
-        ################
-        # Github Check
-        ################
+                     
+    # Add a method for each repository                 
+    def github(self, username):
         self.verbose('Checking Github...')
         url = 'https://github.com/%s' % username
         resp = self.request(url)
@@ -35,19 +30,18 @@ class Module(framework.module):
             gitLoc = re.search('<dd itemprop="homeLocation">(.+)</dd>', resp.text)
             gitPersonalUrl = re.search('<dd itemprop="url"><a href="(.+?)" class="url"', resp.text)
             gitAvatar = re.search('<a href="(https://secure.gravatar.com/avatar/.+?);', resp.text)
-            tdata.append(['Github', 'Real Name', gitName.group(1)+' ('+url+')'])
+            self.tdata.append(['Github', 'Real Name', gitName.group(1)+' ('+url+')'])
             if gitJoin: 
-                tdata.append(['Github', 'Join Date', time.strftime('%Y-%m-%d', time.strptime(gitJoin.group(1), '%b %d, %Y'))])
-            if gitLoc: tdata.append(['Github', 'Home Location', gitLoc.group(1)])
-            if gitDesc: tdata.append(['Github', 'Description', gitDesc.group(1)])
-            if gitPersonalUrl: tdata.append(['Github', 'Personal URL', gitPersonalUrl.group(1)])
-            if gitAvatar: tdata.append(['Github', 'Avatar', gitAvatar.group(1)])
+                self.tdata.append(['Github', 'Join Date', time.strftime('%Y-%m-%d', time.strptime(gitJoin.group(1), '%b %d, %Y'))])
+            if gitLoc: self.tdata.append(['Github', 'Home Location', gitLoc.group(1)])
+            if gitDesc: self.tdata.append(['Github', 'Description', gitDesc.group(1)])
+            if gitPersonalUrl: self.tdata.append(['Github', 'Personal URL', gitPersonalUrl.group(1)])
+            if gitAvatar: self.tdata.append(['Github', 'Avatar', gitAvatar.group(1)])
         else:
             self.output('Github username not found')
-        
-        ##################
-        # Bitbucket Check
-        ##################
+
+    
+    def bitbucket(self, username):
         self.verbose('Checking Bitbucket...')
         # Bitbucket usernames are case sensitive, or at least will do a redirect if not using correct case
         # First we just use the username entered by the recon-ng user
@@ -78,19 +72,17 @@ class Module(framework.module):
             bbFollowerCount = re.search('<span class="count">([0-9]+)</span> Followers', resp.text)
             bbFollowingCount = re.search('<span class="count">([0-9]+)</span> Following', resp.text)
             bbRepositories = re.findall('repo-link".+">(.+)</a></h1>', resp.text)
-            tdata.append(['Bitbucket', 'Real Name', bbName.group(1)+' ('+url+')'])
-            if bbJoin: tdata.append(['Bitbucket', 'Join Date', bbJoin.group(1)])
+            self.tdata.append(['Bitbucket', 'Real Name', bbName.group(1)+' ('+url+')'])
+            if bbJoin: self.tdata.append(['Bitbucket', 'Join Date', bbJoin.group(1)])
             if bbFollowerCount and int(bbFollowerCount.group(1)) > 0: 
-                tdata.append(['Bitbucket', '# of Followers', bbFollowerCount.group(1)])
+                self.tdata.append(['Bitbucket', '# of Followers', bbFollowerCount.group(1)])
             if bbFollowingCount and int(bbFollowingCount.group(1)) > 0: 
-                tdata.append(['Bitbucket', '# Projects Following', bbFollowingCount.group(1)])
-            if bbRepositories: tdata.append(['Bitbucket', 'Repository Names', ', '.join(bbRepositories)])
+                self.tdata.append(['Bitbucket', '# Projects Following', bbFollowingCount.group(1)])
+            if bbRepositories: self.tdata.append(['Bitbucket', 'Repository Names', ', '.join(bbRepositories)])
         else:
             self.output('Bitbucket username not found')
         
-        #####################
-        # Sourceforge Check
-        #####################
+    def sourceforge(self, username):
         self.verbose('Checking SourceForge...')
         url = 'http://sourceforge.net/users/%s' % username
         resp = self.request(url)
@@ -102,16 +94,14 @@ class Module(framework.module):
             sfJoin = re.search('<label>Joined:</label> (\d\d\d\d-\d\d-\d\d) ', resp.text)
             sfRepositories = re.findall('<li class="item"><a href="/projects/.+>(.+)</a>', resp.text)
             sfMyOpenID = re.search('(?s)<label>My OpenID:</label>.+?<a href="(.+?)"', resp.text)
-            tdata.append(['Sourceforge', 'Real Name', sfName.group(1)+' ('+url+')'])
-            if sfJoin: tdata.append(['Sourceforge', 'Join Date', sfJoin.group(1)])
-            if sfMyOpenID: tdata.append(['Sourceforge', 'Open ID URL', sfMyOpenID.group(1)])
-            if sfRepositories: tdata.append(['Sourceforge', 'Repository Names', ', '.join(sfRepositories)])
+            self.tdata.append(['Sourceforge', 'Real Name', sfName.group(1)+' ('+url+')'])
+            if sfJoin: self.tdata.append(['Sourceforge', 'Join Date', sfJoin.group(1)])
+            if sfMyOpenID: self.tdata.append(['Sourceforge', 'Open ID URL', sfMyOpenID.group(1)])
+            if sfRepositories: self.tdata.append(['Sourceforge', 'Repository Names', ', '.join(sfRepositories)])
         else:
             self.output('Sourceforge username not found')
-        
-        #####################
-        # CodePlex Check
-        #####################
+
+    def codeplex(self, username):
         self.verbose('Checking CodePlex...')
         url = 'http://www.codeplex.com/site/users/view/%s' % username
         resp = self.request(url)
@@ -123,22 +113,20 @@ class Module(framework.module):
             cpJoin = re.search('Member Since<span class="user_float">([A-Z].+[0-9])</span>', resp.text)
             cpLast = re.search('Last Visit<span class="user_float">([A-Z].+[0-9])</span>', resp.text)
             cpCoordinator = re.search('(?s)<p class="OverflowHidden">(.*?)</p>', resp.text)
-            tdata.append(['CodePlex', 'URL', url])
+            self.tdata.append(['CodePlex', 'URL', url])
             if cpJoin: 
-                tdata.append(['CodePlex', 'Join Date', time.strftime('%Y-%m-%d', time.strptime(cpJoin.group(1), '%B %d, %Y'))])
+                self.tdata.append(['CodePlex', 'Join Date', time.strftime('%Y-%m-%d', time.strptime(cpJoin.group(1), '%B %d, %Y'))])
             if cpLast: 
-                tdata.append(['CodePlex', 'Last Date', time.strftime('%Y-%m-%d', time.strptime(cpLast.group(1), '%B %d, %Y'))])
+                self.tdata.append(['CodePlex', 'Last Date', time.strftime('%Y-%m-%d', time.strptime(cpLast.group(1), '%B %d, %Y'))])
             if cpCoordinator: 
                 cpCoordProject = re.findall('<a href="(http://.+)/" title=".+">(.+)<br /></a>', cpCoordinator.group(1))
                 cpReposOut = []
                 for cpReposUrl, cpRepos in cpCoordProject:
-                    tdata.append(['CodePlex', 'Coordinator for', cpRepos + ' (' + cpReposUrl + ')'])
+                    self.tdata.append(['CodePlex', 'Coordinator for', cpRepos + ' (' + cpReposUrl + ')'])
         else:
             self.output('CodePlex username not found')
-              
-        #####################
-        # Freecode Check
-        #####################
+        
+    def freecode(self, username):
         self.verbose('Checking Freecode...')
         url = 'http://freecode.com/users/%s' % username
         resp = self.request(url)
@@ -148,15 +136,13 @@ class Module(framework.module):
         if fcCreated: 
             self.alert('Freecode username found - (%s)' % url)
             fcRepositories = re.findall("'Projects', 'Website', '(.+?)'", resp.text)
-            tdata.append(['Freecode', 'URL', url])
-            tdata.append(['Freecode', 'Join Date', time.strftime('%Y-%m-%d', time.strptime(fcCreated.group(1), '%d %b %Y %H:%M'))])
-            if fcRepositories: tdata.append(['Freecode', 'Repository Names', ', '.join(fcRepositories)])
+            self.tdata.append(['Freecode', 'URL', url])
+            self.tdata.append(['Freecode', 'Join Date', time.strftime('%Y-%m-%d', time.strptime(fcCreated.group(1), '%d %b %Y %H:%M'))])
+            if fcRepositories: self.tdata.append(['Freecode', 'Repository Names', ', '.join(fcRepositories)])
         else:
-            self.output('Freecode username not found')     
- 
-        #####################
-        # Google Code Check
-        #####################
+            self.output('Freecode username not found') 
+        
+    def googlecode(self, username):
         self.verbose('Checking Google Code...')
         url = 'https://code.google.com/u/%s/' % username
         resp = self.request(url)
@@ -174,16 +160,28 @@ class Module(framework.module):
                 gooName = re.search('<title>(.+?) -.+</title>', respGPlus.text)
                 # TODO - Since we are now on this user's G+ page we could scrape a lot more information
                 if gooName: tdata.append(['Google Code', 'Full Name', gooName.group(1)])
-                tdata.append(['Google Code', 'Google Plus URL', gooPlusUrl.group(1)])
+                self.tdata.append(['Google Code', 'Google Plus URL', gooPlusUrl.group(1)])
             
-            tdata.append(['Google Code', 'Email', gooEmail.group(1)])    
-            if gooRepositoriesOwned: tdata.append(['Google Code', 'Repositories Owned', ', '.join(gooRepositoriesOwned)])
-            if gooRepositoriesCommit: tdata.append(['Google Code', 'Repository Committer', ', '.join(gooRepositoriesCommit)])
+            self.tdata.append(['Google Code', 'Email', gooEmail.group(1)])    
+            if gooRepositoriesOwned: self.tdata.append(['Google Code', 'Repositories Owned', ', '.join(gooRepositoriesOwned)])
+            if gooRepositoriesCommit: self.tdata.append(['Google Code', 'Repository Committer', ', '.join(gooRepositoriesCommit)])
         else:
-            self.output('Google code username not found')     
+            self.output('Google code username not found')          
+    
+    def module_run(self):
+        username = self.options['username']['value']
+        self.tdata = [['Site', 'Parameter', 'Value']]
         
+        # Check each repository
+        self.github(username)
+        self.bitbucket(username)
+        self.sourceforge(username)
+        self.codeplex(username)
+        self.freecode(username)
+        self.googlecode(username)
+
         # Print Final Output Table
-        if len(tdata) > 1: 
-            self.table(tdata, True)
+        if len(self.tdata) > 1: 
+            self.table(self.tdata, True)
         else:
             self.error('%s not found at any repository' % username)
