@@ -22,7 +22,7 @@ class Module(framework.module):
         resp = self.request(url)
        
         # Parse the results
-        gitName = re.search('<span itemprop="name">(.+)</span>', resp.text)
+        gitName = re.search('<span itemprop="\w*[nN]ame"[^>]*>(.+)</span>', resp.text)
         if gitName: 
             self.alert('Github username found - (%s)' % url)
             gitDesc = re.search('<meta name="description" content="(.+)" />', resp.text)
@@ -39,7 +39,6 @@ class Module(framework.module):
             if gitAvatar: self.tdata.append(['Github', 'Avatar', gitAvatar.group(1)])
         else:
             self.output('Github username not found')
-
     
     def bitbucket(self, username):
         self.verbose('Checking Bitbucket...')
