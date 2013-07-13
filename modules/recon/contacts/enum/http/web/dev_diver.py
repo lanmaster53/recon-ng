@@ -159,7 +159,7 @@ class Module(framework.module):
     
     def module_run(self):
         username = self.options['username']['value']
-        self.tdata = [['foobar', 'foobar', 'foobar']] # Set up the list of lists with proper number of cols
+        self.tdata = []
         
         # Check each repository
         self.github(username)
@@ -173,7 +173,6 @@ class Module(framework.module):
         if len(self.tdata) > 1: 
             sortedTdata = sorted(self.tdata)
             sortedTdata.insert(0, ['Parameter', 'Site', 'Value'])
-            sortedTdata.remove(['foobar', 'foobar', 'foobar']) # Remove the initial entry with no data in it
             self.table(sortedTdata, True)
         else:
             self.error('%s not found at any repository' % username)
