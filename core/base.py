@@ -9,6 +9,7 @@ import os
 import errno
 import json
 import sys
+import random
 import imp
 import sqlite3
 import traceback
@@ -110,7 +111,26 @@ class Recon(framework.module):
         for count in sorted(counts, reverse=True):
             cnt = '[%d]' % (count[0])
             print '%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N)
+            # create dynamic easter egg command based on counts
+            setattr(self, 'do_%d' % count[0], self.menu_egg)
         print ''
+
+    def menu_egg(self, params):
+        eggs = [
+                'Really? A menu option? Try again.',
+                'You clearly need \'help\'.',
+                'That makes no sense to me.',
+                '*grunt* *grunt* Nope. I got nothin\'.',
+                'Wait for it...',
+                'This is not the Social Engineering Toolkit.',
+                'Don\'t you think if that worked the numbers would at least be in order?',
+                'Reserving that option for the next-NEXT generation of the framework.',
+                'You\'ve clearly got the wrong framework. Attempting to start SET...',
+                'Your mother called. She wants her menu driven UI back.',
+                'What\'s the samurai password?'
+                ]
+        print random.choice(eggs)
+        return 
 
     def init_workspace(self, workspace=None):
         workspace = workspace if workspace is not None else self.options['workspace']['value']
