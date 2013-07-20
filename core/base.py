@@ -230,25 +230,30 @@ class Recon(framework.module):
         if len(options) == 0:
             self.help_load()
         else:
-            modules = []
-            try:
-                # finds any modules that contain params
-                modules = [params] if params in self.loaded_modules else [x for x in self.loaded_modules if params in x]
-                # raise AssertionError if multiple modules are found
-                assert len(modules) == 1
-                modulename = modules[0]
-                loadedname = self.loaded_modules[modulename]
-                prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
-                y = sys.modules[loadedname].Module((prompt, modulename))
-                if cli: return y
-                try: y.cmdloop()
-                except KeyboardInterrupt: print ''
-            except (KeyError, AttributeError, AssertionError):
+            modules = []            
+            # finds any modules that contain params
+            modules = [params] if params in self.loaded_modules else [x for x in self.loaded_modules if params in x]
+            # notify the user if none or multiple modules are found
+            if len(modules) != 1:
                 if not modules:
                     self.error('Invalid module name.')
                 else:
                     self.output('Multiple modules match \'%s\'.' % params)
                     self.display_modules(modules)
+                return
+            modulename = modules[0]
+            loadedname = self.loaded_modules[modulename]
+            prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
+            # notify the user if runtime errors exist in the module
+            try: y = sys.modules[loadedname].Module((prompt, modulename))
+            except Exception:
+                self.error('Error in module: %s' % (traceback.format_exc().splitlines()[-1]))
+                return
+            # return the loaded module if in command line mode
+            if cli: return y
+            try: y.cmdloop()
+            except KeyboardInterrupt:
+                print ''
 
     # alias for load
     def do_use(self, params):
