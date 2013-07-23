@@ -36,7 +36,12 @@ __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
 
 class Recon(framework.module):
-    def __init__(self):
+    def __init__(self, mode=0):
+        # modes:
+        # 0 == console (default)
+        # 1 == cli
+        # 2 == gui
+        self.mode = mode
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
         framework.module.__init__(self, (prompt, 'core'))
@@ -44,7 +49,7 @@ class Recon(framework.module):
         self.options = self.goptions
         self.load_modules()
         self.load_keys()
-        self.show_banner()
+        if self.mode == 0: self.show_banner()
         self.init_workspace()
 
     #==================================================
@@ -58,6 +63,7 @@ class Recon(framework.module):
         self.register_option('company', None, 'no', 'target company name', self.goptions)
         self.register_option('latitude', None, 'no', 'target latitudinal position', self.goptions)
         self.register_option('longitude', None, 'no', 'target longitudinal position', self.goptions)
+        self.register_option('radius', None, 'no', 'radius of interest relative to latitude and longitude', self.goptions)
         self.register_option('user-agent', 'Recon-ng/%s' % (__version__), 'yes', 'user-agent string', self.goptions)
         self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
         self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
@@ -214,7 +220,7 @@ class Recon(framework.module):
                 self.save_config()
             else: self.error('Invalid option.')
 
-    def do_load(self, params, cli=False):
+    def do_load(self, params):
         '''Loads selected module'''
         if params.lower() == 'useless':
             self.output('Thank you, Kevin Fiscus!')
@@ -250,7 +256,7 @@ class Recon(framework.module):
                 self.error('Error in module: %s' % (traceback.format_exc().splitlines()[-1]))
                 return
             # return the loaded module if in command line mode
-            if cli: return y
+            if self.mode == 1: return y
             try: y.cmdloop()
             except KeyboardInterrupt:
                 print ''

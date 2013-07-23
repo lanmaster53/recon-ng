@@ -12,7 +12,7 @@ class Module(framework.module):
         self.register_option('media_filename', '%s/pushpin_media.html' % (self.workspace), 'yes', 'path and filename for pushpin media report')
         self.register_option('latitude', self.goptions['latitude']['value'], 'yes', 'latitude of the epicenter')
         self.register_option('longitude', self.goptions['longitude']['value'], 'yes', 'longitude of the epicenter')
-        self.register_option('radius', 1, 'yes', 'radius of the epicenter in kilometers')
+        self.register_option('radius', self.goptions['radius']['value'], 'yes', 'radius from the epicenter in kilometers')
         self.info = {
                      'Name': 'PushPin Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -34,9 +34,11 @@ class Module(framework.module):
             count = source[0]
             source = source[1]
             media_content += '<div class="media_column %s">\n<table>\n<tr><td colspan="2" class="media_header"><div class="media_summary">%s</div>%s</td></tr>\n' % (source.lower(), count, source.capitalize())
-            for item in self.query('SELECT * FROM pushpin WHERE source=\'%s\'' % (source)):
-                media_content += '<tr><td class="prof_cell"><a href="%s" target="_blank"><img class="prof_img" src="%s" /></a></td><td class="data_cell"><div class="trigger" id="trigger" lat="%s" lon="%s">[<a href="%s" target="_blank">%s</a>] %s<br /><span class="time">%s</span></div></td></tr>\n' % (item[4], item[5], item[7], item[8], item[3], item[2], self.html_escape(item[6]), item[9])
-                map_details = "<table><tr><td class='prof_cell'><a href='%s' target='_blank'><img class='prof_img' src='%s' /></a></td class='data_cell'><td>[<a href='%s' target='_blank'>%s</a>] %s<br /><span class='time'>%s</span></td></tr></table>" % (item[4], item[5], item[3], item[2], self.html_escape(item[6]), item[9])
+            items = self.query('SELECT * FROM pushpin WHERE source=\'%s\'' % (source))
+            items.sort(key=lambda x: x[9], reverse=True)
+            for item in items:
+                media_content += '<tr><td class="prof_cell"><a href="%s" target="_blank"><img class="prof_img" src="%s" /></a></td><td class="data_cell"><div class="trigger" id="trigger" lat="%s" lon="%s">[<a href="%s" target="_blank">%s</a>] %s<br /><span class="time">%s</span></div></td></tr>\n' % (item[4], item[5], item[7], item[8], item[3], item[2], self.html_escape(item[6]).replace('\n', '<br />'), item[9])
+                map_details = "<table><tr><td class='prof_cell'><a href='%s' target='_blank'><img class='prof_img' src='%s' /></a></td class='data_cell'><td>[<a href='%s' target='_blank'>%s</a>] %s<br /><span class='time'>%s</span></td></tr></table>" % (item[4], item[5], item[3], item[2], self.html_escape(item[6]).replace('\n', '<br />'), item[9])
                 map_content += '\t\tadd_marker({position: new google.maps.LatLng(%s,%s),title:"%s",icon:"%s",map:map},{details:"%s"});\n' % (item[7], item[8], item[2], icons[source.lower()], map_details)
             media_content += '</table>\n</div>\n'
         return media_content, map_content
@@ -52,7 +54,9 @@ class Module(framework.module):
         sources = self.query('SELECT COUNT(source), source FROM pushpin GROUP BY source')
         media_content, map_content = self.build_content(sources)
         self.write_markup('./data/template_media.html', self.options['media_filename']['value'], media_content)
+        self.output('Media data written to \'%s\'' % (self.options['media_filename']['value']))
         self.write_markup('./data/template_map.html', self.options['map_filename']['value'], map_content)
+        self.output('Mapping data written to \'%s\'' % (self.options['map_filename']['value']))
 
         w = webbrowser.get()
         w.open(self.options['media_filename']['value'])

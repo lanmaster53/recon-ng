@@ -9,7 +9,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('latitude', self.goptions['latitude']['value'], 'yes', self.goptions['latitude']['desc'])
         self.register_option('longitude', self.goptions['longitude']['value'], 'yes', self.goptions['longitude']['desc'])
-        self.register_option('radius', 1, 'yes', 'radius in kilometers')
+        self.register_option('radius', self.goptions['radius']['value'], 'yes', 'radius in kilometers')
         self.info = {
                      'Name': 'Flickr Geolocation Search',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -25,6 +25,8 @@ class Module(framework.module):
         rad = self.options['radius']['value']
         payload = {'method': 'flickr.photos.search', 'format': 'json', 'api_key': api_key, 'text': '-', 'lat': lat, 'lon': lon, 'has_geo': 1, 'extras': 'date_upload,date_taken,owner_name,geo,url_t,url_m', 'radius': rad, 'radius_units':'km', 'per_page': 500}
         url = 'http://api.flickr.com/services/rest/'
+        cnt = 0
+        new = 0
         while True:
             resp = self.request(url, payload=payload)
             jsonobj = json.loads(resp.text[14:-1])
@@ -43,7 +45,10 @@ class Module(framework.module):
                 latitude = photo['latitude']
                 longitude = photo['longitude']
                 time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
-                self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
-            if jsonobj['photos']['page'] == jsonobj['photos']['pages']:
+                new += self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
+                cnt += 1
+            if jsonobj['photos']['page'] >= jsonobj['photos']['pages']:
                 break
             payload['page'] = jsonobj['photos']['page'] + 1
+        self.output('%d total items found.' % (cnt))
+        if new: self.alert('%d NEW items found!' % (new))

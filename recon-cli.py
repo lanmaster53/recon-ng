@@ -7,7 +7,7 @@ sys.path.append('./core/')
 import base
 
 def recon_cli(opts):
-    x = base.Recon()
+    x = base.Recon(mode=1)
     # set the given workspace
     if opts.workspace: x.do_set('workspace %s' % (opts.workspace))
     # set given global options
@@ -27,7 +27,7 @@ def recon_cli(opts):
         print '%s[!] Module required.%s' % (R, N)
         return
     # load the module
-    y = x.do_load(opts.module, cli=True)
+    y = x.do_load(opts.module)
     # exit if module not successfully loaded
     if not y: return
     # set given module options

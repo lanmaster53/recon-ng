@@ -8,7 +8,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('latitude', self.goptions['latitude']['value'], 'yes', self.goptions['latitude']['desc'])
         self.register_option('longitude', self.goptions['longitude']['value'], 'yes', self.goptions['longitude']['desc'])
-        self.register_option('radius', 1, 'yes', 'radius in kilometers')
+        self.register_option('radius', self.goptions['radius']['value'], 'yes', 'radius in kilometers')
         self.register_option('restrict', True, 'yes', 'limit number of api requests to \'REQUESTS\'')
         self.register_option('requests', 1, 'yes', 'maximum number of api requests to make')
         self.info = {
@@ -25,6 +25,7 @@ class Module(framework.module):
         query = 'geo:%f,%f,%d' % (lat, lon, rad)
         limit = self.options['requests']['value'] if self.options['restrict']['value'] else 0
         results = self.search_shodan_api(query, limit)
+        new = 0
         for host in results:
             os = host['os'] if 'os' in host else ''
             hostname = host['hostnames'][0] if len(host['hostnames']) > 0 else 'None'
@@ -39,4 +40,6 @@ class Module(framework.module):
             latitude = host['latitude']
             longitude = host['longitude']
             time = datetime.strptime(host['updated'], '%d.%m.%Y').strftime('%Y-%m-%d %H:%M:%S')
-            self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
+            new += self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
+        self.output('%d total items found.' % (len(results)))
+        if new: self.alert('%d NEW items found!' % (new))

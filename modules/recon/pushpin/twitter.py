@@ -9,7 +9,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('latitude', self.goptions['latitude']['value'], 'yes', self.goptions['latitude']['desc'])
         self.register_option('longitude', self.goptions['longitude']['value'], 'yes', self.goptions['longitude']['desc'])
-        self.register_option('radius', 1, 'yes', 'radius in kilometers')
+        self.register_option('radius', self.goptions['radius']['value'], 'yes', 'radius in kilometers')
         self.info = {
                      'Name': 'Twitter Geolocation Search',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -24,6 +24,8 @@ class Module(framework.module):
         headers = {'Authorization': 'Bearer %s' % (self.bearer_token)}
         payload = {'geocode': '%f,%f,%dkm' % (lat,lon,rad), 'count': 100}
         url = 'https://api.twitter.com/1.1/search/tweets.json'
+        cnt = 0
+        new = 0
         while True:
             resp = self.request(url, payload=payload, headers=headers)
             jsonobj = resp.json
@@ -46,9 +48,12 @@ class Module(framework.module):
                 latitude = tweet['geo']['coordinates'][0]
                 longitude = tweet['geo']['coordinates'][1]
                 time = datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y').strftime('%Y-%m-%d %H:%M:%S')
-                self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
+                new += self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
+                cnt += 1
             if 'next_results' in jsonobj['search_metadata']:
                 max_id = parse_qs(jsonobj['search_metadata']['next_results'][1:])['max_id'][0]
                 payload['max_id'] = max_id
                 continue
             break
+        self.output('%d total items found.' % (cnt))
+        if new: self.alert('%d NEW items found!' % (new))

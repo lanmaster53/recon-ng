@@ -9,7 +9,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('latitude', self.goptions['latitude']['value'], 'yes', self.goptions['latitude']['desc'])
         self.register_option('longitude', self.goptions['longitude']['value'], 'yes', self.goptions['longitude']['desc'])
-        self.register_option('radius', 1, 'yes', 'radius in kilometers')
+        self.register_option('radius', self.goptions['radius']['value'], 'yes', 'radius in kilometers')
         self.info = {
                      'Name': 'Picasa Geolocation Search',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -28,6 +28,8 @@ class Module(framework.module):
         north_boundary = float(lat) + (float(rad) / kilometers_per_degree_latitude)
         payload = {'alt': 'json', 'bbox': '%.6f,%.6f,%.6f,%.6f' % (west_boundary, south_boundary, east_boundary, north_boundary)}
         url = 'http://picasaweb.google.com/data/feed/api/all'
+        cnt = 0
+        new = 0
         page = 1
         while True:
             resp = self.request(url, payload=payload)
@@ -47,7 +49,8 @@ class Module(framework.module):
                 latitude = photo['georss$where']['gml$Point']['gml$pos']['$t'].split()[0]
                 longitude = photo['georss$where']['gml$Point']['gml$pos']['$t'].split()[1]
                 time = datetime.strptime(photo['published']['$t'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y-%m-%d %H:%M:%S')
-                self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
+                new += self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
+                cnt += 1
             qty = jsonobj['feed']['openSearch$itemsPerPage']['$t']
             start = jsonobj['feed']['openSearch$startIndex']['$t']
             next = qty + start
@@ -56,3 +59,5 @@ class Module(framework.module):
                 break
             page += 1
             payload['start-index'] = next
+        self.output('%d total items found.' % (cnt))
+        if new: self.alert('%d NEW items found!' % (new))
