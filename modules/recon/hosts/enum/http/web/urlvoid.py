@@ -20,7 +20,10 @@ class Module(framework.module):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
 
         for host in hosts:
-            url = 'http://www.urlvoid.com/scan/%s/' % (host)
+            url = 'http://www.urlvoid.com/update-report/%s' % (host)
+            self.verbose('Triggering report update...')
+            resp = self.request(url)
+            url = 'http://www.urlvoid.com/scan/%s' % (host)
             self.verbose('URL: %s' % url)
             resp = self.request(url)
 
@@ -29,6 +32,7 @@ class Module(framework.module):
                 continue
 
             # Get and display the results
+            self.output(re.search('<p>(Report updated [^\.]*.) <', resp.text).group(1))
             blacklisted = re.search(r'Blacklist Status</td><td><span.+>(\w.+)</span>', resp.text)
             if blacklisted.group(1) == "BLACKLISTED":
                 self.alert('\'%s\' is BLACKLISTED! (ruhroh)' % (host))

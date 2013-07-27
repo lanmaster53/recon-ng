@@ -185,7 +185,7 @@ class module(cmd.Cmd):
             ">": "&gt;",
             "<": "&lt;",
             }
-        return "".join(escapes.get(c,c) for c in text)
+        return "".join(escapes.get(c,c) for c in s)
 
     def is_hash(self, hashstr):
         hashdict = [
