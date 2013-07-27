@@ -49,7 +49,6 @@ class Module(framework.module):
             for cred in jsonobj['results']:
                 username = cred['plain']
                 password = self.aes_decrypt(cred['password'], decrypt_key, iv)
-                #password = self.ascii_sanitize(password)
                 leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))
                 cnt += 1
