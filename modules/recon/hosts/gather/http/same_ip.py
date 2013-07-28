@@ -19,7 +19,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
         if not hosts: return
         store = self.options['store']['value']
 
@@ -36,7 +36,7 @@ class Module(framework.module):
                 self.error(e.__str__())
                 continue
             # get the sites this host's web site links to
-            results = re.findall(r'<a href="http:\/\/[^"]+" rel=\'nofollow\' title="visit ([^"]+)"', resp.text)
+            results = re.findall(r'rel=\'nofollow\' title="([^"]+) whois"', resp.text)
             if not results:
                 self.verbose('No additional hosts discovered at the same IP address.')
                 continue
@@ -47,5 +47,7 @@ class Module(framework.module):
                 self.output(result)
                 # add each host to the database
                 if store: cnt += self.add_host(result)
+
+        # return results
         self.output('%d total hosts found.' % (tot))
         if store and cnt: self.alert('%d NEW hosts found!' % (cnt))
