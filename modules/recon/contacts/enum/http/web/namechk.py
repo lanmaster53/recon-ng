@@ -37,7 +37,7 @@ class Module(framework.module):
             self.table(tdata, True)
 
         # retrive statuses
-        key = "shhh it's :] super secret"
+        key = "1Sx8srDg1u57Ei2wqX65ymPGXu0f7uAig13u"
         url = 'http://namechk.com/check'
 
         # this header is required
@@ -72,4 +72,4 @@ class Module(framework.module):
                 else:
                     self.verbose('%s: %s' % (name, status))
             else:
-                self.error('%s: %s' % (name, 'Error'))
+                self.error('%s: %s' % (name, 'Unknown error.'))
