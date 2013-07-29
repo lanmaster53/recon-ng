@@ -181,24 +181,19 @@ class Module(framework.module):
         self.codeplex(username)
         self.freecode(username)
         self.gitorious(username)
-
+        
         # Print Final Output Table
-        ''' DEBUG - Set new if/then for this in case no results come back'''
-
-        self.tdata = []
-        #sortedTdata = sorted(self.tdata)
-        self.tdata.append(['Parameter', 'Value', 'Site'])
-        if self.name: self.build_table(self.name, 'Real Name')
-        if self.dateJoin: self.build_table(sorted(self.dateJoin), 'Date Joined')
-        if self.urlRepos: self.build_table(sorted(self.urlRepos), 'URL (Repository)')
-        '''if self.repositories: 
-            for repositories, repos in sorted(self.repositories): 
-                self.tdata.append(['Repositories', repositories, repos])     ''' 
-        if self.urlAvatar: self.build_table(sorted(self.urlAvatar), 'URL (Avatar)')
-        if self.urlPersonal: self.build_table(sorted(self.urlPersonal), 'URL (Personal)')
-        if self.other: self.build_table(sorted(self.other), 'Other')
-         
-               
-        self.table(self.tdata, True)
-        #else:
-           # self.error('%s not found at any repository' % username)
+        if self.name or self.dateJoin:
+            self.tdata = []
+            self.tdata.append(['Parameter', 'Value', 'Site'])
+            if self.name: self.build_table(self.name, 'Real Name')
+            if self.dateJoin: self.build_table(sorted(self.dateJoin), 'Date Joined')
+            if self.urlRepos: self.build_table(sorted(self.urlRepos), 'URL (Repository)')
+            if self.repositories: self.build_table(sorted(self.repositories), 'Repositories)') 
+            if self.urlAvatar: self.build_table(sorted(self.urlAvatar), 'URL (Avatar)')
+            if self.urlPersonal: self.build_table(sorted(self.urlPersonal), 'URL (Personal)')
+            if self.other: self.build_table(sorted(self.other), 'Other')
+            
+            self.table(self.tdata, True)
+        else:
+           self.error('%s not found at any repository' % username)
