@@ -25,13 +25,15 @@ class Module(framework.module):
             resp = self.request(url)
             lines = resp.text.strip().split('\n')
             tdata = []
+            last_line = ''
             for line in lines:
-                if line:
+                if not line.startswith('#') and ':' in line:
                     name = line.split(':', 1)[0].strip()
                     value = line.split(':', 1)[1].strip()
                     tdata.append([name.title(), value])
+                    last_line = line
                 elif last_line:
-                    # removes extra spacing
                     tdata.append([None, None])
-                last_line = line
+                    last_line = None
+            if not any(tdata[-1]): del tdata[-1]
             if tdata: self.table(tdata)

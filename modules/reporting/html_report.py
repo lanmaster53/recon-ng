@@ -169,7 +169,7 @@ a[id*="show-"] {
                 self.output('Associate leak data omitted. Please run the \'leaks_dump\' module to populate the database and try again.')
 
         # all other tables
-        tables.extend(['leaks', 'dashboard'])
+        tables.extend(['leaks', 'dashboard', 'pushpin'])
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in tables]
         for table in tables:
             table_content += self.build_table(table)
