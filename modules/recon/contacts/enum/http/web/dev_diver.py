@@ -29,14 +29,14 @@ class Module(framework.module):
             gitLoc = re.search('<dd itemprop="homeLocation">(.+)</dd>', resp.text)
             gitPersonalUrl = re.search('<dd itemprop="url"><a href="(.+?)" class="url"', resp.text)
             gitAvatar = re.search('<a href="(https://secure.gravatar.com/avatar/.+?)\?;', resp.text)
-            self.tdata.append(['Real Name', 'Github', gitName.group(1)])
-            self.tdata.append(['URL', 'Github', url])
+            self.name.append([gitName.group(1), 'Github'])
+            self.urlRepos.append([url, 'Github'])
             if gitJoin: 
-                self.tdata.append(['Join Date', 'Github', time.strftime('%Y-%m-%d', time.strptime(gitJoin.group(1), '%b %d, %Y'))])
-            if gitLoc: self.tdata.append(['Home Location', 'Github', gitLoc.group(1)])
-            if gitDesc: self.tdata.append(['Description', 'Github', gitDesc.group(1)])
-            if gitPersonalUrl: self.tdata.append(['URL (Personal)', 'Github', gitPersonalUrl.group(1)])
-            if gitAvatar: self.tdata.append(['Avatar', 'Github', gitAvatar.group(1)])
+                self.dateJoin.append([time.strftime('%Y-%m-%d', time.strptime(gitJoin.group(1), '%b %d, %Y')), 'Github'])
+            if gitLoc: self.other.append(['Location', gitLoc.group(1), 'Github'])
+            if gitDesc: self.other.append(['Description', gitDesc.group(1), 'Github'])
+            if gitPersonalUrl: self.urlPersonal.append([gitPersonalUrl.group(1), 'Github'])
+            if gitAvatar: self.urlAvatar.append([gitAvatar.group(1), 'Github'])
         else:
             self.output('Github username not found')
     
@@ -66,14 +66,10 @@ class Module(framework.module):
             bbFollowerCount = re.search('<span class="count">([0-9]+)</span> Followers', resp.text)
             bbFollowingCount = re.search('<span class="count">([0-9]+)</span> Following', resp.text)
             bbRepositories = re.findall('repo-link".+">(.+)</a></h1>', resp.text)
-            self.tdata.append(['Real Name', 'Bitbucket', bbName.group(1)])
-            self.tdata.append(['URL', 'Bitbucket', url])
-            if bbJoin: self.tdata.append(['Join Date', 'Bitbucket', bbJoin.group(1)])
-            if bbFollowerCount and int(bbFollowerCount.group(1)) > 0: 
-                self.tdata.append(['# of Followers', 'Bitbucket', bbFollowerCount.group(1)])
-            if bbFollowingCount and int(bbFollowingCount.group(1)) > 0: 
-                self.tdata.append(['# Projects Following', 'Bitbucket', bbFollowingCount.group(1)])
-            if bbRepositories: self.tdata.append(['Repository Names', 'Bitbucket', ', '.join(bbRepositories)])
+            self.name.append([bbName.group(1), 'Bitbucket'])
+            self.urlRepos.append([url, 'Bitbucket'])
+            if bbJoin: self.dateJoin.append([bbJoin.group(1), 'Bitbucket'])
+            if bbRepositories: self.repositories.append([', '.join(bbRepositories), 'Bitbucket'])
         else:
             self.output('Bitbucket username not found')
         
@@ -87,11 +83,11 @@ class Module(framework.module):
             sfJoin = re.search('<label>Joined:</label> (\d\d\d\d-\d\d-\d\d) ', resp.text)
             sfRepositories = re.findall('<li class="item"><a href="/projects/.+>(.+)</a>', resp.text)
             sfMyOpenID = re.search('(?s)<label>My OpenID:</label>.+?<a href="(.+?)"', resp.text)
-            self.tdata.append(['Real Name', 'Sourceforge', sfName.group(1)])
-            self.tdata.append(['URL', 'Sourceforge', url])
-            if sfJoin: self.tdata.append(['Join Date', 'Sourceforge', sfJoin.group(1)])
-            if sfMyOpenID: self.tdata.append(['URL (Open ID)', 'Sourceforge', sfMyOpenID.group(1)])
-            if sfRepositories: self.tdata.append(['Repository Names', 'Sourceforge', ', '.join(sfRepositories)])
+            self.name.append([sfName.group(1), 'Sourceforge'])
+            self.urlRepos.append([url, 'Sourceforge'])
+            if sfJoin: self.dateJoin.append([sfJoin.group(1), 'Sourceforge'])
+            if sfMyOpenID: self.other.append(['URL (Open ID)', sfMyOpenID.group(1), 'Sourceforge'])
+            if sfRepositories: self.repositories.append([', '.join(sfRepositories), 'Sourceforge'])
         else:
             self.output('Sourceforge username not found')
 
@@ -105,16 +101,16 @@ class Module(framework.module):
             cpJoin = re.search('Member Since<span class="user_float">([A-Z].+[0-9])</span>', resp.text)
             cpLast = re.search('Last Visit<span class="user_float">([A-Z].+[0-9])</span>', resp.text)
             cpCoordinator = re.search('(?s)<p class="OverflowHidden">(.*?)</p>', resp.text)
-            self.tdata.append(['URL', 'CodePlex', url])
+            self.urlRepos.append([url, 'CodePlex'])
             if cpJoin: 
-                self.tdata.append(['Join Date', 'CodePlex', time.strftime('%Y-%m-%d', time.strptime(cpJoin.group(1), '%B %d, %Y'))])
+                self.dateJoin.append([time.strftime('%Y-%m-%d', time.strptime(cpJoin.group(1), '%B %d, %Y')), 'CodePlex'])
             if cpLast: 
-                self.tdata.append(['Last Date', 'CodePlex', time.strftime('%Y-%m-%d', time.strptime(cpLast.group(1), '%B %d, %Y'))])
+                self.other.append(['Date Last', time.strftime('%Y-%m-%d', time.strptime(cpLast.group(1), '%B %d, %Y')), 'CodePlex'])
             if cpCoordinator: 
                 cpCoordProject = re.findall('<a href="(http://.+)/" title=".+">(.+)<br /></a>', cpCoordinator.group(1))
                 cpReposOut = []
                 for cpReposUrl, cpRepos in cpCoordProject:
-                    self.tdata.append(['Coordinator for', 'CodePlex', cpRepos + ' (' + cpReposUrl + ')'])
+                    self.repositories.append([cpRepos + ' (' + cpReposUrl + ')', 'CodePlex'])
         else:
             self.output('CodePlex username not found')
         
@@ -126,9 +122,9 @@ class Module(framework.module):
         if fcCreated: 
             self.alert('Freecode username found - (%s)' % url)
             fcRepositories = re.findall("'Projects', 'Website', '(.+?)'", resp.text)
-            self.tdata.append(['URL', 'Freecode', url])
-            self.tdata.append(['Join Date', 'Freecode', time.strftime('%Y-%m-%d', time.strptime(fcCreated.group(1), '%d %b %Y %H:%M'))])
-            if fcRepositories: self.tdata.append(['Repository Names', 'Freecode', ', '.join(fcRepositories)])
+            self.urlRepos.append([url, 'Freecode'])
+            self.dateJoin.append([time.strftime('%Y-%m-%d', time.strptime(fcCreated.group(1), '%d %b %Y %H:%M')), 'Freecode'])
+            if fcRepositories: self.repositories.append([', '.join(fcRepositories), 'Freecode'])
         else:
             self.output('Freecode username not found') 
 
@@ -139,7 +135,7 @@ class Module(framework.module):
         if re.search('href="/~' + username + '" class="avatar"', resp.text):
             self.alert('Gitorious username found - (%s)' % url)          
             gitoName = re.search('([A-Za-z0-9].+)\s+</li>\s+<li class="email">', resp.text)
-            if gitoName: self.tdata.append(['Real Name', 'Gitorious', gitoName.group(1)])
+            if gitoName: self.name.append([gitoName.group(1), 'Gitorious'])
             
             # Gitorious URL encodes the user's email to obscure it...lulz. No problem.
             gitoEmailraw = re.search("eval\(decodeURIComponent\('(.+)'", resp.text)
@@ -148,18 +144,35 @@ class Module(framework.module):
             gitoPersonalUrl = re.search('rel="me" href="(.+)">', resp.text)
             gitoAvatar = re.search('<img alt="avatar" height="16" src="(https://secure.gravatar.com/avatar/.+?)&', resp.text)
             gitoProjects = re.findall('(?s)<li class="project">\s+<a href="/(.+?)">', resp.text)
-            self.tdata.append(['URL', 'Gitorious', url])
-            if gitoJoin: self.tdata.append(['Join Date', 'Gitorious', gitoJoin.group(1)])
-            if gitoEmail: self.tdata.append(['Email', 'Gitorious', gitoEmail.group(1).strip('\\')])
-            if gitoPersonalUrl: self.tdata.append(['URL (Personal)', 'Gitorious', gitoPersonalUrl.group(1)])
-            if gitoAvatar: self.tdata.append(['Avatar', 'Gitorious', gitoAvatar.group(1)])
-            if gitoProjects: self.tdata.append(['Project Names', 'Gitorious', ', '.join(gitoProjects)])
+            self.urlRepos.append([url, 'Gitorious'])
+            if gitoJoin: self.dateJoin.append([gitoJoin.group(1), 'Gitorious'])
+            if gitoEmail: self.other.append(['Email', gitoEmail.group(1).strip('\\'), 'Gitorious'])
+            if gitoPersonalUrl: self.urlPersonal.append([gitoPersonalUrl.group(1), 'Gitorious'])
+            if gitoAvatar: self.urlAvatar.append([gitoAvatar.group(1), 'Gitorious'])
+            if gitoProjects: self.repositories.append([', '.join(gitoProjects), 'Gitorious'])
         else:
             self.output('Gitorious username not found')          
     
+    def build_table(self, content, heading):
+        if heading == 'Other': # The Other dictionary has 3 cols not 2.
+            for name, value, repos in content:
+                self.tdata.append([name, value, repos])
+        else:
+            for value, repos in content:
+                self.tdata.append([heading, value, repos])
+            self.tdata.append(['  -----', '  -----', '  -----'])
+            
+    
     def module_run(self):
         username = self.options['username']['value']
-        self.tdata = []
+        # Dictionaries to store the scraped data
+        self.name = []
+        self.dateJoin = []
+        self.urlRepos = []
+        self.repositories = []
+        self.urlAvatar = []
+        self.urlPersonal = []
+        self.other = []
         
         # Check each repository
         self.github(username)
@@ -170,9 +183,22 @@ class Module(framework.module):
         self.gitorious(username)
 
         # Print Final Output Table
-        if len(self.tdata) > 1: 
-            sortedTdata = sorted(self.tdata)
-            sortedTdata.insert(0, ['Parameter', 'Site', 'Value'])
-            self.table(sortedTdata, True)
-        else:
-            self.error('%s not found at any repository' % username)
+        ''' DEBUG - Set new if/then for this in case no results come back'''
+
+        self.tdata = []
+        #sortedTdata = sorted(self.tdata)
+        self.tdata.append(['Parameter', 'Value', 'Site'])
+        if self.name: self.build_table(self.name, 'Real Name')
+        if self.dateJoin: self.build_table(sorted(self.dateJoin), 'Date Joined')
+        if self.urlRepos: self.build_table(sorted(self.urlRepos), 'URL (Repository)')
+        '''if self.repositories: 
+            for repositories, repos in sorted(self.repositories): 
+                self.tdata.append(['Repositories', repositories, repos])     ''' 
+        if self.urlAvatar: self.build_table(sorted(self.urlAvatar), 'URL (Avatar)')
+        if self.urlPersonal: self.build_table(sorted(self.urlPersonal), 'URL (Personal)')
+        if self.other: self.build_table(sorted(self.other), 'Other')
+         
+               
+        self.table(self.tdata, True)
+        #else:
+           # self.error('%s not found at any repository' % username)
