@@ -33,7 +33,7 @@ class Module(framework.module):
         if not resp.json:
             self.error('Invalid JSON response for \'%s\'.\n%s' % (domain, resp.text))
             return
-        handles = [x['@handle'] for x in resp.json['pocs']['pocRef']]
+        handles = [x['@handle'] for x in resp.json['pocs']['pocRef']] if type(resp.json['pocs']['pocRef']) == list else [resp.json['pocs']['pocRef']['@handle']]
         for handle in handles:
             url = 'http://whois.arin.net/rest/poc/%s' % (handle)
             self.verbose('URL: %s' % url)

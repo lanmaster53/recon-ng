@@ -20,7 +20,10 @@ class Module(framework.module):
         addresses = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
 
         for address in addresses:
-            url = 'http://www.ipvoid.com/scan/%s/' % (address)
+            url = 'http://www.ipvoid.com/update-report/%s' % (address)
+            self.verbose('Triggering report update...')
+            resp = self.request(url)
+            url = 'http://www.ipvoid.com/scan/%s' % (address)
             self.verbose('URL: %s' % url)
             resp = self.request(url)
 
@@ -29,6 +32,7 @@ class Module(framework.module):
                 continue
 
             # Get and display the results
+            self.output(re.search('<p>(Report updated [^\.]*.) <', resp.text).group(1))
             blacklisted = re.search(r'Blacklist Status</td><td><span.+>(\w.+)</span>', resp.text)
             if blacklisted.group(1) == "BLACKLISTED":
                 self.alert('\'%s\' is BLACKLISTED! (ruhroh)' % (address))
