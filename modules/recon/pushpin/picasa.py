@@ -34,7 +34,7 @@ class Module(framework.module):
         while True:
             resp = self.request(url, payload=payload)
             jsonobj = resp.json
-            if jsonobj['feed']['openSearch$totalResults']['$t'] == 0:
+            if not jsonobj or jsonobj['feed']['openSearch$totalResults']['$t'] == 0:
                 break
             for photo in jsonobj['feed']['entry']:
                 if not photo['georss$where']:
@@ -43,8 +43,8 @@ class Module(framework.module):
                 screen_name = photo['author'][0]['name']['$t']
                 profile_name = photo['author'][0]['name']['$t']
                 profile_url = photo['author'][0]['uri']['$t']
-                media_url = photo['media$group']['media$content'][0]['url']
-                thumb_url = photo['media$group']['media$thumbnail'][0]['url']
+                media_url = photo['content']['src']
+                thumb_url = '/s72/'.join(media_url.rsplit('/', 1))
                 message = photo['title']['$t']
                 latitude = photo['georss$where']['gml$Point']['gml$pos']['$t'].split()[0]
                 longitude = photo['georss$where']['gml$Point']['gml$pos']['$t'].split()[1]
