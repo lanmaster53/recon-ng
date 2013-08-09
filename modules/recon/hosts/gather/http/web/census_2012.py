@@ -5,8 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('ip_first', None, 'yes', 'first address in the target range.')
-        self.register_option('ip_last', None, 'yes', 'last address in the target range.')
+        self.register_option('range', None, 'yes', 'comma delineated list of ip address ranges (no cidr).')
         self.register_option('store', None, 'no', 'name of database table to store the results or data will not be stored.')
         self.info = {
                      'Name': 'Internet Census 2012 Lookup',
@@ -18,12 +17,19 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        first = self.options['ip_first']['value']
-        last = self.options['ip_last']['value']
-        payload = {'startIP': first, 'endIP': last, 'includeHostnames': 'Yes', 'rawDownload': 'Yes'}
-        url = 'http://exfiltrated.com/query.php'
-        resp = self.request(url, payload=payload)
+        ranges = self.options['range']['value'].split(',')
         tdata = []
-        for host in resp.text.strip().split('\r\n'):
-            tdata.append(host.split('\t'))
+        for ips in ranges:
+            cnt = 0
+            self.output('Gathering port scan data for range: %s' % (ips))
+            first = ips.split('-')[0]
+            last = ips.split('-')[1]
+            payload = {'startIP': first, 'endIP': last, 'includeHostnames': 'Yes', 'rawDownload': 'Yes'}
+            url = 'http://exfiltrated.com/query.php'
+            resp = self.request(url, payload=payload)
+            for host in resp.text.strip().split('\r\n')[1:]:
+                tdata.append(host.split('\t'))
+                cnt += 1
+            if cnt: self.alert('%d entries found!' % (cnt))
+        tdata.insert(0, ['hostname', 'address', 'port'])
         self.table(tdata, header=True, table=self.options['store']['value'])

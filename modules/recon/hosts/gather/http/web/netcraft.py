@@ -1,5 +1,6 @@
 import framework
 # unique to module
+from cookielib import CookieJar
 import urllib
 import re
 import hashlib
@@ -25,31 +26,22 @@ class Module(framework.module):
         pattern = '<td align\=\"left\">\s*<a href=\"http://(.*?)/"'
         subs = []
         cnt = 0
-        cookies = {}
-        # control variables
-        New = True
+
+        cookiejar = CookieJar()
+        resp = self.request(url, payload=payload, cookiejar=cookiejar)
+        cookiejar = resp.cookiejar
+        for cookie in cookiejar:
+            if cookie.name == 'netcraft_js_verification_challenge':
+                challenge = cookie.value
+                response = hashlib.sha1(urllib.unquote(challenge)).hexdigest()
+                cookiejar.set_cookie(self.make_cookie('netcraft_js_verification_response', '%s' % response, '.netcraft.com'))
+                break
+
         # execute search engine queries and scrape results storing subdomains in a list
         # loop until no Next Page is available
-        while New:
+        while True:
             self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
-
-            resp = self.request(url, payload=payload, cookies=cookies)
-            if 'set-cookie' in resp.headers:
-                # we have a cookie to set!
-                cookie = resp.headers['set-cookie']
-                # this was taken from the netcraft page's JavaScript, no need to use big parsers just for that
-                # grab the cookie sent by the server, hash it and send the response
-                challenge_token = (cookie.split('=')[1].split(';')[0])
-                response = hashlib.sha1(urllib.unquote(challenge_token))
-                cookies = {
-                      'netcraft_js_verification_response': '%s' % response.hexdigest(),
-                      'netcraft_js_verification_challenge': '%s' % challenge_token,
-                      'path' : '/'
-                      }
-
-                # Now we can request the page again
-                resp = self.request(url, payload=payload, cookies=cookies)
-
+            resp = self.request(url, payload=payload, cookiejar=cookiejar)
             content = resp.text
 
             sites = re.findall(pattern, content)
@@ -67,7 +59,6 @@ class Module(framework.module):
             # values for our payload...
             link = re.findall(r'(\blast\=\b|\bfrom\=\b)(.*?)&', content)
             if not link:
-                New = False
                 break
             else:
                 payload['last'] = link[0][1]

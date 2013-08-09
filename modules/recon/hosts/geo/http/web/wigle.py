@@ -1,5 +1,6 @@
 import framework
 # unique to module
+from cookielib import CookieJar
 import math
 import re
 
@@ -69,10 +70,9 @@ class Module(framework.module):
         payload['credential_0'] = self.options['username']['value']
         payload['credential_1'] = self.options['password']['value']
         payload['destination'] = '/'
-        resp = self.request('https://wigle.net/gps/gps/main/login/', method='POST', payload=payload, redirect=False)
-        for cookie in resp.cookies:
-            if cookie.name == 'auth': auth = '%s=%s' % (cookie.name, cookie.value)
-        headers = {'Cookie': auth}
+        cookiejar = CookieJar()
+        resp = self.request('https://wigle.net/gps/gps/main/login/', method='POST', payload=payload, redirect=False, cookiejar=cookiejar)
+        cookiejar = resp.cookiejar
         payload = {}
         payload['latrange1'] = str(latrange1)
         payload['latrange2'] = str(latrange2)
@@ -81,7 +81,7 @@ class Module(framework.module):
         nodes = []
         page = 1
         while True:
-            resp = self.request('https://wigle.net/gps/gps/main/confirmquery/', payload=payload, headers=headers)
+            resp = self.request('https://wigle.net/gps/gps/main/confirmquery/', payload=payload, cookiejar=cookiejar)
             if 'too many queries' in resp.text:
                 self.alert('You\'re account has reached its daily limit of API queries.')
                 break

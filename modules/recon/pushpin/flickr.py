@@ -44,7 +44,8 @@ class Module(framework.module):
                 message = photo['title']
                 latitude = photo['latitude']
                 longitude = photo['longitude']
-                time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+                try: time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+                except ValueError: time = datetime(1970, 1, 1).strftime('%Y-%m-%d %H:%M:%S')
                 new += self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                 cnt += 1
             if jsonobj['photos']['page'] >= jsonobj['photos']['pages']:

@@ -1,5 +1,6 @@
 import framework
 # unique to module
+from cookielib import CookieJar
 import re
 import hashlib
 import urllib
@@ -22,30 +23,22 @@ class Module(framework.module):
 
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        cookies = {}
+
+        cookiejar = CookieJar()
+        url = 'http://uptime.netcraft.com/up/graph?site=www.google.com'
+        resp = self.request(url, cookiejar=cookiejar)
+        cookiejar = resp.cookiejar
+        for cookie in cookiejar:
+            if cookie.name == 'netcraft_js_verification_challenge':
+                challenge = cookie.value
+                response = hashlib.sha1(urllib.unquote(challenge)).hexdigest()
+                cookiejar.set_cookie(self.make_cookie('netcraft_js_verification_response', '%s' % response, '.netcraft.com'))
+                break
 
         for host in hosts:
             url = 'http://uptime.netcraft.com/up/graph?site=%s' % (host)
             self.verbose('URL: %s' % url)
-            resp = self.request(url, cookies=cookies)
-            if 'set-cookie' in resp.headers:
-                # we have a cookie to set!
-                self.verbose('Setting cookie...')
-                cookie = resp.headers['set-cookie']
-                # this was taken from the netcraft page's JavaScript, no need to use big parsers just for that
-                # grab the cookie sent by the server, hash it and send the response
-                challenge_token = (cookie.split('=')[1].split(';')[0])
-                response = hashlib.sha1(urllib.unquote(challenge_token))
-                cookies = {
-                            'netcraft_js_verification_response': '%s' % response.hexdigest(),
-                            'netcraft_js_verification_challenge': '%s' % challenge_token,
-                            'path' : '/'
-                          }
-
-                # Now we can request the page again
-                self.verbose('URL: %s' % url)
-                resp = self.request(url, cookies=cookies)
-
+            resp = self.request(url, cookiejar=cookiejar)
             content = resp.text
 
             # instantiate history list

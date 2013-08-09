@@ -1,5 +1,6 @@
 import framework
 # unique to module
+from cookielib import CookieJar
 import re
 import time
 
@@ -11,7 +12,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Open Recursive DNS Resolvers Check',
                      'Author': 'Dan Woodruff (@dewoodruff)',
-                     'Description': 'Leverages data ptovided by the Open DNS Resolver Project at openresolverproject.org to check class C subnets for open recursive DNS resolvers.',
+                     'Description': 'Leverages data provided by the Open DNS Resolver Project at openresolverproject.org to check class C subnets for open recursive DNS resolvers.',
                      'Comments': [
                                   'Source options: [ db | <address> | ./path/to/file | query <sql> ]',
                                   ]
@@ -30,11 +31,10 @@ class Module(framework.module):
 
         # get the cookie first for all other requests
         mainUrl = 'http://openresolverproject.org'
-        setupResponse = self.request(mainUrl)
-        hv = ""
-        for cookie in setupResponse.cookies:
-            if cookie.name == 'hv':
-                hv = cookie.value
+
+        cookiejar = CookieJar()
+        resp = self.request(mainUrl, cookiejar=cookiejar)
+        cookiejar = resp.cookiejar
         # it seems we need to briefly sleep so the server has time to register the session, otherwise we don't get results back
         time.sleep(1)
 
@@ -45,7 +45,7 @@ class Module(framework.module):
             self.verbose('URL: %s' % url)
 
             # build the request as expected by the open resolver project
-            response = self.request(url, cookies={"hv":hv}, headers={"Referer":"http://openresolverproject.org"})
+            response = self.request(url, headers={"Referer":"http://openresolverproject.org"}, cookiejar=cookiejar)
 
             rows = re.findall("<TR>.+</TR>", response.text)
             # skip the first row since that is the table header

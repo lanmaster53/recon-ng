@@ -670,17 +670,33 @@ class module(cmd.Cmd):
     # REQUEST METHODS
     #==================================================
 
-    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, auth=(), redirect=True):
+    def make_cookie(self, name, value, domain, path='/'):
+        return cookielib.Cookie(
+            version=0, 
+            name=name, 
+            value=value,
+            port=None, 
+            port_specified=False,
+            domain=domain, 
+            domain_specified=True, 
+            domain_initial_dot=False,
+            path=path, 
+            path_specified=True,
+            secure=False,
+            expires=None,
+            discard=False,
+            comment=None,
+            comment_url=None,
+            rest=None
+        )
+
+    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookiejar=None, auth=(), redirect=True):
         '''Makes a web request and returns a response object.'''
         # set request arguments
         # process user-agent header
         headers['User-Agent'] = self.goptions['user-agent']['value']
         # process payload
         payload = urllib.urlencode(payload)
-        # process cookies
-        if len(cookies.keys()) > 0:
-            cookie_value = '; '.join('%s=%s' % (key, cookies[key]) for key in cookies.keys())
-            headers['Cookie'] = cookie_value
         # process basic authentication
         if len(auth) == 2:
             authorization = ('%s:%s' % (auth[0], auth[1])).encode('base64').replace('\n', '')
@@ -692,6 +708,9 @@ class module(cmd.Cmd):
         # set handlers
         # declare handlers list according to debug setting
         handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1)] if self.goptions['debug']['value'] else []
+        # process cookiejar handler
+        if cookiejar != None:
+            handlers.append(urllib2.HTTPCookieProcessor(cookiejar))
         # process redirect and add handler
         if redirect == False:
             handlers.append(NoRedirectHandler)
@@ -699,14 +718,10 @@ class module(cmd.Cmd):
         if self.goptions['proxy']['value']:
             proxies = {'http': self.goptions['proxy_server']['value'], 'https': self.goptions['proxy_server']['value']}
             handlers.append(urllib2.ProxyHandler(proxies))
-        # create cookie jar
-        cj = cookielib.CookieJar()
-        handlers.append(urllib2.HTTPCookieProcessor(cj))
 
         # install opener
         opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(opener)
-        
         # process method and make request
         if method == 'GET':
             if payload: url = '%s?%s' % (url, payload)
@@ -725,7 +740,7 @@ class module(cmd.Cmd):
             resp = e
 
         # build and return response object
-        return ResponseObject(resp, cj)
+        return ResponseObject(resp, cookiejar)
 
     #==================================================
     # COMMAND METHODS
@@ -1001,7 +1016,7 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
 
 class ResponseObject(object):
 
-    def __init__(self, resp, cj):
+    def __init__(self, resp, cookiejar):
         # set hidden text property
         self.__text__ = resp.read()
         # set inherited properties
@@ -1010,7 +1025,7 @@ class ResponseObject(object):
         self.headers = resp.headers.dict
         # detect and set encoding property
         self.encoding = resp.headers.getparam('charset')
-        self.cookies = cj
+        self.cookiejar = cookiejar
 
     @property
     def text(self):
