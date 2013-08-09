@@ -28,8 +28,11 @@ class Module(framework.module):
             url = 'http://exfiltrated.com/query.php'
             resp = self.request(url, payload=payload)
             for host in resp.text.strip().split('\r\n')[1:]:
-                tdata.append(host.split('\t'))
+                address = host.split('\t')[1]
+                port = host.split('\t')[2]
+                hostname = host.split('\t')[0]
+                tdata.append([address, port, hostname])
                 cnt += 1
             if cnt: self.alert('%d entries found!' % (cnt))
-        tdata.insert(0, ['hostname', 'address', 'port'])
+        tdata.insert(0, ['address', 'port', 'hostname'])
         self.table(tdata, header=True, table=self.options['store']['value'])
