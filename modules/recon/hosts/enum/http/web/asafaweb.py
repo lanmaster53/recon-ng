@@ -19,6 +19,7 @@ class Module(framework.module):
 
         # request the scan
         details = [['Check', 'Status']]
+        configs = []
         url = 'https://asafaweb.com/Scan?Url=%s' % (host)
         self.verbose('URL: %s' % url)
         resp = self.request(url)
@@ -27,7 +28,8 @@ class Module(framework.module):
         content = resp.text
         result = re.search(r'<div class="statusSummary" id="StatusSummary">(.*?)</div>', content, re.S)
         # store results
-        configs = re.findall(r'">(.+?)</', result.group(1), re.S)
+        if result:
+            configs = re.findall(r'">(.+?)</', result.group(1), re.S)
         if configs:
             for config in configs:
                 check = config.split(':')[0].strip()
