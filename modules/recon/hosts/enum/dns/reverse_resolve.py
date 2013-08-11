@@ -29,7 +29,9 @@ class Module(framework.module):
         
             try:
                 addr = dns.reversename.from_address(ip)
-                self.output( ip + " " + str(dns.resolver.query(addr,"PTR")[0]))
+                hostname = str(dns.resolver.query(addr,"PTR")[0])
+                self.output("IP Address %s has hostname %s\n" % (ip, hostname))
+                self.add_host(hostname,ip_address=ip)
                 node = node +1
                     
             except  dns.resolver.NXDOMAIN:
