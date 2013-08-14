@@ -29,6 +29,8 @@ class Module(framework.module):
         # setup API call
         method = 'domains.query'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+
+        # build the payload
         payload = {'domain_identifier': domain, 'daysAgo': 0}
         payload = self.build_pwnedlist_payload(payload, method, key, secret)
         # make request
@@ -40,10 +42,14 @@ class Module(framework.module):
         if len(jsonobj['accounts']) == 0:
             self.output('No results returned for \'%s\'.' % (domain))
         else:
+            cnt = 0
+            new = 0
             for cred in jsonobj['accounts']:
                 username = cred['plain']
                 password = self.aes_decrypt(cred['password'], decrypt_key, iv)
-                #password = self.ascii_sanitize(password)
                 leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))
-                self.add_cred(username, password, None, leak)
+                cnt += 1
+                new += self.add_cred(username, password, None, leak)
+            self.output('%d total credentials found.' % (cnt))
+            if new: self.alert('%d NEW credentials found!' % (new))

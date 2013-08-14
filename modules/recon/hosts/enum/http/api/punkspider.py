@@ -14,7 +14,7 @@ class Module(framework.module):
         self.register_option('sqli', True, 'yes', 'search for sqli')
         self.register_option('xss', True, 'yes', 'search for xss')
         self.register_option('vulns', False, 'yes', 'if found, display vulnerabily information')
-        self.register_option('store', None, 'no', 'name of database table to store search results or data will not be stored.')
+        self.register_option('store_table', None, 'no', 'name of database table to store search results or data will not be stored.')
         self.info = {
                      'Name': 'punkSPIDER Vulnerabilty Finder',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
@@ -31,6 +31,7 @@ class Module(framework.module):
             self.error('Invalid search type \'%s\'.' % (search_type))
             return
         search_str = self.options['string']['value']
+        table = self.options['store_table']['value']
         url = 'http://punkspider.hyperiongray.com/service/search/domain/'
         payload = {'searchkey': search_type, 'searchvalue': search_str, 'filtertype': 'OR'}
         for item in ['bsqli', 'sqli', 'xss']:
@@ -66,7 +67,8 @@ class Module(framework.module):
             else:
                 if tdata:
                     tdata.insert(0, ['Host', 'Time', 'BSQLi', 'SQLi', 'XSS'])
-                    self.table(tdata, header=True, table=self.options['store']['value'])
+                    self.table(tdata, header=True)
+                    if table: self.add_table(table, tdata, header=True)
                 hits = jsonobj['data']['rowsFound']
                 pages = jsonobj['data']['numberOfPages']
                 break

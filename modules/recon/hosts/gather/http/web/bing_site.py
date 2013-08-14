@@ -1,5 +1,6 @@
 import framework
 # unique to module
+from cookielib import CookieJar
 import urllib
 import re
 import time
@@ -28,6 +29,8 @@ class Module(framework.module):
         new = True
         page = 0
         nr = 50
+        cookiejar = CookieJar()
+        cookiejar.set_cookie(self.make_cookie('SRCHHPGUSR', 'NEWWND=0&NRSLT=%d&SRCHLANG=&AS=1' % (nr), '.bing.com'))
         # execute search engine queries and scrape results storing subdomains in a list
         # loop until no new subdomains are found
         while new == True:
@@ -41,9 +44,8 @@ class Module(framework.module):
             # bing errors out at > 2059 characters not including the protocol
             if len(url) > 2066: url = url[:2066]
             self.verbose('URL: %s' % (url))
-            cookies = {'SRCHHPGUSR': 'NEWWND=0&NRSLT=%d&SRCHLANG=&AS=1' % (nr)}
             # send query to search engine
-            resp = self.request(url, cookies=cookies)
+            resp = self.request(url, cookiejar=cookiejar)
             if resp.status_code != 200:
                 self.alert('Bing has encountered an error. Please submit an issue for debugging.')
                 break

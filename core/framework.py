@@ -185,7 +185,7 @@ class module(cmd.Cmd):
             ">": "&gt;",
             "<": "&lt;",
             }
-        return "".join(escapes.get(c,c) for c in text)
+        return "".join(escapes.get(c,c) for c in s)
 
     def is_hash(self, hashstr):
         hashdict = [
@@ -250,8 +250,9 @@ class module(cmd.Cmd):
             print '%s%s' % (self.spacer, line.title())
             print '%s%s' % (self.spacer, self.ruler*len(line))
 
-    def table(self, tdata, header=False, table=None):
+    def table(self, data, header=False):
         '''Accepts a list of rows and outputs a table.'''
+        tdata = list(data)
         if len(set([len(x) for x in tdata])) > 1:
             raise FrameworkException('Row lengths not consistent.')
         lens = []
@@ -267,36 +268,18 @@ class module(cmd.Cmd):
             # top of ascii table
             print ''
             print separator
-            if table: columns = None
             # ascii table data
             if header:
                 rdata = tdata.pop(0)
                 data_sub = tuple([rdata[i].center(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
                 print separator
-                # build column names for database table out of header row
-                if table: columns = [self.to_unicode_str(x).lower() for x in rdata]
             for rdata in tdata:
                 data_sub = tuple([self.to_unicode_str(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
                 print data_str % data_sub
             # bottom of ascii table
             print separator
             print ''
-
-            # build database table
-            if table:
-                table = table.replace(' ', '_').lower()
-                # create database table
-                if not columns: columns = ['column_%s' % (i) for i in range(0,len(tdata[0]))]
-                metadata = ','.join(['\'%s\' TEXT' % (x) for x in columns])
-                self.query('CREATE TABLE IF NOT EXISTS %s (%s)' % (table, metadata))
-                # insert rows into database table
-                for rdata in tdata:
-                    data = {}
-                    for i in range(0, len(columns)):
-                        data[columns[i]] = self.to_unicode(rdata[i])
-                    self.insert(table, data)
-                self.output('\'%s\' table created in the database' % (table))
 
     #==================================================
     # DATABASE METHODS
@@ -375,6 +358,67 @@ class module(cmd.Cmd):
         )
 
         return self.insert('pushpin', data, data.keys())
+
+    def add_table(self, table, data, header=False):
+        '''Adds a table to the database and populates it with data.
+        table - the name of the table to create.
+        header - whether or not the first row of tdata consists of headers.
+        data - the information to insert into the database table.'''
+
+        tdata = list(data)
+        table = table.replace(' ', '_').lower()
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
+        if table in tables:
+            raise FrameworkException('Table \'%s\' already exists' % (table))
+        # create database table
+        if header:
+            rdata = tdata.pop(0)
+            columns = [self.to_unicode_str(x).lower() for x in rdata]
+        else:
+            columns = ['column_%s' % (i) for i in range(0,len(tdata[0]))]
+        metadata = ','.join(['\'%s\' TEXT' % (x) for x in columns])
+        self.query('CREATE TABLE IF NOT EXISTS %s (%s)' % (table, metadata))
+        # insert rows into database table
+        for rdata in tdata:
+            data = {}
+            for i in range(0, len(columns)):
+                data[columns[i]] = self.to_unicode(rdata[i])
+            self.insert(table, data)
+        self.output('\'%s\' table created in the database' % (table))
+
+    def add_column(self, table, match_column, new_column, data):
+        '''Adds a column to a database table and populates it with data.
+        table - the table to insert the data into.
+        match_columns - the existing column that will be searched for an update match.
+        new_column - the new column which will be added to the table.
+        data - the information to add to the created column in the form of a list of tuples
+               where the first index in the tuple is the match column value and the second
+               index is the new column value.'''
+
+        cdata = list(data)
+        columns = [x[1] for x in self.query('PRAGMA table_info(%s)' % (table))]
+        if not columns:
+            raise FrameworkException('Table \'%s\' does not exist' % (table))
+        if match_column not in columns:
+            raise FrameworkException('Match column \'%s\' does not exist in table \'%s\'' % (match_column, table))
+        if new_column in columns:
+            raise FrameworkException('Column \'%s\' already exists in table \'%s\'' % (new_column, table))
+        self.query('ALTER TABLE %s ADD COLUMN \'%s\' \'TEXT\'' % (table, new_column))
+        # combine duplicate cdata based on match_column_value
+        rdata = {}
+        for item in cdata:
+            if item[0] not in rdata:
+                rdata[item[0]] = []
+            rdata[item[0]].append(item[1])
+        # create a new db connection in order to make parameterized queries
+        conn = sqlite3.connect('%s/data.db' % (self.workspace))
+        cur = conn.cursor()
+        for item in rdata:
+            query = 'UPDATE %s SET %s=? WHERE %s=?' % (table, new_column, match_column)
+            values = (self.to_unicode(','.join(rdata[item])), item)
+            cur.execute(query, values)
+        conn.commit()
+        self.output('\'%s\' column created in the \'%s\' table' % (new_column, table))
 
     def insert(self, table, data, unique_columns=[]):
         '''Inserts items into database and returns the affected row count.
@@ -670,17 +714,33 @@ class module(cmd.Cmd):
     # REQUEST METHODS
     #==================================================
 
-    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookies={}, auth=(), redirect=True):
+    def make_cookie(self, name, value, domain, path='/'):
+        return cookielib.Cookie(
+            version=0, 
+            name=name, 
+            value=value,
+            port=None, 
+            port_specified=False,
+            domain=domain, 
+            domain_specified=True, 
+            domain_initial_dot=False,
+            path=path, 
+            path_specified=True,
+            secure=False,
+            expires=None,
+            discard=False,
+            comment=None,
+            comment_url=None,
+            rest=None
+        )
+
+    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookiejar=None, auth=(), redirect=True):
         '''Makes a web request and returns a response object.'''
         # set request arguments
         # process user-agent header
         headers['User-Agent'] = self.goptions['user-agent']['value']
         # process payload
         payload = urllib.urlencode(payload)
-        # process cookies
-        if len(cookies.keys()) > 0:
-            cookie_value = '; '.join('%s=%s' % (key, cookies[key]) for key in cookies.keys())
-            headers['Cookie'] = cookie_value
         # process basic authentication
         if len(auth) == 2:
             authorization = ('%s:%s' % (auth[0], auth[1])).encode('base64').replace('\n', '')
@@ -692,6 +752,9 @@ class module(cmd.Cmd):
         # set handlers
         # declare handlers list according to debug setting
         handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1)] if self.goptions['debug']['value'] else []
+        # process cookiejar handler
+        if cookiejar != None:
+            handlers.append(urllib2.HTTPCookieProcessor(cookiejar))
         # process redirect and add handler
         if redirect == False:
             handlers.append(NoRedirectHandler)
@@ -699,14 +762,10 @@ class module(cmd.Cmd):
         if self.goptions['proxy']['value']:
             proxies = {'http': self.goptions['proxy_server']['value'], 'https': self.goptions['proxy_server']['value']}
             handlers.append(urllib2.ProxyHandler(proxies))
-        # create cookie jar
-        cj = cookielib.CookieJar()
-        handlers.append(urllib2.HTTPCookieProcessor(cj))
 
         # install opener
         opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(opener)
-        
         # process method and make request
         if method == 'GET':
             if payload: url = '%s?%s' % (url, payload)
@@ -725,7 +784,7 @@ class module(cmd.Cmd):
             resp = e
 
         # build and return response object
-        return ResponseObject(resp, cj)
+        return ResponseObject(resp, cookiejar)
 
     #==================================================
     # COMMAND METHODS
@@ -747,14 +806,14 @@ class module(cmd.Cmd):
         for item in ['Name', 'Path', 'Author', 'Description']:
             print ''
             print pattern % (self.spacer, item)
-            print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, initial_indent='', subsequent_indent=self.spacer*2))
+            print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, subsequent_indent=self.spacer*2))
         print ''
         print pattern % (self.spacer, 'Options')
         self.display_options('info')
         if self.info['Comments']:
             print pattern % (self.spacer, 'Comments')
             for comment in self.info['Comments']:
-                print pattern[:-1] % (self.spacer*2, textwrap.fill(comment, 100, initial_indent='', subsequent_indent=self.spacer*2))
+                print pattern[:-1] % (self.spacer*2, textwrap.fill(comment, 100, subsequent_indent=self.spacer*2))
             print ''
 
     def do_set(self, params):
@@ -813,7 +872,7 @@ class module(cmd.Cmd):
                 self.output('No data returned.')
             else:
                 tdata.insert(0, header)
-                self.table(tdata, True)
+                self.table(tdata, header=True)
                 self.output('%d rows returned' % (len(tdata)))
         else:
             conn.commit()
@@ -1001,7 +1060,7 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
 
 class ResponseObject(object):
 
-    def __init__(self, resp, cj):
+    def __init__(self, resp, cookiejar):
         # set hidden text property
         self.__text__ = resp.read()
         # set inherited properties
@@ -1010,7 +1069,7 @@ class ResponseObject(object):
         self.headers = resp.headers.dict
         # detect and set encoding property
         self.encoding = resp.headers.getparam('charset')
-        self.cookies = cj
+        self.cookiejar = cookiejar
 
     @property
     def text(self):
