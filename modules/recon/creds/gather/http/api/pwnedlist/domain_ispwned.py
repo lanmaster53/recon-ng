@@ -6,7 +6,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', self.goptions['domain']['value'], 'yes', 'source of domains for module input (see \'info\' for options)')
-        self.register_option('store', None, 'no', 'name of database table to store the results or data will not be stored.')
+        self.register_option('store_table', None, 'no', 'name of database table to store the results or data will not be stored.')
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -22,6 +22,7 @@ class Module(framework.module):
         secret = self.get_key('pwnedlist_secret')
 
         domains = self.get_source(self.options['source']['value'])
+        table = self.options['store_table']['value']
 
         # API query guard
         if not self.api_guard(1*len(domains)): return
@@ -49,4 +50,5 @@ class Module(framework.module):
             tdata.append([jsonobj['domain'], str(jsonobj['num_entries']), jsonobj['first_seen'], jsonobj['last_seen']])
         if tdata:
             tdata.insert(0, ['Domain', 'Pwned_Accounts', 'First_Seen', 'Last_Seen'])
-            self.table(tdata, header=True, table=self.options['store']['value'])
+            self.table(tdata, header=True)
+            if table: self.add_table(table, tdata, header=True)
