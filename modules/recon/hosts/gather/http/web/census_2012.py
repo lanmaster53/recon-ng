@@ -23,7 +23,6 @@ class Module(framework.module):
         table = self.options['store_table']['value']
         column = self.options['store_column']['value']
         tdata = []
-        cdata = []
         for ips in ranges:
             cnt = 0
             self.output('Gathering port scan data for range: %s' % (ips))
@@ -35,12 +34,28 @@ class Module(framework.module):
             for host in resp.text.strip().split('\r\n')[1:]:
                 address = host.split('\t')[1]
                 port = host.split('\t')[2]
-                cdata.append((address, port))
                 hostname = host.split('\t')[0]
                 tdata.append([address, port, hostname])
                 cnt += 1
             if cnt: self.alert('%d entries found!' % (cnt))
         tdata.insert(0, ['address', 'port', 'hostname'])
         self.table(tdata, header=True)
-        if table: self.add_table(table, tdata, header=True)
-        if column: self.add_column('hosts', 'ip_address', column, cdata)
+
+        # store data
+        if table:
+            try: self.add_table(table, tdata, header=True)
+            except framework.FrameworkException as e:
+                self.error(e.message)
+        if column:
+            try:
+                self.add_column('hosts', column)
+                # combine duplicate tdata based on address
+                rdata = {}
+                for item in tdata[1:]:
+                    if item[0] not in rdata:
+                        rdata[item[0]] = []
+                    rdata[item[0]].append(item[1])
+                for item in rdata:
+                    self.query('UPDATE hosts SET %s=? WHERE ip_address=?' % (column), (','.join(rdata[item]), item))
+            except framework.FrameworkException as e:
+                self.error(e.message)

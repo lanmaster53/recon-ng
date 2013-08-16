@@ -384,41 +384,17 @@ class module(cmd.Cmd):
             for i in range(0, len(columns)):
                 data[columns[i]] = self.to_unicode(rdata[i])
             self.insert(table, data)
-        self.output('\'%s\' table created in the database' % (table))
+        self.verbose('\'%s\' table created in the database' % (table))
 
-    def add_column(self, table, match_column, new_column, data):
-        '''Adds a column to a database table and populates it with data.
-        table - the table to insert the data into.
-        match_columns - the existing column that will be searched for an update match.
-        new_column - the new column which will be added to the table.
-        data - the information to add to the created column in the form of a list of tuples
-               where the first index in the tuple is the match column value and the second
-               index is the new column value.'''
-
-        cdata = list(data)
+    def add_column(self, table, column):
+        '''Adds a column to a database table.'''
         columns = [x[1] for x in self.query('PRAGMA table_info(%s)' % (table))]
         if not columns:
             raise FrameworkException('Table \'%s\' does not exist' % (table))
-        if match_column not in columns:
-            raise FrameworkException('Match column \'%s\' does not exist in table \'%s\'' % (match_column, table))
-        if new_column in columns:
-            raise FrameworkException('Column \'%s\' already exists in table \'%s\'' % (new_column, table))
-        self.query('ALTER TABLE %s ADD COLUMN \'%s\' \'TEXT\'' % (table, new_column))
-        # combine duplicate cdata based on match_column_value
-        rdata = {}
-        for item in cdata:
-            if item[0] not in rdata:
-                rdata[item[0]] = []
-            rdata[item[0]].append(item[1])
-        # create a new db connection in order to make parameterized queries
-        conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        cur = conn.cursor()
-        for item in rdata:
-            query = 'UPDATE %s SET %s=? WHERE %s=?' % (table, new_column, match_column)
-            values = (self.to_unicode(','.join(rdata[item])), item)
-            cur.execute(query, values)
-        conn.commit()
-        self.output('\'%s\' column created in the \'%s\' table' % (new_column, table))
+        if column in columns:
+            raise FrameworkException('Column \'%s\' already exists in table \'%s\'' % (column, table))
+        self.query('ALTER TABLE %s ADD COLUMN \'%s\' \'TEXT\'' % (table, column))
+        self.verbose('\'%s\' column created in the \'%s\' table' % (column, table))
 
     def insert(self, table, data, unique_columns=[]):
         '''Inserts items into database and returns the affected row count.
@@ -458,11 +434,14 @@ class module(cmd.Cmd):
         conn.close()
         return cur.rowcount
 
-    def query(self, query):
+    def query(self, query, values=()):
         '''Queries the database and returns the results as a list.'''
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
-        cur.execute(query)
+        if values:
+            cur.execute(query, values)
+        else:
+            cur.execute(query)
         # a rowcount of -1 typically refers to a select statement
         if cur.rowcount == -1:
             rows = cur.fetchall()
