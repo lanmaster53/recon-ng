@@ -3,10 +3,6 @@ import framework
 import dns.resolver
 import dns.reversename
 
-
-
-
-
 class Module(framework.module):
 
     def __init__(self, params):
