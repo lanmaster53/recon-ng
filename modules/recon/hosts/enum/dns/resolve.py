@@ -26,7 +26,7 @@ class Module(framework.module):
             try:
                 answers = q.query(host)
                 address = answers[0].address
-                self.query('UPDATE hosts SET ip_address=\'%s\' WHERE rowid=\'%s\'' % (address, row))
+                self.query('UPDATE hosts SET ip_address=\'%s\' WHERE rowid=%d' % (address, row))
             except dns.exception.SyntaxError:
                 self.error('Nameserver must be in IP form.')
                 return

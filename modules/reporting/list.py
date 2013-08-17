@@ -25,10 +25,10 @@ class Module(framework.module):
         # handle the source of information for the report
         column = self.options['column']['value']
         table = self.options['table']['value']
-        nulls = ' WHERE %s IS NOT NULL' % (column) if not self.options['nulls']['value'] else ''
+        nulls = ' WHERE "%s" IS NOT NULL' % (column) if not self.options['nulls']['value'] else ''
         unique = 'DISTINCT ' if self.options['unique']['value'] else ''
         values = (unique, column, table, nulls)
-        query = 'SELECT %s%s FROM %s%s ORDER BY 1' % values
+        query = 'SELECT %s"%s" FROM "%s"%s ORDER BY 1' % values
         rows = self.query(query)
         for row in [x[0] for x in rows]:
             row = row if row else ''

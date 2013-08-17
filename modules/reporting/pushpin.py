@@ -34,7 +34,7 @@ class Module(framework.module):
             count = source[0]
             source = source[1]
             media_content += '<div class="media_column %s">\n<table>\n<tr><td colspan="2" class="media_header"><div class="media_summary">%s</div>%s</td></tr>\n' % (source.lower(), count, source.capitalize())
-            items = self.query('SELECT * FROM pushpin WHERE source=\'%s\'' % (source))
+            items = self.query('SELECT * FROM pushpin WHERE source=?', (source,))
             items.sort(key=lambda x: x[9], reverse=True)
             for item in items:
                 item = [self.to_unicode_str(x) if x != None else u'' for x in item]

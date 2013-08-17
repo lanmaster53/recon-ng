@@ -147,7 +147,7 @@ class module(cmd.Cmd):
         tdata = [['Category', 'Quantity']]
         for table in tables:
             if not table in ['leaks', 'dashboard']:
-                count = self.query('SELECT COUNT(*) FROM %s' % (table))[0][0]
+                count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
                 tdata.append([table.title(), count])
         self.table(tdata, header=True)
 
@@ -287,13 +287,9 @@ class module(cmd.Cmd):
 
     def display_schema(self):
         '''Displays the database schema'''
-        conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        cur = conn.cursor()
-        cur.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
-        tables = [x[0] for x in cur.fetchall()]
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         for table in tables:
-            cur.execute('PRAGMA table_info(%s)' % (table))
-            columns = [(x[1],x[2]) for x in cur.fetchall()]
+            columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
             name_len = len(max([x[0] for x in columns], key=len))
             type_len = len(max([x[1] for x in columns], key=len))
             print ''
@@ -366,7 +362,7 @@ class module(cmd.Cmd):
         data - the information to insert into the database table.'''
 
         tdata = list(data)
-        table = table.replace(' ', '_').lower()
+        table = self.to_unicode_str(table).lower()
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         if table in tables:
             raise FrameworkException('Table \'%s\' already exists' % (table))
@@ -376,8 +372,8 @@ class module(cmd.Cmd):
             columns = [self.to_unicode_str(x).lower() for x in rdata]
         else:
             columns = ['column_%s' % (i) for i in range(0,len(tdata[0]))]
-        metadata = ','.join(['\'%s\' TEXT' % (x) for x in columns])
-        self.query('CREATE TABLE IF NOT EXISTS %s (%s)' % (table, metadata))
+        metadata = ', '.join(['\'%s\' TEXT' % (x) for x in columns])
+        self.query('CREATE TABLE IF NOT EXISTS \'%s\' (%s)' % (table, metadata))
         # insert rows into database table
         for rdata in tdata:
             data = {}
@@ -388,12 +384,13 @@ class module(cmd.Cmd):
 
     def add_column(self, table, column):
         '''Adds a column to a database table.'''
-        columns = [x[1] for x in self.query('PRAGMA table_info(%s)' % (table))]
+        column = self.to_unicode_str(column).lower()
+        columns = [x[1] for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
         if not columns:
             raise FrameworkException('Table \'%s\' does not exist' % (table))
         if column in columns:
             raise FrameworkException('Column \'%s\' already exists in table \'%s\'' % (column, table))
-        self.query('ALTER TABLE %s ADD COLUMN \'%s\' \'TEXT\'' % (table, column))
+        self.query('ALTER TABLE "%s" ADD COLUMN \'%s\' TEXT' % (table, column))
         self.verbose('\'%s\' column created in the \'%s\' table' % (column, table))
 
     def insert(self, table, data, unique_columns=[]):
@@ -411,34 +408,32 @@ class module(cmd.Cmd):
         if not columns: return 0
 
         if not unique_columns:
-            query = u'INSERT INTO %s (%s) VALUES (%s)' % (
+            query = u'INSERT INTO "%s" ("%s") VALUES (%s)' % (
                 table,
-                ','.join(columns),
-                ','.join('?'*len(columns))
+                '", "'.join(columns),
+                ', '.join('?'*len(columns))
             )
         else:
-            query = u'INSERT INTO %s (%s) SELECT %s WHERE NOT EXISTS(SELECT * FROM %s WHERE %s)' % (
+            query = u'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
                 table,
-                ','.join(columns),
-                ','.join('?'*len(columns)),
+                '", "'.join(columns),
+                ', '.join('?'*len(columns)),
                 table,
-                ' and '.join([column + '=?' for column in unique_columns])
+                ' and '.join(['"%s"=?' % (column) for column in unique_columns])
             )
 
-        values = [data[column] for column in columns] + [data[column] for column in unique_columns]
+        values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
 
-        conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        cur = conn.cursor()
-        cur.execute(query, values)
-        conn.commit()
-        conn.close()
-        return cur.rowcount
+        rowcount = self.query(query, values)
+        return rowcount
 
     def query(self, query, values=()):
         '''Queries the database and returns the results as a list.'''
+        if self.goptions['debug']['value']: self.output(query)
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
         if values:
+            if self.goptions['debug']['value']: self.output(repr(values))
             cur.execute(query, values)
         else:
             cur.execute(query)
@@ -840,6 +835,7 @@ class module(cmd.Cmd):
             return
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
+        if self.goptions['debug']['value']: self.output(params)
         try: cur.execute(params)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
@@ -887,7 +883,7 @@ class module(cmd.Cmd):
                 self.display_schema()
                 return
             elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
-                self.do_query('SELECT * FROM %s ORDER BY 1' % (arg))
+                self.do_query('SELECT * FROM "%s" ORDER BY 1' % (arg))
                 return
         self.help_show()
 

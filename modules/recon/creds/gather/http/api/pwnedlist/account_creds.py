@@ -53,6 +53,6 @@ class Module(framework.module):
                 self.output('%s:%s' % (username, password))
                 cnt += 1
                 new += self.add_cred(username, password, None, leak)
-                self.query("DELETE FROM creds WHERE username = '%s' and password IS NULL and hash IS NULL" % (username))
+                self.query('DELETE FROM creds WHERE username = \'%s\' and password IS NULL and hash IS NULL' % (username))
             self.output('%d total credentials found.' % (cnt))
             if new: self.alert('%d NEW credentials found!' % (new))

@@ -49,13 +49,13 @@ class Module(framework.module):
         if column:
             try:
                 self.add_column('hosts', column)
-                # combine duplicate tdata based on address
+                # combine the port data from duplicate addresses
                 rdata = {}
                 for item in tdata[1:]:
                     if item[0] not in rdata:
                         rdata[item[0]] = []
                     rdata[item[0]].append(item[1])
                 for item in rdata:
-                    self.query('UPDATE hosts SET %s=? WHERE ip_address=?' % (column), (','.join(rdata[item]), item))
+                    self.query('UPDATE hosts SET "%s"=? WHERE ip_address=?' % (column), (','.join(rdata[item]), item))
             except framework.FrameworkException as e:
                 self.error(e.message)
