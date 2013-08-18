@@ -7,23 +7,20 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('subnet', '8.8.8', 'yes', 'First three octets of the subnet')
+        self.register_option('subnet', None, 'yes', 'CIDR notation of the target network (X.X.X.X/Y).')
         self.info = {
                      'Name': 'Reverse Resolver',
                      'Author': 'John Babio (@3vi1john)',
                      'Description': 'Does a reverse lookup of IP address to hostname for the given subnet.',
-                     'Comments': [
-                                  'Note: Subnet must be the first 3 octets without a period. Example 192.168.1 ']
+                     'Comments': []
                      }
 
     def module_run(self):
-        node = 1
+        addresses = self.cidr_to_list(self.options['subnet']['value'])
         tot = 0
         cnt = 0
-        subnet = self.options['subnet']['value']
         
-        while node < 255: 
-            address = '%s.%d' % (subnet, node)        
+        for address in addresses:
             try:
                 addr = dns.reversename.from_address(address)
                 host = str(dns.resolver.query(addr,'PTR')[0])
@@ -31,8 +28,7 @@ class Module(framework.module):
                 tot += 1
                 self.alert('%s => %s' % (host, address))
             except  dns.resolver.NXDOMAIN:
-                self.verbose('%s => Unknown' % (address))
-            node += 1
+                self.verbose('%s => No record found.' % (address))
 
         self.output('%d total hosts found.' % (tot))
         if cnt: self.alert('%d NEW hosts found!' % (cnt))

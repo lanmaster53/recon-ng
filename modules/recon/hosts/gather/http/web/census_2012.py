@@ -5,7 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('range', None, 'yes', 'comma delineated list of ip address ranges (no cidr).')
+        self.register_option('range', None, 'yes', 'comma delineated list of ip address ranges (X.X.X.X-Y.Y.Y.Y).')
         self.register_option('store_table', None, 'no', 'name for a table to create in the database and store the complete result set.')
         self.register_option('store_column', None, 'no', 'name for a column to create in the hosts table and store open port information.')
         self.info = {
@@ -13,7 +13,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the Internet Census 2012 data through Exfiltrated.com to enumerate open ports on target hosts.',
                      'Comments': [
-                                  'This module updates only previously harvested hosts when using the \'store_column\' option.'
+                                  'This module updates only previously harvested hosts when using the \'store_column\' option.',
                                   'http://exfiltrated.com/querystart.php'
                                   ]
                      }
@@ -26,8 +26,8 @@ class Module(framework.module):
         for ips in ranges:
             cnt = 0
             self.output('Gathering port scan data for range: %s' % (ips))
-            first = ips.split('-')[0]
-            last = ips.split('-')[1]
+            first = ips.split('-')[0].strip()
+            last = ips.split('-')[1].strip()
             payload = {'startIP': first, 'endIP': last, 'includeHostnames': 'Yes', 'rawDownload': 'Yes'}
             url = 'http://exfiltrated.com/query.php'
             resp = self.request(url, payload=payload)
