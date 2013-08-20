@@ -167,7 +167,7 @@ class module(cmd.Cmd):
         return obj
 
     def ascii_sanitize(self, s):
-        return ''.join([char for char in s if ord(char) == 10 or ord(char) in range(32, 126)])
+        return ''.join([char for char in s if ord(char) in [10,13] + range(32, 126)])
 
     def html_unescape(self, s):
         '''Unescapes HTML markup and returns an unescaped string.'''
@@ -1083,10 +1083,12 @@ class ResponseObject(object):
 
     @property
     def text(self):
-        if self.encoding:
+        try:
             return self.__text__.decode(self.encoding)
-        else:
-            return self.__text__
+        except (UnicodeDecodeError, TypeError):
+            if goptions['debug']['value']:
+                print '%s[*]%s %s' % (G, N, 'WARNING: Charset mismatch. All non-printable ascii characters removed from the response.')
+            return ''.join([char for char in self.__text__ if ord(char) in [10,13] + range(32, 126)])
 
     @property
     def json(self):
