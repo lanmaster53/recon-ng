@@ -610,22 +610,26 @@ class module(cmd.Cmd):
             pass
         linkedin_key = self.get_key('linkedin_api')
         linkedin_secret = self.get_key('linkedin_secret')
-        redirect_uri = 'http://127.0.0.1'
+        port = 50007
+        redirect_uri = 'http://127.0.0.1:%d' % (port)
         url = 'https://www.linkedin.com/uas/oauth2/authorization'
         payload = {'response_type': 'code', 'client_id': linkedin_key, 'scope': 'r_basicprofile r_network', 'state': 'thisisaverylongstringusedforstate', 'redirect_uri': redirect_uri}
         authorize_url = '%s?%s' % (url, urllib.urlencode(payload))
-        self.output(authorize_url)
-        self.output('Copy the above URL and paste it into a browser.')
-        self.output('Sign in and authorize the application to access your profile and connections.')
-        self.output('Once authorized, you\'ll be redirected to a webpage that is not available.')
-        self.output('Copy the value of the \'code\' parameter from the URL and paste it into the prompt below.')
-        self.output('You will need to do this the first time the module is ran and each time the access token expires (60 days).')
         w = webbrowser.get()
         w.open(authorize_url)
-        authorization_code = raw_input('\'CODE\' parameter value => ')
+        # open a socket to receive the access token callback
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(('127.0.0.1', port))
+        sock.listen(1)
+        conn, addr = sock.accept()
+        data = conn.recv(1024)
+        conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>Recon-ng</title></head><body>Authorization code received. Return to Recon-ng.</body></html>')
+        conn.close()
+        # process the received access token
+        authorization_code = re.search('code=([^&]*)', data).group(1)
         url = 'https://www.linkedin.com/uas/oauth2/accessToken'
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': linkedin_key, 'client_secret': linkedin_secret}
-        resp = self.request(url, payload=payload)
+        resp = self.request(url, method='POST', payload=payload)
         if 'error' in resp.json:
             raise FrameworkException(resp.json['error_description'])
         access_token = resp.json['access_token']
