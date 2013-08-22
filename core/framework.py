@@ -51,6 +51,8 @@ class module(cmd.Cmd):
         return 0
 
     def precmd(self, line):
+        if __builtin__.load:
+            sys.stdout.write('\r%s\r' % (' '*100))
         if __builtin__.script:
             sys.stdout.write('%s\n' % (line))
         if __builtin__.record:
@@ -68,6 +70,7 @@ class module(cmd.Cmd):
             # reset stdin for raw_input
             sys.stdin = sys.__stdin__
             __builtin__.script = 0
+            __builtin__.load = 0
             return 0
         if cmd is None:
             return self.default(line)
@@ -490,8 +493,6 @@ class module(cmd.Cmd):
     def display_options(self, params):
         '''Lists options'''
         spacer = self.spacer
-        if params == 'info':
-            spacer = self.spacer*2
         if self.options:
             pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
             key_len = len(max(self.options, key=len))
@@ -814,58 +815,65 @@ class module(cmd.Cmd):
 
     def do_info(self, params):
         '''Displays module information'''
-        pattern = '%s%s:'
         self.info['Path'] = 'modules/%s.py' % (self.modulename)
-        for item in ['Name', 'Path', 'Author', 'Description']:
-            print ''
-            print pattern % (self.spacer, item)
-            print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, subsequent_indent=self.spacer*2))
         print ''
-        print pattern % (self.spacer, 'Options')
+        # meta
+        for item in ['Name', 'Path', 'Author']:
+            print '%s: %s' % (item.rjust(10), self.info[item])
+        print ''
+        # options
+        print 'Options:'
         self.display_options('info')
+        # description
+        print 'Description:'
+        print '%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer))
+        print ''
+        # comments
         if self.info['Comments']:
-            print pattern % (self.spacer, 'Comments')
+            print 'Comments:'
             for comment in self.info['Comments']:
-                print pattern[:-1] % (self.spacer*2, textwrap.fill(comment, 100, subsequent_indent=self.spacer*2))
+                print '%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer))
             print ''
 
     def do_set(self, params):
         '''Sets module options'''
         options = params.split()
-        if len(options) < 2: self.help_set()
-        else:
-            name = options[0].lower()
-            if name in self.options:
-                value = ' '.join(options[1:])
-                print '%s => %s' % (name.upper(), value)
-                self.options[name]['value'] = self.autoconvert(value)
-            else: self.error('Invalid option.')
+        if len(options) < 2:
+            self.help_set()
+            return
+        name = options[0].lower()
+        if name in self.options:
+            value = ' '.join(options[1:])
+            print '%s => %s' % (name.upper(), value)
+            self.options[name]['value'] = self.autoconvert(value)
+        else: self.error('Invalid option.')
 
     def do_keys(self, params):
         '''Manages framework API keys'''
-        if params:
-            params = params.split()
-            arg = params.pop(0).lower()
-            if arg == 'list':
-                self.display_keys()
-                return
-            elif arg in ['add', 'update']:
-                if len(params) == 2:
-                    self.add_key(params[0], params[1])
-                    self.output('Key \'%s\' added.' % (params[0]))
-                else: print 'Usage: keys [add|update] <name> <value>'
-                return
-            elif arg == 'delete':
-                if len(params) == 1:
-                    try:
-                        self.delete_key(params[0])
-                    except FrameworkException as e:
-                        self.error(e.__str__())
-                    else:
-                        self.output('Key \'%s\' deleted.' % (params[0]))
-                else: print 'Usage: keys delete <name>'
-                return
-        self.help_keys()
+        if not params:
+            self.help_keys()
+            return
+        params = params.split()
+        arg = params.pop(0).lower()
+        if arg == 'list':
+            self.display_keys()
+            return
+        elif arg in ['add', 'update']:
+            if len(params) == 2:
+                self.add_key(params[0], params[1])
+                self.output('Key \'%s\' added.' % (params[0]))
+            else: print 'Usage: keys [add|update] <name> <value>'
+            return
+        elif arg == 'delete':
+            if len(params) == 1:
+                try:
+                    self.delete_key(params[0])
+                except FrameworkException as e:
+                    self.error(e.__str__())
+                else:
+                    self.output('Key \'%s\' deleted.' % (params[0]))
+            else: print 'Usage: keys delete <name>'
+            return
 
     def do_query(self, params):
         '''Queries the database'''
@@ -896,35 +904,36 @@ class module(cmd.Cmd):
 
     def do_show(self, params):
         '''Shows various framework items'''
-        if params:
-            arg = params.lower()
-            if arg.split()[0] == 'modules':
-                if len(arg.split()) > 1:
-                    param = arg.split()[1]
-                    modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
-                    if not modules:
-                        self.error('Invalid module category.')
-                        return
-                else:
-                    modules = __builtin__.loaded_modules
-                self.display_modules(modules)
-                return
-            elif arg == 'options':
-                self.display_options(None)
-                return
-            elif arg == 'dashboard':
-                self.display_dashboard()
-                return
-            elif arg == 'workspaces':
-                self.display_workspaces()
-                return
-            elif arg == 'schema':
-                self.display_schema()
-                return
-            elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
-                self.do_query('SELECT * FROM "%s" ORDER BY 1' % (arg))
-                return
-        self.help_show()
+        if not params:
+            self.help_show()
+            return
+        arg = params.lower()
+        if arg.split()[0] == 'modules':
+            if len(arg.split()) > 1:
+                param = arg.split()[1]
+                modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
+                if not modules:
+                    self.error('Invalid module category.')
+                    return
+            else:
+                modules = __builtin__.loaded_modules
+            self.display_modules(modules)
+            return
+        elif arg == 'options':
+            self.display_options(None)
+            return
+        elif arg == 'dashboard':
+            self.display_dashboard()
+            return
+        elif arg == 'workspaces':
+            self.display_workspaces()
+            return
+        elif arg == 'schema':
+            self.display_schema()
+            return
+        elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
+            self.do_query('SELECT * FROM "%s" ORDER BY 1' % (arg))
+            return
 
     def do_search(self, params):
         '''Searches available modules'''
@@ -993,26 +1002,54 @@ class module(cmd.Cmd):
 
     def do_resource(self, params):
         '''Executes commands from a resource file'''
-        if params:
-            if os.path.exists(params):
-                sys.stdin = open(params)
-                __builtin__.script = 1
-                return
+        if not params:
+            self.help_resource()
+            return
+        if os.path.exists(params):
+            sys.stdin = open(params)
+            __builtin__.script = 1
+            return
+        else:
+            self.error('Script file \'%s\' not found.' % (params))
+            return
+
+    def do_load(self, params):
+        '''Loads selected module'''
+        if not params:
+            self.help_load()
+            return
+        # finds any modules that contain params
+        modules = [params] if params in __builtin__.loaded_modules else [x for x in __builtin__.loaded_modules if params in x]
+        # notify the user if none or multiple modules are found
+        if len(modules) != 1:
+            if not modules:
+                self.error('Invalid module name.')
             else:
-                self.error('Script file \'%s\' not found.' % (params))
-                return
-        self.help_resource()
+                self.output('Multiple modules match \'%s\'.' % params)
+                self.display_modules(modules)
+            return
+        import StringIO
+        sys.stdin = StringIO.StringIO('load %s\nEOF' % modules[0])
+        __builtin__.load = 1
+        return True
+    do_use = do_load
 
     #==================================================
     # HELP METHODS
     #==================================================
 
-    def help_set(self):
-        print 'Usage: set <option> <value>'
-        self.display_options(None)
-
     def help_keys(self):
         print 'Usage: keys [list|add|delete|update]'
+
+    def help_load(self):
+        print 'Usage: [load|use] <module>'
+    help_use = help_load
+
+    def help_record(self):
+        print 'Usage: record [start|stop|status]'
+
+    def help_resource(self):
+        print 'Usage: resource <filename>'
 
     def help_query(self):
         print 'Usage: query <sql>'
@@ -1024,32 +1061,43 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'INSERT INTO table_name (column1, column2,...) VALUES (value1, value2,...)')
         print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
 
-    def help_show(self):
-        print 'Usage: show [modules|options|dashboard|workspaces|schema|<table>]'
+    def help_search(self):
+        print 'Usage: search <string>'
+
+    def help_set(self):
+        print 'Usage: set <option> <value>'
+        self.display_options(None)
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
         print '...or just type a command at the prompt.'
 
-    def help_record(self):
-        print 'Usage: record [start|stop|status]'
-
-    def help_resource(self):
-        print 'Usage: resource <filename>'
+    def help_show(self):
+        print 'Usage: show [modules|options|dashboard|workspaces|schema|<table>]'
 
     #==================================================
     # COMPLETE METHODS
     #==================================================
 
-    def complete_set(self, text, *ignored):
-        return [x for x in self.options if x.startswith(text)]
-
     def complete_keys(self, text, line, *ignored):
         args = line.split()
         options = ['list', 'add', 'delete', 'update']
-        if len(args) > 1 and args[1].lower() in options:
-            return [x for x in self.keys.keys() if x.startswith(text)]
+        if len(args) > 1:
+            if args[1].lower() in options[2:]:
+                return [x for x in self.keys.keys() if x.startswith(text)]
+            if args[1].lower() in options[:2]:
+                return
         return [x for x in options if x.startswith(text)]
+
+    def complete_load(self, text, *ignored):
+        return [x for x in __builtin__.loaded_modules if x.startswith(text)]
+    complete_info = complete_use = complete_load
+
+    def complete_record(self, text, *ignored):
+        return [x for x in ['start', 'stop', 'status'] if x.startswith(text)]
+
+    def complete_set(self, text, *ignored):
+        return [x for x in self.options if x.startswith(text)]
 
     def complete_show(self, text, line, *ignored):
         args = line.split()
