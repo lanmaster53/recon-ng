@@ -849,6 +849,7 @@ class module(cmd.Cmd):
         else: self.error('Invalid option.')
 
     def do_unset(self, params):
+        '''Unsets module options'''
         options = params.split()
         if options[0].lower() == 'workspace':
             self.error('Unsetting the workspace is not permitted.')
@@ -1073,6 +1074,10 @@ class module(cmd.Cmd):
 
     def help_set(self):
         print 'Usage: set <option> <value>'
+        self.display_options(None)
+
+    def help_unset(self):
+        print 'Usage: unset <option>'
         self.display_options(None)
 
     def help_shell(self):
