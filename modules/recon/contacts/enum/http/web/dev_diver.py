@@ -196,4 +196,4 @@ class Module(framework.module):
             
             self.table(self.tdata, True)
         else:
-           self.error('%s not found at any repository' % username)
+           self.error('%s not found at any repository.' % username)

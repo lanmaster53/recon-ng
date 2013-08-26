@@ -848,6 +848,13 @@ class module(cmd.Cmd):
             self.options[name]['value'] = self.autoconvert(value)
         else: self.error('Invalid option.')
 
+    def do_unset(self, params):
+        options = params.split()
+        if options[0].lower() == 'workspace':
+            self.error('Unsetting the workspace is not permitted.')
+            return
+        self.do_set('%s %s' % (params, 'None'))
+
     def do_keys(self, params):
         '''Manages framework API keys'''
         if not params:
@@ -1098,6 +1105,7 @@ class module(cmd.Cmd):
 
     def complete_set(self, text, *ignored):
         return [x for x in self.options if x.startswith(text)]
+    complete_unset = complete_set
 
     def complete_show(self, text, line, *ignored):
         args = line.split()
