@@ -24,10 +24,16 @@ class Module(framework.module):
         column = self.options['store_column']['value']
         tdata = []
         for ips in ranges:
+            ips = ips.strip()
+            if '/' in ips:
+                ips = self.cidr_to_list(ips)
+                first = ips[0]
+                last = ips[-1]
+            else:
+                first = ips.split('-')[0].strip()
+                last = ips.split('-')[1].strip()
             cnt = 0
-            self.output('Gathering port scan data for range: %s' % (ips))
-            first = ips.split('-')[0].strip()
-            last = ips.split('-')[1].strip()
+            self.output('Gathering port scan data for range: %s - %s' % (first, last))
             payload = {'startIP': first, 'endIP': last, 'includeHostnames': 'Yes', 'rawDownload': 'Yes'}
             url = 'http://exfiltrated.com/query.php'
             resp = self.request(url, payload=payload)
