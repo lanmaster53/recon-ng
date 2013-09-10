@@ -399,11 +399,12 @@ class module(cmd.Cmd):
         header - whether or not the first row of tdata consists of headers.
         data - the information to insert into the database table.'''
 
+        reserved = ['leaks']
         tdata = list(data)
         table = self.to_unicode_str(table).lower()
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        if table in tables:
-            raise FrameworkException('Table \'%s\' already exists' % (table))
+        if table in tables + reserved:
+            raise FrameworkException('Table \'%s\' already exists or is a reserved table name' % (table))
         # create database table
         if header:
             rdata = tdata.pop(0)
@@ -896,14 +897,14 @@ class module(cmd.Cmd):
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return
         if cur.rowcount == -1 and cur.description:
-            header = tuple([x[0] for x in cur.description])
             tdata = cur.fetchall()
             if not tdata:
                 self.output('No data returned.')
             else:
+                header = tuple([x[0] for x in cur.description])
                 tdata.insert(0, header)
                 self.table(tdata, header=True)
-                self.output('%d rows returned' % (len(tdata)))
+                self.output('%d rows returned' % (len(tdata)-1)) # -1 to account for header row
         else:
             conn.commit()
             self.output('%d rows affected.' % (cur.rowcount))

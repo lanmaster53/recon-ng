@@ -4,8 +4,7 @@ import re
 class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'Domain to search.')
-        self.register_option('store', False, 'yes', 'add discovered hosts to the database.')
+        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'domain to search')
         self.info = {
                      'Name': 'RedIRIS PGP Key Owner Lookup',
                      'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
@@ -16,7 +15,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        store = self.options['store']['value']
+        domain = self.options['domain']['value']
 
         url = 'http://pgp.rediris.es/pks/lookup'
         payload= {'search' : self.options['domain']['value'] }
@@ -51,6 +50,6 @@ class Module(framework.module):
             email = contact[1]
             self.output('%s (%s)' % (name, email))
             cnt += 1
-            if store: new += self.add_contact(first, last, 'PGP key association', email)
+            if email.lower().endswith(domain.lower()): new += self.add_contact(first, last, 'PGP key association', email)
         self.output('%d total contacts found.' % (cnt))
         if new: self.alert('%d NEW contacts found!' % (new))

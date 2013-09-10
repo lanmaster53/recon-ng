@@ -7,7 +7,6 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
-        self.register_option('store', False, 'yes', 'add discovered hosts to the database.')
         self.info = {
                      'Name': 'Whois POC Harvester',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -19,7 +18,6 @@ class Module(framework.module):
 
     def module_run(self):
         domain = self.options['domain']['value']
-        store = self.options['store']['value']
 
         headers = {'Accept': 'application/json'}
         cnt = 0
@@ -50,11 +48,11 @@ class Module(framework.module):
             lname = poc['lastName']['$']
             emails = poc['emails']['email'] if type(poc['emails']['email']) == list else [poc['emails']['email']]
             email = emails[0]['$']
-            state = poc['iso3166-2']['$'].upper()
-            region = '%s, %s' % (city, state)
+            state = poc['iso3166-2']['$'].upper() if 'iso3166-2' in poc else None
+            region = ', '.join([x for x in [city, state] if x])
             name = ' '.join([x for x in [fname, lname] if x])
             self.output('%s (%s) - %s (%s - %s)' % (name, email, title, region, country))
-            if store: new += self.add_contact(fname=fname, lname=lname, email=email, title=title, region=region, country=country)
+            if email.lower().endswith(domain.lower()): new += self.add_contact(fname=fname, lname=lname, email=email, title=title, region=region, country=country)
             cnt += 1
         self.output('%d total contacts found.' % (cnt))
         if new: self.alert('%d NEW contacts found!' % (new))

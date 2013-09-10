@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('subnet', None, 'yes', 'CIDR notation of the target network (X.X.X.X/Y).')
+        self.register_option('subnet', None, 'yes', 'CIDR notation of the target network (X.X.X.X/Y)')
         self.info = {
                      'Name': 'Reverse Resolver',
                      'Author': 'John Babio (@3vi1john)',

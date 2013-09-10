@@ -7,7 +7,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
-        self.register_option('store', False, 'yes', 'add discovered hosts to the database.')
+        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'domain to match for adding results to the database')
         self.info = {
                      'Name': 'My-IP-Neighbors Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
@@ -20,7 +20,7 @@ class Module(framework.module):
    
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        store = self.options['store']['value']
+        domain = self.options['domain']['value']
 
         cnt = 0
         tot = 0
@@ -39,6 +39,6 @@ class Module(framework.module):
                 tot += 1
                 self.output(result)
                 # add each host to the database
-                if store: cnt += self.add_host(result)
+                if result.lower().endswith(domain.lower()): cnt += self.add_host(result)
         self.output('%d total hosts found.' % (tot))
-        if store and cnt: self.alert('%d NEW hosts found!' % (cnt))
+        if cnt: self.alert('%d NEW hosts found!' % (cnt))

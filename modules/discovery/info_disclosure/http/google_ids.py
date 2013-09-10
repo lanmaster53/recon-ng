@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('url', None, 'yes', 'The URL of the website with the Analytics/AdSense code.')
+        self.register_option('url', None, 'yes', 'the URL of the website with the Analytics/AdSense code')
         self.info = {
                      'Name': 'Google Analytics/AdSense Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',

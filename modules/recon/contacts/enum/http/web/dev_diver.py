@@ -8,7 +8,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('username', None, 'yes', 'Username to validate')
+        self.register_option('username', None, 'yes', 'username to validate')
         self.info = {
                      'Name': 'Dev Diver Repository Activity Examiner',
                      'Author': 'Micah Hoffman (@WebBreacher)',

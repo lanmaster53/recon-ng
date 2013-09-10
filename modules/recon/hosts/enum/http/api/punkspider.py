@@ -14,7 +14,7 @@ class Module(framework.module):
         self.register_option('sqli', True, 'yes', 'search for sqli')
         self.register_option('xss', True, 'yes', 'search for xss')
         self.register_option('vulns', False, 'yes', 'if found, display vulnerabily information')
-        self.register_option('store_table', None, 'no', 'name of database table to store search results or data will not be stored.')
+        self.register_option('store_table', None, 'no', 'name of database table to store search results or data will not be stored')
         self.info = {
                      'Name': 'punkSPIDER Vulnerabilty Finder',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
