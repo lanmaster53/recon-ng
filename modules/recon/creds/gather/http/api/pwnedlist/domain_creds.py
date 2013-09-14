@@ -29,21 +29,23 @@ class Module(framework.module):
         # setup API call
         method = 'domains.query'
         url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-
-        # build the payload
         payload = {'domain_identifier': domain, 'daysAgo': 0}
-        payload = self.build_pwnedlist_payload(payload, method, key, secret)
-        # make request
-        resp = self.request(url, payload=payload)
-        if resp.json: jsonobj = resp.json
-        else:
-            self.error('Invalid JSON response for \'%s\'.\n%s' % (domain, resp.text))
-            return
-        if len(jsonobj['accounts']) == 0:
-            self.output('No results returned for \'%s\'.' % (domain))
-        else:
-            cnt = 0
-            new = 0
+
+        cnt = 0
+        new = 0
+        while True:
+            # build payload
+            pwnedlist_payload = self.build_pwnedlist_payload(payload, method, key, secret)
+            # make request
+            resp = self.request(url, payload=pwnedlist_payload)
+            if resp.json: jsonobj = resp.json
+            else:
+                self.error('Invalid JSON response for \'%s\'.\n%s' % (domain, resp.text))
+                return
+            if len(jsonobj['accounts']) == 0:
+                self.output('No results returned for \'%s\'.' % (domain))
+                return
+            # extract creds
             for cred in jsonobj['accounts']:
                 username = cred['plain']
                 password = self.aes_decrypt(cred['password'], decrypt_key, iv)
@@ -51,5 +53,10 @@ class Module(framework.module):
                 self.output('%s:%s' % (username, password))
                 cnt += 1
                 new += self.add_cred(username, password, None, leak)
-            self.output('%d total credentials found.' % (cnt))
-            if new: self.alert('%d NEW credentials found!' % (new))
+            # paginate
+            if jsonobj['token']:
+                payload['token'] = jsonobj['token']
+                continue
+            break
+        self.output('%d total credentials found.' % (cnt))
+        if new: self.alert('%d NEW credentials found!' % (new))
