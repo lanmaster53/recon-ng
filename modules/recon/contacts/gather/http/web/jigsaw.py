@@ -100,7 +100,8 @@ class Module(framework.module):
         while True:
             payload['rpage'] = str(page_cnt)
             self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
-            content = self.request(url, payload=payload, cookiejar=self.cookiejar).text
+            resp = self.request(url, payload=payload, cookiejar=self.cookiejar)
+            content = resp.text
             if 'use of automated scripts to access jigsaw.com is prohibited' in content:
                 self.verbose('Fetching BotMitigationCookie...')
                 headers = self.get_headers(content)
