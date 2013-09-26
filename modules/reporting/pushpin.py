@@ -34,15 +34,15 @@ class Module(framework.module):
         for source in sources:
             count = source[0]
             source = source[1]
-            media_content += '<div class="media_column %s">\n<table>\n<tr><td colspan="2" class="media_header"><div class="media_summary">%s</div>%s</td></tr>\n' % (source.lower(), count, source.capitalize())
+            media_content += '<div class="media_column %s">\n<div class="media_header"><div class="media_summary">%s</div>%s</div>\n' % (source.lower(), count, source.capitalize())
             items = self.query('SELECT * FROM pushpin WHERE source=?', (source,))
             items.sort(key=lambda x: x[9], reverse=True)
             for item in items:
                 item = [self.to_unicode_str(x) if x != None else u'' for x in item]
-                media_content += '<tr><td class="prof_cell"><a href="%s" target="_blank"><img class="prof_img" src="%s" /></a></td><td class="data_cell"><div class="trigger" id="trigger" lat="%s" lon="%s">[<a href="%s" target="_blank">%s</a>] %s<br /><span class="time">%s</span></div></td></tr>\n' % (item[4], item[5], item[7], item[8], item[3], item[2], re.sub('[\r\n]+', '<br />', self.html_escape(item[6])), item[9])
-                map_details = "<table><tr><td class='prof_cell'><a href='%s' target='_blank'><img class='prof_img' src='%s' /></a></td class='data_cell'><td>[<a href='%s' target='_blank'>%s</a>] %s<br /><span class='time'>%s</span></td></tr></table>" % (item[4], item[5], item[3], item[2], re.sub('[\r\n]+', '<br />', self.html_escape(item[6])), item[9])
+                media_content += '<div class="media_row"><div class="prof_cell"><a href="%s" target="_blank"><img class="prof_img" src="%s" /></a></div><div class="data_cell"><div class="trigger" id="trigger" lat="%s" lon="%s">[<a href="%s" target="_blank">%s</a>] %s<br /><span class="time">%s</span></div></div></div>\n' % (item[4], item[5], item[7], item[8], item[3], item[2], re.sub('[\r\n]+', '<br />', self.html_escape(item[6])), item[9])
+                map_details = "<table><tr><td class='prof_cell'><a href='%s' target='_blank'><img class='prof_img' src='%s' /></a></td><td class='data_cell'>[<a href='%s' target='_blank'>%s</a>] %s<br /><span class='time'>%s</span></td></tr></table>" % (item[4], item[5], item[3], item[2], re.sub('[\r\n]+', '<br />', self.html_escape(item[6])), item[9])
                 map_content += '\t\tadd_marker({position: new google.maps.LatLng(%s,%s),title:"%s",icon:"%s",map:map},{details:"%s"});\n' % (item[7], item[8], item[2], icons[source.lower()], map_details)
-            media_content += '</table>\n</div>\n'
+            media_content += '</div>\n'
         return media_content, map_content
 
     def write_markup(self, template, filename, content):
