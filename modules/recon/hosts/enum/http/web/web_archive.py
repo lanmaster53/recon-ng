@@ -35,7 +35,7 @@ class Module(framework.module):
         details = [['Date', 'URL']]
         cnt = 0
         for year in range(int(first_year), date.today().year+1):
-            url = 'http://web.archive.org/web/%s*/%s' % (str(year), domain)
+            url = 'http://web.archive.org/web/%s0201000000*/%s' % (str(year), domain)
             self.verbose('URL: %s' % url)
             resp = self.request(url)
             content = resp.text

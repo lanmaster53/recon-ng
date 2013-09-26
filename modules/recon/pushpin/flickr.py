@@ -23,9 +23,10 @@ class Module(framework.module):
         lat = self.options['latitude']['value']
         lon = self.options['longitude']['value']
         rad = self.options['radius']['value']
-        payload = {'method': 'flickr.photos.search', 'format': 'json', 'api_key': api_key, 'text': '-', 'lat': lat, 'lon': lon, 'has_geo': 1, 'extras': 'date_upload,date_taken,owner_name,geo,url_t,url_m', 'radius': rad, 'radius_units':'km', 'per_page': 500}
+        payload = {'method': 'flickr.photos.search', 'format': 'json', 'api_key': api_key, 'lat': lat, 'lon': lon, 'has_geo': 1, 'min_taken_date': '1990-01-01 00:00:00', 'extras': 'date_upload,date_taken,owner_name,geo,url_t,url_m', 'radius': rad, 'radius_units':'km', 'per_page': 500}
         url = 'http://api.flickr.com/services/rest/'
-        cnt = 0
+        processed = 0
+        count = 0
         new = 0
         while True:
             resp = self.request(url, payload=payload)
@@ -34,7 +35,11 @@ class Module(framework.module):
             if jsonobj['stat'] == 'fail':
                 self.error(jsonobj['message'])
                 break
+            if not count: self.output('Collecting data for ~%s total photos...' % (jsonobj['photos']['total']))
             for photo in jsonobj['photos']['photo']:
+                latitude = photo['latitude']
+                longitude = photo['longitude']
+                if not all((latitude, longitude)): continue
                 source = 'Flickr'
                 screen_name = photo['owner']
                 profile_name = photo['ownername']
@@ -42,14 +47,14 @@ class Module(framework.module):
                 media_url = photo['url_m']
                 thumb_url = photo['url_t']
                 message = photo['title']
-                latitude = photo['latitude']
-                longitude = photo['longitude']
                 try: time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
                 except ValueError: time = datetime(1970, 1, 1).strftime('%Y-%m-%d %H:%M:%S')
                 new += self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
-                cnt += 1
+                count += 1
+            processed += len(jsonobj['photos']['photo'])
+            self.verbose('%s photos processed.' % (processed))
             if jsonobj['photos']['page'] >= jsonobj['photos']['pages']:
                 break
             payload['page'] = jsonobj['photos']['page'] + 1
-        self.output('%d total items found.' % (cnt))
+        self.output('%d total items found.' % (count))
         if new: self.alert('%d NEW items found!' % (new))

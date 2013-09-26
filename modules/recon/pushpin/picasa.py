@@ -28,7 +28,8 @@ class Module(framework.module):
         north_boundary = float(lat) + (float(rad) / kilometers_per_degree_latitude)
         payload = {'alt': 'json', 'bbox': '%.6f,%.6f,%.6f,%.6f' % (west_boundary, south_boundary, east_boundary, north_boundary)}
         url = 'http://picasaweb.google.com/data/feed/api/all'
-        cnt = 0
+        processed = 0
+        count = 0
         new = 0
         page = 1
         while True:
@@ -39,8 +40,9 @@ class Module(framework.module):
                 break
             if jsonobj['feed']['openSearch$totalResults']['$t'] == 0:
                 break
+            if not count: self.output('Collecting data for ~%s total photos...' % (jsonobj['feed']['openSearch$totalResults']['$t']))
             for photo in jsonobj['feed']['entry']:
-                if not photo['georss$where']:
+                if not 'georss$where' in photo:
                     continue
                 source = 'Picasa'
                 screen_name = photo['author'][0]['name']['$t']
@@ -54,14 +56,16 @@ class Module(framework.module):
                 longitude = photo['georss$where']['gml$Point']['gml$pos']['$t'].split()[1]
                 time = datetime.strptime(photo['published']['$t'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y-%m-%d %H:%M:%S')
                 new += self.add_pushpin(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
-                cnt += 1
+                count += 1
+            processed += len(jsonobj['feed']['entry'])
+            self.verbose('%s photos processed.' % (processed))
             qty = jsonobj['feed']['openSearch$itemsPerPage']['$t']
             start = jsonobj['feed']['openSearch$startIndex']['$t']
             next = qty + start
-            total = jsonobj['feed']['openSearch$totalResults']['$t']
+            total = min(jsonobj['feed']['openSearch$totalResults']['$t'], 1000)
             if next > total:
                 break
             page += 1
             payload['start-index'] = next
-        self.output('%d total items found.' % (cnt))
+        self.output('%d total items found.' % (count))
         if new: self.alert('%d NEW items found!' % (new))

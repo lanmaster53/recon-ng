@@ -27,7 +27,10 @@ class Module(framework.module):
 
             # parse returned json objects
             jsonobj = resp.json
-            if jsonobj == None and resp.text:
+            if not resp.text.strip():
+                self.output('No data returned for \'%s\'.' % (host))
+                continue
+            elif not jsonobj:
                 jsonobjs = [json.loads(x) for x in resp.text.strip().split('\n')]
             else:
                 jsonobjs = [jsonobj]
