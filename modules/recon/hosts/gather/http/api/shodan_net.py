@@ -5,22 +5,22 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('subnet', None, 'yes', 'CIDR block of the target network (X.X.X.X/Y)')
         self.register_option('restrict', 1, 'yes', 'limit number of api requests (0 = unrestricted)')
         self.info = {
-                     'Name': 'Shodan Hostname Enumerator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator and updates the \'hosts\' table of the database with the results.',
+                     'Name': 'Shodan Network Enumerator',
+                     'Author': 'Mike Siegel and Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Harvests hosts from the Shodanhq.com API by using the \'net\' search operator and updates the \'hosts\' table of the database with the results.',
                      'Comments': [
                                   'Note: \'RESTRICT\' option limits the number of API requests in order to prevent API query exhaustion.'
                                   ]
                      }
 
     def module_run(self):
-        domain = self.options['domain']['value']
+        cidr = self.options['subnet']['value']
         subs = []
         cnt = 0
-        query = 'hostname:%s' % (domain)
+        query = 'net:%s' % (cidr)
         limit = self.options['restrict']['value']
         results = self.search_shodan_api(query, limit)
         for host in results:
