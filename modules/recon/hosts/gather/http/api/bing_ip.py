@@ -1,13 +1,14 @@
 import framework
 # unique to module
 from urlparse import urlparse
+import re
 
 class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'domain to match for adding results to the database')
+        self.register_option('regex', '%s$' % (self.goptions['domain']['value']), 'no', 'regex to match for adding results to the database')
         self.info = {
                      'Name': 'Bing IP Neighbor Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -19,7 +20,7 @@ class Module(framework.module):
 
     def module_run(self):
         addresses = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        domain = self.options['domain']['value']
+        regex = self.options['regex']['value']
 
         new = 0
         hosts = []
@@ -34,7 +35,7 @@ class Module(framework.module):
                     hosts.append(host)
                     self.output(host)
                     # add each host to the database
-                    if host.lower().endswith(domain.lower()):
+                    if not regex or re.search(regex, host):
                         new += self.add_host(host, address)
 
         self.output('%d total hosts found.' % (len(hosts)))

@@ -7,7 +7,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'domain to match for adding results to the database')
+        self.register_option('regex', '%s$' % (self.goptions['domain']['value']), 'no', 'regex to match for adding results to the database')
         self.info = {
                      'Name': 'My-IP-Neighbors Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
@@ -20,7 +20,7 @@ class Module(framework.module):
    
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        domain = self.options['domain']['value']
+        regex = self.options['regex']['value']
 
         cnt = 0
         new = 0
@@ -33,13 +33,12 @@ class Module(framework.module):
             if not results:
                 self.verbose('No additional hosts discovered at the same IP address.')
                 continue
-            
-            # display the output
             for result in results:
                 cnt += 1
                 self.output(result)
                 # add each host to the database
-                if result.lower().endswith(domain.lower()):
+                if not regex or re.search(regex, host):
                     new += self.add_host(result)
-        self.output('%d cntal hosts found.' % (cnt))
+
+        self.output('%d total hosts found.' % (cnt))
         if new: self.alert('%d NEW hosts found!' % (new))
