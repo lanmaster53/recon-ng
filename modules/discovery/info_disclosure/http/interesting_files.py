@@ -1,5 +1,6 @@
 import framework
 # unique to module
+import warnings
 import gzip
 from StringIO import StringIO
 
@@ -7,7 +8,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of module input')
+        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.register_option('download', True, 'yes', 'download discovered files')
         self.info = {
                      'Name': 'Interesting File Finder',
@@ -34,11 +35,10 @@ class Module(framework.module):
         return data_ct
 
     def module_run(self):
-        download = self.options['download']['value']
-        
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        if not hosts: return
-
+        download = self.options['download']['value']
+        # ignore unicode warnings when trying to ungzip text type 200 repsonses
+        warnings.simplefilter("ignore")
         protocols = ['http', 'https']
         # (filename, string to search for to prevent false positive)
         filetypes = [
@@ -60,20 +60,19 @@ class Module(framework.module):
                         resp = self.request(url, timeout=2, redirect=False)
                         code = resp.status_code
                     except KeyboardInterrupt:
-                        print ''
-                        return
+                        raise KeyboardInterrupt
                     except:
                         code = 'Error'
                     if code == 200:
                         # uncompress if necessary
                         text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text
-                        # check for file type since many custom 404s are returned as 200s 
+                        # check for file type since many custom 404s are returned as 200s
                         if verify.lower() in text.lower():
                             self.alert('%s => %s. \'%s\' found!' % (url, code, filename))
                             if download:
                                 filepath = '%s/%s_%s_%s' % (self.workspace, proto, host, filename)
                                 dl = open(filepath, 'wb')
-                                dl.write(resp.text)
+                                dl.write(resp.text.encode(resp.encoding) if resp.encoding else resp.text)
                                 dl.close()
                             cnt += 1
                         else:
@@ -81,3 +80,4 @@ class Module(framework.module):
                     else:
                         self.verbose('%s => %s' % (url, code))
         self.output('%d interesting files found.' % (cnt))
+        if download: self.output('...downloaded to \'%s/\'' % (self.workspace))

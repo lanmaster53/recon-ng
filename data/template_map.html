@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>PUSHPIN - Map</title>
+<meta charset="UTF-8">
+<script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript">
+function showMap() {
+	var lat = %s;
+	var lon = %s;
+	var rad = %s;
+		var coords = new google.maps.LatLng(lat,lon);
+		var mapOptions = {
+			zoom: 15,
+			center: coords,
+			mapTypeControl: true,
+			navigationControlOptions: { style: google.maps.NavigationControlStyle.SMALL },
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+		var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+		var populationOptions = {
+			strokeColor: "gray",
+		strokeOpacity: 0.8,
+			strokeWeight: 1,
+		fillColor: "gray",
+			fillOpacity: 0.1,
+			map: map,
+		center: coords,
+			radius: rad * 1000
+	};
+	var cityCircle = new google.maps.Circle(populationOptions);
+		function add_marker(opts, place) {
+			var marker = new google.maps.Marker(opts);
+			var infowindow = new google.maps.InfoWindow({
+					autoScroll: false,
+				content: place.details
+			});
+				google.maps.event.addListener(marker, 'click', function() {
+						infowindow.open(map,marker);
+			});
+		}
+
+		add_marker({position:coords,title:"Epicenter",icon:"http://maps.google.com/mapfiles/ms/icons/green-dot.png",map:map},{details:"Epicenter:<br />" + lat + "," + lon + "<br />Radius: " + rad + "km"});
+%s
+}
+</script>
+<style type="text/css">
+html {
+	height: 100%%
+}
+body {
+	font-family: Helvetica, Arial, sans-serif;
+	height: 100%%;
+	margin: 0;
+	padding: 0
+}
+td {
+	padding: 5px
+}
+.map {
+	width: 100%%;
+	height: 100%%;
+	-webkit-border-radius: 0px;
+	-moz-border-radius: 0px;
+	border-radius: 0px;
+}
+.prof_cell {
+	text-align: center;
+	width: 57px; /*.prof_img[50px width + (1px border x 2 sides) + 5px margin]*/
+}
+.data_cell {
+	width: 400px;
+}
+.prof_img {
+	width: 50px;
+	height: 50px;
+	border: 1px solid black;
+	margin: 0 0 0 5px;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+.time {
+	font-size: .75em;
+}
+</style>
+</head>
+<body onload="showMap();">
+<div class="map" id="map"></div>
+</body>
+</html>

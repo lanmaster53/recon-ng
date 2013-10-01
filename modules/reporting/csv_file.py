@@ -6,46 +6,44 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', 'all', 'yes', 'data source for the report')
+        self.register_option('source', 'all', 'yes', 'source of data for the report (see \'info\' for options)')
         self.register_option('filename', '%s/results.csv' % (self.workspace), 'yes', 'path and filename for report output')
         self.info = {
                      'Name': 'CSV File Creator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Creates a CSV file containing the specified harvested data types.',
                      'Comments': [
-                                  'Source options: [ hosts | contacts | creds | all | <sql> ]'
+                                  'Source options: [ <table> | all | <sql> ]'
                                   ]
                      }
 
     def module_run(self):
+        # validate that file can be created
         filename = self.options['filename']['value']
-        try:
-            outfile = open(filename, 'wb')
-            outfile.close()
-        except:
-            self.error('Invalid path or filename.')
-            return
-        source = self.options['source']['value']
+        outfile = open(filename, 'w')
+        # handle the source of information for the report
+        source = self.options['source']['value'].lower()
         rows = []
-        if source == 'hosts': rows = self.query('SELECT * FROM hosts ORDER BY host')
-        elif source == 'contacts' : rows = self.query('SELECT * FROM contacts ORDER BY fname')
-        elif source == 'creds' : rows = self.query('SELECT * FROM creds ORDER BY username')
+        tables = [x[0].lower() for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['leaks', 'dashboard']]
+        if source in tables:
+            rows = self.query('SELECT * FROM "%s" ORDER BY 1' % source)
         elif source == 'all':
-            rows.extend(self.query('SELECT * FROM hosts ORDER BY host'))
-            rows.extend(self.query('SELECT * FROM contacts ORDER BY fname'))
-            rows.extend(self.query('SELECT * FROM creds ORDER BY username'))
-            # rename source for summary
-            source = 'rows'
-        elif source.lower().startswith('select'):
+            for table in tables:
+                rows.extend(self.query('SELECT * FROM "%s" ORDER BY 1' % (table)))
+        elif source.startswith('select'):
             rows = self.query(source)
-            source = 'rows'
         else:
             self.error('Invalid data source.')
             return
-        outfile = open(filename, 'wb')
+        if not rows:
+            self.output('No data returned.')
+            return
+        cnt = 0
         for row in rows:
-            row = filter(None, row)
-            csvwriter = csv.writer(outfile, quoting=csv.QUOTE_ALL)
-            csvwriter.writerow([unicode(s).encode("utf-8") for s in row])
+            row = [x if x else '' for x in row]
+            if any(row):
+                cnt += 1
+                csvwriter = csv.writer(outfile, quoting=csv.QUOTE_ALL)
+                csvwriter.writerow([s.encode("utf-8") for s in row])
         outfile.close()
-        self.output('%d %s added to \'%s\'.' % (len(rows), source, filename))
+        self.output('%d records added to \'%s\'.' % (cnt, filename))
