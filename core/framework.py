@@ -52,7 +52,7 @@ class module(cmd.Cmd):
 
     def precmd(self, line):
         if __builtin__.load:
-            sys.stdout.write('\r%s\r' % (' '*100))
+            sys.stdout.write('\r')#%s\r' % (' '*100))
         if __builtin__.script:
             sys.stdout.write('%s\n' % (line))
         if __builtin__.record:
@@ -749,8 +749,12 @@ class module(cmd.Cmd):
             rest=None
         )
 
-    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookiejar=None, auth=(), redirect=True):
+    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, redirect=True):
         '''Makes a web request and returns a response object.'''
+        # prime local mutable variables to prevent persistence
+        if payload is None: payload = {}
+        if headers is None: headers = {}
+        if auth is None: auth = ()
         # set request arguments
         # process user-agent header
         headers['User-Agent'] = self.goptions['user-agent']['value']
