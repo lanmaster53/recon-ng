@@ -34,7 +34,8 @@ class Module(framework.module):
                     hosts.append(host)
                     self.output(host)
                     # add each host to the database
-                    if host.lower().endswith(domain.lower()): new += self.add_host(host, address)
+                    if host.lower().endswith(domain.lower()):
+                        new += self.add_host(host, address)
 
         self.output('%d total hosts found.' % (len(hosts)))
         if new: self.alert('%d NEW hosts found!' % (new))

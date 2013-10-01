@@ -52,7 +52,8 @@ class Module(framework.module):
             region = ', '.join([x for x in [city, state] if x])
             name = ' '.join([x for x in [fname, lname] if x])
             self.output('%s (%s) - %s (%s - %s)' % (name, email, title, region, country))
-            if email.lower().endswith(domain.lower()): new += self.add_contact(fname=fname, lname=lname, email=email, title=title, region=region, country=country)
+            if email.lower().endswith(domain.lower()):
+                new += self.add_contact(fname=fname, lname=lname, email=email, title=title, region=region, country=country)
             cnt += 1
         self.output('%d total contacts found.' % (cnt))
         if new: self.alert('%d NEW contacts found!' % (new))

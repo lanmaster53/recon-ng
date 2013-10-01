@@ -50,6 +50,7 @@ class Module(framework.module):
             email = contact[1]
             self.output('%s (%s)' % (name, email))
             cnt += 1
-            if email.lower().endswith(domain.lower()): new += self.add_contact(first, last, 'PGP key association', email)
+            if email.lower().endswith(domain.lower()):
+                new += self.add_contact(first, last, 'PGP key association', email)
         self.output('%d total contacts found.' % (cnt))
         if new: self.alert('%d NEW contacts found!' % (new))

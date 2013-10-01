@@ -23,7 +23,7 @@ class Module(framework.module):
         domain = self.options['domain']['value']
 
         cnt = 0
-        tot = 0
+        new = 0
         for host in hosts:
             url = 'http://www.my-ip-neighbors.com/?domain=%s' % (host)
             self.verbose('URL: %s' % url)
@@ -36,9 +36,10 @@ class Module(framework.module):
             
             # display the output
             for result in results:
-                tot += 1
+                cnt += 1
                 self.output(result)
                 # add each host to the database
-                if result.lower().endswith(domain.lower()): cnt += self.add_host(result)
-        self.output('%d total hosts found.' % (tot))
-        if cnt: self.alert('%d NEW hosts found!' % (cnt))
+                if result.lower().endswith(domain.lower()):
+                    new += self.add_host(result)
+        self.output('%d cntal hosts found.' % (cnt))
+        if new: self.alert('%d NEW hosts found!' % (new))
