@@ -25,7 +25,7 @@ class Module(framework.module):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
 
         cookiejar = CookieJar()
-        url = 'http://uptime.netcraft.com/up/graph?site=www.google.com'
+        url = 'http://toolbar.netcraft.com/site_report?url=www.google.com'
         resp = self.request(url, cookiejar=cookiejar)
         cookiejar = resp.cookiejar
         for cookie in cookiejar:
@@ -36,17 +36,19 @@ class Module(framework.module):
                 break
 
         for host in hosts:
-            url = 'http://uptime.netcraft.com/up/graph?site=%s' % (host)
+            url = 'http://toolbar.netcraft.com/site_report?url=%s' % (host)
             self.verbose('URL: %s' % url)
             resp = self.request(url, cookiejar=cookiejar)
             content = resp.text
 
             # instantiate history list
-            history = []
-            rows = re.findall(r'<tr class="T\wtr\d*">(?:\s|.)+?<\/div>', content)
+            history = []            
+            section = re.findall(r'<section.*?id="history_table">(?:\s|.)+?<\/section>', content)
+            rows = re.findall(r'<tr class="T\wtr\d*">(?:\s|.)+?<\/tr>', section[0])
+
             for row in rows:
                 cell = re.findall(r'>(.*?)<', row)
-                raw  = [cell[0], cell[2], cell[4], cell[6], cell[8]]
+                raw  = [cell[0], cell[1], cell[2], cell[3], cell[4]]
                 history.append([x.strip() for x in raw])
 
             if len(history) > 0:
