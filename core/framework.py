@@ -350,7 +350,7 @@ class module(cmd.Cmd):
             longitude = self.to_unicode(longitude),
         )
 
-        return self.insert('hosts', data, ('host',))
+        return self.insert('hosts', data, ('host', 'ip_address'))
 
     def add_contact(self, fname, lname, title, email=None, region=None, country=None):
         '''Adds a contact to the database and returns the affected row count.'''
