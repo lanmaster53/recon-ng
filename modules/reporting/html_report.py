@@ -19,9 +19,9 @@ class Module(framework.module):
         table_content = ''
         table_show = '<p><a id="show-%s" href="javascript:showhide(\'%s\');">[+] %s</a></p>' % (table, table, table.upper().replace('_', ' '))
         table_hide = '<p><a id="hide-%s" href="javascript:showhide(\'%s\');">[-] %s</a></p>' % (table, table, table.upper().replace('_', ' '))
-        columns = [x[1] for x in self.query('PRAGMA table_info(%s)' % (table))]
+        columns = [x[1] for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
         row_headers = '<tr><th>%s</th></tr>' % ('</th><th>'.join(columns))
-        rows = self.query('SELECT %s FROM %s ORDER BY 1' % (', '.join(columns), table))
+        rows = self.query('SELECT "%s" FROM "%s" ORDER BY 1' % ('", "'.join(columns), table))
         if not rows: return ''
         row_content = ''
         for row in rows:
@@ -139,7 +139,7 @@ a[id*="show-"] {
         row_headers = '<tr><th>table</th><th>count</th></tr>'
         row_content = ''
         for table in tables:
-            count = self.query('SELECT COUNT(*) FROM %s' % (table))[0][0]
+            count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
             row_content += '<tr><td>%s</td><td>%s</td></tr>\n' % (table, count)
         table_content += '<div class="table_container">\n<p><a id="show-summary" href="javascript:showhide(\'summary\');">[+] SUMMARY</a></p>\n<table id="summary">\n<caption><a id="hide-summary" href="javascript:showhide(\'summary\');">[-] SUMMARY</a></caption>\n%s\n%s</table>\n</div>\n' % (row_headers, row_content)
 
@@ -158,7 +158,7 @@ a[id*="show-"] {
                 table_content += '<div id="leaks">\n'
                 for leak in [x[0] for x in leaks]:
                     row_content = ''
-                    row = self.query('SELECT * FROM leaks WHERE leak_id = \'%s\'' % (leak))[0]
+                    row = self.query('SELECT * FROM leaks WHERE leak_id=?', (leak,))[0]
                     values = [x if x != None else '' for x in row]
                     for i in range(0,len(columns)):
                         row_content += '<tr><td><strong>%s</strong></td><td>%s</td></tr>\n' % (columns[i], values[i])

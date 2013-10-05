@@ -9,7 +9,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the local database for information associated with the given leak ID/s. The \'leaks_dump\' module must be used to populate the local database before this module will execute successfully.',
+                     'Description': 'Queries the local database for information associated with the given leak ID(s). The \'leaks_dump\' module must be used to populate the local database before this module will execute successfully.',
                      'Comments': [
                                   'Source options: [ db | <leak_id> | ./path/to/file | query <sql> ]'
                                   ]
@@ -24,7 +24,7 @@ class Module(framework.module):
             return
         print self.ruler*50
         for leak_id in leak_ids:
-            values = self.query('SELECT %s FROM leaks WHERE leak_id = \'%s\'' % (', '.join(columns), leak_id))[0]
+            values = self.query('SELECT "%s" FROM leaks WHERE leak_id = \'%s\'' % ('", "'.join(columns), leak_id))[0]
             for i in range(0,len(columns)):
                 title = ' '.join(columns[i].split('_')).title()
                 self.output('%s: %s' % (title, values[i]))

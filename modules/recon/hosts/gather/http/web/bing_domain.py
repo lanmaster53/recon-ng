@@ -21,7 +21,7 @@ class Module(framework.module):
     def module_run(self):
         domain = self.options['domain']['value']
         base_url = 'http://www.bing.com/search'
-        base_query = 'site:' + domain
+        base_query = 'domain:' + domain
         pattern = '"sb_tlst"><h3><a href="(?:\w*://)*(\S+?)\.%s[^"]*"' % (domain)
         subs = []
         cnt = 0
@@ -38,7 +38,7 @@ class Module(framework.module):
             query = ''
             # build query based on results of previous results
             for sub in subs:
-                query += ' -site:%s.%s' % (sub, domain)
+                query += ' -domain:%s.%s' % (sub, domain)
             full_query = base_query + query
             url = '%s?first=%d&q=%s' % (base_url, (page*nr), urllib.quote_plus(full_query))
             # bing errors out at > 2059 characters not including the protocol

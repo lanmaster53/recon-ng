@@ -35,7 +35,7 @@ class Module(framework.module):
                 data.append(str(jsonobj['lat']))
                 data.append(str(jsonobj['lng']))
                 data.append(host)
-                self.query('UPDATE hosts SET region=\'%s\', country=\'%s\', latitude=\'%s\', longitude=\'%s\' WHERE ip_address=\'%s\'' % tuple(data))
+                self.query('UPDATE hosts SET region=?, country=?, latitude=?, longitude=? WHERE ip_address=?', tuple(data))
 
             tdata = [['Host Info', 'Value']]
             for key in jsonobj:

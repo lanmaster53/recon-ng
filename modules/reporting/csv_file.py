@@ -26,10 +26,10 @@ class Module(framework.module):
         rows = []
         tables = [x[0].lower() for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['leaks', 'dashboard']]
         if source in tables:
-            rows = self.query('SELECT * FROM %s ORDER BY 1' % source)
+            rows = self.query('SELECT * FROM "%s" ORDER BY 1' % source)
         elif source == 'all':
             for table in tables:
-                rows.extend(self.query('SELECT * FROM %s ORDER BY 1' % (table)))
+                rows.extend(self.query('SELECT * FROM "%s" ORDER BY 1' % (table)))
         elif source.startswith('select'):
             rows = self.query(source)
         else:

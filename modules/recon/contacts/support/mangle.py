@@ -46,4 +46,4 @@ class Module(framework.module):
             email = email[:max_len]
             if domain: email = '%s@%s' % (email, domain)
             self.output('%s %s => %s' % (fname, lname, email))
-            self.query('UPDATE contacts SET email="%s" WHERE rowid="%s"' % (email, row))
+            self.query('UPDATE contacts SET email=? WHERE rowid=?', (email, row))

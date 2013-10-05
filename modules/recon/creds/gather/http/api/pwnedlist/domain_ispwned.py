@@ -6,7 +6,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', self.goptions['domain']['value'], 'yes', 'source of domains for module input (see \'info\' for options)')
-        self.register_option('store_table', None, 'no', 'name of database table to store the results or data will not be stored.')
+        self.register_option('store_table', None, 'no', 'name of database table to store the results or data will not be stored')
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

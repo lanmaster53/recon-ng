@@ -1,5 +1,6 @@
 import framework
 # unique to module
+from cookielib import CookieJar
 import urllib
 import re
 
@@ -17,11 +18,42 @@ class Module(framework.module):
                      }
 
     def module_run(self):
+        self.cookiejar = CookieJar()
         company_id = self.get_company_id()
         if company_id:
             contact_ids = self.get_contact_ids(company_id)
             if contact_ids:
                 self.get_contacts(contact_ids)
+
+    def test(self, var1):
+        import math
+        var_str = "" + str(var1)
+        var_arr = [int(x) for x in list(var_str)]
+        LastDig = var_arr[-1]
+        var_arr.sort()
+        minDig  = sorted(var_arr)[0]
+        subvar1 = (2*(var_arr[2]))+(var_arr[1]*1)
+        subvar2 = str(2*var_arr[2])+str(var_arr[1])
+        my_pow  = int(math.pow(((var_arr[0]*1)+2),var_arr[1]))
+        x       = (var1*3+subvar1)*1
+        y       = int(math.cos(math.pi*int(subvar2)))
+        answer  = x*y
+        answer -= my_pow*1
+        answer += (minDig*1)-(LastDig*1)
+        answer  = str(answer)+subvar2
+        return answer
+
+    def get_headers(self, content):
+        Challenge = int(re.search('Challenge=(\d*);', content).group(1))
+        ChallengeId = int(re.search('ChallengeId=(\d*);', content).group(1))
+        y = self.test(Challenge)
+        headers = {}
+        headers['X-AA-Challenge-ID'] = ChallengeId
+        headers['X-AA-Challenge-Result'] = y
+        headers['X-AA-Challenge'] = Challenge
+        headers['Content-Type'] = 'text/plain'
+        headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:23.0) Gecko/20100101 Firefox/23.0'
+        return headers
 
     def get_company_id(self):
         self.output('Gathering Company IDs...')
@@ -68,7 +100,17 @@ class Module(framework.module):
         while True:
             payload['rpage'] = str(page_cnt)
             self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
-            content = self.request(url, payload=payload).text
+            resp = self.request(url, payload=payload, cookiejar=self.cookiejar)
+            content = resp.text
+            if 'use of automated scripts to access jigsaw.com is prohibited' in content:
+                self.verbose('Fetching BotMitigationCookie...')
+                headers = self.get_headers(content)
+                temp_url = '%s?%s' % (url, urllib.urlencode(payload))
+                resp = self.request(temp_url, method='POST', headers=headers, cookiejar=self.cookiejar)
+                self.cookiejar = resp.cookiejar
+                continue
+            if 'Refresh' in resp.headers:
+                continue
             pattern = "showContact\('(\d+?)'\)"
             contacts = re.findall(pattern, content)
             if not contacts: break
@@ -82,7 +124,7 @@ class Module(framework.module):
         for contact_id in contact_ids:
             url = 'http://www.jigsaw.com/BC.xhtml'
             payload = {'contactId': contact_id}
-            content = self.request(url, payload=payload).text
+            content = self.request(url, payload=payload, cookiejar=self.cookiejar).text
             if 'Contact Not Found' in content: continue
             fname = self.html_unescape(re.search('<span id="firstname">(.+?)</span>', content).group(1))
             lname = self.html_unescape(re.search('<span id="lastname">(.+?)</span>', content).group(1))

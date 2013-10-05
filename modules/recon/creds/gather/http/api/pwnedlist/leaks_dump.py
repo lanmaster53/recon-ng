@@ -42,7 +42,7 @@ class Module(framework.module):
         columns = []
         values = []
         for key in jsonobj['leaks'][0].keys():
-            columns.append('%s TEXT' % (key))
+            columns.append('\'%s\' TEXT' % (key))
         self.query('CREATE TABLE IF NOT EXISTS leaks (%s)' % (', '.join(columns)))
         self.output('New \'leaks\' table created.')
 

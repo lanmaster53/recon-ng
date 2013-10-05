@@ -2,7 +2,7 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '1.41'
+__version__   = '1.4.3'
 
 import datetime
 import os
@@ -28,6 +28,7 @@ __builtin__.B  = '\033[34m' # blue
 # mode flags
 __builtin__.script = 0
 __builtin__.record = 0
+__builtin__.load = 0
 
 # set global framework options
 __builtin__.goptions = {}
@@ -147,16 +148,12 @@ class Recon(framework.module):
             if e.errno != errno.EEXIST:
                 self.error(e.__str__())
                 return False
-        conn = sqlite3.connect('%s/data.db' % (workspace))
-        c = conn.cursor()
-        c.execute('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
-        c.execute('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
-        c.execute('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
-        c.execute('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
-        c.execute('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        conn.commit()
-        conn.close()
         self.workspace = __builtin__.workspace = workspace
+        self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
         self.init_goptions()
         self.load_config()
         return True
@@ -186,16 +183,15 @@ class Recon(framework.module):
 
     def do_info(self, params):
         '''Displays module information'''
-        options = params.split()
-        if len(options) == 0:
+        if not params:
             self.help_info()
-        else:
-            try:
-                modulename = self.loaded_modules[params]
-                y = sys.modules[modulename].Module((None, params))
-                y.do_info(None)
-            except (KeyError, AttributeError):
-                self.error('Invalid module name.')
+            return
+        try:
+            modulename = self.loaded_modules[params]
+            y = sys.modules[modulename].Module((None, params))
+            y.do_info(None)
+        except (KeyError, AttributeError):
+            self.error('Invalid module name.')
 
     def do_banner(self, params):
         '''Displays the banner'''
@@ -204,71 +200,56 @@ class Recon(framework.module):
     def do_set(self, params):
         '''Sets global options'''
         options = params.split()
-        if len(options) < 2: self.help_set()
-        else:
-            name = options[0].lower()
-            if name in self.options:
-                value = ' '.join(options[1:])
-                init = False
-                # validate workspace
-                if name == 'workspace':
-                    if not self.init_workspace(value):
-                        self.error('Unable to create \'%s\' workspace.' % (value))
-                        return
-                self.options[name]['value'] = self.autoconvert(value)
-                print '%s => %s' % (name.upper(), value)
-                self.save_config()
-            else: self.error('Invalid option.')
+        if len(options) < 2:
+            self.help_set()
+            return
+        name = options[0].lower()
+        if name in self.options:
+            value = ' '.join(options[1:])
+            init = False
+            # validate workspace
+            if name == 'workspace':
+                if not self.init_workspace(value):
+                    self.error('Unable to create \'%s\' workspace.' % (value))
+                    return
+            self.options[name]['value'] = self.autoconvert(value)
+            print '%s => %s' % (name.upper(), value)
+            self.save_config()
+        else: self.error('Invalid option.')
 
     def do_load(self, params):
         '''Loads selected module'''
-        if params.lower() == 'useless':
-            self.output('Thank you, Kevin Fiscus!')
-            import webbrowser
-            w = webbrowser.get()
-            w.open('http://www.theuselessweb.com/')
-            return
         try: self.validate_options()
         except framework.FrameworkException as e:
             self.error(e.message)
             return
-        options = params.split()
-        if len(options) == 0:
+        if not params:
             self.help_load()
-        else:
-            modules = []            
-            # finds any modules that contain params
-            modules = [params] if params in self.loaded_modules else [x for x in self.loaded_modules if params in x]
-            # notify the user if none or multiple modules are found
-            if len(modules) != 1:
-                if not modules:
-                    self.error('Invalid module name.')
-                else:
-                    self.output('Multiple modules match \'%s\'.' % params)
-                    self.display_modules(modules)
-                return
-            modulename = modules[0]
-            loadedname = self.loaded_modules[modulename]
-            prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
-            # notify the user if runtime errors exist in the module
-            try: y = sys.modules[loadedname].Module((prompt, modulename))
-            except Exception:
-                self.error('Error in module: %s' % (traceback.format_exc().splitlines()[-1]))
-                return
-            # return the loaded module if in command line mode
-            if self.mode == 1: return y
-            try: y.cmdloop()
-            except KeyboardInterrupt:
-                print ''
-
-    # alias for load
-    def do_use(self, params):
-        '''Loads selected module'''
-        options = params.split()
-        if len(options) == 0:
-            self.help_use()
-        else:
-            self.do_load(params)
+            return
+        # finds any modules that contain params
+        modules = [params] if params in self.loaded_modules else [x for x in self.loaded_modules if params in x]
+        # notify the user if none or multiple modules are found
+        if len(modules) != 1:
+            if not modules:
+                self.error('Invalid module name.')
+            else:
+                self.output('Multiple modules match \'%s\'.' % params)
+                self.display_modules(modules)
+            return
+        modulename = modules[0]
+        loadedname = self.loaded_modules[modulename]
+        prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
+        # notify the user if runtime errors exist in the module
+        try: y = sys.modules[loadedname].Module((prompt, modulename))
+        except Exception:
+            self.error('Error in module: %s' % (traceback.format_exc().splitlines()[-1]))
+            return
+        # return the loaded module if in command line mode
+        if self.mode == 1: return y
+        try: y.cmdloop()
+        except KeyboardInterrupt:
+            print ''
+    do_use = do_load
 
     def do_run(self, params):
         '''Not available'''
@@ -277,15 +258,6 @@ class Recon(framework.module):
     #==================================================
     # HELP METHODS
     #==================================================
-
-    def help_search(self):
-        print 'Usage: search <string>'
-
-    def help_load(self):
-        print 'Usage: load <module>'
-
-    def help_use(self):
-        print 'Usage: use <module>'
 
     def help_info(self):
         print 'Usage: info <module>'
@@ -299,7 +271,3 @@ class Recon(framework.module):
         if len(args) > 1 and args[1].lower() == 'workspace':
             return [name for name in os.listdir('./workspaces') if name.startswith(text) and os.path.isdir('./workspaces/%s' % (name))]
         return [x for x in self.options if x.startswith(text)]
-
-    def complete_load(self, text, *ignored):
-        return [x for x in self.loaded_modules if x.startswith(text)]
-    complete_info = complete_use = complete_load

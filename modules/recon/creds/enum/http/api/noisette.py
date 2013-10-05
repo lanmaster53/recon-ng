@@ -32,6 +32,6 @@ class Module(framework.module):
             if len(nodes) > 0:
                 plaintext = nodes[0].firstChild.wholeText
                 self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
-                self.query('UPDATE creds SET password="%s", type="%s" WHERE hash="%s"' % (plaintext, hashtype, hashstr))
+                self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
             else:
                 self.verbose('Value not found for hash: %s' % (hashstr))

@@ -3,6 +3,7 @@ import sqlite3
 import re
 import os
 import sys
+import struct
 import textwrap
 import socket
 import time
@@ -50,6 +51,8 @@ class module(cmd.Cmd):
         return 0
 
     def precmd(self, line):
+        if __builtin__.load:
+            sys.stdout.write('\r')#%s\r' % (' '*100))
         if __builtin__.script:
             sys.stdout.write('%s\n' % (line))
         if __builtin__.record:
@@ -67,6 +70,7 @@ class module(cmd.Cmd):
             # reset stdin for raw_input
             sys.stdin = sys.__stdin__
             __builtin__.script = 0
+            __builtin__.load = 0
             return 0
         if cmd is None:
             return self.default(line)
@@ -147,7 +151,7 @@ class module(cmd.Cmd):
         tdata = [['Category', 'Quantity']]
         for table in tables:
             if not table in ['leaks', 'dashboard']:
-                count = self.query('SELECT COUNT(*) FROM %s' % (table))[0][0]
+                count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
                 tdata.append([table.title(), count])
         self.table(tdata, header=True)
 
@@ -166,7 +170,7 @@ class module(cmd.Cmd):
         return obj
 
     def ascii_sanitize(self, s):
-        return ''.join([char for char in s if ord(char) == 10 or ord(char) in range(32, 126)])
+        return ''.join([char for char in s if ord(char) in [10,13] + range(32, 126)])
 
     def html_unescape(self, s):
         '''Unescapes HTML markup and returns an unescaped string.'''
@@ -207,6 +211,40 @@ class module(cmd.Cmd):
         decoded = ciphertext.decode('base64')
         password = aes.decryptData(key, iv.encode('utf-8') + decoded)
         return unicode(password, 'utf-8')
+
+    def cidr_to_list(self, string):
+        # references:
+        # http://boubakr92.wordpress.com/2012/12/20/convert-cidr-into-ip-range-with-python/
+        # http://stackoverflow.com/questions/8338655/how-to-get-list-of-ip-addresses
+        # parse address and cidr
+        (addrString, cidrString) = string.split('/')
+        # split address into octets and convert cidr to int
+        addr = addrString.split('.')
+        cidr = int(cidrString)
+        # initialize the netmask and calculate based on cidr mask
+        mask = [0, 0, 0, 0]
+        for i in range(cidr):
+            mask[i/8] = mask[i/8] + (1 << (7 - i % 8))
+        # initialize net and binary and netmask with addr to get network
+        net = []
+        for i in range(4):
+            net.append(int(addr[i]) & mask[i])
+        # duplicate net into broad array, gather host bits, and generate broadcast
+        broad = list(net)
+        brange = 32 - cidr
+        for i in range(brange):
+            broad[3 - i/8] = broad[3 - i/8] + (1 << (i % 8))
+        # print information, mapping integer lists to strings for easy printing
+        #mask = ".".join(map(str, mask))
+        net = ".".join(map(str, net))
+        broad = ".".join(map(str, broad))
+        ips = []
+        f = struct.unpack('!I',socket.inet_pton(socket.AF_INET,net))[0]
+        l = struct.unpack('!I',socket.inet_pton(socket.AF_INET,broad))[0]
+        while f <= l:
+            ips.append(socket.inet_ntop(socket.AF_INET,struct.pack('!I',f)))
+            f = f + 1
+        return ips
 
     def api_guard(self, num):
         try:
@@ -287,13 +325,9 @@ class module(cmd.Cmd):
 
     def display_schema(self):
         '''Displays the database schema'''
-        conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        cur = conn.cursor()
-        cur.execute('SELECT name FROM sqlite_master WHERE type=\'table\'')
-        tables = [x[0] for x in cur.fetchall()]
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         for table in tables:
-            cur.execute('PRAGMA table_info(%s)' % (table))
-            columns = [(x[1],x[2]) for x in cur.fetchall()]
+            columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
             name_len = len(max([x[0] for x in columns], key=len))
             type_len = len(max([x[1] for x in columns], key=len))
             print ''
@@ -316,7 +350,7 @@ class module(cmd.Cmd):
             longitude = self.to_unicode(longitude),
         )
 
-        return self.insert('hosts', data, ('host',))
+        return self.insert('hosts', data, ('host', 'ip_address'))
 
     def add_contact(self, fname, lname, title, email=None, region=None, country=None):
         '''Adds a contact to the database and returns the affected row count.'''
@@ -365,19 +399,20 @@ class module(cmd.Cmd):
         header - whether or not the first row of tdata consists of headers.
         data - the information to insert into the database table.'''
 
+        reserved = ['leaks']
         tdata = list(data)
-        table = table.replace(' ', '_').lower()
+        table = self.to_unicode_str(table).lower()
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        if table in tables:
-            raise FrameworkException('Table \'%s\' already exists' % (table))
+        if table in tables + reserved:
+            raise FrameworkException('Table \'%s\' already exists or is a reserved table name' % (table))
         # create database table
         if header:
             rdata = tdata.pop(0)
             columns = [self.to_unicode_str(x).lower() for x in rdata]
         else:
             columns = ['column_%s' % (i) for i in range(0,len(tdata[0]))]
-        metadata = ','.join(['\'%s\' TEXT' % (x) for x in columns])
-        self.query('CREATE TABLE IF NOT EXISTS %s (%s)' % (table, metadata))
+        metadata = ', '.join(['\'%s\' TEXT' % (x) for x in columns])
+        self.query('CREATE TABLE IF NOT EXISTS \'%s\' (%s)' % (table, metadata))
         # insert rows into database table
         for rdata in tdata:
             data = {}
@@ -388,12 +423,13 @@ class module(cmd.Cmd):
 
     def add_column(self, table, column):
         '''Adds a column to a database table.'''
-        columns = [x[1] for x in self.query('PRAGMA table_info(%s)' % (table))]
+        column = self.to_unicode_str(column).lower()
+        columns = [x[1] for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
         if not columns:
             raise FrameworkException('Table \'%s\' does not exist' % (table))
         if column in columns:
             raise FrameworkException('Column \'%s\' already exists in table \'%s\'' % (column, table))
-        self.query('ALTER TABLE %s ADD COLUMN \'%s\' \'TEXT\'' % (table, column))
+        self.query('ALTER TABLE "%s" ADD COLUMN \'%s\' TEXT' % (table, column))
         self.verbose('\'%s\' column created in the \'%s\' table' % (column, table))
 
     def insert(self, table, data, unique_columns=[]):
@@ -411,34 +447,32 @@ class module(cmd.Cmd):
         if not columns: return 0
 
         if not unique_columns:
-            query = u'INSERT INTO %s (%s) VALUES (%s)' % (
+            query = u'INSERT INTO "%s" ("%s") VALUES (%s)' % (
                 table,
-                ','.join(columns),
-                ','.join('?'*len(columns))
+                '", "'.join(columns),
+                ', '.join('?'*len(columns))
             )
         else:
-            query = u'INSERT INTO %s (%s) SELECT %s WHERE NOT EXISTS(SELECT * FROM %s WHERE %s)' % (
+            query = u'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
                 table,
-                ','.join(columns),
-                ','.join('?'*len(columns)),
+                '", "'.join(columns),
+                ', '.join('?'*len(columns)),
                 table,
-                ' and '.join([column + '=?' for column in unique_columns])
+                ' and '.join(['"%s"=?' % (column) for column in unique_columns])
             )
 
-        values = [data[column] for column in columns] + [data[column] for column in unique_columns]
+        values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
 
-        conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        cur = conn.cursor()
-        cur.execute(query, values)
-        conn.commit()
-        conn.close()
-        return cur.rowcount
+        rowcount = self.query(query, values)
+        return rowcount
 
     def query(self, query, values=()):
         '''Queries the database and returns the results as a list.'''
+        if self.goptions['debug']['value']: self.output(query)
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
         if values:
+            if self.goptions['debug']['value']: self.output(repr(values))
             cur.execute(query, values)
         else:
             cur.execute(query)
@@ -460,8 +494,6 @@ class module(cmd.Cmd):
     def display_options(self, params):
         '''Lists options'''
         spacer = self.spacer
-        if params == 'info':
-            spacer = self.spacer*2
         if self.options:
             pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
             key_len = len(max(self.options, key=len))
@@ -580,22 +612,26 @@ class module(cmd.Cmd):
             pass
         linkedin_key = self.get_key('linkedin_api')
         linkedin_secret = self.get_key('linkedin_secret')
-        redirect_uri = 'http://127.0.0.1'
+        port = 50007
+        redirect_uri = 'http://127.0.0.1:%d' % (port)
         url = 'https://www.linkedin.com/uas/oauth2/authorization'
         payload = {'response_type': 'code', 'client_id': linkedin_key, 'scope': 'r_basicprofile r_network', 'state': 'thisisaverylongstringusedforstate', 'redirect_uri': redirect_uri}
         authorize_url = '%s?%s' % (url, urllib.urlencode(payload))
-        self.output(authorize_url)
-        self.output('Copy the above URL and paste it into a browser.')
-        self.output('Sign in and authorize the application to access your profile and connections.')
-        self.output('Once authorized, you\'ll be redirected to a webpage that is not available.')
-        self.output('Copy the value of the \'code\' parameter from the URL and paste it into the prompt below.')
-        self.output('You will need to do this the first time the module is ran and each time the access token expires (60 days).')
         w = webbrowser.get()
         w.open(authorize_url)
-        authorization_code = raw_input('\'CODE\' parameter value => ')
+        # open a socket to receive the access token callback
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(('127.0.0.1', port))
+        sock.listen(1)
+        conn, addr = sock.accept()
+        data = conn.recv(1024)
+        conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>Recon-ng</title></head><body>Authorization code received. Return to Recon-ng.</body></html>')
+        conn.close()
+        # process the received access token
+        authorization_code = re.search('code=([^&]*)', data).group(1)
         url = 'https://www.linkedin.com/uas/oauth2/accessToken'
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': linkedin_key, 'client_secret': linkedin_secret}
-        resp = self.request(url, payload=payload)
+        resp = self.request(url, method='POST', payload=payload)
         if 'error' in resp.json:
             raise FrameworkException(resp.json['error_description'])
         access_token = resp.json['access_token']
@@ -713,8 +749,12 @@ class module(cmd.Cmd):
             rest=None
         )
 
-    def request(self, url, method='GET', timeout=None, payload={}, headers={}, cookiejar=None, auth=(), redirect=True):
+    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, redirect=True):
         '''Makes a web request and returns a response object.'''
+        # prime local mutable variables to prevent persistence
+        if payload is None: payload = {}
+        if headers is None: headers = {}
+        if auth is None: auth = ()
         # set request arguments
         # process user-agent header
         headers['User-Agent'] = self.goptions['user-agent']['value']
@@ -780,58 +820,73 @@ class module(cmd.Cmd):
 
     def do_info(self, params):
         '''Displays module information'''
-        pattern = '%s%s:'
         self.info['Path'] = 'modules/%s.py' % (self.modulename)
-        for item in ['Name', 'Path', 'Author', 'Description']:
-            print ''
-            print pattern % (self.spacer, item)
-            print pattern[:-1] % (self.spacer*2, textwrap.fill(self.info[item], 100, subsequent_indent=self.spacer*2))
         print ''
-        print pattern % (self.spacer, 'Options')
+        # meta
+        for item in ['Name', 'Path', 'Author']:
+            print '%s: %s' % (item.rjust(10), self.info[item])
+        print ''
+        # options
+        print 'Options:'
         self.display_options('info')
+        # description
+        print 'Description:'
+        print '%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer))
+        print ''
+        # comments
         if self.info['Comments']:
-            print pattern % (self.spacer, 'Comments')
+            print 'Comments:'
             for comment in self.info['Comments']:
-                print pattern[:-1] % (self.spacer*2, textwrap.fill(comment, 100, subsequent_indent=self.spacer*2))
+                print '%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer))
             print ''
 
     def do_set(self, params):
         '''Sets module options'''
         options = params.split()
-        if len(options) < 2: self.help_set()
-        else:
-            name = options[0].lower()
-            if name in self.options:
-                value = ' '.join(options[1:])
-                print '%s => %s' % (name.upper(), value)
-                self.options[name]['value'] = self.autoconvert(value)
-            else: self.error('Invalid option.')
+        if len(options) < 2:
+            self.help_set()
+            return
+        name = options[0].lower()
+        if name in self.options:
+            value = ' '.join(options[1:])
+            print '%s => %s' % (name.upper(), value)
+            self.options[name]['value'] = self.autoconvert(value)
+        else: self.error('Invalid option.')
+
+    def do_unset(self, params):
+        '''Unsets module options'''
+        options = params.split()
+        if options[0].lower() == 'workspace':
+            self.error('Unsetting the workspace is not permitted.')
+            return
+        self.do_set('%s %s' % (params, 'None'))
 
     def do_keys(self, params):
         '''Manages framework API keys'''
-        if params:
-            params = params.split()
-            arg = params.pop(0).lower()
-            if arg == 'list':
-                self.display_keys()
-                return
-            elif arg in ['add', 'update']:
-                if len(params) == 2:
-                    self.add_key(params[0], params[1])
-                    self.output('Key \'%s\' added.' % (params[0]))
-                else: print 'Usage: keys [add|update] <name> <value>'
-                return
-            elif arg == 'delete':
-                if len(params) == 1:
-                    try:
-                        self.delete_key(params[0])
-                    except FrameworkException as e:
-                        self.error(e.__str__())
-                    else:
-                        self.output('Key \'%s\' deleted.' % (params[0]))
-                else: print 'Usage: keys delete <name>'
-                return
-        self.help_keys()
+        if not params:
+            self.help_keys()
+            return
+        params = params.split()
+        arg = params.pop(0).lower()
+        if arg == 'list':
+            self.display_keys()
+            return
+        elif arg in ['add', 'update']:
+            if len(params) == 2:
+                self.add_key(params[0], params[1])
+                self.output('Key \'%s\' added.' % (params[0]))
+            else: print 'Usage: keys [add|update] <name> <value>'
+            return
+        elif arg == 'delete':
+            if len(params) == 1:
+                try:
+                    self.delete_key(params[0])
+                except FrameworkException as e:
+                    self.error(e.__str__())
+                else:
+                    self.output('Key \'%s\' deleted.' % (params[0]))
+            else: print 'Usage: keys delete <name>'
+            return
 
     def do_query(self, params):
         '''Queries the database'''
@@ -840,19 +895,20 @@ class module(cmd.Cmd):
             return
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
+        if self.goptions['debug']['value']: self.output(params)
         try: cur.execute(params)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
             return
         if cur.rowcount == -1 and cur.description:
-            header = tuple([x[0] for x in cur.description])
             tdata = cur.fetchall()
             if not tdata:
                 self.output('No data returned.')
             else:
+                header = tuple([x[0] for x in cur.description])
                 tdata.insert(0, header)
                 self.table(tdata, header=True)
-                self.output('%d rows returned' % (len(tdata)))
+                self.output('%d rows returned' % (len(tdata)-1)) # -1 to account for header row
         else:
             conn.commit()
             self.output('%d rows affected.' % (cur.rowcount))
@@ -861,35 +917,36 @@ class module(cmd.Cmd):
 
     def do_show(self, params):
         '''Shows various framework items'''
-        if params:
-            arg = params.lower()
-            if arg.split()[0] == 'modules':
-                if len(arg.split()) > 1:
-                    param = arg.split()[1]
-                    modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
-                    if not modules:
-                        self.error('Invalid module category.')
-                        return
-                else:
-                    modules = __builtin__.loaded_modules
-                self.display_modules(modules)
-                return
-            elif arg == 'options':
-                self.display_options(None)
-                return
-            elif arg == 'dashboard':
-                self.display_dashboard()
-                return
-            elif arg == 'workspaces':
-                self.display_workspaces()
-                return
-            elif arg == 'schema':
-                self.display_schema()
-                return
-            elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
-                self.do_query('SELECT * FROM %s ORDER BY 1' % (arg))
-                return
-        self.help_show()
+        if not params:
+            self.help_show()
+            return
+        arg = params.lower()
+        if arg.split()[0] == 'modules':
+            if len(arg.split()) > 1:
+                param = arg.split()[1]
+                modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
+                if not modules:
+                    self.error('Invalid module category.')
+                    return
+            else:
+                modules = __builtin__.loaded_modules
+            self.display_modules(modules)
+            return
+        elif arg == 'options':
+            self.display_options(None)
+            return
+        elif arg == 'dashboard':
+            self.display_dashboard()
+            return
+        elif arg == 'workspaces':
+            self.display_workspaces()
+            return
+        elif arg == 'schema':
+            self.display_schema()
+            return
+        elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
+            self.do_query('SELECT * FROM "%s" ORDER BY 1' % (arg))
+            return
 
     def do_search(self, params):
         '''Searches available modules'''
@@ -958,26 +1015,54 @@ class module(cmd.Cmd):
 
     def do_resource(self, params):
         '''Executes commands from a resource file'''
-        if params:
-            if os.path.exists(params):
-                sys.stdin = open(params)
-                __builtin__.script = 1
-                return
+        if not params:
+            self.help_resource()
+            return
+        if os.path.exists(params):
+            sys.stdin = open(params)
+            __builtin__.script = 1
+            return
+        else:
+            self.error('Script file \'%s\' not found.' % (params))
+            return
+
+    def do_load(self, params):
+        '''Loads selected module'''
+        if not params:
+            self.help_load()
+            return
+        # finds any modules that contain params
+        modules = [params] if params in __builtin__.loaded_modules else [x for x in __builtin__.loaded_modules if params in x]
+        # notify the user if none or multiple modules are found
+        if len(modules) != 1:
+            if not modules:
+                self.error('Invalid module name.')
             else:
-                self.error('Script file \'%s\' not found.' % (params))
-                return
-        self.help_resource()
+                self.output('Multiple modules match \'%s\'.' % params)
+                self.display_modules(modules)
+            return
+        import StringIO
+        sys.stdin = StringIO.StringIO('load %s\nEOF' % modules[0])
+        __builtin__.load = 1
+        return True
+    do_use = do_load
 
     #==================================================
     # HELP METHODS
     #==================================================
 
-    def help_set(self):
-        print 'Usage: set <option> <value>'
-        self.display_options(None)
-
     def help_keys(self):
         print 'Usage: keys [list|add|delete|update]'
+
+    def help_load(self):
+        print 'Usage: [load|use] <module>'
+    help_use = help_load
+
+    def help_record(self):
+        print 'Usage: record [start|stop|status]'
+
+    def help_resource(self):
+        print 'Usage: resource <filename>'
 
     def help_query(self):
         print 'Usage: query <sql>'
@@ -989,32 +1074,48 @@ class module(cmd.Cmd):
         print '%s%s' % (self.spacer, 'INSERT INTO table_name (column1, column2,...) VALUES (value1, value2,...)')
         print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
 
-    def help_show(self):
-        print 'Usage: show [modules|options|dashboard|workspaces|schema|<table>]'
+    def help_search(self):
+        print 'Usage: search <string>'
+
+    def help_set(self):
+        print 'Usage: set <option> <value>'
+        self.display_options(None)
+
+    def help_unset(self):
+        print 'Usage: unset <option>'
+        self.display_options(None)
 
     def help_shell(self):
         print 'Usage: [shell|!] <command>'
         print '...or just type a command at the prompt.'
 
-    def help_record(self):
-        print 'Usage: record [start|stop|status]'
-
-    def help_resource(self):
-        print 'Usage: resource <filename>'
+    def help_show(self):
+        print 'Usage: show [modules|options|dashboard|workspaces|schema|<table>]'
 
     #==================================================
     # COMPLETE METHODS
     #==================================================
 
-    def complete_set(self, text, *ignored):
-        return [x for x in self.options if x.startswith(text)]
-
     def complete_keys(self, text, line, *ignored):
         args = line.split()
         options = ['list', 'add', 'delete', 'update']
-        if len(args) > 1 and args[1].lower() in options:
-            return [x for x in self.keys.keys() if x.startswith(text)]
+        if len(args) > 1:
+            if args[1].lower() in options[2:]:
+                return [x for x in self.keys.keys() if x.startswith(text)]
+            if args[1].lower() in options[:2]:
+                return
         return [x for x in options if x.startswith(text)]
+
+    def complete_load(self, text, *ignored):
+        return [x for x in __builtin__.loaded_modules if x.startswith(text)]
+    complete_info = complete_use = complete_load
+
+    def complete_record(self, text, *ignored):
+        return [x for x in ['start', 'stop', 'status'] if x.startswith(text)]
+
+    def complete_set(self, text, *ignored):
+        return [x for x in self.options if x.startswith(text)]
+    complete_unset = complete_set
 
     def complete_show(self, text, line, *ignored):
         args = line.split()
@@ -1052,10 +1153,12 @@ class ResponseObject(object):
 
     @property
     def text(self):
-        if self.encoding:
+        try:
             return self.__text__.decode(self.encoding)
-        else:
-            return self.__text__
+        except (UnicodeDecodeError, TypeError):
+            if goptions['debug']['value']:
+                print '%s[*]%s %s' % (G, N, 'WARNING: Charset mismatch. All non-printable ascii characters removed from the response.')
+            return ''.join([char for char in self.__text__ if ord(char) in [9,10,13] + range(32, 126)])
 
     @property
     def json(self):
