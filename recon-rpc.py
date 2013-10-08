@@ -27,7 +27,7 @@ sys.path.append('./libs/')
 import base
 
 import random
-import optparse
+import argparse
 
 
 class ReconState:
@@ -61,29 +61,28 @@ class ReconState:
 
 
 if __name__ == '__main__':
-    usage = './%prog [options]'
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--type', help='Set server type', action="store",
-                      dest='server_type')
-    opts, args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--type", type=str, action="store", default='jsonrpc',
+                                help="Set RPC server type", dest="server_type")
+    parser.add_argument("-a", "--address", type=str, action="store", default='0.0.0.0',
+                                help="Set RPC server bind address", dest="address")
+    parser.add_argument("-p", "--port", type=int, action="store", default=4141,
+                                help="Set RPC server port", dest="port")
+    args = parser.parse_args()
 
-    addr = "0.0.0.0"
-    port = 4141
-
-    if not opts.server_type:
-        opts.server_type = 'jsonrpc'
-
-    if opts.server_type == 'xmlrpc':
+    if args.server_type == 'xmlrpc':
         from SimpleXMLRPCServer import SimpleXMLRPCServer
         RPCServer = SimpleXMLRPCServer
-        server = RPCServer((addr, port), allow_none=True)
-    elif opts.server_type == 'jsonrpc':
+        server = RPCServer((args.address, args.port), allow_none=True)
+    elif args.server_type == 'jsonrpc':
         from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
-
         RPCServer = SimpleJSONRPCServer
-        server = RPCServer((addr, port))
+        server = RPCServer((args.address, args.port))
 
     server.register_instance(ReconState())
-    print "[+] Serving on %s:%d" % (addr, port)
-    server.serve_forever()
+    print "[+] Serving on %s:%d" % (args.address, args.port)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print "\n[+] Exiting"
 
