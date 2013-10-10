@@ -11,9 +11,9 @@ The following code can be used to test the XMLRPC interface:
     import xmlrpclib
     client = xmlrpclib.Server('http://localhost:4141')
     sid = client.init()
-    client.global_set('workspace rpc', sid)
+    client.global_set('WORKSPACE', 'rpc', sid)
     client.use('recon/hosts/gather/http/web/bing_domain', sid)
-    client.local_set('domain sunyit.edu', sid)
+    client.set('DOMAIN', 'sunyit.edu', sid)
     client.run(sid)
     hosts = client.show('hosts', sid)
     print hosts
@@ -52,11 +52,11 @@ class ReconState:
         mod = self.sessions[sid]["recon"].do_use(param)
         self.sessions[sid]["module"] = mod
 
-    def global_set(self, param, sid):
-        self.sessions[sid]["recon"].do_set(param)
+    def global_set(self, var, param, sid):
+        self.sessions[sid]["recon"].do_set(var + " " + param)
 
-    def local_set(self, param, sid):
-        self.sessions[sid]["module"].do_set(param)
+    def set(self, var, param, sid):
+        self.sessions[sid]["module"].do_set(var + " " + param)
 
     def run(self, sid):
         self.sessions[sid]["module"].do_run(None)
