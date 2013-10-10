@@ -15,6 +15,8 @@ The following code can be used to test the XMLRPC interface:
     client.use('recon/hosts/gather/http/web/bing_domain', sid)
     client.local_set('domain sunyit.edu', sid)
     client.run(sid)
+    hosts = client.show('hosts', sid)
+    print hosts
 
 To test the JSONRPC interface, replace xmlrpclib with jsonrpclib.
 
@@ -58,6 +60,13 @@ class ReconState:
 
     def run(self, sid):
         self.sessions[sid]["module"].do_run(None)
+
+    def show(self, param, sid):
+        tables_query = "SELECT name FROM sqlite_master WHERE type='table'"
+        param_query = 'SELECT * FROM "%s" ORDER BY 1' % (param)
+        tables = self.sessions[sid]["module"].query(tables_query)
+        if param in [ x[0] for x in  tables ]:
+            return self.sessions[sid]["module"].query(param_query)
 
 
 if __name__ == '__main__':
