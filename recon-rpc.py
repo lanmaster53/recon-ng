@@ -23,13 +23,14 @@ To test the JSONRPC interface, replace xmlrpclib with jsonrpclib.
 """
 __author__ = "Anthony Miller-Rhodes (@_s1lentjudge)"
 
+import uuid
+import argparse
 import sys
+
 sys.path.append('./core/')
 sys.path.append('./libs/')
 import base
 
-import random
-import argparse
 
 
 class ReconState:
@@ -38,7 +39,7 @@ class ReconState:
         self.sessions = {}
 
     def init(self):
-        sid = random.randint(0, 1000000)
+        sid = str(uuid.uuid4())
         self.sessions[sid] = {
             "recon": base.Recon(mode=1),
             "module": None
