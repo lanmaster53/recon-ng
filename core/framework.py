@@ -820,6 +820,7 @@ class module(cmd.Cmd):
 
     def do_info(self, params):
         '''Displays module information'''
+        if params: self.alert('Command parameters ignored in module context.')
         self.info['Path'] = 'modules/%s.py' % (self.modulename)
         print ''
         # meta

@@ -2,7 +2,7 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '1.4.3'
+__version__   = '2.2013.10.11.0025'
 
 import datetime
 import os
@@ -65,7 +65,7 @@ class Recon(framework.module):
         self.register_option('latitude', None, 'no', 'target latitudinal position', self.goptions)
         self.register_option('longitude', None, 'no', 'target longitudinal position', self.goptions)
         self.register_option('radius', None, 'no', 'radius of interest relative to latitude and longitude', self.goptions)
-        self.register_option('user-agent', 'Recon-ng/%s' % (__version__), 'yes', 'user-agent string', self.goptions)
+        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string', self.goptions)
         self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
         self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
         self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
@@ -111,7 +111,7 @@ class Recon(framework.module):
         banner = open('./core/banner').read()
         banner_len = len(max(banner.split('\n'), key=len))
         print banner
-        print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), banner_len+8) # +8 compensates for the color bytes
+        print '{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8) # +8 compensates for the color bytes
         print ''
         counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
         count_len = len(max([str(x[0]) for x in counts], key=len))

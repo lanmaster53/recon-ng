@@ -46,4 +46,4 @@ class Module(framework.module):
                 time.sleep(1)
             print self.ruler*50
         else:
-            self.output('No results found')
+            self.output('No results found.')
