@@ -2,7 +2,7 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '2.2013.10.11.0025'
+__version__   = '2.2013.10.11.0902'
 
 import datetime
 import os

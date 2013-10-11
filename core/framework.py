@@ -497,6 +497,7 @@ class module(cmd.Cmd):
         if self.options:
             pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
             key_len = len(max(self.options, key=len))
+            if key_len < 4: key_len = 4
             val_len = len(max([self.to_unicode_str(self.options[x]['value']) for x in self.options], key=len))
             if val_len < 13: val_len = 13
             print ''
