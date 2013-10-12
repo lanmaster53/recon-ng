@@ -6,19 +6,24 @@ This module provides the foundation for RPC functionality for Recon-ng. Both
 JSONRPC and XMLRPC are supported.  ReconState uses session IDs to ensure that 
 each connection has its own Recon-ng session.
 
-The following code can be used to test the XMLRPC interface:
+The following code can be used to test the RPC interface:
 
-    import xmlrpclib
-    client = xmlrpclib.Server('http://localhost:4141')
-    sid = client.init()
-    client.global_set('WORKSPACE', 'rpc', sid)
-    client.use('recon/hosts/gather/http/web/bing_domain', sid)
-    client.set('DOMAIN', 'sunyit.edu', sid)
-    client.run(sid)
-    hosts = client.show('hosts', sid)
-    print hosts
+JSON:
+import jsonrpclib
+client = jsonrpclib.Server('http://localhost:4141')
+sid = client.init()
+hosts = client.show('hosts', sid)
 
-To test the JSONRPC interface, replace xmlrpclib with jsonrpclib.
+XML:
+import xmlrpclib
+client = xmlrpclib.Server('http://localhost:4141')
+sid = client.init()
+client.global_set('WORKSPACE', 'rpc', sid)
+client.use('recon/hosts/gather/http/web/bing_domain', sid)
+client.set('DOMAIN', 'sunyit.edu', sid)
+client.run(sid)
+hosts = client.show('hosts', sid)
+print hosts
 
 """
 __author__ = "Anthony Miller-Rhodes (@_s1lentjudge)"
@@ -31,8 +36,6 @@ sys.path.append('./core/')
 sys.path.append('./libs/')
 import base
 
-
-
 class ReconState:
 
     def __init__(self):
@@ -44,9 +47,7 @@ class ReconState:
             "recon": base.Recon(mode=1),
             "module": None
         }
-
         self.sessions[sid]["module"] = self.sessions[sid]["recon"]
-
         return sid
 
     def use(self, param, sid):
@@ -63,21 +64,15 @@ class ReconState:
         self.sessions[sid]["module"].do_run(None)
 
     def show(self, param, sid):
-        tables_query = "SELECT name FROM sqlite_master WHERE type='table'"
-        param_query = 'SELECT * FROM "%s" ORDER BY 1' % (param)
-        tables = self.sessions[sid]["module"].query(tables_query)
-        if param in [ x[0] for x in  tables ]:
-            return self.sessions[sid]["module"].query(param_query)
-
+        tables = self.sessions[sid]["module"].query('SELECT name FROM sqlite_master WHERE type=\'table\'')
+        if param in [x[0] for x in tables]:
+            return self.sessions[sid]["module"].query('SELECT * FROM %s ORDER BY 1' % (param))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--type", type=str, action="store", default='jsonrpc',
-                                help="Set RPC server type", dest="server_type")
-    parser.add_argument("-a", "--address", type=str, action="store", default='0.0.0.0',
-                                help="Set RPC server bind address", dest="address")
-    parser.add_argument("-p", "--port", type=int, action="store", default=4141,
-                                help="Set RPC server port", dest="port")
+    parser.add_argument("-t", "--type", type=str, action="store", default='jsonrpc', help="Set RPC server type", dest="server_type")
+    parser.add_argument("-a", "--address", type=str, action="store", default='0.0.0.0', help="Set RPC server bind address", dest="address")
+    parser.add_argument("-p", "--port", type=int, action="store", default=4141, help="Set RPC server port", dest="port")
     args = parser.parse_args()
 
     if args.server_type == 'xmlrpc':
@@ -95,4 +90,3 @@ if __name__ == '__main__':
         server.serve_forever()
     except KeyboardInterrupt:
         print "\n[+] Exiting"
-
