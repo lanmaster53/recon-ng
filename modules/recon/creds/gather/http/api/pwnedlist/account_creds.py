@@ -42,7 +42,7 @@ class Module(framework.module):
             self.error('Invalid JSON response.\n%s' % (resp.text))
             return
         if len(jsonobj['results']) == 0:
-            self.output('No results returned')
+            self.output('No results returned.')
         else:
             cnt = 0
             new = 0

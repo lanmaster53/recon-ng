@@ -38,7 +38,7 @@ class Module(framework.module):
             if gitPersonalUrl: self.urlPersonal.append([gitPersonalUrl.group(1), 'Github'])
             if gitAvatar: self.urlAvatar.append([gitAvatar.group(1), 'Github'])
         else:
-            self.output('Github username not found')
+            self.output('Github username not found.')
     
     def bitbucket(self, username):
         self.verbose('Checking Bitbucket...')
@@ -71,7 +71,7 @@ class Module(framework.module):
             if bbJoin: self.dateJoin.append([bbJoin.group(1), 'Bitbucket'])
             if bbRepositories: self.repositories.append([', '.join(bbRepositories), 'Bitbucket'])
         else:
-            self.output('Bitbucket username not found')
+            self.output('Bitbucket username not found.')
         
     def sourceforge(self, username):
         self.verbose('Checking SourceForge...')
@@ -89,7 +89,7 @@ class Module(framework.module):
             if sfMyOpenID: self.other.append(['URL (Open ID)', sfMyOpenID.group(1), 'Sourceforge'])
             if sfRepositories: self.repositories.append([', '.join(sfRepositories), 'Sourceforge'])
         else:
-            self.output('Sourceforge username not found')
+            self.output('Sourceforge username not found.')
 
     def codeplex(self, username):
         self.verbose('Checking CodePlex...')
@@ -112,7 +112,7 @@ class Module(framework.module):
                 for cpReposUrl, cpRepos in cpCoordProject:
                     self.repositories.append([cpRepos + ' (' + cpReposUrl + ')', 'CodePlex'])
         else:
-            self.output('CodePlex username not found')
+            self.output('CodePlex username not found.')
         
     def freecode(self, username):
         self.verbose('Checking Freecode...')
@@ -126,7 +126,7 @@ class Module(framework.module):
             self.dateJoin.append([time.strftime('%Y-%m-%d', time.strptime(fcCreated.group(1), '%d %b %Y %H:%M')), 'Freecode'])
             if fcRepositories: self.repositories.append([', '.join(fcRepositories), 'Freecode'])
         else:
-            self.output('Freecode username not found') 
+            self.output('Freecode username not found.') 
 
     def gitorious(self, username):
         self.verbose('Checking Gitorious...')
@@ -151,7 +151,7 @@ class Module(framework.module):
             if gitoAvatar: self.urlAvatar.append([gitoAvatar.group(1), 'Gitorious'])
             if gitoProjects: self.repositories.append([', '.join(gitoProjects), 'Gitorious'])
         else:
-            self.output('Gitorious username not found')          
+            self.output('Gitorious username not found.')          
     
     def build_table(self, content, heading):
         if heading == 'Other': # The Other dictionary has 3 cols not 2.

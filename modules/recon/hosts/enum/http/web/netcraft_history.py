@@ -40,24 +40,20 @@ class Module(framework.module):
             self.verbose('URL: %s' % url)
             resp = self.request(url, cookiejar=cookiejar)
             content = resp.text
-
-            # instantiate history list
-            history = []            
-            section = re.findall(r'<section.*?id="history_table">(?:\s|.)+?<\/section>', content)
-            rows = re.findall(r'<tr class="T\wtr\d*">(?:\s|.)+?<\/tr>', section[0])
-
-            for row in rows:
-                cell = re.findall(r'>(.*?)<', row)
-                raw  = [cell[0], cell[1], cell[2], cell[3], cell[4]]
-                history.append([x.strip() for x in raw])
-
-            if len(history) > 0:
-                header = ['OS', 'Server', 'Last Changed', 'IP Address', 'Owner']
-                history.insert(0, header)
-                self.table(history, True)
+            section = re.search(r'<section.*?id="history_table">((?:\s|.)+?)<\/section>', content)
+            if section:
+                rows = re.findall(r'<tr class="T\wtr\d*">(?:\s|.)+?<\/tr>', section.group(1))
+                history = []
+                for row in rows:
+                    cell = re.findall(r'>(.*?)<', row)
+                    raw  = [cell[0], cell[1], cell[2], cell[3], cell[4]]
+                    history.append([x.strip() for x in raw])
+                if len(history) > 0:
+                    header = ['OS', 'Server', 'Last Changed', 'IP Address', 'Owner']
+                    history.insert(0, header)
+                    self.table(history, True)
             else:
-                self.output('No results found')
-
+                self.output('No results found for \'%s\'.' % host)
             if len(hosts) > 1:
                 # sleep script to avoid lock-out
                 self.verbose('Sleeping to Avoid Lock-out...')

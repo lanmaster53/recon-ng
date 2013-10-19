@@ -350,7 +350,7 @@ class module(cmd.Cmd):
             longitude = self.to_unicode(longitude),
         )
 
-        return self.insert('hosts', data, ('host',))
+        return self.insert('hosts', data, ('host', 'ip_address'))
 
     def add_contact(self, fname, lname, title, email=None, region=None, country=None):
         '''Adds a contact to the database and returns the affected row count.'''
@@ -497,6 +497,7 @@ class module(cmd.Cmd):
         if self.options:
             pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
             key_len = len(max(self.options, key=len))
+            if key_len < 4: key_len = 4
             val_len = len(max([self.to_unicode_str(self.options[x]['value']) for x in self.options], key=len))
             if val_len < 13: val_len = 13
             print ''
@@ -820,6 +821,7 @@ class module(cmd.Cmd):
 
     def do_info(self, params):
         '''Displays module information'''
+        if params: self.alert('Command parameters ignored in module context.')
         self.info['Path'] = 'modules/%s.py' % (self.modulename)
         print ''
         # meta

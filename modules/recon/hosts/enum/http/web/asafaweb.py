@@ -40,4 +40,4 @@ class Module(framework.module):
         if len(details) > 1:
             self.table(details, True)
         else:
-            self.output('No results found')
+            self.output('No results found.')
