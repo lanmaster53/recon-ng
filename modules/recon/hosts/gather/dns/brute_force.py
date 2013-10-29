@@ -41,36 +41,35 @@ class Module(framework.module):
         if os.path.exists(wordlist):
             words = open(wordlist).read().split()
             for word in words:
-                success = False
-                attempt = 1
-                while not success:
+                attempt = 0
+                while attempt < max_attempts:
                     host = '%s.%s' % (word, domain)
                     try:
                         answers = q.query(host)
                     except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                         self.verbose('%s => Not a host.' % (host))
-                        success = True
-                        continue
                     except dns.resolver.Timeout:
                         self.verbose('%s => Request timed out.' % (host))
                         attempt += 1
-                        if attempt > max_attempts: success = True
                         continue
-                    success = True
-                    for answer in answers.response.answer:
-                        for rdata in answer:
-                            if rdata.rdtype == 1:
-                                self.alert('%s => (A) %s - Host found!' % (host, host))
-                                cnt += self.add_host(host)
-                                tot += 1
-                            if rdata.rdtype == 5:
-                                cname = rdata.target.to_text()[:-1]
-                                self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
-                                if host != cname:
-                                    cnt += self.add_host(cname)
+                    else:
+                        # process answers
+                        for answer in answers.response.answer:
+                            for rdata in answer:
+                                if rdata.rdtype == 1:
+                                    self.alert('%s => (A) %s - Host found!' % (host, host))
+                                    cnt += self.add_host(host)
                                     tot += 1
-                                cnt += self.add_host(host)
-                                tot += 1
+                                if rdata.rdtype == 5:
+                                    cname = rdata.target.to_text()[:-1]
+                                    self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
+                                    if host != cname:
+                                        cnt += self.add_host(cname)
+                                        tot += 1
+                                    cnt += self.add_host(host)
+                                    tot += 1
+                    # break out of the loop
+                    attempt = max_attempts
             self.output('%d total hosts found.' % (tot))
             if cnt: self.alert('%d NEW hosts found!' % (cnt))
         else:
