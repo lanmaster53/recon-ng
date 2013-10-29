@@ -10,6 +10,7 @@ class Module(framework.module):
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.register_option('wordlist', './data/hostnames.txt', 'yes', 'path to hostname wordlist')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
+        self.register_option('attempts', 3, 'yes', 'Number of retry attempts per host')
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -20,6 +21,7 @@ class Module(framework.module):
     def module_run(self):
         domain = self.options['domain']['value']
         wordlist = self.options['wordlist']['value']
+        max_attempts = self.options['attempts']['value']
         q = dns.resolver.get_default_resolver()
         q.nameservers = [self.options['nameserver']['value']]
         q.lifetime = 3
@@ -40,6 +42,7 @@ class Module(framework.module):
             words = open(wordlist).read().split()
             for word in words:
                 success = False
+                attempt = 1
                 while not success:
                     host = '%s.%s' % (word, domain)
                     try:
@@ -50,6 +53,8 @@ class Module(framework.module):
                         continue
                     except dns.resolver.Timeout:
                         self.verbose('%s => Request timed out.' % (host))
+                        attempt += 1
+                        if attempt > max_attempts: success = True
                         continue
                     success = True
                     for answer in answers.response.answer:
