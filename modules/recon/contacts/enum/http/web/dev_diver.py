@@ -21,14 +21,15 @@ class Module(framework.module):
         self.verbose('Checking Github...')
         url = 'https://github.com/%s' % username
         resp = self.request(url)
-        gitName = re.search('<span itemprop="\w*[nN]ame"[^>]*>(.+)</span>', resp.text)
+        gitName = re.search('<span class="vcard-fullname" itemprop="name">(.+?)</span>', resp.text)
         if gitName: 
             self.alert('Github username found - (%s)' % url)
             gitDesc = re.search('<meta name="description" content="(.+)" />', resp.text)
-            gitJoin = re.search('<span class="join-date">(.+)</span>', resp.text)
-            gitLoc = re.search('<dd itemprop="homeLocation">(.+)</dd>', resp.text)
-            gitPersonalUrl = re.search('<dd itemprop="url"><a href="(.+?)" class="url"', resp.text)
-            gitAvatar = re.search('<a href="(https://secure.gravatar.com/avatar/.+?)\?;', resp.text)
+            gitJoin = re.search('<span class="join-date">(.+?)</span>', resp.text)
+            gitLoc = re.search('<span class="octicon octicon-location"></span>(.+?)</li>', resp.text)
+            gitPersonalUrl = re.search('<span class="octicon octicon-link"></span><a href="(.+?)" class="url"', resp.text)
+            gitAvatar = re.search('<img class="avatar" height="220" src="(.+?)"', resp.text)
+            gitEmail = re.search('<a class="email js-obfuscate-email" data-email="(.+?)"', resp.text)
             self.name.append([gitName.group(1), 'Github'])
             self.urlRepos.append([url, 'Github'])
             if gitJoin: 
@@ -37,6 +38,12 @@ class Module(framework.module):
             if gitDesc: self.other.append(['Description', gitDesc.group(1), 'Github'])
             if gitPersonalUrl: self.urlPersonal.append([gitPersonalUrl.group(1), 'Github'])
             if gitAvatar: self.urlAvatar.append([gitAvatar.group(1), 'Github'])
+            if gitEmail: self.other.append(['Email', urllib.unquote(gitEmail.group(1)), 'Github'])
+
+            fname, lname = gitName.group(1).split(' ')
+            if self.add_contact(fname, lname, None, urllib.unquote(gitEmail.group(1)), None, None):
+                self.output('New contact added successfully')
+
         else:
             self.output('Github username not found.')
     
@@ -70,6 +77,10 @@ class Module(framework.module):
             self.urlRepos.append([url, 'Bitbucket'])
             if bbJoin: self.dateJoin.append([bbJoin.group(1), 'Bitbucket'])
             if bbRepositories: self.repositories.append([', '.join(bbRepositories), 'Bitbucket'])
+
+            fname, lname = bbName.group(1).split(' ')
+            if self.add_contact(fname, lname, None, None, None, None):
+                self.output('New contact added successfully')
         else:
             self.output('Bitbucket username not found.')
         
@@ -88,6 +99,10 @@ class Module(framework.module):
             if sfJoin: self.dateJoin.append([sfJoin.group(1), 'Sourceforge'])
             if sfMyOpenID: self.other.append(['URL (Open ID)', sfMyOpenID.group(1), 'Sourceforge'])
             if sfRepositories: self.repositories.append([', '.join(sfRepositories), 'Sourceforge'])
+
+            fname, lname = sfName.group(1).split(' ')
+            if self.add_contact(fname, lname, None, None, None, None):
+                self.output('New contact added successfully')
         else:
             self.output('Sourceforge username not found.')
 
@@ -150,6 +165,10 @@ class Module(framework.module):
             if gitoPersonalUrl: self.urlPersonal.append([gitoPersonalUrl.group(1), 'Gitorious'])
             if gitoAvatar: self.urlAvatar.append([gitoAvatar.group(1), 'Gitorious'])
             if gitoProjects: self.repositories.append([', '.join(gitoProjects), 'Gitorious'])
+
+            fname, lname = gitoName.group(1).split(' ')
+            if self.add_contact(fname, lname, None, gitoEmail, None, None):
+                self.output('New contact added successfully')
         else:
             self.output('Gitorious username not found.')          
     
