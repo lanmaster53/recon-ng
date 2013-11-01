@@ -5,7 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('host', None, 'yes', 'fully qualified domain name')
+        self.register_option('host', None, 'no', 'fully qualified domain name')
         self.register_option('address', None, 'no', 'ip address')
         self.register_option('region', None, 'no', 'city, state or region')
         self.register_option('country', None, 'no', 'country name or code')
@@ -14,10 +14,21 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Host Adder',
                      'Author': 'Drumm',
-                     'Description': 'Manually adds a host.',
+                     'Description': 'Manually adds a host or IP.',
                      'Comments':[]
                      }
 
     def module_run(self):
-        if self.add_host(self.options['host']['value'], self.options['address']['value'], self.options['region']['value'], self.options['country']['value'], self.options['latitude']['value'], self.options['longitude']['value']):
+        host = self.options['host']['value']
+        ip = self.options['address']['value']
+
+        if host == None and ip == None:
+            self.error("Host or IP required")
+            return
+
+        # make the add_host call happy
+        if not ip == None and host == None:
+            host == ""
+
+        if self.add_host(host, ip, self.options['region']['value'], self.options['country']['value'], self.options['latitude']['value'], self.options['longitude']['value']):
             self.output('Host successfully added.')
