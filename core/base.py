@@ -2,7 +2,7 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '2.2013.10.12.0019'
+__version__   = '2.2013.10.30.1535'
 
 import datetime
 import os
@@ -13,6 +13,7 @@ import random
 import imp
 import sqlite3
 import traceback
+import re
 import __builtin__
 import framework
 
@@ -45,6 +46,7 @@ class Recon(framework.module):
         self.mode = mode
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         prompt = '%s > ' % (self.name)
+        self.home = '%s/.recon-ng' % os.path.expanduser('~')
         framework.module.__init__(self, (prompt, 'core'))
         self.init_goptions()
         self.options = self.goptions
@@ -76,27 +78,31 @@ class Recon(framework.module):
         self.loaded_category = {}
         self.loaded_modules = __builtin__.loaded_modules
         if reload: self.output('Reloading...')
-        for dirpath, dirnames, filenames in os.walk('./modules/'):
-            if len(filenames) > 0:
-                mod_category = dirpath.split('/')[2]
-                if not mod_category in self.loaded_category: self.loaded_category[mod_category] = []
-                for filename in [f for f in filenames if f.endswith('.py')]:
-                    # this (as opposed to sys.path.append) allows for module reloading
-                    mod_name = filename.split('.')[0]
-                    mod_dispname = '%s%s%s' % (self.module_delimiter.join(dirpath.split('/')[2:]), self.module_delimiter, mod_name)
-                    mod_loadname = mod_dispname.replace(self.module_delimiter, '_')
-                    mod_loadpath = os.path.join(dirpath, filename)
-                    mod_file = open(mod_loadpath, 'rb')
-                    try:
-                        imp.load_source(mod_loadname, mod_loadpath, mod_file)
-                        __import__(mod_loadname)
-                        self.loaded_category[mod_category].append(mod_loadname)
-                        self.loaded_modules[mod_dispname] = mod_loadname
-                    except:
-                        print '-'*60
-                        traceback.print_exc()
-                        print '-'*60
-                        self.error('Unable to load module: %s' % (mod_name))
+        for path in ('./modules/', '%s/modules/' % self.home):
+            for dirpath, dirnames, filenames in os.walk(path):
+                # remove hidden files and directories
+                filenames = [f for f in filenames if not f[0] == '.']
+                dirnames[:] = [d for d in dirnames if not d[0] == '.']
+                if len(filenames) > 0:
+                    mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
+                    if not mod_category in self.loaded_category: self.loaded_category[mod_category] = []
+                    for filename in [f for f in filenames if f.endswith('.py')]:
+                        # this (as opposed to sys.path.append) allows for module reloading
+                        mod_name = filename.split('.')[0]
+                        mod_dispname = '%s%s%s' % (self.module_delimiter.join(re.split('/modules/', dirpath)[-1].split('/')), self.module_delimiter, mod_name)
+                        mod_loadname = mod_dispname.replace(self.module_delimiter, '_')
+                        mod_loadpath = os.path.join(dirpath, filename)
+                        mod_file = open(mod_loadpath, 'rb')
+                        try:
+                            imp.load_source(mod_loadname, mod_loadpath, mod_file)
+                            __import__(mod_loadname)
+                            self.loaded_category[mod_category].append(mod_loadname)
+                            self.loaded_modules[mod_dispname] = mod_loadname
+                        except:
+                            print '-'*60
+                            traceback.print_exc()
+                            print '-'*60
+                            self.error('Unable to load module: %s' % (mod_name))
 
     def load_keys(self):
         key_path = './data/keys.dat'

@@ -14,7 +14,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the Internet Census 2012 data through Exfiltrated.com to enumerate open ports on target hosts.',
                      'Comments': [
-                                  'Source options: [ X.X.X.X-Y.Y.Y.Y | X.X.X.X/XX | db | <address> | ./path/to/file | query <sql> ]',
+                                  'Source options: [ <range> | <cidr> | db | <address> | ./path/to/file | query <sql> ]',
                                   'This module updates only previously harvested hosts when using the \'store_column\' option.',
                                   'http://exfiltrated.com/querystart.php'
                                   ]
