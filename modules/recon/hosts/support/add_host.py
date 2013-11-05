@@ -28,7 +28,7 @@ class Module(framework.module):
 
         # make the add_host call happy
         if not ip == None and host == None:
-            host == ""
+            host = ""
 
         if self.add_host(host, ip, self.options['region']['value'], self.options['country']['value'], self.options['latitude']['value'], self.options['longitude']['value']):
             self.output('Host successfully added.')
