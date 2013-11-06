@@ -48,11 +48,13 @@ class Module(framework.module):
             # extract creds
             for cred in jsonobj['accounts']:
                 username = cred['plain']
-                password = self.aes_decrypt(cred['password'], decrypt_key, iv)
+                password = self.aes_decrypt(cred['password'], decrypt_key, iv) if cred['password'] else cred['password']
                 leak = cred['leak_id']
-                self.output('%s:%s' % (username, password))
                 cnt += 1
                 new += self.add_cred(username, password, None, leak)
+                # clean up the password for output
+                if not password: password = ''
+                self.output('%s:%s' % (username, password))
             # paginate
             if jsonobj['token']:
                 payload['token'] = jsonobj['token']
