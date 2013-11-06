@@ -41,9 +41,7 @@ class Module(framework.module):
             if gitEmail: self.other.append(['Email', urllib.unquote(gitEmail.group(1)), 'Github'])
 
             fname, lname = gitName.group(1).split(' ')
-            if self.add_contact(fname, lname, None, urllib.unquote(gitEmail.group(1)), None, None):
-                self.output('New contact added successfully')
-
+            self.add_contact(fname, lname, None, urllib.unquote(gitEmail.group(1)), None, None)
         else:
             self.output('Github username not found.')
     
@@ -79,8 +77,7 @@ class Module(framework.module):
             if bbRepositories: self.repositories.append([', '.join(bbRepositories), 'Bitbucket'])
 
             fname, lname = bbName.group(1).split(' ')
-            if self.add_contact(fname, lname, None, None, None, None):
-                self.output('New contact added successfully')
+            self.add_contact(fname, lname, None, None, None, None)
         else:
             self.output('Bitbucket username not found.')
         
@@ -101,8 +98,7 @@ class Module(framework.module):
             if sfRepositories: self.repositories.append([', '.join(sfRepositories), 'Sourceforge'])
 
             fname, lname = sfName.group(1).split(' ')
-            if self.add_contact(fname, lname, None, None, None, None):
-                self.output('New contact added successfully')
+            self.add_contact(fname, lname, None, None, None, None)
         else:
             self.output('Sourceforge username not found.')
 
@@ -167,8 +163,7 @@ class Module(framework.module):
             if gitoProjects: self.repositories.append([', '.join(gitoProjects), 'Gitorious'])
 
             fname, lname = gitoName.group(1).split(' ')
-            if self.add_contact(fname, lname, None, gitoEmail, None, None):
-                self.output('New contact added successfully')
+            self.add_contact(fname, lname, None, gitoEmail, None, None)
         else:
             self.output('Gitorious username not found.')          
     
