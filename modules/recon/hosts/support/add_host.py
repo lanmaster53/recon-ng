@@ -13,7 +13,7 @@ class Module(framework.module):
         self.register_option('longitude', None, 'no', 'longitude')
         self.info = {
                      'Name': 'Host Adder',
-                     'Author': 'Drumm',
+                     'Author': 'Drumm, Zach Grace (@ztgrace)',
                      'Description': 'Manually adds a host or IP.',
                      'Comments':[]
                      }
@@ -25,10 +25,6 @@ class Module(framework.module):
         if host == None and ip == None:
             self.error("Host or IP required")
             return
-
-        # make the add_host call happy
-        if not ip == None and host == None:
-            host = ""
 
         if self.add_host(host, ip, self.options['region']['value'], self.options['country']['value'], self.options['latitude']['value'], self.options['longitude']['value']):
             self.output('Host successfully added.')
