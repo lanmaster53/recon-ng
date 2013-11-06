@@ -14,7 +14,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Host Adder',
                      'Author': 'Drumm, Zach Grace (@ztgrace)',
-                     'Description': 'Manually adds a host or IP.',
+                     'Description': 'Manually adds a host.',
                      'Comments':[]
                      }
 
@@ -22,7 +22,7 @@ class Module(framework.module):
         host = self.options['host']['value']
         ip = self.options['address']['value']
 
-        if host == None and ip == None:
+        if not any((host, ip)):
             self.error("Host or IP required")
             return
 
