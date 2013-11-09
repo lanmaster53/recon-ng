@@ -22,6 +22,15 @@ import __builtin__
 sys.path.append('./libs/')
 import aes
 
+def rpc_callable(func):
+    def wrapper(*args):
+        func(*args)
+        results = args[0].result_cache[:]
+        args[0].result_cache = []
+        return results
+    return wrapper
+
+
 class module(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
@@ -37,6 +46,7 @@ class module(cmd.Cmd):
         self.keys = __builtin__.keys
         self.workspace = __builtin__.workspace
         self.options = {}
+        self.result_cache = []
 
     #==================================================
     # CMD OVERRIDE METHODS
@@ -349,6 +359,8 @@ class module(cmd.Cmd):
             latitude = self.to_unicode(latitude),
             longitude = self.to_unicode(longitude),
         )
+
+        self.result_cache.append(data)
 
         return self.insert('hosts', data, ('host', 'ip_address'))
 
@@ -992,6 +1004,7 @@ class module(cmd.Cmd):
         if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))
         if stderr: sys.stdout.write('%s%s%s' % (R, stderr, N))
 
+    @rpc_callable
     def do_run(self, params):
         '''Runs the module'''
         try:
