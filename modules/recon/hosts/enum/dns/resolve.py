@@ -36,8 +36,9 @@ class Module(framework.module):
                 self.error('Nameserver must be in IP form.')
                 return
             except dns.resolver.NXDOMAIN:
-                address = 'Unknown'
+                message = 'Unknown'
             except dns.resolver.NoAnswer:
-                address = 'No answer'
+                message = 'No answer'
             except (dns.resolver.NoNameservers, dns.resolver.Timeout):
-                address = 'Error'
+                message = 'DNS Error'
+            if not found: self.verbose('%s => %s' % (host, message))
