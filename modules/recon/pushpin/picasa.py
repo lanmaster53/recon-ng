@@ -38,6 +38,7 @@ class Module(framework.module):
                 self.error(resp.text)
                 break
             if not count: self.output('Collecting data for an unknown number of photos...')
+            if not 'entry' in jsonobj['feed']: break
             for photo in jsonobj['feed']['entry']:
                 if not 'georss$where' in photo:
                     continue
