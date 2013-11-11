@@ -21,6 +21,9 @@ class Module(framework.module):
                      'Comments': []
                      }
 
+    def remove_nl(self, x, repl=''):
+        return re.sub('[\r\n]+', repl, self.html_escape(x))
+
     def build_content(self, sources):
         icons = {
                  'flickr': 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png',
@@ -39,9 +42,9 @@ class Module(framework.module):
             items.sort(key=lambda x: x[9], reverse=True)
             for item in items:
                 item = [self.to_unicode_str(x) if x != None else u'' for x in item]
-                media_content += '<div class="media_row"><div class="prof_cell"><a href="%s" target="_blank"><img class="prof_img" src="%s" /></a></div><div class="data_cell"><div class="trigger" id="trigger" lat="%s" lon="%s">[<a href="%s" target="_blank">%s</a>] %s<br /><span class="time">%s</span></div></div></div>\n' % (item[4], item[5], item[7], item[8], item[3], item[2], re.sub('[\r\n]+', '<br />', self.html_escape(item[6])), item[9])
-                map_details = "<table><tr><td class='prof_cell'><a href='%s' target='_blank'><img class='prof_img' src='%s' /></a></td><td class='data_cell'>[<a href='%s' target='_blank'>%s</a>] %s<br /><span class='time'>%s</span></td></tr></table>" % (item[4], item[5], item[3], re.sub("\n", "", item[2]), re.sub('[\r\n]+', '<br />', self.html_escape(item[6])), item[9])
-                map_content += '\t\tadd_marker({position: new google.maps.LatLng(%s,%s),title:"%s",icon:"%s",map:map},{details:"%s"});\n' % (item[7], item[8], re.sub("\n", "", item[2]), icons[source.lower()], map_details)
+                media_content += '<div class="media_row"><div class="prof_cell"><a href="%s" target="_blank"><img class="prof_img" src="%s" /></a></div><div class="data_cell"><div class="trigger" id="trigger" lat="%s" lon="%s">[<a href="%s" target="_blank">%s</a>] %s<br /><span class="time">%s</span></div></div></div>\n' % (item[4], item[5], item[7], item[8], item[3], item[2], self.remove_nl(item[6], '<br />'), item[9])
+                map_details = "<table><tr><td class='prof_cell'><a href='%s' target='_blank'><img class='prof_img' src='%s' /></a></td><td class='data_cell'>[<a href='%s' target='_blank'>%s</a>] %s<br /><span class='time'>%s</span></td></tr></table>" % (item[4], item[5], item[3], self.remove_nl(item[2]), self.remove_nl(item[6], '<br />'), item[9])
+                map_content += '\t\tadd_marker({position: new google.maps.LatLng(%s,%s),title:"%s",icon:"%s",map:map},{details:"%s"});\n' % (item[7], item[8], self.remove_nl(item[2]), icons[source.lower()], map_details)
             media_content += '</div>\n'
         return media_content, map_content
 
