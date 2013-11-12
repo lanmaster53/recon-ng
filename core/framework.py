@@ -360,8 +360,6 @@ class module(cmd.Cmd):
             longitude = self.to_unicode(longitude),
         )
 
-        self.result_cache.append(data)
-
         return self.insert('hosts', data, ('host', 'ip_address'))
 
     def add_contact(self, fname, lname, title, email=None, region=None, country=None):
@@ -476,6 +474,12 @@ class module(cmd.Cmd):
         values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
 
         rowcount = self.query(query, values)
+
+        for key in data.keys():
+            if not data[key]:
+                del data[key]
+        self.result_cache.append(data)
+
         return rowcount
 
     def query(self, query, values=()):

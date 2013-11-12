@@ -84,6 +84,7 @@ if __name__ == '__main__':
         RPCServer = SimpleJSONRPCServer
         server = RPCServer((args.address, args.port))
 
+    server.register_multicall_functions()
     server.register_instance(ReconState())
     print "[+] Serving on %s:%d" % (args.address, args.port)
     try:
