@@ -46,7 +46,8 @@ class Recon(framework.module):
         # 2 == gui
         self.mode = mode
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
-        self.base_prompt = '%s > ' % (self.name)
+        self.prompt_template = '%s[%s] > '
+        self.base_prompt = self.prompt_template % ('', self.name)
         framework.module.__init__(self, (self.base_prompt, 'core'))
         self.init_home()
         self.init_goptions()
@@ -158,7 +159,7 @@ class Recon(framework.module):
                 self.error(e.__str__())
                 return False
         self.workspace = __builtin__.workspace = workspace
-        self.prompt = '[%s] %s' % (self.workspace.split('/')[-1], self.base_prompt)
+        self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
@@ -250,7 +251,7 @@ class Recon(framework.module):
             return
         modulename = modules[0]
         loadedname = self.loaded_modules[modulename]
-        prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
+        prompt = self.prompt_template % (self.prompt[:-3], modulename.split(self.module_delimiter)[-1])
         # notify the user if runtime errors exist in the module
         try: y = sys.modules[loadedname].Module((prompt, modulename))
         except Exception:
