@@ -2,7 +2,7 @@
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '2.2013.11.11.1203'
+execfile('VERSION')
 
 import datetime
 import os
@@ -28,7 +28,6 @@ __builtin__.B  = '\033[34m' # blue
 
 # mode flags
 __builtin__.script = 0
-__builtin__.record = 0
 __builtin__.load = 0
 
 # set global framework options
@@ -36,6 +35,8 @@ __builtin__.goptions = {}
 __builtin__.keys = {}
 __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
+__builtin__.home = ''
+__builtin__.record = None
 
 class Recon(framework.module):
     def __init__(self, mode=0):
@@ -45,23 +46,27 @@ class Recon(framework.module):
         # 2 == gui
         self.mode = mode
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
-        prompt = '%s > ' % (self.name)
-        self.home = '%s/.recon-ng' % os.path.expanduser('~')
-        framework.module.__init__(self, (prompt, 'core'))
+        self.prompt_template = '%s[%s] > '
+        self.base_prompt = self.prompt_template % ('', self.name)
+        framework.module.__init__(self, (self.base_prompt, 'core'))
+        self.init_home()
         self.init_goptions()
         self.options = self.goptions
         self.load_modules()
         self.load_keys()
         if self.mode == 0: self.show_banner()
-        self.init_workspace()
+        self.init_workspace('default')
 
     #==================================================
     # SUPPORT METHODS
     #==================================================
 
+    def init_home(self):
+        self.home = __builtin__.home = '%s/.recon-ng' % os.path.expanduser('~')
+        if not os.path.exists(self.home):
+            os.makedirs(self.home)
+
     def init_goptions(self):
-        self.register_option('workspace', 'default', 'yes', 'current workspace name', self.goptions)
-        self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
         self.register_option('domain', None, 'no', 'target domain', self.goptions)
         self.register_option('company', None, 'no', 'target company name', self.goptions)
         self.register_option('latitude', None, 'no', 'target latitudinal position', self.goptions)
@@ -105,7 +110,7 @@ class Recon(framework.module):
                             self.error('Unable to load module: %s' % (mod_name))
 
     def load_keys(self):
-        key_path = './data/keys.dat'
+        key_path = '%s/keys.dat' % (self.home)
         if os.path.exists(key_path):
             try:
                 key_data = json.loads(open(key_path, 'rb').read())
@@ -145,9 +150,8 @@ class Recon(framework.module):
         print random.choice(eggs)
         return 
 
-    def init_workspace(self, workspace=None):
-        workspace = workspace if workspace is not None else self.options['workspace']['value']
-        workspace = './workspaces/%s' % (workspace)
+    def init_workspace(self, workspace):
+        workspace = '%s/workspaces/%s' % (self.home, workspace)
         try:
             os.makedirs(workspace)
         except OSError as e:
@@ -155,6 +159,7 @@ class Recon(framework.module):
                 self.error(e.__str__())
                 return False
         self.workspace = __builtin__.workspace = workspace
+        self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
@@ -212,16 +217,18 @@ class Recon(framework.module):
         name = options[0].lower()
         if name in self.options:
             value = ' '.join(options[1:])
-            init = False
-            # validate workspace
-            if name == 'workspace':
-                if not self.init_workspace(value):
-                    self.error('Unable to create \'%s\' workspace.' % (value))
-                    return
             self.options[name]['value'] = self.autoconvert(value)
             print '%s => %s' % (name.upper(), value)
             self.save_config()
         else: self.error('Invalid option.')
+
+    def do_workspace(self, params):
+        '''Sets the workspace'''
+        if not params:
+            self.help_workspace()
+            return
+        if not self.init_workspace(params):
+            self.error('Unable to create \'%s\' workspace.' % (value))
 
     def do_load(self, params):
         '''Loads selected module'''
@@ -244,7 +251,7 @@ class Recon(framework.module):
             return
         modulename = modules[0]
         loadedname = self.loaded_modules[modulename]
-        prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
+        prompt = self.prompt_template % (self.prompt[:-3], modulename.split(self.module_delimiter)[-1])
         # notify the user if runtime errors exist in the module
         try: y = sys.modules[loadedname].Module((prompt, modulename))
         except Exception:
@@ -268,12 +275,13 @@ class Recon(framework.module):
     def help_info(self):
         print 'Usage: info <module>'
 
+    def help_workspace(self):
+        print 'Usage: workspace <string>'
+
     #==================================================
     # COMPLETE METHODS
     #==================================================
 
-    def complete_set(self, text, line, *ignored):
-        args = line.split()
-        if len(args) > 1 and args[1].lower() == 'workspace':
-            return [name for name in os.listdir('./workspaces') if name.startswith(text) and os.path.isdir('./workspaces/%s' % (name))]
-        return [x for x in self.options if x.startswith(text)]
+    def complete_workspace(self, text, *ignored):
+        path = '%s/workspaces' % (self.home)
+        return [name for name in os.listdir(path) if name.startswith(text) and os.path.isdir('%s/%s' % (path, name))]

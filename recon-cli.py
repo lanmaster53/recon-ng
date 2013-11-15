@@ -9,7 +9,7 @@ import base
 def recon_cli(opts):
     x = base.Recon(mode=1)
     # set the given workspace
-    if opts.workspace: x.do_set('workspace %s' % (opts.workspace))
+    if opts.workspace: x.do_workspace(opts.workspace)
     # set given global options
     for option in opts.goptions:
         param = ' '.join(option.split('='))
