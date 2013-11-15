@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Recon-ng RPC Interface
 
@@ -8,33 +9,50 @@ each connection has its own Recon-ng session.
 
 The following code can be used to test the RPC interface:
 
-JSON:
-import jsonrpclib
-client = jsonrpclib.Server('http://localhost:4141')
-sid = client.init()
-hosts = client.show('hosts', sid)
-
 XML:
 import xmlrpclib
 client = xmlrpclib.Server('http://localhost:4141')
 sid = client.init()
-client.global_set('WORKSPACE', 'rpc', sid)
 client.use('recon/hosts/gather/http/web/bing_domain', sid)
-client.set('DOMAIN', 'sunyit.edu', sid)
-client.run(sid)
-hosts = client.show('hosts', sid)
-print hosts
+client.set('domain', 'sunyit.edu', sid)
+results = client.run(sid)
+print results
 
+JSON:
+import jsonrpclib
+client = jsonrpclib.Server('http://localhost:4141')
+...
 """
+
 __author__ = "Anthony Miller-Rhodes (@_s1lentjudge)"
 
 import uuid
 import argparse
 import sys
-
+# prep python path for base module
 sys.path.append('./core/')
-sys.path.append('./libs/')
 import base
+sys.path.append('./libs/')
+
+def recon_rpc(args):
+    if args.server_type.lower() == 'xmlrpc':
+        from SimpleXMLRPCServer import SimpleXMLRPCServer
+        RPCServer = SimpleXMLRPCServer
+        server = RPCServer((args.address, args.port), allow_none=True)
+    elif args.server_type.lower() == 'jsonrpc':
+        from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
+        RPCServer = SimpleJSONRPCServer
+        server = RPCServer((args.address, args.port))
+    else:
+        print '[!] Invalid RPC server type \'%s\'.' % (args.server_type)
+        return
+    server.register_multicall_functions()
+    server.register_instance(ReconState())
+    print "[+] Serving on %s:%d" % (args.address, args.port)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print ''
 
 class ReconState:
 
@@ -68,26 +86,9 @@ class ReconState:
         if param in [x[0] for x in tables]:
             return self.sessions[sid]["module"].query('SELECT * FROM %s ORDER BY 1' % (param))
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--type", type=str, action="store", default='jsonrpc', help="Set RPC server type", dest="server_type")
-    parser.add_argument("-a", "--address", type=str, action="store", default='0.0.0.0', help="Set RPC server bind address", dest="address")
-    parser.add_argument("-p", "--port", type=int, action="store", default=4141, help="Set RPC server port", dest="port")
-    args = parser.parse_args()
-
-    if args.server_type == 'xmlrpc':
-        from SimpleXMLRPCServer import SimpleXMLRPCServer
-        RPCServer = SimpleXMLRPCServer
-        server = RPCServer((args.address, args.port), allow_none=True)
-    elif args.server_type == 'jsonrpc':
-        from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
-        RPCServer = SimpleJSONRPCServer
-        server = RPCServer((args.address, args.port))
-
-    server.register_multicall_functions()
-    server.register_instance(ReconState())
-    print "[+] Serving on %s:%d" % (args.address, args.port)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print "\n[+] Exiting"
+parser = argparse.ArgumentParser()
+parser.add_argument("-t", type=str, action="store", default='jsonrpc', help="Set RPC server type", dest="server_type", metavar="[jsonrpc|xmlrpc]")
+parser.add_argument("-a", type=str, action="store", default='0.0.0.0', help="Set RPC server bind address", dest="address", metavar="address")
+parser.add_argument("-p", type=int, action="store", default=4141, help="Set RPC server port", dest="port", metavar="port")
+args = parser.parse_args()
+recon_rpc(args)

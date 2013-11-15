@@ -25,11 +25,10 @@ import aes
 def rpc_callable(func):
     def wrapper(*args):
         func(*args)
-        results = args[0].result_cache[:]
-        args[0].result_cache = []
+        results = args[0].rpc_cache[:]
+        args[0].rpc_cache = []
         return results
     return wrapper
-
 
 class module(cmd.Cmd):
     def __init__(self, params):
@@ -47,7 +46,7 @@ class module(cmd.Cmd):
         self.workspace = __builtin__.workspace
         self.home = __builtin__.home
         self.options = {}
-        self.result_cache = []
+        self.rpc_cache = []
 
     #==================================================
     # CMD OVERRIDE METHODS
@@ -474,10 +473,11 @@ class module(cmd.Cmd):
 
         rowcount = self.query(query, values)
 
+        # build RPC response
         for key in data.keys():
             if not data[key]:
                 del data[key]
-        self.result_cache.append(data)
+        self.rpc_cache.append(data)
 
         return rowcount
 
