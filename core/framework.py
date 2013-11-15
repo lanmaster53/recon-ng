@@ -1006,7 +1006,7 @@ class module(cmd.Cmd):
             self.help_record()
 
     def do_shell(self, params):
-        '''Executed shell commands'''
+        '''Execute shell commands'''
         proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         self.output('Command: %s' % (params))
         stdout = proc.stdout.read()
