@@ -86,6 +86,9 @@ class ReconState:
         if param in [x[0] for x in tables]:
             return self.sessions[sid]["module"].query('SELECT * FROM %s ORDER BY 1' % (param))
 
+    def workspace(self, param, sid):
+        self.sessions[sid]["recon"].do_workspace(param)
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", type=str, action="store", default='jsonrpc', help="Set RPC server type", dest="server_type", metavar="[jsonrpc|xmlrpc]")
 parser.add_argument("-a", type=str, action="store", default='0.0.0.0', help="Set RPC server bind address", dest="address", metavar="address")
