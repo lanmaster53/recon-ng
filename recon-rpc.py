@@ -1,29 +1,5 @@
 #!/usr/bin/env python
 
-"""
-Recon-ng RPC Interface
-
-This module provides the foundation for RPC functionality for Recon-ng. Both
-JSONRPC and XMLRPC are supported.  ReconState uses session IDs to ensure that 
-each connection has its own Recon-ng session.
-
-The following code can be used to test the RPC interface:
-
-XML:
-import xmlrpclib
-client = xmlrpclib.Server('http://localhost:4141')
-sid = client.init()
-client.use('recon/hosts/gather/http/web/bing_domain', sid)
-client.set('domain', 'sunyit.edu', sid)
-results = client.run(sid)
-print results
-
-JSON:
-import jsonrpclib
-client = jsonrpclib.Server('http://localhost:4141')
-...
-"""
-
 __author__ = "Anthony Miller-Rhodes (@_s1lentjudge)"
 
 import uuid
