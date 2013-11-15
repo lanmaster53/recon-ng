@@ -23,7 +23,7 @@ def recon_ui(opts):
         #readline.set_completion_display_matches_hook(display_hook)
     x = base.Recon()
     # check for and load workspace
-    if opts.workspace: x.do_set('workspace %s' % (opts.workspace))
+    if opts.workspace: x.do_workspace(opts.workspace)
     # check for and run script session
     if opts.script_file: x.do_resource(opts.script_file)
     try: x.cmdloop()

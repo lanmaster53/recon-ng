@@ -22,6 +22,14 @@ import __builtin__
 sys.path.append('./libs/')
 import aes
 
+def rpc_callable(func):
+    def wrapper(*args):
+        func(*args)
+        results = args[0].rpc_cache[:]
+        args[0].rpc_cache = []
+        return results
+    return wrapper
+
 class module(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
@@ -29,14 +37,16 @@ class module(cmd.Cmd):
         self.modulename = params[1]
         self.ruler = '-'
         self.spacer = '  '
-        self.module_delimiter = '/' # match line ~257 recon-ng.py
+        self.module_delimiter = '/' # match line ~21 recon-ng.py
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.goptions = __builtin__.goptions
         self.keys = __builtin__.keys
         self.workspace = __builtin__.workspace
+        self.home = __builtin__.home
         self.options = {}
+        self.rpc_cache = []
 
     #==================================================
     # CMD OVERRIDE METHODS
@@ -56,7 +66,7 @@ class module(cmd.Cmd):
         if __builtin__.script:
             sys.stdout.write('%s\n' % (line))
         if __builtin__.record:
-            recorder = open(self.goptions['rec_file']['value'], 'ab')
+            recorder = open(__builtin__.record, 'ab')
             recorder.write(('%s\n' % (line)).encode('utf-8'))
             recorder.flush()
             recorder.close()
@@ -125,14 +135,12 @@ class module(cmd.Cmd):
 
     def display_workspaces(self):
         dirnames = []
-        for name in os.listdir('./workspaces'):
-            if os.path.isdir('./workspaces/%s' % (name)):
-                if name == self.goptions['workspace']['value']:
-                    name += '*'
+        path = '%s/workspaces' % (self.home)
+        for name in os.listdir(path):
+            if os.path.isdir('%s/%s' % (path, name)):
                 dirnames.append([name])
         dirnames.insert(0, ['Workspaces'])
         self.table(dirnames, header=True)
-        self.output('\'*\' denotes the active workspace.')
 
     def display_dashboard(self):
         # display activity table
@@ -464,6 +472,13 @@ class module(cmd.Cmd):
         values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
 
         rowcount = self.query(query, values)
+
+        # build RPC response
+        for key in data.keys():
+            if not data[key]:
+                del data[key]
+        self.rpc_cache.append(data)
+
         return rowcount
 
     def query(self, query, values=()):
@@ -559,7 +574,7 @@ class module(cmd.Cmd):
         else: self.output('No API keys stored.')
 
     def save_keys(self):
-        key_path = './data/keys.dat'
+        key_path = '%s/keys.dat' % (self.home)
         key_file = open(key_path, 'wb')
         json.dump(self.keys, key_file)
         key_file.close()
@@ -857,10 +872,6 @@ class module(cmd.Cmd):
 
     def do_unset(self, params):
         '''Unsets module options'''
-        options = params.split()
-        if options[0].lower() == 'workspace':
-            self.error('Unsetting the workspace is not permitted.')
-            return
         self.do_set('%s %s' % (params, 'None'))
 
     def do_keys(self, params):
@@ -965,20 +976,31 @@ class module(cmd.Cmd):
 
     def do_record(self, params):
         '''Records commands to a resource file'''
+        if not params:
+            self.help_record()
+            return
         arg = params.lower()
-        rec_file = self.goptions['rec_file']['value']
-        if arg == 'start':
-            if __builtin__.record == 0:
-                __builtin__.record = 1
-                self.output('Recording commands to \'%s\'' % (rec_file))
+        if arg.split()[0] == 'start':
+            if not __builtin__.record:
+                if len(arg.split()) > 1:
+                    filename = ' '.join(arg.split()[1:])
+                    try:
+                        recorder = open(filename, 'ab')
+                        recorder.close()
+                    except IOError:
+                        self.output('Cannot record to \'%s\'' % (filename))
+                    else:
+                        __builtin__.record = filename
+                        self.output('Recording commands to \'%s\'' % (__builtin__.record))
+                else: self.help_record()
             else: self.output('Recording is already started.')
         elif arg == 'stop':
-            if __builtin__.record == 1:
-                __builtin__.record = 0
-                self.output('Recording stopped. Commands saved to \'%s\'' % (rec_file))
+            if __builtin__.record:
+                self.output('Recording stopped. Commands saved to \'%s\'' % (__builtin__.record))
+                __builtin__.record = None
             else: self.output('Recording is already stopped.')
         elif arg == 'status':
-            status = 'started' if __builtin__.record == 1 else 'stopped'
+            status = 'started' if __builtin__.record else 'stopped'
             self.output('Command recording is %s.' % (status))
         else:
             self.help_record()
@@ -992,6 +1014,7 @@ class module(cmd.Cmd):
         if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))
         if stderr: sys.stdout.write('%s%s%s' % (R, stderr, N))
 
+    @rpc_callable
     def do_run(self, params):
         '''Runs the module'''
         try:
@@ -1061,7 +1084,7 @@ class module(cmd.Cmd):
     help_use = help_load
 
     def help_record(self):
-        print 'Usage: record [start|stop|status]'
+        print 'Usage: record [start <filename>|stop|status]'
 
     def help_resource(self):
         print 'Usage: resource <filename>'
