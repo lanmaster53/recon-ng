@@ -22,6 +22,15 @@ import __builtin__
 sys.path.append('./libs/')
 import aes
 
+def rpc_callable(func):
+    def wrapper(*args):
+        func(*args)
+        results = args[0].result_cache[:]
+        args[0].result_cache = []
+        return results
+    return wrapper
+
+
 class module(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
@@ -38,6 +47,7 @@ class module(cmd.Cmd):
         self.workspace = __builtin__.workspace
         self.home = __builtin__.home
         self.options = {}
+        self.result_cache = []
 
     #==================================================
     # CMD OVERRIDE METHODS
@@ -463,6 +473,12 @@ class module(cmd.Cmd):
         values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
 
         rowcount = self.query(query, values)
+
+        for key in data.keys():
+            if not data[key]:
+                del data[key]
+        self.result_cache.append(data)
+
         return rowcount
 
     def query(self, query, values=()):
@@ -998,6 +1014,7 @@ class module(cmd.Cmd):
         if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))
         if stderr: sys.stdout.write('%s%s%s' % (R, stderr, N))
 
+    @rpc_callable
     def do_run(self, params):
         '''Runs the module'''
         try:

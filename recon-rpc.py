@@ -61,7 +61,7 @@ class ReconState:
         self.sessions[sid]["module"].do_set(var + " " + param)
 
     def run(self, sid):
-        self.sessions[sid]["module"].do_run(None)
+        return self.sessions[sid]["module"].do_run(None)
 
     def show(self, param, sid):
         tables = self.sessions[sid]["module"].query('SELECT name FROM sqlite_master WHERE type=\'table\'')
@@ -84,6 +84,7 @@ if __name__ == '__main__':
         RPCServer = SimpleJSONRPCServer
         server = RPCServer((args.address, args.port))
 
+    server.register_multicall_functions()
     server.register_instance(ReconState())
     print "[+] Serving on %s:%d" % (args.address, args.port)
     try:
