@@ -22,6 +22,11 @@ def recon_ui(opts):
         # for possible future use to format command completion output
         #readline.set_completion_display_matches_hook(display_hook)
     x = base.Recon()
+    # check for and run version check
+    if opts.check:
+        if not x.version_check():
+            ans = raw_input('Your version of Recon-ng is out of date. Would you like to continue anyway? [Y]: ')
+            if ans.upper().startswith('N'): return
     # check for and load workspace
     if opts.workspace: x.do_workspace(opts.workspace)
     # check for and run script session
@@ -34,5 +39,6 @@ description = '%%prog - %s %s' % (base.__author__, base.__email__)
 parser = optparse.OptionParser(usage=usage, description=description, version=base.__version__)
 parser.add_option('-w', help='load/create a workspace', metavar='workspace', dest='workspace', type='string', action='store')
 parser.add_option('-r', help='load commands from a resource file', metavar='filename', dest='script_file', type='string', action='store')
+parser.add_option('--no-check', help='disable version check', dest='check', default=True, action='store_false')
 (opts, args) = parser.parse_args()
 recon_ui(opts)

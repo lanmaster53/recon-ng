@@ -4,6 +4,8 @@ __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
 execfile('VERSION')
 
+import urllib2
+import hashlib
 import datetime
 import os
 import errno
@@ -60,6 +62,14 @@ class Recon(framework.module):
     #==================================================
     # SUPPORT METHODS
     #==================================================
+
+    def version_check(self):
+        try:
+            remote = hashlib.md5(urllib2.urlopen('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').read()).hexdigest()
+            local = hashlib.md5(open('VERSION').read()).hexdigest()
+            return local == remote
+        except:
+            return True
 
     def init_home(self):
         self.home = __builtin__.home = '%s/.recon-ng' % os.path.expanduser('~')
