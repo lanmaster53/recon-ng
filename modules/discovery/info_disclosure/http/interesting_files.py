@@ -10,7 +10,9 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.register_option('download', True, 'yes', 'download discovered files')
-        self.register_option('port', 80, 'no', 'request port')
+        self.register_option('protocol', 'http', 'yes', 'request protocol')
+        self.register_option('port', 80, 'yes', 'request port')
+
         self.info = {
                      'Name': 'Interesting File Finder',
                      'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), and Jay Turla (@shipcod3)',
@@ -38,10 +40,10 @@ class Module(framework.module):
     def module_run(self):
         hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         download = self.options['download']['value']
+        protocol = self.options['protocol']['value']
         port = self.options['port']['value']
         # ignore unicode warnings when trying to ungzip text type 200 repsonses
         warnings.simplefilter("ignore")
-        protocols = ['http', 'https']
         # (filename, string to search for to prevent false positive)
         filetypes = [
                      ('robots.txt', 'user-agent:'),
@@ -58,35 +60,31 @@ class Module(framework.module):
                      ]
         cnt = 0
         for host in hosts:
-            for proto in protocols:
-                for (filename, verify) in filetypes:
-                    if port != 80:
-                        url = '%s://%s:%d/%s' % (proto, host,port, filename)
+            for (filename, verify) in filetypes:
+                url = '%s://%s:%d/%s' % (protocol, host,port, filename)
+                try:
+                    resp = self.request(url, timeout=2, redirect=False)
+                    code = resp.status_code
+                except KeyboardInterrupt:
+                    raise KeyboardInterrupt
+                except:
+                    code = 'Error'
+                if code == 200:
+                    # uncompress if necessary
+                    text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text
+                    # check for file type since many custom 404s are returned as 200s
+                    if verify.lower() in text.lower():
+                        self.alert('%s => %s. \'%s\' found!' % (url, code, filename))
+                        #The / check is for urls that end with /. They do not necessarily denote a "file" 
+                        if download and not filename.endswith("/"):
+                            filepath = '%s/%s_%s_%s' % (self.workspace, protocol, host, filename)
+                            dl = open(filepath, 'wb')
+                            dl.write(resp.text.encode(resp.encoding) if resp.encoding else resp.text)
+                            dl.close()
+                        cnt += 1
                     else:
-                        url = '%s://%s/%s' % (proto, host, filename)
-                    try:
-                        resp = self.request(url, timeout=2, redirect=False)
-                        code = resp.status_code
-                    except KeyboardInterrupt:
-                        raise KeyboardInterrupt
-                    except:
-                        code = 'Error'
-                    if code == 200:
-                        # uncompress if necessary
-                        text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text
-                        # check for file type since many custom 404s are returned as 200s
-                        if verify.lower() in text.lower():
-                            self.alert('%s => %s. \'%s\' found!' % (url, code, filename))
-                            #The / check is for urls that end with /. They do not necessarily denote a "file" 
-                            if download and not filename.endswith("/"):
-                                filepath = '%s/%s_%s_%s' % (self.workspace, proto, host, filename)
-                                dl = open(filepath, 'wb')
-                                dl.write(resp.text.encode(resp.encoding) if resp.encoding else resp.text)
-                                dl.close()
-                            cnt += 1
-                        else:
-                            self.output('%s => %s. \'%s\' found but unverified.' % (url, code, filename))
-                    else:
-                        self.verbose('%s => %s' % (url, code))
+                        self.output('%s => %s. \'%s\' found but unverified.' % (url, code, filename))
+                else:
+                    self.verbose('%s => %s' % (url, code))
         self.output('%d interesting files found.' % (cnt))
         if download: self.output('...downloaded to \'%s/\'' % (self.workspace))
