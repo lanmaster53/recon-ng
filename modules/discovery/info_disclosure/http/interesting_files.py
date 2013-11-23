@@ -15,14 +15,15 @@ class Module(framework.module):
 
         self.info = {
                      'Name': 'Interesting File Finder',
-                     'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), and Jay Turla (@shipcod3)',
+                     'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), Jay Turla (@shipcod3), and Mark Jeffery',
                      'Description': 'Checks hosts for interesting files in predictable locations.',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
-                                  'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status/, jmx-console/, admin-console/, web-console/',
+                                  'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status, jmx-console/, admin-console/, web-console/',
                                   'Google Dorks:',
                                   '%sinurl:robots.txt ext:txt' % (self.spacer),
                                   '%sinurl:elmah.axd ext:axd intitle:"Error log for"' % (self.spacer),
+                                  '%sinurl:server-status "Apache Status"' % (self.spacer),
                                   ]
                      }
 
@@ -61,7 +62,7 @@ class Module(framework.module):
         cnt = 0
         for host in hosts:
             for (filename, verify) in filetypes:
-                url = '%s://%s:%d/%s' % (protocol, host,port, filename)
+                url = '%s://%s:%d/%s' % (protocol, host, port, filename)
                 try:
                     resp = self.request(url, timeout=2, redirect=False)
                     code = resp.status_code
@@ -75,7 +76,7 @@ class Module(framework.module):
                     # check for file type since many custom 404s are returned as 200s
                     if verify.lower() in text.lower():
                         self.alert('%s => %s. \'%s\' found!' % (url, code, filename))
-                        #The / check is for urls that end with /. They do not necessarily denote a "file" 
+                        # urls that end with '/' are not necessary to download
                         if download and not filename.endswith("/"):
                             filepath = '%s/%s_%s_%s' % (self.workspace, protocol, host, filename)
                             dl = open(filepath, 'wb')
