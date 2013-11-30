@@ -543,9 +543,9 @@ class module(cmd.Cmd):
         return
 
     def get_source(self, params, query=None):
-        source = params.split()[0].lower()
-        if source in ['query', 'db']:
-            query = ' '.join(params.split()[1:]) if source == 'query' else query
+        prefix = params.split()[0].lower()
+        if prefix in ['query', 'db']:
+            query = ' '.join(params.split()[1:]) if prefix == 'query' else query
             try: results = self.query(query)
             except sqlite3.OperationalError as e:
                 raise FrameworkException('Invalid source query. %s %s' % (type(e).__name__, e.message))
@@ -554,10 +554,10 @@ class module(cmd.Cmd):
             elif len(results[0]) > 1:
                 raise FrameworkException('Too many columns of data as source input.')
             else: sources = [x[0] for x in results]
-        elif os.path.exists(source):
-            sources = open(source).read().split()
+        elif os.path.exists(params):
+            sources = open(params).read().split()
         else:
-            sources = [source]
+            sources = [params]
         return [self.to_unicode(x) for x in sources]
 
     #==================================================

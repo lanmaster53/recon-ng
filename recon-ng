@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import optparse
+import argparse
 import sys
 # prep python path for base module
 sys.path.append('./core/')
 import base
 
-def recon_ui(opts):
+def recon_ui(args):
     # set up command completion
     try:
         import readline
@@ -23,22 +23,21 @@ def recon_ui(opts):
         #readline.set_completion_display_matches_hook(display_hook)
     x = base.Recon()
     # check for and run version check
-    if opts.check:
+    if args.check:
         if not x.version_check():
             ans = raw_input('Your version of Recon-ng is out of date. Would you like to continue anyway? [Y]: ')
             if ans.upper().startswith('N'): return
     # check for and load workspace
-    if opts.workspace: x.do_workspace(opts.workspace)
+    if args.workspace: x.do_workspace(args.workspace)
     # check for and run script session
-    if opts.script_file: x.do_resource(opts.script_file)
+    if args.script_file: x.do_resource(args.script_file)
     try: x.cmdloop()
     except KeyboardInterrupt: print ''
 
-usage = './%prog [options]'
-description = '%%prog - %s %s' % (base.__author__, base.__email__)
-parser = optparse.OptionParser(usage=usage, description=description, version=base.__version__)
-parser.add_option('-w', help='load/create a workspace', metavar='workspace', dest='workspace', type='string', action='store')
-parser.add_option('-r', help='load commands from a resource file', metavar='filename', dest='script_file', type='string', action='store')
-parser.add_option('--no-check', help='disable version check', dest='check', default=True, action='store_false')
-(opts, args) = parser.parse_args()
-recon_ui(opts)
+description = '%%(prog)s - %s %s' % (base.__author__, base.__email__)
+parser = argparse.ArgumentParser(description=description, version=base.__version__)
+parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
+parser.add_argument('-r', help='load commands from a resource file', metavar='filename', dest='script_file', action='store')
+parser.add_argument('--no-check', help='disable version check', dest='check', default=True, action='store_false')
+args = parser.parse_args()
+recon_ui(args)
