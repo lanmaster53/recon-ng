@@ -25,6 +25,11 @@ class Module(framework.module):
             resp = self.request(url, payload=payload)
             jsonobj = resp.json
             if 'errorCode' in jsonobj:
+                if jsonobj['status'] == 401:
+                    # renew token
+                    self.delete_key('linkedin_token')
+                    payload['oauth2_access_token'] = self.get_linkedin_access_token()
+                    continue
                 self.error(jsonobj['message'])
                 break
             if not 'values' in jsonobj['people']:
