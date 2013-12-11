@@ -33,7 +33,7 @@ class Module(framework.module):
             # if any breaches were found, show the number found and the last found date
             if numFound != "0":
                 last = jsonobj['last']
-                self.alert('%s => breached! Seen %s times as recent as %s.' % (emailstr, numFound, last))
+                self.alert('%s => Found! Seen %s times as recent as %s.' % (emailstr, numFound, last))
                 emailsFound += 1
             else:
                 self.verbose('%s => safe.' % (emailstr))

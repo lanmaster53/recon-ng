@@ -24,16 +24,15 @@ class Module(framework.module):
         for account in accounts:
             account = account.encode('utf-8')
             url = 'http://haveibeenpwned.com/api/breachedaccount/' + account
-            resp = self.request(url, method='GET')
-            content = resp.text
+            resp = self.request(url)
             rcode = resp.status_code
             if rcode == 404:
-                self.verbose('%s => Not Found' % (account))
+                self.verbose('%s => Not Found.' % (account))
             elif rcode == 400:
-                self.error('%s => Bad Request' % (account))
+                self.error('%s => Bad Request.' % (account))
                 continue
             else:
-                self.alert('%s => Found in %s' % (account, content))
+                self.alert('%s => Found! Seen in the %s data dump.' % (account, resp.json[0]))
                 pwned += 1
             cnt += 1
         self.output('%d/%d targets pwned.' % (pwned, cnt))
