@@ -11,7 +11,7 @@ class Module(framework.module):
         self.info = {
                      'Name': 'HaveIBeenPwned Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) & Tyler Halfpop (@tylerhalfpop)',
-                     'Description': 'Leverages HaveIBeenPwned.com to determine if email addresses are associated with leaked credentials and updates the \'creds\' table of the database with the positive results.',
+                     'Description': 'Leverages HaveIBeenPwned.com to determine if email addresses are associated with leaked credentials',
                      'Comments': [
                                   'Source options: [ db | email.address@domain.com | ./path/to/file | query <sql> ]'
                                   ]
@@ -24,20 +24,17 @@ class Module(framework.module):
         cnt = 0
         pwned = 0
         for account in accounts:
-            status = None
             account = account.encode('utf-8')
             url = 'http://haveibeenpwned.com/api/breachedaccount/' + account
             resp = self.request(url, method='GET')
             content = resp.text
             rcode = resp.status_code
             if rcode == 404:
-                status = 'safe'
                 self.verbose('%s => Not Found' % (account))
             elif rcode == 400:
                 self.error('%s => Bad Request' % (account))
                 continue
             else:
-                status = 'pwned'
                 self.alert('%s => Found in %s' % (account, content))
                 pwned += 1
             cnt += 1
