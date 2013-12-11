@@ -1,7 +1,5 @@
 import framework
 # unique to module
-import hashlib
-import re
 
 class Module(framework.module):
 
