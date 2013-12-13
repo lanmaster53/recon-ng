@@ -1,7 +1,5 @@
 import framework
 # unique to module
-import traceback
-import sys
 
 class Module(framework.module):
 
@@ -73,7 +71,8 @@ class Module(framework.module):
 
 
         if found:
-            self.output('%s - %s %s | %s | %s | %s' %
-                        (email, first_name, last_name, job_title, region, country))
+            self.output('%s => found' % (email))
+        else:
+            self.output('%s => not found' % (email))
         return found
 
