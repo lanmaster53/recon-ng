@@ -35,7 +35,7 @@ class Module(framework.module):
             for result in results:
                 cnt += 1
                 self.output(result)
-                if not regex or re.search(regex, host):
+                if not regex or re.search(regex, result):
                     new += self.add_host(result)
 
         self.output('%d total hosts found.' % (cnt))
