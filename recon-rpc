@@ -55,7 +55,10 @@ class ReconState:
         self.sessions[sid]["module"].do_set(var + " " + param)
 
     def run(self, sid):
-        return self.sessions[sid]["module"].do_run(None)
+        self.sessions[sid]["module"].do_run(None)
+        results = self.sessions[sid]["module"].rpc_cache[:]
+        self.sessions[sid]["module"].rpc_cache = []
+        return results
 
     def show(self, param, sid):
         tables = self.sessions[sid]["module"].query('SELECT name FROM sqlite_master WHERE type=\'table\'')

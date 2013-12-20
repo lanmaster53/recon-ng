@@ -22,14 +22,6 @@ import __builtin__
 sys.path.append('./libs/')
 import aes
 
-def rpc_callable(func):
-    def wrapper(*args):
-        func(*args)
-        results = args[0].rpc_cache[:]
-        args[0].rpc_cache = []
-        return results
-    return wrapper
-
 class module(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
@@ -1014,7 +1006,6 @@ class module(cmd.Cmd):
         if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))
         if stderr: sys.stdout.write('%s%s%s' % (R, stderr, N))
 
-    @rpc_callable
     def do_run(self, params):
         '''Runs the module'''
         try:
