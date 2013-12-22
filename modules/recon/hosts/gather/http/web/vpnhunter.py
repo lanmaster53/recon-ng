@@ -24,33 +24,24 @@ class Module(framework.module):
             'genericlogin': {'pretty': 'generic login page'}
         }
 
-
         payload = {'fqdn': domain}
-        headers = {
-            'Host': 'www.vpnhunter.com',
-            'Origin': 'http://www.vpnhunter.com/',
-            'Referer': 'http://www.vpnhunter.com/'
-        }
         resp = self.request(
             'http://www.vpnhunter.com/',
             method='POST',
-            headers=headers,
             payload=payload,
             redirect=False
         )
         if resp.status_code != 302:
-            self.error("An error occured while requesting vpnhunter.com")
+            self.error("vpnhunter.com can't obtain results.")
             return
 
         hash = resp.headers['location'].replace("/r/", "")
-
-        headers['Referer'] = "http://www.vpnhunter.com/r/%s" % (hash)
         payload['hash'] = hash
 
         for service in self.services:
             payload['type'] = service
             self.output("Checking for %s on %s" % (self.services[service]['pretty'], payload['fqdn']))
-            resp = self.request('http://www.vpnhunter.com/poll', headers=headers, payload=payload)
+            resp = self.request('http://www.vpnhunter.com/poll', payload=payload)
             if resp.status_code == 200:
                 content = resp.json
                 if len(content["result"]):
