@@ -1,27 +1,25 @@
 import framework
 # unique to module
-import time
 
 class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'domain to check for remote accesses')
+        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'domain to check for remote access')
         self.info = {
             'Name': 'VPNHunter Lookup',
             'Author': 'Quentin Kaiser (contact[at]quentinkaiser.be)',
             'Description': 'Checks vpnhunter.com for SSL VPNs, remote accesses, email portals and generic login sites.',
-            'Comments': [
-            ]
+            'Comments': []
         }
 
     def module_run(self):
 
         domain = self.options['domain']['value']
         self.services = {
-            'sslvpn': {'pretty': 'SSL VPN'},
-            'remoteaccess': {'pretty': 'remote access'},
-            'emailportals': {'pretty': 'email portal'},
-            'genericlogin': {'pretty': 'generic login page'}
+            'sslvpn': 'SSL VPN',
+            'remoteaccess': 'remote access',
+            'emailportals': 'email portal',
+            'genericlogin': 'generic login page'
         }
 
         payload = {'fqdn': domain}
@@ -40,18 +38,15 @@ class Module(framework.module):
 
         for service in self.services:
             payload['type'] = service
-            self.output("Checking for %s on %s" % (self.services[service]['pretty'], payload['fqdn']))
+            self.output("Checking for %s on %s." % (self.services[service], domain))
             resp = self.request('http://www.vpnhunter.com/poll', payload=payload)
             if resp.status_code == 200:
-                content = resp.json
-                if len(content["result"]):
-                    for result in content["result"]:
-                        if len(result['address']) == 2:
-                            self.alert("Found 1 %s running %s on %s (port %s)" %
-                                       (self.services[service]['pretty'], result['vendor'], result['address'][0],
-                                        result['address'][1]))
-                        else:
-                            self.alert("Found 1 %s running %s on %s" %
-                                       (self.services[service]['pretty'], result['vendor'], result['address']))
+                for result in resp.json["result"]:
+                    if len(result['address']) == 2:
+                        self.alert("Found 1 %s running %s on %s (port %s)" %
+                                   (self.services[service], result['vendor'], result['address'][0], result['address'][1]))
+                    else:
+                        self.alert("Found 1 %s running %s on %s" %
+                                   (self.services[service], result['vendor'], result['address']))
             else:
-                self.error("An error occured while requesting vpnhunter.com")
+                self.error("An error occured while requesting vpnhunter.com.")
