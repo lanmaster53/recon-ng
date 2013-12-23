@@ -23,7 +23,7 @@ class Module(framework.module):
         pwned = 0
         for account in accounts:
             account = account.encode('utf-8')
-            url = 'http://haveibeenpwned.com/api/breachedaccount/' + account
+            url = 'https://haveibeenpwned.com/api/breachedaccount/' + account
             resp = self.request(url)
             rcode = resp.status_code
             if rcode == 404:
