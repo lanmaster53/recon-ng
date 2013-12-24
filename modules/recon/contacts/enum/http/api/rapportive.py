@@ -14,6 +14,19 @@ class Module(framework.module):
             'Comments': []
         }
 
+    def get_rapportive_session_token(self):
+        token_name = 'rapportive_token'
+        try:
+            return self.get_key(token_name)
+        except:
+            pass
+        resp = self.request('https://rapportive.com/login_status?user_email=%s@mail.com' % (self.random_str(15)))
+        if 'error' in resp.json:
+            raise FrameworkException(resp.json['error'])
+        session_token = resp.json['session_token']
+        self.add_key(token_name, session_token)
+        return session_token
+
     def module_run(self):
 
         emails = self.get_source(self.options['source']['value'], "SELECT DISTINCT email FROM contacts ORDER BY email")
