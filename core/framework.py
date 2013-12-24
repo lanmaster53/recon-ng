@@ -617,40 +617,6 @@ class module(cmd.Cmd):
         self.add_key(token_name, access_token)
         return access_token
 
-    def get_linkedin_access_token(self):
-        token_name = 'linkedin_token'
-        try:
-            return self.get_key(token_name)
-        except:
-            pass
-        linkedin_key = self.get_key('linkedin_api')
-        linkedin_secret = self.get_key('linkedin_secret')
-        port = 50007
-        redirect_uri = 'http://127.0.0.1:%d' % (port)
-        url = 'https://www.linkedin.com/uas/oauth2/authorization'
-        payload = {'response_type': 'code', 'client_id': linkedin_key, 'scope': 'r_basicprofile r_network', 'state': 'thisisaverylongstringusedforstate', 'redirect_uri': redirect_uri}
-        authorize_url = '%s?%s' % (url, urllib.urlencode(payload))
-        w = webbrowser.get()
-        w.open(authorize_url)
-        # open a socket to receive the access token callback
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('127.0.0.1', port))
-        sock.listen(1)
-        conn, addr = sock.accept()
-        data = conn.recv(1024)
-        conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>Recon-ng</title></head><body>Authorization code received. Return to Recon-ng.</body></html>')
-        conn.close()
-        # process the received access token
-        authorization_code = re.search('code=([^&]*)', data).group(1)
-        url = 'https://www.linkedin.com/uas/oauth2/accessToken'
-        payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': linkedin_key, 'client_secret': linkedin_secret}
-        resp = self.request(url, method='POST', payload=payload)
-        if 'error' in resp.json:
-            raise FrameworkException(resp.json['error_description'])
-        access_token = resp.json['access_token']
-        self.add_key(token_name, access_token)
-        return access_token
-
     def build_pwnedlist_payload(self, payload, method, key, secret):
         timestamp = int(time.time())
         payload['ts'] = timestamp
