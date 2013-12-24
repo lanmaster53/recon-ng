@@ -1,4 +1,6 @@
 import cmd
+import random
+import string
 import sqlite3
 import re
 import os
@@ -254,6 +256,9 @@ class module(cmd.Cmd):
             print ''
             return False
         return True
+
+    def random_str(self, length):
+        return ''.join(random.choice(string.lowercase) for i in range(length))
 
     #==================================================
     # OUTPUT METHODS
