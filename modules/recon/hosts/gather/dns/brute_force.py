@@ -31,7 +31,7 @@ class Module(framework.module):
         cnt = 0
         new = 0
         try:
-            answers = resolver.query('%s.%s' % (''.join(random.choice(string.lowercase) for i in range(15)), domain))
+            answers = resolver.query('%s.%s' % (self.random_str(15), domain))
             self.output('Wildcard DNS entry found. Cannot brute force hostnames.')
             return
         except (dns.resolver.NoNameservers, dns.resolver.Timeout):
