@@ -22,7 +22,7 @@ class Module(framework.module):
             pass
         resp = self.request('https://rapportive.com/login_status?user_email=%s@mail.com' % (self.random_str(15)))
         if 'error' in resp.json:
-            raise FrameworkException(resp.json['error'])
+            raise framework.FrameworkException(resp.json['error'])
         session_token = resp.json['session_token']
         self.add_key(token_name, session_token)
         return session_token
