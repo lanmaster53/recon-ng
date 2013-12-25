@@ -1029,8 +1029,13 @@ class module(cmd.Cmd):
                 self.display_modules(modules)
             return
         import StringIO
-        sys.stdin = StringIO.StringIO('load %s\nEOF' % modules[0])
-        __builtin__.load = 1
+        # compensation for stdin being used for scripting and loading
+        if __builtin__.script:
+            end_string = sys.stdin.read()
+        else:
+            end_string = 'EOF'
+            __builtin__.load = 1
+        sys.stdin = StringIO.StringIO('load %s\n%s' % (modules[0], end_string))
         return True
     do_use = do_load
 
