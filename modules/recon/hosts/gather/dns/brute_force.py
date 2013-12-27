@@ -2,6 +2,8 @@ import framework
 # unique to module
 import dns.resolver
 import os.path
+import random
+import string
 
 class Module(framework.module):
 
@@ -22,14 +24,14 @@ class Module(framework.module):
         domain = self.options['domain']['value']
         wordlist = self.options['wordlist']['value']
         max_attempts = self.options['attempts']['value']
-        q = dns.resolver.get_default_resolver()
-        q.nameservers = [self.options['nameserver']['value']]
-        q.lifetime = 3
-        q.timeout = 2
-        fake_host = 'sudhfydgssjdue.%s' % (domain)
-        cnt, tot = 0, 0
+        resolver = dns.resolver.get_default_resolver()
+        resolver.nameservers = [self.options['nameserver']['value']]
+        resolver.lifetime = 2
+        #resolver.timeout = 2
+        cnt = 0
+        new = 0
         try:
-            answers = q.query(fake_host)
+            answers = resolver.query('%s.%s' % (self.random_str(15), domain))
             self.output('Wildcard DNS entry found. Cannot brute force hostnames.')
             return
         except (dns.resolver.NoNameservers, dns.resolver.Timeout):
@@ -45,9 +47,9 @@ class Module(framework.module):
                 while attempt < max_attempts:
                     host = '%s.%s' % (word, domain)
                     try:
-                        answers = q.query(host)
+                        answers = resolver.query(host)
                     except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-                        self.verbose('%s => Not a host.' % (host))
+                        self.verbose('%s => No record found.' % (host))
                     except dns.resolver.Timeout:
                         self.verbose('%s => Request timed out.' % (host))
                         attempt += 1
@@ -58,19 +60,19 @@ class Module(framework.module):
                             for rdata in answer:
                                 if rdata.rdtype == 1:
                                     self.alert('%s => (A) %s - Host found!' % (host, host))
-                                    cnt += self.add_host(host)
-                                    tot += 1
+                                    new += self.add_host(host)
+                                    cnt += 1
                                 if rdata.rdtype == 5:
                                     cname = rdata.target.to_text()[:-1]
                                     self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
                                     if host != cname:
-                                        cnt += self.add_host(cname)
-                                        tot += 1
-                                    cnt += self.add_host(host)
-                                    tot += 1
+                                        new += self.add_host(cname)
+                                        cnt += 1
+                                    new += self.add_host(host)
+                                    cnt += 1
                     # break out of the loop
                     attempt = max_attempts
-            self.output('%d total hosts found.' % (tot))
-            if cnt: self.alert('%d NEW hosts found!' % (cnt))
+            self.output('%d total hosts found.' % (cnt))
+            if new: self.alert('%d NEW hosts found!' % (new))
         else:
             self.error('Wordlist file not found.')

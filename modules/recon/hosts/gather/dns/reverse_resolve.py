@@ -10,6 +10,8 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('subnet', None, 'yes', 'CIDR block of the target network (X.X.X.X/Y)')
         self.register_option('regex', '%s$' % (self.goptions['domain']['value']), 'no', 'regex to match for adding results to the database')
+        self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
+        self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
         self.info = {
                      'Name': 'Reverse Resolver',
                      'Author': 'John Babio (@3vi1john)',
@@ -20,20 +22,25 @@ class Module(framework.module):
     def module_run(self):
         addresses = self.cidr_to_list(self.options['subnet']['value'])
         regex = self.options['regex']['value']
-
+        resolver = dns.resolver.get_default_resolver()
+        resolver.nameservers = [self.options['nameserver']['value']]
+        resolver.lifetime = self.options['timeout']['value']
+        #resolver.timeout = 2
         cnt = 0
         new = 0
         for address in addresses:
             try:
                 addr = dns.reversename.from_address(address)
-                host = str(dns.resolver.query(addr,'PTR')[0])
+                host = str(resolver.query(addr,'PTR')[0])
                 host = host[:-1] # slice trailing dot
                 if not regex or re.search(regex, host):
                     new += self.add_host(host, address)
                 cnt += 1
-                self.alert('%s => %s' % (host, address))
+                self.alert('%s => %s' % (address, host))
             except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                 self.verbose('%s => No record found.' % (address))
+            except dns.resolver.Timeout:
+                self.verbose('%s => Request timed out.' % (address))
 
         self.output('%d total hosts found.' % (cnt))
         if new: self.alert('%d NEW hosts found!' % (new))
