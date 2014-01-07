@@ -13,10 +13,12 @@ class Module(framework.module):
         self.info = {
                      'Name': 'Adobe Hash Lookup',
                      'Author': 'Ethan Robish (@EthanRobish)',
-                     'Description': 'Uses a local Adobe hash database to perform a reverse hash lookup and updates the \'creds\' table of the database with the positive results.',
+                     'Description': 'This module identifies Adobe hashes based on the leak id, moves them to the hash column, and changes the hash type to \'Adobe\'.  It then uses a local Adobe hash database to perform a reverse hash lookup and updates the \'creds\' table with any passwords it finds.',
                      'Comments': [
                                   'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
                                   'Hash types supported: Adobe\'s base64 format',
+                                  '',
+                                  'The hash database is from: http://stricture-group.com/files/adobe-top100.txt'
                                   ]
                      }
                      
@@ -39,7 +41,6 @@ class Module(framework.module):
             if hashstr in adobe_db:
                 plaintext = adobe_db[hashstr]
                 self.alert('%s => %s' % (hashstr, plaintext))
-                # Move the base64 hash from the password field to the hash field and set the plaintext password.
                 self.query('UPDATE creds SET password=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashstr))
             else:
                 self.verbose('Value not found for hash: %s' % (hashstr))
