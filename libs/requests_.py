@@ -103,8 +103,6 @@ class ResponseObject(object):
         try:
             return self.__text__.decode(self.encoding)
         except (UnicodeDecodeError, TypeError):
-            if goptions['debug']['value']:
-                print '%s[*]%s %s' % (G, N, 'WARNING: Charset mismatch. All non-printable ascii characters removed from the response.')
             return ''.join([char for char in self.__text__ if ord(char) in [9,10,13] + range(32, 126)])
 
     @property
