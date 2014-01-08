@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
@@ -19,9 +20,7 @@ import re
 import __builtin__
 import framework
 
-# define colors for output
-# note: color in prompt effects
-# rendering of command history
+# colors for output
 __builtin__.N  = '\033[m' # native
 __builtin__.R  = '\033[31m' # red
 __builtin__.G  = '\033[32m' # green
@@ -32,13 +31,28 @@ __builtin__.B  = '\033[34m' # blue
 __builtin__.script = 0
 __builtin__.load = 0
 
-# set global framework options
+# framework variables
 __builtin__.goptions = {}
 __builtin__.keys = {}
 __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
 __builtin__.home = ''
 __builtin__.record = None
+__builtin__.spool = None
+
+# spooling system
+def spool_print(*args, **kwargs):
+    if __builtin__.spool:
+        __builtin__.spool.write('%s\n' % (args[0]))
+        __builtin__.spool.flush()
+    if 'console' in kwargs and kwargs['console'] is False:
+        return
+    # new print function must still use the old print function via the backup
+    __builtin__._print(*args, **kwargs)
+# make a builtin backup of the original print function
+__builtin__._print = print
+# override the builtin print function with the new print function
+__builtin__.print = spool_print
 
 class Recon(framework.module):
     def __init__(self, mode=0):
@@ -79,13 +93,13 @@ class Recon(framework.module):
     def init_goptions(self):
         self.register_option('domain', None, 'no', 'target domain', self.goptions)
         self.register_option('company', None, 'no', 'target company name', self.goptions)
+        self.register_option('netblock', None, 'no', 'target netblock (CIDR)', self.goptions)
         self.register_option('latitude', None, 'no', 'target latitudinal position', self.goptions)
         self.register_option('longitude', None, 'no', 'target longitudinal position', self.goptions)
-        self.register_option('radius', None, 'no', 'radius of interest relative to latitude and longitude', self.goptions)
+        self.register_option('radius', None, 'no', 'radius relative to latitude and longitude', self.goptions)
         self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string', self.goptions)
-        self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
-        self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
-        self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
+        self.register_option('proxy', None, 'no', 'proxy server <address>:<port>', self.goptions)
+        self.register_option('timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
         self.register_option('verbose', True,  'yes', 'enable verbose output', self.goptions)
         self.register_option('debug', False,  'yes', 'enable debugging output', self.goptions)
 
@@ -114,9 +128,9 @@ class Recon(framework.module):
                             self.loaded_category[mod_category].append(mod_loadname)
                             self.loaded_modules[mod_dispname] = mod_loadname
                         except:
-                            print '-'*60
+                            print('-'*60)
                             traceback.print_exc()
-                            print '-'*60
+                            print('-'*60)
                             self.error('Unable to load module: %s' % (mod_name))
 
     def load_keys(self):
@@ -131,17 +145,17 @@ class Recon(framework.module):
     def show_banner(self):
         banner = open('./core/banner').read()
         banner_len = len(max(banner.split('\n'), key=len))
-        print banner
-        print '{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8) # +8 compensates for the color bytes
-        print ''
+        print(banner)
+        print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8)) # +8 compensates for the color bytes
+        print('')
         counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
         count_len = len(max([str(x[0]) for x in counts], key=len))
         for count in sorted(counts, reverse=True):
             cnt = '[%d]' % (count[0])
-            print '%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N)
+            print('%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N))
             # create dynamic easter egg command based on counts
             setattr(self, 'do_%d' % count[0], self.menu_egg)
-        print ''
+        print('')
 
     def menu_egg(self, params):
         eggs = [
@@ -157,7 +171,7 @@ class Recon(framework.module):
                 'Your mother called. She wants her menu driven UI back.',
                 'What\'s the samurai password?'
                 ]
-        print random.choice(eggs)
+        print(random.choice(eggs))
         return 
 
     def init_workspace(self, workspace):
@@ -228,7 +242,7 @@ class Recon(framework.module):
         if name in self.options:
             value = ' '.join(options[1:])
             self.options[name]['value'] = self.autoconvert(value)
-            print '%s => %s' % (name.upper(), value)
+            print('%s => %s' % (name.upper(), value))
             self.save_config()
         else: self.error('Invalid option.')
 
@@ -271,7 +285,7 @@ class Recon(framework.module):
         if self.mode == 1: return y
         try: y.cmdloop()
         except KeyboardInterrupt:
-            print ''
+            print('')
     do_use = do_load
 
     def do_run(self, params):
@@ -283,10 +297,10 @@ class Recon(framework.module):
     #==================================================
 
     def help_info(self):
-        print 'Usage: info <module>'
+        print('Usage: info <module>')
 
     def help_workspace(self):
-        print 'Usage: workspace <string>'
+        print('Usage: workspace <string>')
 
     #==================================================
     # COMPLETE METHODS

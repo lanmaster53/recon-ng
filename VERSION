@@ -1,4 +1,4 @@
-__version__ = '3.1.6'
+__version__ = '3.2.3'
 
 # ex. x.y.z
 # x - Incremented when a change requires user interaction to migrate.

@@ -20,15 +20,15 @@ def recon_rpc(args):
         RPCServer = SimpleJSONRPCServer
         server = RPCServer((args.address, args.port))
     else:
-        print '[!] Invalid RPC server type \'%s\'.' % (args.server_type)
+        print('[!] Invalid RPC server type \'%s\'.' % (args.server_type))
         return
     server.register_multicall_functions()
     server.register_instance(ReconState())
-    print "[+] Serving on %s:%d" % (args.address, args.port)
+    print("[+] Serving on %s:%d" % (args.address, args.port))
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print ''
+        print('')
 
 class ReconState:
 

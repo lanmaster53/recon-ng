@@ -23,17 +23,23 @@ class Module(framework.module):
 
         hashtags = ' OR '.join([x for x in re.split(',| ', hashtags) if x])
         query = '%s %s' % (hashtags, company)
-        url = 'http://search.twitter.com/search.json'
-        payload = {'q': query, 'rpp': 100, 'include_entities': 'true', 'result_type': 'mixed'}
-        resp = self.request(url, payload=payload)
+        self.bearer_token = self.get_twitter_oauth_token()
+        headers = {'Authorization': 'Bearer %s' % (self.bearer_token)}
+        payload = {'q': query, 'count': 100, 'include_entities': 'false', 'result_type': 'mixed'}
+        url = 'https://api.twitter.com/1.1/search/tweets.json'
+        resp = self.request(url, payload=payload, headers=headers)
         jsonobj = resp.json
+        if 'errors' in jsonobj:
+            for error in jsonobj['errors']:
+                self.error(error['message'])
+            return
         tdata = []
-        for result in jsonobj['results']:
-            user = '@' + result['from_user']
-            date = result['created_at']
-            date = datetime.datetime.strptime(' '.join(date.split()[:-1]), '%a, %d %b %Y %H:%M:%S')
+        for status in jsonobj['statuses']:
+            user = '@' + status['user']['screen_name']
+            date = status['created_at']
+            date = datetime.datetime.strptime(date, '%a %b %d %H:%M:%S +0000 %Y')
             date = datetime.datetime.strftime(date, '%d %b %Y')
-            text = ' '.join(result['text'].split())
+            text = ' '.join(status['text'].split())
             tdata.append([user, date, text])
         if tdata:
             tdata.insert(0, ['From', 'Date', 'Text'])

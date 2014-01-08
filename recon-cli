@@ -24,7 +24,7 @@ def recon_cli(args):
         return
     # exit if module not specified
     if not args.module:
-        print '%s[!] Module required.%s' % (R, N)
+        print('%s[!] Module required.%s' % (R, N))
         return
     # load the module
     y = x.do_load(args.module)
