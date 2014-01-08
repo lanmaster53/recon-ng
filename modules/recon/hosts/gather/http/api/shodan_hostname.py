@@ -1,5 +1,6 @@
 import framework
 # unique to module
+import re
 
 class Module(framework.module):
 
@@ -7,6 +8,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
         self.register_option('restrict', 1, 'yes', 'limit number of api requests (0 = unrestricted)')
+        self.register_option('regex', '%s$' % (self.goptions['domain']['value']), 'no', 'regex to match for adding results to the database')
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -18,8 +20,9 @@ class Module(framework.module):
 
     def module_run(self):
         domain = self.options['domain']['value']
-        subs = []
+        regex = self.options['regex']['value']
         cnt = 0
+        new = 0
         query = 'hostname:%s' % (domain)
         limit = self.options['restrict']['value']
         results = self.search_shodan_api(query, limit)
@@ -27,9 +30,9 @@ class Module(framework.module):
             if not 'hostnames' in host.keys():
                 continue
             for hostname in host['hostnames']:
-                if hostname not in subs:
-                    subs.append(hostname)
-                    self.output('%s' % (hostname))
-                    cnt += self.add_host(hostname)
-        self.output('%d total hosts found.' % (len(subs)))
-        if cnt: self.alert('%d NEW hosts found!' % (cnt))
+                cnt += 1
+                self.output(hostname)
+                if not regex or re.search(regex, hostname):
+                    new += self.add_host(hostname)
+        self.output('%d total hosts found.' % (cnt))
+        if new: self.alert('%d NEW hosts found!' % (new))
