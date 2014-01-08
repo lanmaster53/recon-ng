@@ -58,9 +58,9 @@ class module(cmd.Cmd):
 
     def precmd(self, line):
         if __builtin__.load:
-            sys.stdout.write('\r')#%s\r' % (' '*100))
+            print('\r', end='')
         if __builtin__.script:
-            sys.stdout.write('%s\n' % (line))
+            print('%s' % (line))
         if __builtin__.record:
             recorder = open(__builtin__.record, 'ab')
             recorder.write(('%s\n' % (line)).encode('utf-8'))
@@ -960,8 +960,8 @@ class module(cmd.Cmd):
         self.output('Command: %s' % (params))
         stdout = proc.stdout.read()
         stderr = proc.stderr.read()
-        if stdout: sys.stdout.write('%s%s%s' % (O, stdout, N))
-        if stderr: sys.stdout.write('%s%s%s' % (R, stderr, N))
+        if stdout: print('%s%s%s' % (O, stdout, N), end='')
+        if stderr: print('%s%s%s' % (R, stderr, N), end='')
 
     def do_run(self, params):
         '''Runs the module'''
