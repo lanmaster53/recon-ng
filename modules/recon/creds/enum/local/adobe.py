@@ -17,19 +17,19 @@ class Module(framework.module):
                      'Comments': [
                                   'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
                                   'Hash types supported: Adobe\'s base64 format',
-                                  '',
-                                  'The hash database is from: http://stricture-group.com/files/adobe-top100.txt'
+                                  'Hash database from: http://stricture-group.com/files/adobe-top100.txt'
                                   ]
                      }
                      
     def module_run(self):
         adobe_leak_id = '26830509422781c65919cba69f45d889'
         
-        # Move all Adobe leak hashes the passwords column to the hashes column and set the hashtype to Adobe
+        # move Adobe leaked hashes from the passwords column to the hashes column and set the hashtype to Adobe
         if self.options['source']['value'] == 'db':
-            self.query('UPDATE creds SET hash=password, password=NULL, type=\'Adobe\' WHERE hash IS NULL AND leak IS \'%s\'' % adobe_leak_id)
+            self.verbose('Checking for Adobe hashes and updating the database accordingly...')
+            self.query('UPDATE creds SET hash=password, password=NULL, type=\'Adobe\' WHERE hash IS NULL AND leak IS ?', (adobe_leak_id,))
         
-        # Find all hashes from the Adobe leak
+        # find all hashes from the Adobe leak
         query = 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL AND password IS NULL AND leak IS \'%s\'' % adobe_leak_id
         hashes = self.get_source(self.options['source']['value'], query)
         
