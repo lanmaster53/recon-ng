@@ -79,13 +79,13 @@ class Recon(framework.module):
     def init_goptions(self):
         self.register_option('domain', None, 'no', 'target domain', self.goptions)
         self.register_option('company', None, 'no', 'target company name', self.goptions)
+        self.register_option('netblock', None, 'no', 'target netblock (CIDR)', self.goptions)
         self.register_option('latitude', None, 'no', 'target latitudinal position', self.goptions)
         self.register_option('longitude', None, 'no', 'target longitudinal position', self.goptions)
-        self.register_option('radius', None, 'no', 'radius of interest relative to latitude and longitude', self.goptions)
+        self.register_option('radius', None, 'no', 'radius relative to latitude and longitude', self.goptions)
         self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string', self.goptions)
-        self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
-        self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
-        self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
+        self.register_option('proxy', None, 'no', 'proxy server <address>:<port>', self.goptions)
+        self.register_option('timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
         self.register_option('verbose', True,  'yes', 'enable verbose output', self.goptions)
         self.register_option('debug', False,  'yes', 'enable debugging output', self.goptions)
 

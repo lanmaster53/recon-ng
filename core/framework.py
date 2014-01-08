@@ -23,6 +23,7 @@ import __builtin__
 # prep python path for supporting modules
 sys.path.append('./libs/')
 import aes
+import requests
 
 class module(cmd.Cmd):
     def __init__(self, params):
@@ -266,6 +267,9 @@ class module(cmd.Cmd):
 
     def error(self, line):
         '''Formats and presents errors.'''
+        if not re.search('[.,;!?]$', line):
+            line += '.'
+        line = line[:1].upper() + line[1:]
         print '%s[!] %s%s' % (R, self.to_unicode(line), N)
 
     def output(self, line):
@@ -729,60 +733,13 @@ class module(cmd.Cmd):
         )
 
     def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, redirect=True):
-        '''Makes a web request and returns a response object.'''
-        # prime local mutable variables to prevent persistence
-        if payload is None: payload = {}
-        if headers is None: headers = {}
-        if auth is None: auth = ()
-        # set request arguments
-        # process user-agent header
-        headers['User-Agent'] = self.goptions['user-agent']['value']
-        # process payload
-        payload = urllib.urlencode(payload)
-        # process basic authentication
-        if len(auth) == 2:
-            authorization = ('%s:%s' % (auth[0], auth[1])).encode('base64').replace('\n', '')
-            headers['Authorization'] = 'Basic %s' % (authorization)
-        # process socket timeout
-        timeout = timeout or self.goptions['socket_timeout']['value']
-        socket.setdefaulttimeout(timeout)
-        
-        # set handlers
-        # declare handlers list according to debug setting
-        handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1)] if self.goptions['debug']['value'] else []
-        # process cookiejar handler
-        if cookiejar != None:
-            handlers.append(urllib2.HTTPCookieProcessor(cookiejar))
-        # process redirect and add handler
-        if redirect == False:
-            handlers.append(NoRedirectHandler)
-        # process proxies and add handler
-        if self.goptions['proxy']['value']:
-            proxies = {'http': self.goptions['proxy_server']['value'], 'https': self.goptions['proxy_server']['value']}
-            handlers.append(urllib2.ProxyHandler(proxies))
-
-        # install opener
-        opener = urllib2.build_opener(*handlers)
-        urllib2.install_opener(opener)
-        # process method and make request
-        if method == 'GET':
-            if payload: url = '%s?%s' % (url, payload)
-            req = urllib2.Request(url, headers=headers)
-        elif method == 'POST':
-            req = urllib2.Request(url, data=payload, headers=headers)
-        elif method == 'HEAD':
-            if payload: url = '%s?%s' % (url, payload)
-            req = urllib2.Request(url, headers=headers)
-            req.get_method = lambda : 'HEAD'
-        else:
-            raise FrameworkException('Request method \'%s\' is not a supported method.' % (method))
-        try:
-            resp = urllib2.urlopen(req)
-        except urllib2.HTTPError as e:
-            resp = e
-
-        # build and return response object
-        return ResponseObject(resp, cookiejar)
+        request = requests.Request()
+        request.user_agent = self.goptions['user-agent']['value']
+        request.debug = self.goptions['debug']['value']
+        request.proxy = self.goptions['proxy']['value']
+        request.timeout = timeout or self.goptions['timeout']['value']
+        request.redirect = redirect
+        return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth)
 
     #==================================================
     # COMMAND METHODS
@@ -984,16 +941,14 @@ class module(cmd.Cmd):
             self.module_run()
         except KeyboardInterrupt:
             print ''
+        except socket.timeout as e:
+            self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
         except Exception as e:
             if self.goptions['debug']['value']:
                 print '%s%s' % (R, '-'*60)
                 traceback.print_exc()
                 print '%s%s' % ('-'*60, N)
-            else:
-                error = e.__str__()
-                if not re.search('[.,;!?]$', error):
-                    error += '.'
-                self.error(error.capitalize())
+            self.error(e.__str__())
         finally:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 
@@ -1120,44 +1075,8 @@ class module(cmd.Cmd):
         return [x for x in options if x.startswith(text)]
 
 #=================================================
-# CUSTOM CLASSES & WRAPPERS
+# SUPPORT CLASSES
 #=================================================
-
-class NoRedirectHandler(urllib2.HTTPRedirectHandler):
-
-    def http_error_302(self, req, fp, code, msg, headers):
-        pass
-
-    http_error_301 = http_error_303 = http_error_307 = http_error_302
-
-class ResponseObject(object):
-
-    def __init__(self, resp, cookiejar):
-        # set hidden text property
-        self.__text__ = resp.read()
-        # set inherited properties
-        self.url = resp.geturl()
-        self.status_code = resp.getcode()
-        self.headers = resp.headers.dict
-        # detect and set encoding property
-        self.encoding = resp.headers.getparam('charset')
-        self.cookiejar = cookiejar
-
-    @property
-    def text(self):
-        try:
-            return self.__text__.decode(self.encoding)
-        except (UnicodeDecodeError, TypeError):
-            if goptions['debug']['value']:
-                print '%s[*]%s %s' % (G, N, 'WARNING: Charset mismatch. All non-printable ascii characters removed from the response.')
-            return ''.join([char for char in self.__text__ if ord(char) in [9,10,13] + range(32, 126)])
-
-    @property
-    def json(self):
-        try:
-            return json.loads(self.text)
-        except ValueError:
-            return None
 
 class FrameworkException(Exception):
     pass
