@@ -1,3 +1,4 @@
+from __future__ import print_function
 import cmd
 import random
 import string
@@ -65,6 +66,9 @@ class module(cmd.Cmd):
             recorder.write(('%s\n' % (line)).encode('utf-8'))
             recorder.flush()
             recorder.close()
+        if __builtin__.spool:
+            __builtin__.spool.write('%s%s\n' % (self.prompt, line))
+            __builtin__.spool.flush()
         return line
 
     def onecmd(self, line):
@@ -125,8 +129,8 @@ class module(cmd.Cmd):
                 last_category = category
                 self.heading(last_category)
             # print module
-            print '%s%s' % (self.spacer*2, module)
-        print ''
+            print('%s%s' % (self.spacer*2, module))
+        print('')
 
     def display_workspaces(self):
         dirnames = []
@@ -147,7 +151,7 @@ class module(cmd.Cmd):
         if rows:
             self.table(tdata, header=True)
         else:
-            print '\n%sThis workspace has no record of activity.' % (self.spacer)
+            print('\n%sThis workspace has no record of activity.' % (self.spacer))
         # display sumary results table
         self.heading('Results Summary')
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
@@ -254,7 +258,7 @@ class module(cmd.Cmd):
             ans = raw_input('This operation will decrement the allotted quota by %d. Do you want to continue? [Y/N]: ' % (num))
             if ans.upper() != 'Y': return False
         except KeyboardInterrupt:
-            print ''
+            print('')
             return False
         return True
 
@@ -270,15 +274,15 @@ class module(cmd.Cmd):
         if not re.search('[.,;!?]$', line):
             line += '.'
         line = line[:1].upper() + line[1:]
-        print '%s[!] %s%s' % (R, self.to_unicode(line), N)
+        print('%s[!] %s%s' % (R, self.to_unicode(line), N))
 
     def output(self, line):
         '''Formats and presents normal output.'''
-        print '%s[*]%s %s' % (B, N, self.to_unicode(line))
+        print('%s[*]%s %s' % (B, N, self.to_unicode(line)))
 
     def alert(self, line):
         '''Formats and presents important output.'''
-        print '%s[*]%s %s' % (G, N, self.to_unicode(line))
+        print('%s[*]%s %s' % (G, N, self.to_unicode(line)))
 
     def verbose(self, line):
         '''Formats and presents output if in verbose mode.'''
@@ -288,14 +292,14 @@ class module(cmd.Cmd):
     def heading(self, line, level=1):
         '''Formats and presents styled banner text'''
         line = self.to_unicode(line)
-        print ''
+        print('')
         if level == 0:
-            print self.ruler*len(line)
-            print line.upper()
-            print self.ruler*len(line)
+            print(self.ruler*len(line))
+            print(line.upper())
+            print(self.ruler*len(line))
         if level == 1:
-            print '%s%s' % (self.spacer, line.title())
-            print '%s%s' % (self.spacer, self.ruler*len(line))
+            print('%s%s' % (self.spacer, line.title()))
+            print('%s%s' % (self.spacer, self.ruler*len(line)))
 
     def table(self, data, header=False):
         '''Accepts a list of rows and outputs a table.'''
@@ -313,20 +317,20 @@ class module(cmd.Cmd):
             separator = separator_str % separator_sub
             data_str = '%s| %s%%s |' % (self.spacer, '%s | '*(cols-1))
             # top of ascii table
-            print ''
-            print separator
+            print('')
+            print(separator)
             # ascii table data
             if header:
                 rdata = tdata.pop(0)
                 data_sub = tuple([rdata[i].center(lens[i]) for i in range(0,cols)])
-                print data_str % data_sub
-                print separator
+                print(data_str % data_sub)
+                print(separator)
             for rdata in tdata:
                 data_sub = tuple([self.to_unicode_str(rdata[i]).ljust(lens[i]) if rdata[i] != None else ''.ljust(lens[i]) for i in range(0,cols)])
-                print data_str % data_sub
+                print(data_str % data_sub)
             # bottom of ascii table
-            print separator
-            print ''
+            print(separator)
+            print('')
 
     #==================================================
     # DATABASE METHODS
@@ -339,14 +343,14 @@ class module(cmd.Cmd):
             columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
             name_len = len(max([x[0] for x in columns], key=len))
             type_len = len(max([x[1] for x in columns], key=len))
-            print ''
-            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
-            print '%s| %s |' % (self.spacer, table.center(name_len+type_len+3))
-            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
+            print('')
+            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
+            print('%s| %s |' % (self.spacer, table.center(name_len+type_len+3)))
+            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
             for column in columns:
-                print '%s| %s | %s |' % (self.spacer, column[0].ljust(name_len), column[1].center(type_len))
-            print '%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5))
-        print ''
+                print('%s| %s | %s |' % (self.spacer, column[0].ljust(name_len), column[1].center(type_len)))
+            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
+        print('')
 
     def add_host(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
         '''Adds a host to the database and returns the affected row count.'''
@@ -516,19 +520,19 @@ class module(cmd.Cmd):
             if key_len < 4: key_len = 4
             val_len = len(max([self.to_unicode_str(self.options[x]['value']) for x in self.options], key=len))
             if val_len < 13: val_len = 13
-            print ''
-            print pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description')
-            print pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11)
+            print('')
+            print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description'))
+            print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11))
             for key in sorted(self.options):
                 value = self.options[key]['value'] if self.options[key]['value'] != None else ''
                 reqd = self.options[key]['reqd']
                 desc = self.options[key]['desc']
-                print pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc)
-            print ''
+                print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc))
+            print('')
         else:
-            if params != 'info': print ''
-            print '%sNo options available for this module.' % (spacer)
-            print ''
+            if params != 'info': print('')
+            print('%sNo options available for this module.' % (spacer))
+            print('')
 
     def register_option(self, name, value, reqd, desc, options=None):
         # can't use not because empty dictonary would eval as true
@@ -758,24 +762,24 @@ class module(cmd.Cmd):
         '''Displays module information'''
         if params: self.alert('Command parameters ignored in module context.')
         self.info['Path'] = 'modules/%s.py' % (self.modulename)
-        print ''
+        print('')
         # meta
         for item in ['Name', 'Path', 'Author']:
-            print '%s: %s' % (item.rjust(10), self.info[item])
-        print ''
+            print('%s: %s' % (item.rjust(10), self.info[item]))
+        print('')
         # options
-        print 'Options:'
+        print('Options:')
         self.display_options('info')
         # description
-        print 'Description:'
-        print '%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer))
-        print ''
+        print('Description:')
+        print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
+        print('')
         # comments
         if self.info['Comments']:
-            print 'Comments:'
+            print('Comments:')
             for comment in self.info['Comments']:
-                print '%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer))
-            print ''
+                print('%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer)))
+            print('')
 
     def do_set(self, params):
         '''Sets module options'''
@@ -786,7 +790,7 @@ class module(cmd.Cmd):
         name = options[0].lower()
         if name in self.options:
             value = ' '.join(options[1:])
-            print '%s => %s' % (name.upper(), value)
+            print('%s => %s' % (name.upper(), value))
             self.options[name]['value'] = self.autoconvert(value)
         else: self.error('Invalid option.')
 
@@ -808,7 +812,7 @@ class module(cmd.Cmd):
             if len(params) == 2:
                 self.add_key(params[0], params[1])
                 self.output('Key \'%s\' added.' % (params[0]))
-            else: print 'Usage: keys [add|update] <name> <value>'
+            else: print('Usage: keys [add|update] <name> <value>')
             return
         elif arg == 'delete':
             if len(params) == 1:
@@ -818,7 +822,7 @@ class module(cmd.Cmd):
                     self.error(e.__str__())
                 else:
                     self.output('Key \'%s\' deleted.' % (params[0]))
-            else: print 'Usage: keys delete <name>'
+            else: print('Usage: keys delete <name>')
             return
 
     def do_query(self, params):
@@ -904,19 +908,16 @@ class module(cmd.Cmd):
             if not __builtin__.record:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
-                    try:
-                        recorder = open(filename, 'ab')
-                        recorder.close()
-                    except IOError:
-                        self.output('Cannot record to \'%s\'' % (filename))
+                    if not is_writeable(filename):
+                        self.output('Cannot record commands to \'%s\'.' % (filename))
                     else:
                         __builtin__.record = filename
-                        self.output('Recording commands to \'%s\'' % (__builtin__.record))
+                        self.output('Recording commands to \'%s\'.' % (__builtin__.record))
                 else: self.help_record()
             else: self.output('Recording is already started.')
         elif arg == 'stop':
             if __builtin__.record:
-                self.output('Recording stopped. Commands saved to \'%s\'' % (__builtin__.record))
+                self.output('Recording stopped. Commands saved to \'%s\'.' % (__builtin__.record))
                 __builtin__.record = None
             else: self.output('Recording is already stopped.')
         elif arg == 'status':
@@ -925,8 +926,36 @@ class module(cmd.Cmd):
         else:
             self.help_record()
 
+    def do_spool(self, params):
+        '''Spools output to a file'''
+        if not params:
+            self.help_spool()
+            return
+        arg = params.lower()
+        if arg.split()[0] == 'start':
+            if not __builtin__.spool:
+                if len(arg.split()) > 1:
+                    filename = ' '.join(arg.split()[1:])
+                    if not is_writeable(filename):
+                        self.output('Cannot spool output to \'%s\'.' % (filename))
+                    else:
+                        __builtin__.spool = open(filename, 'ab')
+                        self.output('Spooling output to \'%s\'.' % (__builtin__.spool.name))
+                else: self.help_spool()
+            else: self.output('Spooling is already started.')
+        elif arg == 'stop':
+            if __builtin__.spool:
+                self.output('Spooling stopped. Output saved to \'%s\'.' % (__builtin__.spool.name))
+                __builtin__.spool = None
+            else: self.output('Spooling is already stopped.')
+        elif arg == 'status':
+            status = 'started' if __builtin__.spool else 'stopped'
+            self.output('Output spooling is %s.' % (status))
+        else:
+            self.help_spool()
+
     def do_shell(self, params):
-        '''Execute shell commands'''
+        '''Executes shell commands'''
         proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         self.output('Command: %s' % (params))
         stdout = proc.stdout.read()
@@ -940,14 +969,14 @@ class module(cmd.Cmd):
             self.validate_options()
             self.module_run()
         except KeyboardInterrupt:
-            print ''
+            print('')
         except socket.timeout as e:
             self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
         except Exception as e:
             if self.goptions['debug']['value']:
-                print '%s%s' % (R, '-'*60)
+                print('%s%s' % (R, '-'*60))
                 traceback.print_exc()
-                print '%s%s' % ('-'*60, N)
+                print('%s%s' % ('-'*60, N))
             self.error(e.__str__())
         finally:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
@@ -999,45 +1028,48 @@ class module(cmd.Cmd):
     #==================================================
 
     def help_keys(self):
-        print 'Usage: keys [list|add|delete|update]'
+        print('Usage: keys [list|add|delete|update]')
 
     def help_load(self):
-        print 'Usage: [load|use] <module>'
+        print('Usage: [load|use] <module>')
     help_use = help_load
 
     def help_record(self):
-        print 'Usage: record [start <filename>|stop|status]'
+        print('Usage: record [start <filename>|stop|status]')
+
+    def help_spool(self):
+        print('Usage: spool [start <filename>|stop|status]')
 
     def help_resource(self):
-        print 'Usage: resource <filename>'
+        print('Usage: resource <filename>')
 
     def help_query(self):
-        print 'Usage: query <sql>'
-        print ''
-        print 'SQL Examples:'
-        print '%s%s' % (self.spacer, 'SELECT columns|* FROM table_name')
-        print '%s%s' % (self.spacer, 'SELECT columns|* FROM table_name WHERE some_column=some_value')
-        print '%s%s' % (self.spacer, 'DELETE FROM table_name WHERE some_column=some_value')
-        print '%s%s' % (self.spacer, 'INSERT INTO table_name (column1, column2,...) VALUES (value1, value2,...)')
-        print '%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value')
+        print('Usage: query <sql>')
+        print('')
+        print('SQL Examples:')
+        print('%s%s' % (self.spacer, 'SELECT columns|* FROM table_name'))
+        print('%s%s' % (self.spacer, 'SELECT columns|* FROM table_name WHERE some_column=some_value'))
+        print('%s%s' % (self.spacer, 'DELETE FROM table_name WHERE some_column=some_value'))
+        print('%s%s' % (self.spacer, 'INSERT INTO table_name (column1, column2,...) VALUES (value1, value2,...)'))
+        print('%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value'))
 
     def help_search(self):
-        print 'Usage: search <string>'
+        print('Usage: search <string>')
 
     def help_set(self):
-        print 'Usage: set <option> <value>'
+        print('Usage: set <option> <value>')
         self.display_options(None)
 
     def help_unset(self):
-        print 'Usage: unset <option>'
+        print('Usage: unset <option>')
         self.display_options(None)
 
     def help_shell(self):
-        print 'Usage: [shell|!] <command>'
-        print '...or just type a command at the prompt.'
+        print('Usage: [shell|!] <command>')
+        print('...or just type a command at the prompt.')
 
     def help_show(self):
-        print 'Usage: show [modules|options|dashboard|workspaces|schema|<table>]'
+        print('Usage: show [modules|options|dashboard|workspaces|schema|<table>]')
 
     #==================================================
     # COMPLETE METHODS
@@ -1059,6 +1091,7 @@ class module(cmd.Cmd):
 
     def complete_record(self, text, *ignored):
         return [x for x in ['start', 'stop', 'status'] if x.startswith(text)]
+    complete_spool = complete_record
 
     def complete_set(self, text, *ignored):
         return [x for x in self.options if x.startswith(text)]
@@ -1075,8 +1108,16 @@ class module(cmd.Cmd):
         return [x for x in options if x.startswith(text)]
 
 #=================================================
-# SUPPORT CLASSES
+# SUPPORT CLASSES AND FUNCTIONS
 #=================================================
 
 class FrameworkException(Exception):
     pass
+
+def is_writeable(filename):
+    try:
+        fp = open(filename, 'ab')
+        fp.close()
+        return True
+    except IOError:
+        return False
