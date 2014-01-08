@@ -12,7 +12,6 @@ class Module(framework.module):
         self.register_option('quote_character', '', 'no', 'character that surrounds each column value')
         self.register_option('has_header', True, 'yes', 'whether or not the first row in the csv file should be interpreted as column names')
         self.register_option('table', None, 'yes', 'table to import the csv values')
-        self.register_option('verbose', self.goptions['verbose']['value'], 'yes', self.goptions['verbose']['desc'])
         self.info = {
                      'Name': 'Advanced CSV File Importer',
                      'Author': 'Ethan Robish (@EthanRobish)',
@@ -38,14 +37,14 @@ class Module(framework.module):
         has_header = self.options['has_header']['value']
 
         # if anything has changed, repopulate the modules options
-        if filename != orig_filename 
-            or sep != orig_sep 
-            or quote != orig_quote 
+        if filename != orig_filename \
+            or sep != orig_sep \
+            or quote != orig_quote \
             or has_header != orig_has_header:
             try:
                 self.values = self.parse_file(filename, sep, quote)
             except IOError:
-                self.error('%s could not be opened. Does it exist?' % filename)
+                self.error('%s could not be opened. The file may not exist.' % filename)
             except AssertionError:
                 self.error('The number of columns in each row is inconsistent. \
                 Try checking the input file, changing the column separator, or changing the quote character.')
@@ -57,7 +56,7 @@ class Module(framework.module):
             return
 
         has_header = self.options['has_header']['value']
-        verbose = self.options['verbose']['value']
+        verbose = self.goptions['verbose']['value']
 
         all_column_names = [None] * len(self.values[0])
         for option in self.options:
@@ -109,6 +108,8 @@ class Module(framework.module):
             filename = self.options['filename']['value']
         if sep is None:
             sep = self.options['column_separator']['value']
+        if quote is None:
+            quote = self.options['quote_character']['value']
         if filename is None or sep is None:
             raise IOError
 
