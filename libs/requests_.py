@@ -12,13 +12,13 @@ import json
 
 class Request(object):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         '''Initializes control parameters as class attributes.'''
-        self.user_agent = "Python-urllib/%s" % (urllib2.__version__)
-        self.debug = False
-        self.proxy = None
-        self.timeout = None
-        self.redirect = True
+        self.user_agent = "Python-urllib/%s" % (urllib2.__version__) if 'user_agent' not in kwargs else kwargs['user_agent']
+        self.debug = False if 'debug' not in kwargs else kwargs['debug']
+        self.proxy = None if 'proxy' not in kwargs else kwargs['proxy']
+        self.timeout = None if 'timeout' not in kwargs else kwargs['timeout']
+        self.redirect = True if 'redirect' not in kwargs else kwargs['redirect']
 
     def send(self, url, method='GET', payload=None, headers=None, cookiejar=None, auth=None):
         '''Makes a web request and returns a response object.'''
@@ -88,8 +88,8 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
 class ResponseObject(object):
 
     def __init__(self, resp, cookiejar):
-        # set hidden text property
-        self.__text__ = resp.read()
+        # set raw response property
+        self.raw = resp.read()
         # set inherited properties
         self.url = resp.geturl()
         self.status_code = resp.getcode()
@@ -101,9 +101,9 @@ class ResponseObject(object):
     @property
     def text(self):
         try:
-            return self.__text__.decode(self.encoding)
+            return self.raw.decode(self.encoding)
         except (UnicodeDecodeError, TypeError):
-            return ''.join([char for char in self.__text__ if ord(char) in [9,10,13] + range(32, 126)])
+            return ''.join([char for char in self.raw if ord(char) in [9,10,13] + range(32, 126)])
 
     @property
     def json(self):
