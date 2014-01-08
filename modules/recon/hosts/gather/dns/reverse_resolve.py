@@ -8,7 +8,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('subnet', None, 'yes', 'CIDR block of the target network (X.X.X.X/Y)')
+        self.register_option('netblock', self.goptions['netblock']['value'], 'yes', self.goptions['netblock']['desc'])
         self.register_option('regex', '%s$' % (self.goptions['domain']['value']), 'no', 'regex to match for adding results to the database')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
