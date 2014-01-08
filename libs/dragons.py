@@ -1,10 +1,3 @@
-'''
-This is a module for handling all of the difficult legwork in setting up complex web requests.
-
-This module has no relation to the popular "Requests" python module and was developed exclusively
-by Tim Tomes (@LaNMaSteR53) for the purposes of supporting the Recon-ng framework.
-'''
-
 import urllib
 import socket
 import urllib2
