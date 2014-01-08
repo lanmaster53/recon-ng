@@ -15,7 +15,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
                      'Description': 'Leverages NameChk.com to validate the existance of usernames at specific web sites.',
                      'Comments': [
-                                  'Note: The global socket_timeout may need to be increased to support slower sites.']
+                                  'Note: The global timeout option may need to be increased to support slower sites.']
                      }
 
     def module_run(self):
