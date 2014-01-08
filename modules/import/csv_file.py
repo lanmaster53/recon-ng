@@ -17,8 +17,8 @@ class Module(framework.module):
                      'Author': 'Ethan Robish (@EthanRobish)',
                      'Description': 'Imports values from a csv file to a database table.',
                      'Comments': [
-                                  'At first you will see only a few options. Once you set a valid filename, you will be able to see more options for configuring where each column is imported.',
-                                  'This module is very powerful, but if you aren\'t careful it could seriously pollute your database.',
+                                  'Only a few options are available until a valid filename is set. Then, the file is analyzed and more options become available for configuring where each column is imported.',
+                                  'This module is very powerful and can seriously pollute a database. Backing up the database before importing is encouraged.',
                                   ]
                      }
         self.values = []
@@ -73,7 +73,7 @@ class Module(framework.module):
 
         # ensure that at least one column name is populated
         if not any(all_column_names):
-            self.error('You must set at least one column name to import')
+            self.error('You must set at least one column name to import.')
             return
 
         # build the query based on which column options have been set
@@ -101,7 +101,6 @@ class Module(framework.module):
             if not self.insert(table, data):
                 self.error('There was a problem inserting the previous row into the database. Please check your settings.')
                 return
-
 
     def parse_file(self, filename=None, sep=None, quote=None):
         if filename is None:
