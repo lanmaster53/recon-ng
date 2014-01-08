@@ -24,7 +24,7 @@ import __builtin__
 # prep python path for supporting modules
 sys.path.append('./libs/')
 import aes
-import requests
+import requests_
 
 class module(cmd.Cmd):
     def __init__(self, params):
@@ -737,7 +737,7 @@ class module(cmd.Cmd):
         )
 
     def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, redirect=True):
-        request = requests.Request()
+        request = requests_.Request()
         request.user_agent = self.goptions['user-agent']['value']
         request.debug = self.goptions['debug']['value']
         request.proxy = self.goptions['proxy']['value']
