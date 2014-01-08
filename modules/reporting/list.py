@@ -33,6 +33,6 @@ class Module(framework.module):
         for row in [x[0] for x in rows]:
             row = row if row else ''
             outfile.write(('%s\n' % (row)).encode('utf-8'))
-            print row
+            print(row)
         outfile.close()
         self.output('%d items added to \'%s\'.' % (len(rows), filename))

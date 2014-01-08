@@ -31,10 +31,10 @@ class Module(framework.module):
             self.alert(fqdn)
             if self.goptions['verbose']['value']:
                 for item in path['Technologies']:
-                    print self.ruler*50
+                    print(self.ruler*50)
                     for tag in item:
                         self.output('%s: %s' % (tag, textwrap.fill(item[tag], 100, initial_indent='', subsequent_indent=self.spacer*2)))
-                print self.ruler*50
+                print(self.ruler*50)
 
             tags = ['web server', 'analytics', 'framework', 'server']
             tdata = []

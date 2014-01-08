@@ -22,10 +22,10 @@ class Module(framework.module):
         if not columns:
             self.output('Please run the \'leaks_dump\' module to populate the database and try again.')
             return
-        print self.ruler*50
+        print(self.ruler*50)
         for leak_id in leak_ids:
             values = self.query('SELECT "%s" FROM leaks WHERE leak_id = \'%s\'' % ('", "'.join(columns), leak_id))[0]
             for i in range(0,len(columns)):
                 title = ' '.join(columns[i].split('_')).title()
                 self.output('%s: %s' % (title, values[i]))
-            print self.ruler*50
+            print(self.ruler*50)

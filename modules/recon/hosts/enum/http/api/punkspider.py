@@ -85,12 +85,12 @@ class Module(framework.module):
                 if results:
                     self.alert('Domain: %s' % (domain))
                     for result in results:
-                        print ''
+                        print('')
                         vulns += 1
                         self.output('Bug: %s' % (result['bugType']))
                         self.output('URL: %s' % (result['vulnerabilityUrl']))
                         self.output('Parameter: %s' % (result['parameter']))
-                print self.ruler*50
+                print(self.ruler*50)
 
         self.output('%d results.' % (hits))
         self.output('%d pages.' % (pages))
