@@ -24,9 +24,7 @@ def recon_ui(args):
     x = base.Recon()
     # check for and run version check
     if args.check:
-        if not x.version_check():
-            ans = raw_input('Your version of Recon-ng is out of date. Would you like to continue anyway? [Y]: ')
-            if ans.upper().startswith('N'): return
+        if not x.version_check(): return
     # check for and load workspace
     if args.workspace: x.do_workspace(args.workspace)
     # check for and run script session

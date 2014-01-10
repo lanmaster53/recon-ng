@@ -79,8 +79,14 @@ class Recon(framework.module):
 
     def version_check(self):
         try:
-            remote = hashlib.md5(urllib2.urlopen('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').read()).hexdigest()
-            local = hashlib.md5(open('VERSION').read()).hexdigest()
+            pattern = "'([\d\.]*)'"
+            remote = re.search(pattern, self.request('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').raw).group(1)
+            local = re.search(pattern, open('VERSION').read()).group(1)
+            if remote != local:
+                self.alert('Your version of Recon-ng does not match the latest release.')
+                self.alert('Please update or use the \'--no-check\' switch to continue using the old version.')
+                self.output('Remote version: %s' % (remote))
+                self.output('Local version:  %s' % (local))
             return local == remote
         except:
             return True
