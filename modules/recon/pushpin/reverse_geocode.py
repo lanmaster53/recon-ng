@@ -16,7 +16,7 @@ class Module(framework.module):
     def module_run(self):
         lat = self.options['latitude']['value']
         lon = self.options['longitude']['value']
-        self.verbose("Requesting Google Geocoding API with coordinates (%f, %f)" % (lat, lon))
+        self.verbose("Requesting Google Maps API with coordinates (%f, %f)" % (lat, lon))
         payload = {'latlng' : '%f,%f'%(lat,lon), 'sensor' : 'false'}
         url = 'http://maps.googleapis.com/maps/api/geocode/json'
         resp = self.request(url, payload=payload)
