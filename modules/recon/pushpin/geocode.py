@@ -21,7 +21,6 @@ class Module(framework.module):
         payload = {'address' : address, 'sensor' : 'false'}
         url = 'https://maps.googleapis.com/maps/api/geocode/json'
         resp = self.request(url, payload=payload)
-
         if 'status' not in resp.json or resp.json['status'] != 'OK':
             return None
         lat = resp.json['results'][0]['geometry']['location']['lat']
