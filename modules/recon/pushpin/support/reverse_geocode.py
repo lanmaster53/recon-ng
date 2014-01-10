@@ -8,18 +8,28 @@ class Module(framework.module):
         self.register_option('latitude', self.goptions['latitude']['value'], 'yes', self.goptions['latitude']['desc'])
         self.register_option('longitude', self.goptions['longitude']['value'], 'yes', self.goptions['longitude']['desc'])
         self.info = {
-            'Name': 'Reverse Geocoding with Google Geocoding API',
+            'Name': 'Reverse Geocoder',
             'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-            'Description': 'Call the Google Geocoding API to obtain address from coordinates.',
+            'Description': 'Call the Google Maps API to obtain an address from coordinates.',
             'Comments': []
         }
+
     def module_run(self):
         lat = self.options['latitude']['value']
         lon = self.options['longitude']['value']
-        self.verbose("Requesting Google Maps API with coordinates (%f, %f)" % (lat, lon))
-        payload = {'latlng' : '%f,%f'%(lat,lon), 'sensor' : 'false'}
-        url = 'http://maps.googleapis.com/maps/api/geocode/json'
+        self.verbose("Reverse geocoding (%f, %f)..." % (lat, lon))
+        payload = {'latlng' : '%f,%f' % (lat,lon), 'sensor' : 'false'}
+        url = 'https://maps.googleapis.com/maps/api/geocode/json'
         resp = self.request(url, payload=payload)
-        if 'status' not in resp.json or resp.json['status'] != 'OK':
-            return None
-        self.alert("Got address '%s'"%(resp.json['results'][0]['formatted_address']))
+        # kill the module if nothing is returned
+        if len(resp.json['results']) == 0:
+            self.output('Unable to resolve an address for (%f, %f).' % (lat, lon))
+            return
+        # loop through and add results to a table
+        tdata = []
+        for result in resp.json['results']:
+            tdata.append((result['geometry']['location_type'], result['formatted_address']))
+        # output the table
+        if tdata:
+            tdata.insert(0, ('Type', 'Address'))
+            self.table(tdata, header=True)
