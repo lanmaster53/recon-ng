@@ -411,6 +411,8 @@ def xfr(where, zone, rdtype=dns.rdatatype.AXFR, rdclass=dns.rdataclass.IN,
         tcpmsg = struct.pack("!H", l) + wire
         _net_write(s, tcpmsg, expiration)
     done = False
+    delete_mode = True
+    expecting_SOA = False
     soa_rrset = None
     soa_count = 0
     if relativize:
@@ -439,18 +441,16 @@ def xfr(where, zone, rdtype=dns.rdatatype.AXFR, rdclass=dns.rdataclass.IN,
         tsig_ctx = r.tsig_ctx
         first = False
         answer_index = 0
-        delete_mode = False
-        expecting_SOA = False
         if soa_rrset is None:
             if not r.answer or r.answer[0].name != oname:
-                raise dns.exception.FormError
+                raise dns.exception.FormError("No answer or RRset not for qname")
             rrset = r.answer[0]
             if rrset.rdtype != dns.rdatatype.SOA:
                 raise dns.exception.FormError("first RRset is not an SOA")
             answer_index = 1
             soa_rrset = rrset.copy()
             if rdtype == dns.rdatatype.IXFR:
-                if soa_rrset[0].serial == serial:
+                if soa_rrset[0].serial <= serial:
                     #
                     # We're already up-to-date.
                     #
@@ -471,7 +471,14 @@ def xfr(where, zone, rdtype=dns.rdatatype.AXFR, rdclass=dns.rdataclass.IN,
                     expecting_SOA = False
                 elif rdtype == dns.rdatatype.IXFR:
                     delete_mode = not delete_mode
-                if rrset == soa_rrset and not delete_mode:
+                #
+                # If this SOA RRset is equal to the first we saw then we're
+                # finished. If this is an IXFR we also check that we're seeing
+                # the record in the expected part of the response.
+                #
+                if rrset == soa_rrset and \
+                        (rdtype == dns.rdatatype.AXFR or \
+                        (rdtype == dns.rdatatype.IXFR and delete_mode)):
                     done = True
             elif expecting_SOA:
                 #

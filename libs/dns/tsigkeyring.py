@@ -38,7 +38,7 @@ def to_text(keyring):
     
     textring = {}
     for keyname in keyring:
-        keytext = dns.name.to_text(keyname)
+        keytext = keyname.to_text()
         secret = base64.encodestring(keyring[keyname])
         textring[keytext] = secret
     return textring
