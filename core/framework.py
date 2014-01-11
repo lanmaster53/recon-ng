@@ -746,22 +746,22 @@ class module(cmd.Cmd):
         request.redirect = redirect
         return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth)
 
-    def browse(self):
+    def browser(self):
         '''Returns a mechanize.Browser object configured with the framework's global options.'''
-        browser = mechanize.Browser()
+        br = mechanize.Browser()
         # set the user-agent header
-        browser.addheaders = [('User-agent', self.goptions['user-agent']['value'])]
+        br.addheaders = [('User-agent', self.goptions['user-agent']['value'])]
         # set debug options
         if self.goptions['debug']['value']:
-            browser.set_debug_http(True)
-            browser.set_debug_redirects(True)
-            browser.set_debug_responses(True)
+            br.set_debug_http(True)
+            br.set_debug_redirects(True)
+            br.set_debug_responses(True)
         # set proxy
         if self.goptions['proxy']['value']:
-            browser.set_proxies({'http': self.goptions['proxy']['value'], 'https': self.goptions['proxy']['value']})
+            br.set_proxies({'http': self.goptions['proxy']['value'], 'https': self.goptions['proxy']['value']})
         # set timeout
         socket.setdefaulttimeout(self.goptions['timeout']['value'])
-        return browser
+        return br
 
     #==================================================
     # COMMAND METHODS
