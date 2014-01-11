@@ -25,6 +25,7 @@ import __builtin__
 sys.path.append('./libs/')
 import aes
 import dragons
+import mechanize
 
 class module(cmd.Cmd):
     def __init__(self, params):
@@ -744,6 +745,23 @@ class module(cmd.Cmd):
         request.timeout = timeout or self.goptions['timeout']['value']
         request.redirect = redirect
         return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth)
+
+    def browse(self):
+        '''Returns a mechanize.Browser object configured with the framework's global options.'''
+        browser = mechanize.Browser()
+        # set the user-agent header
+        browser.addheaders = [('User-agent', self.goptions['user-agent']['value'])]
+        # set debug options
+        if self.goptions['debug']['value']:
+            browser.set_debug_http(True)
+            browser.set_debug_redirects(True)
+            browser.set_debug_responses(True)
+        # set proxy
+        if self.goptions['proxy']['value']:
+            browser.set_proxies({'http': self.goptions['proxy']['value'], 'https': self.goptions['proxy']['value']})
+        # set timeout
+        socket.setdefaulttimeout(self.goptions['timeout']['value'])
+        return browser
 
     #==================================================
     # COMMAND METHODS
