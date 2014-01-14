@@ -61,14 +61,14 @@ class Module(framework.module):
         return (self.rad2deg(latMin), self.rad2deg(lonMin), self.rad2deg(latMax), self.rad2deg(lonMax))
 
     def module_run(self):
-        coords = self.boundingBox(self.options['latitude']['value'], self.options['longitude']['value'], self.options['radius']['value'])
+        coords = self.boundingBox(self.options['latitude'], self.options['longitude'], self.options['radius'])
         latrange1 = coords[0]
         longrange1 = coords[1]
         latrange2 = coords[2]
         longrange2 = coords[3]
         payload = {}
-        payload['credential_0'] = self.options['username']['value']
-        payload['credential_1'] = self.options['password']['value']
+        payload['credential_0'] = self.options['username']
+        payload['credential_1'] = self.options['password']
         payload['destination'] = '/'
         cookiejar = CookieJar()
         resp = self.request('https://wigle.net/gps/gps/main/login/', method='POST', payload=payload, redirect=False, cookiejar=cookiejar)

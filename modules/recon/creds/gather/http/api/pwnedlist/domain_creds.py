@@ -5,7 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -21,7 +21,7 @@ class Module(framework.module):
         decrypt_key = secret[:16]
         iv = self.get_key('pwnedlist_iv')
 
-        domain = self.options['domain']['value']
+        domain = self.options['domain']
 
         # API query guard
         if not self.api_guard(10000): return

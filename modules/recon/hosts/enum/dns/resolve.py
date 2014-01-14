@@ -19,11 +19,11 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        overwrite = self.options['overwrite']['value']
+        overwrite = self.options['overwrite']
         q = dns.resolver.get_default_resolver()
-        q.nameservers = [self.options['nameserver']['value']]
+        q.nameservers = [self.options['nameserver']]
         q.lifetime = 3
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts ORDER BY host' if overwrite else 'SELECT DISTINCT host FROM hosts WHERE ip_address IS NULL ORDER BY host')
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts ORDER BY host' if overwrite else 'SELECT DISTINCT host FROM hosts WHERE ip_address IS NULL ORDER BY host')
 
         for host in hosts:
             found = False

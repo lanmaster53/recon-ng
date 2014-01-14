@@ -18,7 +18,7 @@ class Module(framework.module):
 
     def module_run(self):
         # handle sources
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         
         url = 'http://whatweb.net/whatweb.php'
         for host in hosts:

@@ -38,10 +38,10 @@ class module(cmd.Cmd):
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
-        self.options = self.goptions = __builtin__.goptions
+        self.module_options = self.global_options = __builtin__.global_options
         # remove global options reference for module context
         if self.modulename != 'core':
-            self.options = {}
+            self.module_options = {}
         self.keys = __builtin__.keys
         self.workspace = __builtin__.workspace
         self.home = __builtin__.home
@@ -289,7 +289,7 @@ class module(cmd.Cmd):
 
     def verbose(self, line):
         '''Formats and presents output if in verbose mode.'''
-        if self.goptions['verbose']['value']:
+        if self.global_options['verbose']['value']:
             self.output(line)
 
     def heading(self, line, level=1):
@@ -491,11 +491,11 @@ class module(cmd.Cmd):
 
     def query(self, query, values=()):
         '''Queries the database and returns the results as a list.'''
-        if self.goptions['debug']['value']: self.output(query)
+        if self.global_options['debug']['value']: self.output(query)
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
         if values:
-            if self.goptions['debug']['value']: self.output(repr(values))
+            if self.global_options['debug']['value']: self.output(repr(values))
             cur.execute(query, values)
         else:
             cur.execute(query)
@@ -517,19 +517,19 @@ class module(cmd.Cmd):
     def display_options(self, params):
         '''Lists options'''
         spacer = self.spacer
-        if self.options:
+        if self.module_options:
             pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
-            key_len = len(max(self.options, key=len))
+            key_len = len(max(self.module_options, key=len))
             if key_len < 4: key_len = 4
-            val_len = len(max([self.to_unicode_str(self.options[x]['value']) for x in self.options], key=len))
+            val_len = len(max([self.to_unicode_str(self.module_options[x]['value']) for x in self.module_options], key=len))
             if val_len < 13: val_len = 13
             print('')
             print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description'))
             print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11))
-            for key in sorted(self.options):
-                value = self.options[key]['value'] if self.options[key]['value'] != None else ''
-                reqd = self.options[key]['reqd']
-                desc = self.options[key]['desc']
+            for key in sorted(self.module_options):
+                value = self.module_options[key]['value'] if self.module_options[key]['value'] != None else ''
+                reqd = self.module_options[key]['reqd']
+                desc = self.module_options[key]['desc']
                 print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc))
             print('')
         else:
@@ -538,13 +538,13 @@ class module(cmd.Cmd):
             print('')
 
     def register_option(self, name, value, reqd, desc):
-        self.options[name.lower()] = {'value':value, 'reqd':reqd, 'desc':desc}
+        self.module_options[name.lower()] = {'value':value, 'reqd':reqd, 'desc':desc}
 
     def validate_options(self):
-        for option in self.options:
+        for option in self.module_options:
             # if value type is bool or int, then we know the options is set
-            if not type(self.options[option]['value']) in [bool, int]:
-                if self.options[option]['reqd'].lower() == 'yes' and not self.options[option]['value']:
+            if not type(self.module_options[option]['value']) in [bool, int]:
+                if self.module_options[option]['reqd'].lower() == 'yes' and not self.module_options[option]['value']:
                     raise FrameworkException('Value required for the \'%s\' option.' % (option))
         return
 
@@ -739,10 +739,10 @@ class module(cmd.Cmd):
 
     def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, redirect=True):
         request = dragons.Request()
-        request.user_agent = self.goptions['user-agent']['value']
-        request.debug = self.goptions['debug']['value']
-        request.proxy = self.goptions['proxy']['value']
-        request.timeout = timeout or self.goptions['timeout']['value']
+        request.user_agent = self.global_options['user-agent']['value']
+        request.debug = self.global_options['debug']['value']
+        request.proxy = self.global_options['proxy']['value']
+        request.timeout = timeout or self.global_options['timeout']['value']
         request.redirect = redirect
         return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth)
 
@@ -750,17 +750,17 @@ class module(cmd.Cmd):
         '''Returns a mechanize.Browser object configured with the framework's global options.'''
         br = mechanize.Browser()
         # set the user-agent header
-        br.addheaders = [('User-agent', self.goptions['user-agent']['value'])]
+        br.addheaders = [('User-agent', self.global_options['user-agent']['value'])]
         # set debug options
-        if self.goptions['debug']['value']:
+        if self.global_options['debug']['value']:
             br.set_debug_http(True)
             br.set_debug_redirects(True)
             br.set_debug_responses(True)
         # set proxy
-        if self.goptions['proxy']['value']:
-            br.set_proxies({'http': self.goptions['proxy']['value'], 'https': self.goptions['proxy']['value']})
+        if self.global_options['proxy']['value']:
+            br.set_proxies({'http': self.global_options['proxy']['value'], 'https': self.global_options['proxy']['value']})
         # set timeout
-        socket.setdefaulttimeout(self.goptions['timeout']['value'])
+        socket.setdefaulttimeout(self.global_options['timeout']['value'])
         return br
 
     #==================================================
@@ -806,10 +806,10 @@ class module(cmd.Cmd):
             self.help_set()
             return
         name = options[0].lower()
-        if name in self.options:
+        if name in self.module_options:
             value = ' '.join(options[1:])
             print('%s => %s' % (name.upper(), value))
-            self.options[name]['value'] = self.autoconvert(value)
+            self.module_options[name]['value'] = self.autoconvert(value)
         else: self.error('Invalid option.')
 
     def do_unset(self, params):
@@ -850,7 +850,7 @@ class module(cmd.Cmd):
             return
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
-        if self.goptions['debug']['value']: self.output(params)
+        if self.global_options['debug']['value']: self.output(params)
         try: cur.execute(params)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
@@ -983,6 +983,10 @@ class module(cmd.Cmd):
 
     def do_run(self, params):
         '''Runs the module'''
+        # create runtime options dictionary
+        self.options = {}
+        for key in self.module_options:
+            self.options[key] = self.module_options[key]['value']
         try:
             self.validate_options()
             self.module_run()
@@ -990,14 +994,16 @@ class module(cmd.Cmd):
             print('')
         except socket.timeout as e:
             self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
-        except Exception:
-            if self.goptions['debug']['value']:
+        except Exception as e:
+            if self.global_options['debug']['value']:
                 print('%s%s' % (R, '-'*60))
                 traceback.print_exc()
                 print('%s%s' % ('-'*60, N))
-            self.error(traceback.format_exc().splitlines()[-1])
+            self.error(e.__str__())
         finally:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
+        # clean up
+        del self.options
 
     def module_run(self):
         pass
@@ -1112,7 +1118,7 @@ class module(cmd.Cmd):
     complete_spool = complete_record
 
     def complete_set(self, text, *ignored):
-        return [x for x in self.options if x.startswith(text)]
+        return [x for x in self.module_options if x.startswith(text)]
     complete_unset = complete_set
 
     def complete_show(self, text, line, *ignored):

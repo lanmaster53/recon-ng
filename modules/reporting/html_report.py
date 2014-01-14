@@ -7,7 +7,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('filename', '%s/results.html' % (self.workspace), 'yes', 'path and filename for report output')
         self.register_option('sanitize', True, 'yes', 'mask sensitive data in the report')
-        self.register_option('company', self.goptions['company']['value'], 'yes', 'name for report header')
+        self.register_option('company', self.global_options['company']['value'], 'yes', 'name for report header')
         self.info = {
                      'Name': 'HTML Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -26,7 +26,7 @@ class Module(framework.module):
         row_content = ''
         for row in rows:
             values = [self.to_unicode_str(x) if x != None else u'' for x in row]
-            if table == 'creds' and self.options['sanitize']['value']:
+            if table == 'creds' and self.options['sanitize']:
                 values[1] = '%s%s%s' % (values[1][:1], '*'*(len(values[1])-2), values[1][-1:])
             row_content += '<tr><td>%s</td></tr>\n' % ('</td><td>'.join(values))
         table_content += '<div class="table_container">\n%s\n%s\n<table id="%s">\n%s\n%s</table>\n</div>\n' % (table_show, table_hide, table, row_headers, row_content)
@@ -34,7 +34,7 @@ class Module(framework.module):
 
     def module_run(self):
         # validate that file can be created
-        filename = self.options['filename']['value']
+        filename = self.options['filename']
         outfile = open(filename, 'w')
         # html template
         template = """
@@ -174,7 +174,7 @@ a[id*="show-"] {
         for table in tables:
             table_content += self.build_table(table)
 
-        markup = template % (self.options['company']['value'].title(), table_content)
+        markup = template % (self.options['company'].title(), table_content)
         outfile.write(markup.encode('utf-8'))
         outfile.close()
         self.output('Report generated at \'%s\'.' % (filename))

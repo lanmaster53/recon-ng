@@ -20,9 +20,9 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        uri = self.options['uri']['value']
-        searchstr = self.options['searchstr']['value']
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        uri = self.options['uri']
+        searchstr = self.options['searchstr']
 
         protocols = ['http', 'https']
 

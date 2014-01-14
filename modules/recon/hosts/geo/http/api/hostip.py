@@ -17,7 +17,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
 
         for host in hosts:
             # request the scan
@@ -29,7 +29,7 @@ class Module(framework.module):
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (host, resp.text))
                 continue
 
-            if self.options['source']['value'] == 'db':
+            if self.options['source'] == 'db':
                 data = [jsonobj['city'].title()]
                 data.append(jsonobj['country_name'].title())
                 data.append(str(jsonobj['lat']))

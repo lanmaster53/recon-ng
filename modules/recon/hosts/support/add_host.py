@@ -19,12 +19,12 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        host = self.options['host']['value']
-        ip = self.options['address']['value']
+        host = self.options['host']
+        ip = self.options['address']
 
         if not any((host, ip)):
             self.error("Host or IP required")
             return
 
-        if self.add_host(host, ip, self.options['region']['value'], self.options['country']['value'], self.options['latitude']['value'], self.options['longitude']['value']):
+        if self.add_host(host, ip, self.options['region'], self.options['country'], self.options['latitude'], self.options['longitude']):
             self.output('Host successfully added.')

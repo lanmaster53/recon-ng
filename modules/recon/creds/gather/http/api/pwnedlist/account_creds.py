@@ -23,7 +23,7 @@ class Module(framework.module):
         decrypt_key = secret[:16]
         iv = self.get_key('pwnedlist_iv')
 
-        accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')
+        accounts = self.get_source(self.options['source'], 'SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')
 
         # API query guard
         if not self.api_guard(1): return

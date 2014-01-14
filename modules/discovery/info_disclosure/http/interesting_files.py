@@ -39,10 +39,10 @@ class Module(framework.module):
         return data_ct
 
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        download = self.options['download']['value']
-        protocol = self.options['protocol']['value']
-        port = self.options['port']['value']
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        download = self.options['download']
+        protocol = self.options['protocol']
+        port = self.options['port']
         # ignore unicode warnings when trying to ungzip text type 200 repsonses
         warnings.simplefilter("ignore")
         # (filename, string to search for to prevent false positive)

@@ -4,7 +4,7 @@ import re
 class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'domain to search')
+        self.register_option('domain', self.global_options['domain']['value'], 'yes', 'domain to search')
         self.info = {
                      'Name': 'RedIRIS PGP Key Owner Lookup',
                      'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
@@ -15,15 +15,15 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        domain = self.options['domain']['value']
+        domain = self.options['domain']
 
         url = 'http://pgp.rediris.es/pks/lookup'
-        payload= {'search' : self.options['domain']['value'] }
+        payload= {'search' : self.options['domain'] }
         resp = self.request(url, payload=payload)
 
         results = []
-        results.extend(re.findall('([^>]*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;<' % (self.options['domain']['value']), resp.text))
-        results.extend(re.findall('[\s]{10,}(\w.*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;' % (self.options['domain']['value']), resp.text))
+        results.extend(re.findall('([^>]*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;<' % (self.options['domain']), resp.text))
+        results.extend(re.findall('[\s]{10,}(\w.*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;' % (self.options['domain']), resp.text))
         results = list(set(results))
         if not results:
             self.output('No results found.')

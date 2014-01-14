@@ -6,9 +6,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('netblock', self.goptions['netblock']['value'], 'yes', self.goptions['netblock']['desc'])
+        self.register_option('netblock', self.global_options['netblock']['value'], 'yes', self.global_options['netblock']['desc'])
         self.register_option('restrict', 1, 'yes', 'limit number of api requests (0 = unrestricted)')
-        self.register_option('regex', '%s$' % (self.goptions['domain']['value']), 'no', 'regex to match for adding results to the database')
+        self.register_option('regex', '%s$' % (self.global_options['domain']['value']), 'no', 'regex to match for adding results to the database')
         self.info = {
                      'Name': 'Shodan Network Enumerator',
                      'Author': 'Mike Siegel and Tim Tomes (@LaNMaSteR53)',
@@ -19,12 +19,12 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        cidr = self.options['subnet']['value']
-        regex = self.options['regex']['value']
+        cidr = self.options['subnet']
+        regex = self.options['regex']
         cnt = 0
         new = 0
         query = 'net:%s' % (cidr)
-        limit = self.options['restrict']['value']
+        limit = self.options['restrict']
         results = self.search_shodan_api(query, limit)
         for host in results:
             if not 'hostnames' in host.keys():

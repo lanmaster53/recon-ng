@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
+        self.register_option('company', self.global_options['company']['value'], 'yes', self.global_options['company']['desc'])
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -52,7 +52,7 @@ class Module(framework.module):
         access_token = self.get_linkedin_access_token()
         count = 25
         url = 'https://api.linkedin.com/v1/people-search:(people:(id,first-name,last-name,headline,location:(name,country:(code))))'
-        payload = {'format': 'json', 'company-name': self.options['company']['value'], 'current-company': 'true', 'count': count, 'oauth2_access_token': access_token}
+        payload = {'format': 'json', 'company-name': self.options['company'], 'current-company': 'true', 'count': count, 'oauth2_access_token': access_token}
         cnt, tot = 0, 0
         page = 1
         while True:

@@ -19,10 +19,10 @@ class Module(framework.module):
 
     def module_run(self):
         # validate that file can be created
-        filename = self.options['filename']['value']
+        filename = self.options['filename']
         outfile = open(filename, 'w')
         # handle the source of information for the report
-        source = self.options['source']['value'].lower()
+        source = self.options['source'].lower()
         rows = []
         tables = [x[0].lower() for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['leaks', 'dashboard']]
         if source in tables:

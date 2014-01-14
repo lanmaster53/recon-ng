@@ -9,7 +9,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
         self.info = {
                      'Name': 'Baidu Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -18,7 +18,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        domain = self.options['domain']['value']
+        domain = self.options['domain']
         base_url = 'http://www.baidu.com/s'
         base_query = 'site:' + domain
         pattern = '<span class="g">\s*(?:\w*://)*(\S*?)\.%s[^<]*</span>'  % (domain)

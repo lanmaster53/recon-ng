@@ -16,7 +16,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        leak_ids = self.get_source(self.options['source']['value'], 'SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
+        leak_ids = self.get_source(self.options['source'], 'SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
 
         columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
         if not columns:

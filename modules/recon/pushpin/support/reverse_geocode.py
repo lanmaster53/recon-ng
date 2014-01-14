@@ -5,8 +5,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('latitude', self.goptions['latitude']['value'], 'yes', self.goptions['latitude']['desc'])
-        self.register_option('longitude', self.goptions['longitude']['value'], 'yes', self.goptions['longitude']['desc'])
+        self.register_option('latitude', self.global_options['latitude']['value'], 'yes', self.global_options['latitude']['desc'])
+        self.register_option('longitude', self.global_options['longitude']['value'], 'yes', self.global_options['longitude']['desc'])
         self.info = {
             'Name': 'Reverse Geocoder',
             'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
@@ -15,8 +15,8 @@ class Module(framework.module):
         }
 
     def module_run(self):
-        lat = self.options['latitude']['value']
-        lon = self.options['longitude']['value']
+        lat = self.options['latitude']
+        lon = self.options['longitude']
         self.verbose("Reverse geocoding (%f, %f)..." % (lat, lon))
         payload = {'latlng' : '%f,%f' % (lat,lon), 'sensor' : 'false'}
         url = 'https://maps.googleapis.com/maps/api/geocode/json'

@@ -24,17 +24,17 @@ class Module(framework.module):
         self.values = []
 
     def do_set(self, params):
-        orig_filename = self.options['filename']['value']
-        orig_sep = self.options['column_separator']['value']
-        orig_quote = self.options['quote_character']['value']
-        orig_has_header = self.options['has_header']['value']
+        orig_filename = self.options['filename']
+        orig_sep = self.options['column_separator']
+        orig_quote = self.options['quote_character']
+        orig_has_header = self.options['has_header']
         
         framework.module.do_set(self, params)
 
-        filename = self.options['filename']['value']
-        sep = self.options['column_separator']['value']
-        quote = self.options['quote_character']['value']
-        has_header = self.options['has_header']['value']
+        filename = self.options['filename']
+        sep = self.options['column_separator']
+        quote = self.options['quote_character']
+        has_header = self.options['has_header']
 
         # if anything has changed, repopulate the modules options
         if filename != orig_filename \
@@ -55,8 +55,7 @@ class Module(framework.module):
         if not self.values or len(self.values) == 0:
             return
 
-        has_header = self.options['has_header']['value']
-        verbose = self.goptions['verbose']['value']
+        has_header = self.options['has_header']
 
         all_column_names = [None] * len(self.values[0])
         for option in self.options:
@@ -67,7 +66,7 @@ class Module(framework.module):
                 except ValueError:
                     index = self.values[0].index(name)
 
-                all_column_names[index] = self.options[option]['value']
+                all_column_names[index] = self.options[option]
 
         # e.g. all_column_names = [None, 'fname', 'lname', None, 'title']
 
@@ -77,7 +76,7 @@ class Module(framework.module):
             return
 
         # build the query based on which column options have been set
-        table = self.options['table']['value']
+        table = self.options['table']
         used_column_names = []
         used_column_indices = []
         for index, name in enumerate(all_column_names):
@@ -97,22 +96,22 @@ class Module(framework.module):
                 )
             )
             # e.g. data = {'fname':'John', 'lname':'Doe', 'title':'CEO'}
-            if verbose: self.output('Inserting %s' % ' '.join([data[col] for col in used_column_names]))
+            self.verbose('Inserting %s' % ' '.join([data[col] for col in used_column_names]))
             if not self.insert(table, data):
                 self.error('There was a problem inserting the previous row into the database. Please check your settings.')
                 return
 
     def parse_file(self, filename=None, sep=None, quote=None):
         if filename is None:
-            filename = self.options['filename']['value']
+            filename = self.options['filename']
         if sep is None:
-            sep = self.options['column_separator']['value']
+            sep = self.options['column_separator']
         if quote is None:
-            quote = self.options['quote_character']['value']
+            quote = self.options['quote_character']
         if filename is None or sep is None:
             raise IOError
 
-        has_header = self.options['has_header']['value']
+        has_header = self.options['has_header']
         values = []
 
         with open(filename, 'rb') as infile:
@@ -147,7 +146,7 @@ class Module(framework.module):
                 del self.options[option]
 
         # add the new options
-        has_header = self.options['has_header']['value']
+        has_header = self.options['has_header']
         if has_header:
             for header in self.values[0]:
                 self.register_option('csv_%s' % header.replace(' ', '_'), None, 'no', 'database column name where this csv column will be imported')

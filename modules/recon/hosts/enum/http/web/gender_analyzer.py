@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('host', self.goptions['domain']['value'], 'yes', 'fully qualified target hostname')
+        self.register_option('host', self.global_options['domain']['value'], 'yes', 'fully qualified target hostname')
         self.info = {
                      'Name': 'Gender Analyzer Lookup',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',
@@ -15,7 +15,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        host  = self.options['host']['value']
+        host  = self.options['host']
 
         # request the author's gender
         url = 'http://genderanalyzer.com/?url=%s' % (host)

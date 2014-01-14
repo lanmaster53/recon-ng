@@ -8,7 +8,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('string', '"%s"' % (self.goptions['domain']['value']), 'yes', 'string to search for')
+        self.register_option('string', '"%s"' % (self.global_options['domain']['value']), 'yes', 'string to search for')
         self.register_option('type', 'url', 'yes', 'type of search (see \'info\' for options)')
         self.register_option('bsqli', True, 'yes', 'search for blind sqli')
         self.register_option('sqli', True, 'yes', 'search for sqli')
@@ -26,16 +26,16 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        search_type = self.options['type']['value']
+        search_type = self.options['type']
         if search_type.lower() not in ['url', 'title']:
             self.error('Invalid search type \'%s\'.' % (search_type))
             return
-        search_str = self.options['string']['value']
-        table = self.options['store_table']['value']
+        search_str = self.options['string']
+        table = self.options['store_table']
         url = 'http://punkspider.hyperiongray.com/service/search/domain/'
         payload = {'searchkey': search_type, 'searchvalue': search_str, 'filtertype': 'OR'}
         for item in ['bsqli', 'sqli', 'xss']:
-            if self.options[item]['value']:
+            if self.options[item]:
                 payload[item] = '1'
 
         tdata = []
@@ -74,7 +74,7 @@ class Module(framework.module):
                 break
 
         # get vulnerbilities for positive results
-        if vuln_domains and self.options['vulns']['value']:
+        if vuln_domains and self.options['vulns']:
             self.heading('Vulnerabilties', 1)
             for domain in vuln_domains:
                 url = 'http://punkspider.hyperiongray.com/service/search/detail/%s' % vuln_domains[domain]

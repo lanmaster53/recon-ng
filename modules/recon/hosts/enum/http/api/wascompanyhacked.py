@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
+        self.register_option('company', self.global_options['company']['value'], 'yes', self.global_options['company']['desc'])
         self.register_option('hashtags', '#xss #sqli #breached #hacked #pwnd', 'yes', 'list of hashtags to search for')
         self.info = {
                      'Name': 'WasCompanyHacked Twitter Search',
@@ -18,8 +18,8 @@ class Module(framework.module):
                                   ]
                      }
     def module_run(self):
-        company = self.options['company']['value']
-        hashtags = self.options['hashtags']['value']
+        company = self.options['company']
+        hashtags = self.options['hashtags']
 
         hashtags = ' OR '.join([x for x in re.split(',| ', hashtags) if x])
         query = '%s %s' % (hashtags, company)

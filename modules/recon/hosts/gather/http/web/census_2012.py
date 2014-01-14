@@ -23,7 +23,7 @@ class Module(framework.module):
     def module_run(self):
 
         # configure module input
-        source = self.options['source']['value']
+        source = self.options['source']
         ranges = []
         if re.search('\d+\.\d+\.\d+\.\d+[\s\-/]', source):
             raw_ranges = source.split(',')
@@ -44,8 +44,8 @@ class Module(framework.module):
                 ranges.append((address, address))
 
         # begin module processing
-        table = self.options['store_table']['value']
-        column = self.options['store_column']['value']
+        table = self.options['store_table']
+        column = self.options['store_column']
         tdata = []
         for ips in ranges:
             first = ips[0]

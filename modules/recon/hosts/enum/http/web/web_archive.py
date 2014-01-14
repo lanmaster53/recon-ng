@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
         self.info = {
                      'Name': 'Web Archive Lookup',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',
@@ -16,7 +16,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        domain  = self.options['domain']['value']
+        domain  = self.options['domain']
 
         # Get the first year the domain was archived
         url = 'http://web.archive.org/web/*/%s' % (domain)

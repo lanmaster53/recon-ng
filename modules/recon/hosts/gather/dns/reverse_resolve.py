@@ -8,8 +8,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('netblock', self.goptions['netblock']['value'], 'yes', self.goptions['netblock']['desc'])
-        self.register_option('regex', '%s$' % (self.goptions['domain']['value']), 'no', 'regex to match for adding results to the database')
+        self.register_option('netblock', self.global_options['netblock']['value'], 'yes', self.global_options['netblock']['desc'])
+        self.register_option('regex', '%s$' % (self.global_options['domain']['value']), 'no', 'regex to match for adding results to the database')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
         self.info = {
@@ -20,11 +20,11 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        addresses = self.cidr_to_list(self.options['subnet']['value'])
-        regex = self.options['regex']['value']
+        addresses = self.cidr_to_list(self.options['subnet'])
+        regex = self.options['regex']
         resolver = dns.resolver.get_default_resolver()
-        resolver.nameservers = [self.options['nameserver']['value']]
-        resolver.lifetime = self.options['timeout']['value']
+        resolver.nameservers = [self.options['nameserver']]
+        resolver.lifetime = self.options['timeout']
         #resolver.timeout = 2
         cnt = 0
         new = 0

@@ -33,7 +33,7 @@ class Module(framework.module):
     def module_run(self):
         results_ana = results_ad = set()
         # Visit Target URL and scrape for codes
-        url_target_site = self.options['url']['value']
+        url_target_site = self.options['url']
         if re.search('^https*://', url_target_site):
             self.verbose('Retrieving source for: %s' % url_target_site)
             resp = self.request(url_target_site)

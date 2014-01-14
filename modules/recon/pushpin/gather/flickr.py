@@ -7,9 +7,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('latitude', self.goptions['latitude']['value'], 'yes', self.goptions['latitude']['desc'])
-        self.register_option('longitude', self.goptions['longitude']['value'], 'yes', self.goptions['longitude']['desc'])
-        self.register_option('radius', self.goptions['radius']['value'], 'yes', 'radius in kilometers')
+        self.register_option('latitude', self.global_options['latitude']['value'], 'yes', self.global_options['latitude']['desc'])
+        self.register_option('longitude', self.global_options['longitude']['value'], 'yes', self.global_options['longitude']['desc'])
+        self.register_option('radius', self.global_options['redius']['value'], 'yes', 'radius in kilometers')
         self.info = {
                      'Name': 'Flickr Geolocation Search',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -20,9 +20,9 @@ class Module(framework.module):
                      }
     def module_run(self):
         api_key = self.get_key('flickr_api')
-        lat = self.options['latitude']['value']
-        lon = self.options['longitude']['value']
-        rad = self.options['radius']['value']
+        lat = self.options['latitude']
+        lon = self.options['longitude']
+        rad = self.options['radius']
         payload = {'method': 'flickr.photos.search', 'format': 'json', 'api_key': api_key, 'lat': lat, 'lon': lon, 'has_geo': 1, 'min_taken_date': '1990-01-01 00:00:00', 'extras': 'date_upload,date_taken,owner_name,geo,url_t,url_m', 'radius': rad, 'radius_units':'km', 'per_page': 500}
         url = 'http://api.flickr.com/services/rest/'
         processed = 0

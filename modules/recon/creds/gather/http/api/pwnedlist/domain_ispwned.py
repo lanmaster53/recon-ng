@@ -5,7 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('source', self.goptions['domain']['value'], 'yes', 'source of domains for module input (see \'info\' for options)')
+        self.register_option('source', self.global_options['domain']['value'], 'yes', 'source of domains for module input (see \'info\' for options)')
         self.register_option('store_table', None, 'no', 'name of database table to store the results or data will not be stored')
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
@@ -21,8 +21,8 @@ class Module(framework.module):
         key = self.get_key('pwnedlist_api')
         secret = self.get_key('pwnedlist_secret')
 
-        domains = self.get_source(self.options['source']['value'])
-        table = self.options['store_table']['value']
+        domains = self.get_source(self.options['source'])
+        table = self.options['store_table']
 
         # API query guard
         if not self.api_guard(1*len(domains)): return

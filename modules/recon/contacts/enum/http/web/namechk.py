@@ -19,7 +19,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        username = self.options['username']['value']
+        username = self.options['username']
 
         # retrive list of sites
         url = 'http://namechk.com/Content/sites.min.js'
@@ -30,7 +30,7 @@ class Module(framework.module):
         sites = re.findall(pattern, resp.text)
 
         # output table of sites info
-        if self.goptions['verbose']['value']:
+        if self.global_options['verbose']:
             tdata = [['Code', 'Name']]
             for site in sites:
                 tdata.append([site[1], site[0]])

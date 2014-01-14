@@ -19,5 +19,5 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        if self.add_contact(self.options['fname']['value'], self.options['lname']['value'], self.options['title']['value'], self.options['email']['value'], self.options['region']['value'], self.options['country']['value']):
+        if self.add_contact(self.options['fname'], self.options['lname'], self.options['title'], self.options['email'], self.options['region'], self.options['country']):
             self.output('Contact successfully added.')

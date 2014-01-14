@@ -45,10 +45,10 @@ class Module(framework.module):
         Sets two properties of this class instance, self.handle and self.dtg.
         '''
         # handle
-        handle = self.options['handle']['value']
+        handle = self.options['handle']
         self.handle = handle if not handle.startswith('@') else handle[1:]
         # dtg
-        dtg = self.options['dtg']['value']
+        dtg = self.options['dtg']
         if not dtg:
             dtg = '2011-01-01'
         elif not re.match(r'\d\d\d\d-\d\d-\d\d', dtg):

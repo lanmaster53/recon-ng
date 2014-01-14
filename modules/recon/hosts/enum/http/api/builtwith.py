@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('host', self.goptions['domain']['value'], 'yes', 'target host')
+        self.register_option('host', self.global_options['domain']['value'], 'yes', 'target host')
         self.info = {
                      'Name': 'BuiltWith Server-side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -17,7 +17,7 @@ class Module(framework.module):
 
     def module_run(self):
         key = self.get_key('builtwith_api')
-        host = self.options['host']['value']
+        host = self.options['host']
         url = ' http://api.builtwith.com/v2/api.json'
         payload = {'key': key, 'lookup': host}
         resp = self.request(url, payload=payload)
@@ -29,7 +29,7 @@ class Module(framework.module):
             subdomain = path['SubDomain']
             fqdn = '.'.join([x for x in [subdomain, domain] if x])
             self.alert(fqdn)
-            if self.goptions['verbose']['value']:
+            if self.global_options['verbose']:
                 for item in path['Technologies']:
                     print(self.ruler*50)
                     for tag in item:
