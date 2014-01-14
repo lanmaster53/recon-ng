@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import urllib
 import re
 import sys
 
@@ -18,6 +17,7 @@ class Module(framework.module):
                                   'Twitter only saves tweets for 6-8 days at this time.'
                                   ]
                      }
+
     def module_run(self):
         self.bearer_token = self.get_twitter_oauth_token()
         self.handle_options()

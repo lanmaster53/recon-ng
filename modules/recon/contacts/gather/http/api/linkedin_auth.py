@@ -20,6 +20,9 @@ class Module(framework.module):
             return self.get_key(token_name)
         except:
             pass
+        import urllib
+        import webbrowser
+        import socket
         linkedin_key = self.get_key('linkedin_api')
         linkedin_secret = self.get_key('linkedin_secret')
         port = 50007

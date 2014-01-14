@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import urllib
 import time
 
 class Module(framework.module):
