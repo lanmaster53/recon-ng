@@ -66,8 +66,7 @@ class Recon(framework.module):
         self.base_prompt = self.prompt_template % ('', self.name)
         framework.module.__init__(self, (self.base_prompt, 'core'))
         self.init_home()
-        self.init_goptions()
-        self.options = self.goptions
+        self.init_global_options()
         self.load_modules()
         self.load_keys()
         if self.mode == 0: self.show_banner()
@@ -96,18 +95,18 @@ class Recon(framework.module):
         if not os.path.exists(self.home):
             os.makedirs(self.home)
 
-    def init_goptions(self):
-        self.register_option('domain', None, 'no', 'target domain', self.goptions)
-        self.register_option('company', None, 'no', 'target company name', self.goptions)
-        self.register_option('netblock', None, 'no', 'target netblock (CIDR)', self.goptions)
-        self.register_option('latitude', None, 'no', 'target latitudinal position', self.goptions)
-        self.register_option('longitude', None, 'no', 'target longitudinal position', self.goptions)
-        self.register_option('radius', None, 'no', 'radius relative to latitude and longitude', self.goptions)
-        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string', self.goptions)
-        self.register_option('proxy', None, 'no', 'proxy server <address>:<port>', self.goptions)
-        self.register_option('timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
-        self.register_option('verbose', True,  'yes', 'enable verbose output', self.goptions)
-        self.register_option('debug', False,  'yes', 'enable debugging output', self.goptions)
+    def init_global_options(self):
+        self.register_option('domain', None, 'no', 'target domain')
+        self.register_option('company', None, 'no', 'target company name')
+        self.register_option('netblock', None, 'no', 'target netblock (CIDR)')
+        self.register_option('latitude', None, 'no', 'target latitudinal position')
+        self.register_option('longitude', None, 'no', 'target longitudinal position')
+        self.register_option('radius', None, 'no', 'radius relative to latitude and longitude')
+        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
+        self.register_option('proxy', None, 'no', 'proxy server <address>:<port>')
+        self.register_option('timeout', 10, 'yes', 'socket timeout in seconds')
+        self.register_option('verbose', True,  'yes', 'enable verbose output')
+        self.register_option('debug', False,  'yes', 'enable debugging output')
 
     def load_modules(self, reload=False):
         self.loaded_category = {}
@@ -195,7 +194,7 @@ class Recon(framework.module):
         self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.init_goptions()
+        self.init_global_options()
         self.load_config()
         return True
 

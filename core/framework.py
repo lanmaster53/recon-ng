@@ -38,11 +38,13 @@ class module(cmd.Cmd):
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
-        self.goptions = __builtin__.goptions
+        self.options = self.goptions = __builtin__.goptions
+        # remove global options reference for module context
+        if self.modulename != 'core':
+            self.options = {}
         self.keys = __builtin__.keys
         self.workspace = __builtin__.workspace
         self.home = __builtin__.home
-        self.options = {}
         self.rpc_cache = []
 
     #==================================================
@@ -535,10 +537,8 @@ class module(cmd.Cmd):
             print('%sNo options available for this module.' % (spacer))
             print('')
 
-    def register_option(self, name, value, reqd, desc, options=None):
-        # can't use not because empty dictonary would eval as true
-        if options == None: options = self.options
-        options[name.lower()] = {'value':value, 'reqd':reqd, 'desc':desc}
+    def register_option(self, name, value, reqd, desc):
+        self.options[name.lower()] = {'value':value, 'reqd':reqd, 'desc':desc}
 
     def validate_options(self):
         for option in self.options:
