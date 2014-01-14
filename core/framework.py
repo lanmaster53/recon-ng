@@ -990,12 +990,12 @@ class module(cmd.Cmd):
             print('')
         except socket.timeout as e:
             self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
-        except Exception as e:
+        except Exception:
             if self.goptions['debug']['value']:
                 print('%s%s' % (R, '-'*60))
                 traceback.print_exc()
                 print('%s%s' % ('-'*60, N))
-            self.error(e.__str__())
+            self.error(traceback.format_exc().splitlines()[-1])
         finally:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 

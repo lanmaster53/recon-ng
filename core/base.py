@@ -284,7 +284,11 @@ class Recon(framework.module):
         # notify the user if runtime errors exist in the module
         try: y = sys.modules[loadedname].Module((prompt, modulename))
         except Exception:
-            self.error('Error in module: %s' % (traceback.format_exc().splitlines()[-1]))
+            if self.options['debug']['value']:
+                print('%s%s' % (R, '-'*60))
+                traceback.print_exc()
+                print('%s%s' % ('-'*60, N))
+            self.error(traceback.format_exc().splitlines()[-1])
             return
         # return the loaded module if in command line mode
         if self.mode == 1: return y
