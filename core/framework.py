@@ -1131,7 +1131,7 @@ class Options(dict):
         super(Options, self).__setitem__(name, self._autoconvert(value))
            
     def __delitem__(self, name):
-        super(Options, self).__detitem__(name)
+        super(Options, self).__delitem__(name)
         if name in self.required:
             del self.required[name]
         if name in self.description:
