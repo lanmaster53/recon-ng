@@ -178,7 +178,7 @@ class Module(framework.module):
             
     
     def module_run(self):
-        username = self.options['username']['value']
+        username = self.options['username']
         # Dictionaries to store the scraped data
         self.name = []
         self.dateJoin = []

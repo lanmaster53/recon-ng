@@ -5,7 +5,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'no', 'target email domain')
+        self.register_option('domain', self.global_options['domain']['value'], 'no', 'target email domain')
         self.register_option('pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
         self.register_option('max-length', 30, 'yes', 'maximum length of email address prefix or username')
         self.register_option('overwrite', False, 'yes', 'overwrite exisitng email addresses')
@@ -21,10 +21,10 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        domain = self.options['domain']['value']
-        pattern = self.options['pattern']['value']
-        max_len = self.options['max-length']['value']
-        overwrite = self.options['overwrite']['value']
+        domain = self.options['domain']
+        pattern = self.options['pattern']
+        max_len = self.options['max-length']
+        overwrite = self.options['overwrite']
         contacts = self.query('SELECT rowid, fname, lname FROM contacts ORDER BY fname' if overwrite else 'SELECT rowid, fname, lname FROM contacts WHERE email IS NULL ORDER BY fname')
         if len(contacts) == 0:
             self.error('No contacts to mangle.')

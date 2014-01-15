@@ -6,7 +6,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'info\' for options)')
-        self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
+        self.register_option('company', self.global_options['company']['value'], 'yes', self.global_options['company']['desc'])
         self.info = {
             'Name': 'Rapportive Contact Enumerator',
             'Author': 'Quentin Kaiser (@qkaiser, contact[at]quentinkaiser.be) and Tim Tomes (@LaNMaSteR53)',
@@ -29,7 +29,7 @@ class Module(framework.module):
 
     def module_run(self):
 
-        emails = self.get_source(self.options['source']['value'], "SELECT DISTINCT email FROM contacts ORDER BY email")
+        emails = self.get_source(self.options['source'], "SELECT DISTINCT email FROM contacts ORDER BY email")
         session_token = self.get_rapportive_session_token()
         headers = {'X-Session-Token' : session_token}
         cnt = 0
@@ -56,7 +56,7 @@ class Module(framework.module):
                     for occupation in contact['occupations']:
                         job_title = occupation['job_title']
                         company = occupation['company']
-                        if self.options['company']['value'].lower() in company.lower():
+                        if self.options['company'].lower() in company.lower():
                             method = getattr(self, 'alert')
                             new += self.add_contact(first_name, last_name, job_title, email, region)
                         else:

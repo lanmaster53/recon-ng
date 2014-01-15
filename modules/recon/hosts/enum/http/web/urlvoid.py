@@ -17,7 +17,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
 
         for host in hosts:
             url = 'http://www.urlvoid.com/update-report/%s' % (host)

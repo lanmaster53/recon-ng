@@ -1,6 +1,5 @@
 import framework
 # unique to module
-import urllib
 import time
 
 class Module(framework.module):
@@ -21,14 +20,14 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        username = self.options['username']['value']
-        password = self.options['password']['value']
+        username = self.options['username']
+        password = self.options['password']
         key = self.get_key('jigsaw_api')
 
         # point guard
         if not self.api_guard(5): return
 
-        url = 'https://www.jigsaw.com/rest/contacts/%s.json' % (self.options['contact']['value'])
+        url = 'https://www.jigsaw.com/rest/contacts/%s.json' % (self.options['contact'])
         payload = {'token': key, 'username': username, 'password': password, 'purchaseFlag': 'true'}
         resp = self.request(url, payload=payload, redirect=False)
         if resp.json: jsonobj = resp.json

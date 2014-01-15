@@ -20,19 +20,19 @@ class Module(framework.module):
 
     def module_run(self):
         # validate that file can be created
-        filename = self.options['filename']['value']
+        filename = self.options['filename']
         outfile = open(filename, 'w')
         # handle the source of information for the report
-        column = self.options['column']['value']
-        table = self.options['table']['value']
-        nulls = ' WHERE "%s" IS NOT NULL' % (column) if not self.options['nulls']['value'] else ''
-        unique = 'DISTINCT ' if self.options['unique']['value'] else ''
+        column = self.options['column']
+        table = self.options['table']
+        nulls = ' WHERE "%s" IS NOT NULL' % (column) if not self.options['nulls'] else ''
+        unique = 'DISTINCT ' if self.options['unique'] else ''
         values = (unique, column, table, nulls)
         query = 'SELECT %s"%s" FROM "%s"%s ORDER BY 1' % values
         rows = self.query(query)
         for row in [x[0] for x in rows]:
             row = row if row else ''
             outfile.write(('%s\n' % (row)).encode('utf-8'))
-            print row
+            print(row)
         outfile.close()
         self.output('%d items added to \'%s\'.' % (len(rows), filename))

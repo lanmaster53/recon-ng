@@ -19,7 +19,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
+        hashes = self.get_source(self.options['source'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
 
         # lookup each hash
         url = 'http://md5.noisette.ch/md5.php'

@@ -18,7 +18,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
 
         for host in hosts:
             # request NetBIOS info

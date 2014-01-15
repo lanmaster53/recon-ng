@@ -111,7 +111,7 @@ def sign(wire, keyname, secret, time, fudge, original_id, error,
     mpack = struct.pack('!H', len(mac))
     tsig_rdata = pre_mac + mpack + mac + id + post_mac
     if multi:
-        ctx = hmac.new(secret)
+        ctx = hmac.new(secret, digestmod=digestmod)
         ml = len(mac)
         ctx.update(struct.pack('!H', ml))
         ctx.update(mac)

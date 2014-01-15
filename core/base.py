@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+from __future__ import print_function
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
@@ -19,9 +19,7 @@ import re
 import __builtin__
 import framework
 
-# define colors for output
-# note: color in prompt effects
-# rendering of command history
+# colors for output
 __builtin__.N  = '\033[m' # native
 __builtin__.R  = '\033[31m' # red
 __builtin__.G  = '\033[32m' # green
@@ -32,13 +30,28 @@ __builtin__.B  = '\033[34m' # blue
 __builtin__.script = 0
 __builtin__.load = 0
 
-# set global framework options
-__builtin__.goptions = {}
+# framework variables
+__builtin__.global_options = {}
 __builtin__.keys = {}
 __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
 __builtin__.home = ''
 __builtin__.record = None
+__builtin__.spool = None
+
+# spooling system
+def spool_print(*args, **kwargs):
+    if __builtin__.spool:
+        __builtin__.spool.write('%s\n' % (args[0]))
+        __builtin__.spool.flush()
+    if 'console' in kwargs and kwargs['console'] is False:
+        return
+    # new print function must still use the old print function via the backup
+    __builtin__._print(*args, **kwargs)
+# make a builtin backup of the original print function
+__builtin__._print = print
+# override the builtin print function with the new print function
+__builtin__.print = spool_print
 
 class Recon(framework.module):
     def __init__(self, mode=0):
@@ -52,8 +65,7 @@ class Recon(framework.module):
         self.base_prompt = self.prompt_template % ('', self.name)
         framework.module.__init__(self, (self.base_prompt, 'core'))
         self.init_home()
-        self.init_goptions()
-        self.options = self.goptions
+        self.init_global_options()
         self.load_modules()
         self.load_keys()
         if self.mode == 0: self.show_banner()
@@ -65,8 +77,14 @@ class Recon(framework.module):
 
     def version_check(self):
         try:
-            remote = hashlib.md5(urllib2.urlopen('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').read()).hexdigest()
-            local = hashlib.md5(open('VERSION').read()).hexdigest()
+            pattern = "'([\d\.]*)'"
+            remote = re.search(pattern, self.request('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').raw).group(1)
+            local = re.search(pattern, open('VERSION').read()).group(1)
+            if remote != local:
+                self.alert('Your version of Recon-ng does not match the latest release.')
+                self.alert('Please update or use the \'--no-check\' switch to continue using the old version.')
+                self.output('Remote version: %s' % (remote))
+                self.output('Local version:  %s' % (local))
             return local == remote
         except:
             return True
@@ -76,18 +94,18 @@ class Recon(framework.module):
         if not os.path.exists(self.home):
             os.makedirs(self.home)
 
-    def init_goptions(self):
-        self.register_option('domain', None, 'no', 'target domain', self.goptions)
-        self.register_option('company', None, 'no', 'target company name', self.goptions)
-        self.register_option('latitude', None, 'no', 'target latitudinal position', self.goptions)
-        self.register_option('longitude', None, 'no', 'target longitudinal position', self.goptions)
-        self.register_option('radius', None, 'no', 'radius of interest relative to latitude and longitude', self.goptions)
-        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string', self.goptions)
-        self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
-        self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
-        self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
-        self.register_option('verbose', True,  'yes', 'enable verbose output', self.goptions)
-        self.register_option('debug', False,  'yes', 'enable debugging output', self.goptions)
+    def init_global_options(self):
+        self.register_option('domain', None, 'no', 'target domain')
+        self.register_option('company', None, 'no', 'target company name')
+        self.register_option('netblock', None, 'no', 'target netblock (CIDR)')
+        self.register_option('latitude', None, 'no', 'target latitudinal position')
+        self.register_option('longitude', None, 'no', 'target longitudinal position')
+        self.register_option('radius', None, 'no', 'radius relative to latitude and longitude')
+        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
+        self.register_option('proxy', None, 'no', 'proxy server <address>:<port>')
+        self.register_option('timeout', 10, 'yes', 'socket timeout in seconds')
+        self.register_option('verbose', True,  'yes', 'enable verbose output')
+        self.register_option('debug', False,  'yes', 'enable debugging output')
 
     def load_modules(self, reload=False):
         self.loaded_category = {}
@@ -114,9 +132,9 @@ class Recon(framework.module):
                             self.loaded_category[mod_category].append(mod_loadname)
                             self.loaded_modules[mod_dispname] = mod_loadname
                         except:
-                            print '-'*60
+                            print('-'*60)
                             traceback.print_exc()
-                            print '-'*60
+                            print('-'*60)
                             self.error('Unable to load module: %s' % (mod_name))
 
     def load_keys(self):
@@ -131,17 +149,17 @@ class Recon(framework.module):
     def show_banner(self):
         banner = open('./core/banner').read()
         banner_len = len(max(banner.split('\n'), key=len))
-        print banner
-        print '{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8) # +8 compensates for the color bytes
-        print ''
+        print(banner)
+        print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8)) # +8 compensates for the color bytes
+        print('')
         counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
         count_len = len(max([str(x[0]) for x in counts], key=len))
         for count in sorted(counts, reverse=True):
             cnt = '[%d]' % (count[0])
-            print '%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N)
+            print('%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N))
             # create dynamic easter egg command based on counts
             setattr(self, 'do_%d' % count[0], self.menu_egg)
-        print ''
+        print('')
 
     def menu_egg(self, params):
         eggs = [
@@ -157,7 +175,7 @@ class Recon(framework.module):
                 'Your mother called. She wants her menu driven UI back.',
                 'What\'s the samurai password?'
                 ]
-        print random.choice(eggs)
+        print(random.choice(eggs))
         return 
 
     def init_workspace(self, workspace):
@@ -175,7 +193,7 @@ class Recon(framework.module):
         self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.init_goptions()
+        self.init_global_options()
         self.load_config()
         return True
 
@@ -184,14 +202,14 @@ class Recon(framework.module):
         if os.path.exists(config_path):
             try:
                 config_data = json.loads(open(config_path, 'rb').read())
-                for key in config_data: self.options[key] = config_data[key]
+                for key in config_data: self.module_options[key] = config_data[key]
             except:
                 self.error('Corrupt config file.')
 
     def save_config(self):
         config_path = '%s/config.dat' % (self.workspace)
         config_file = open(config_path, 'wb')
-        json.dump(self.options, config_file)
+        json.dump(self.module_options, config_file)
         config_file.close()
 
     #==================================================
@@ -225,10 +243,10 @@ class Recon(framework.module):
             self.help_set()
             return
         name = options[0].lower()
-        if name in self.options:
+        if name in self.module_options:
             value = ' '.join(options[1:])
-            self.options[name]['value'] = self.autoconvert(value)
-            print '%s => %s' % (name.upper(), value)
+            self.module_options[name]['value'] = self.autoconvert(value)
+            print('%s => %s' % (name.upper(), value))
             self.save_config()
         else: self.error('Invalid option.')
 
@@ -265,13 +283,17 @@ class Recon(framework.module):
         # notify the user if runtime errors exist in the module
         try: y = sys.modules[loadedname].Module((prompt, modulename))
         except Exception:
-            self.error('Error in module: %s' % (traceback.format_exc().splitlines()[-1]))
+            if self.module_options['debug']['value']:
+                print('%s%s' % (R, '-'*60))
+                traceback.print_exc()
+                print('%s%s' % ('-'*60, N))
+            self.error('ModuleError: %s' % (traceback.format_exc().splitlines()[-1]))
             return
         # return the loaded module if in command line mode
         if self.mode == 1: return y
         try: y.cmdloop()
         except KeyboardInterrupt:
-            print ''
+            print('')
     do_use = do_load
 
     def do_run(self, params):
@@ -283,10 +305,10 @@ class Recon(framework.module):
     #==================================================
 
     def help_info(self):
-        print 'Usage: info <module>'
+        print('Usage: info <module>')
 
     def help_workspace(self):
-        print 'Usage: workspace <string>'
+        print('Usage: workspace <string>')
 
     #==================================================
     # COMPLETE METHODS

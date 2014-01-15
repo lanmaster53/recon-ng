@@ -4,12 +4,14 @@ import dns.resolver
 import os.path
 import random
 import string
+import re
 
 class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
+        self.register_option('regex', '%s$' % (self.global_options['domain']['value']), 'no', 'regex to match for adding results to the database')
         self.register_option('wordlist', './data/hostnames.txt', 'yes', 'path to hostname wordlist')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.register_option('attempts', 3, 'yes', 'Number of retry attempts per host')
@@ -21,11 +23,12 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        domain = self.options['domain']['value']
-        wordlist = self.options['wordlist']['value']
-        max_attempts = self.options['attempts']['value']
+        domain = self.options['domain']
+        regex = self.options['regex']
+        wordlist = self.options['wordlist']
+        max_attempts = self.options['attempts']
         resolver = dns.resolver.get_default_resolver()
-        resolver.nameservers = [self.options['nameserver']['value']]
+        resolver.nameservers = [self.options['nameserver']]
         resolver.lifetime = 2
         #resolver.timeout = 2
         cnt = 0
@@ -58,18 +61,17 @@ class Module(framework.module):
                         # process answers
                         for answer in answers.response.answer:
                             for rdata in answer:
-                                if rdata.rdtype == 1:
-                                    self.alert('%s => (A) %s - Host found!' % (host, host))
-                                    new += self.add_host(host)
-                                    cnt += 1
-                                if rdata.rdtype == 5:
-                                    cname = rdata.target.to_text()[:-1]
-                                    self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
-                                    if host != cname:
-                                        new += self.add_host(cname)
+                                if rdata.rdtype in (1, 5):
+                                    if rdata.rdtype == 1:
+                                        self.alert('%s => (A) %s - Host found!' % (host, host))
                                         cnt += 1
-                                    new += self.add_host(host)
-                                    cnt += 1
+                                    if rdata.rdtype == 5:
+                                        cname = rdata.target.to_text()[:-1]
+                                        self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
+                                        if not regex or re.search(regex, cname): new += self.add_host(cname)
+                                        cnt += 1
+                                    # add the host in case a CNAME exists without an A record
+                                    if not regex or re.search(regex, host): new += self.add_host(host)
                     # break out of the loop
                     attempt = max_attempts
             self.output('%d total hosts found.' % (cnt))

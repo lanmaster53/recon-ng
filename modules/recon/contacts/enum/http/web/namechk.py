@@ -15,11 +15,11 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
                      'Description': 'Leverages NameChk.com to validate the existance of usernames at specific web sites.',
                      'Comments': [
-                                  'Note: The global socket_timeout may need to be increased to support slower sites.']
+                                  'Note: The global timeout option may need to be increased to support slower sites.']
                      }
 
     def module_run(self):
-        username = self.options['username']['value']
+        username = self.options['username']
 
         # retrive list of sites
         url = 'http://namechk.com/Content/sites.min.js'
@@ -30,7 +30,7 @@ class Module(framework.module):
         sites = re.findall(pattern, resp.text)
 
         # output table of sites info
-        if self.goptions['verbose']['value']:
+        if self.global_options['verbose']:
             tdata = [['Code', 'Name']]
             for site in sites:
                 tdata.append([site[1], site[0]])

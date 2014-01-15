@@ -18,7 +18,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
+        accounts = self.get_source(self.options['source'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
 
         # retrieve status
         cnt = 0

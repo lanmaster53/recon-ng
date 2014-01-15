@@ -8,7 +8,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
-        self.register_option('regex', '%s$' % (self.goptions['domain']['value']), 'no', 'regex to match for adding results to the database')
+        self.register_option('regex', '%s$' % (self.global_options['domain']['value']), 'no', 'regex to match for adding results to the database')
         self.info = {
                      'Name': 'Bing IP Neighbor Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -19,8 +19,8 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        addresses = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        regex = self.options['regex']['value']
+        addresses = self.get_source(self.options['source'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
+        regex = self.options['regex']
 
         new = 0
         hosts = []

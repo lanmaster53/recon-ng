@@ -129,6 +129,13 @@ def load(obj):
         except ImportError:
             raise TranslationError('Could not import %s from module %s.' %
                                    (json_class_name, json_module_tree))
+
+        # The returned class is the top-level module, not the one we really
+        # want.  (E.g., if we import a.b.c, we now have a.)  Walk through other
+        # path components to get to b and c.
+        for i in json_module_parts[1:]:
+            temp_module = getattr(temp_module, i)
+
         json_class = getattr(temp_module, json_class_name)
     # Creating the object...
     new_obj = None

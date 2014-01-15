@@ -22,8 +22,8 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        domains = self.get_source(self.options['domains']['value'])
-        nameserver = self.options['nameserver']['value']
+        domains = self.get_source(self.options['domains'])
+        nameserver = self.options['nameserver']
 
         self.output('Starting queries...')
         

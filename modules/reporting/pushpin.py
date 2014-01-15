@@ -11,9 +11,9 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('map_filename', '%s/pushpin_map.html' % (self.workspace), 'yes', 'path and filename for pushpin map report')
         self.register_option('media_filename', '%s/pushpin_media.html' % (self.workspace), 'yes', 'path and filename for pushpin media report')
-        self.register_option('latitude', self.goptions['latitude']['value'], 'yes', 'latitude of the epicenter')
-        self.register_option('longitude', self.goptions['longitude']['value'], 'yes', 'longitude of the epicenter')
-        self.register_option('radius', self.goptions['radius']['value'], 'yes', 'radius from the epicenter in kilometers')
+        self.register_option('latitude', self.global_options['latitude']['value'], 'yes', 'latitude of the epicenter')
+        self.register_option('longitude', self.global_options['longitude']['value'], 'yes', 'longitude of the epicenter')
+        self.register_option('radius', self.global_options['radius']['value'], 'yes', 'radius from the epicenter in kilometers')
         self.info = {
                      'Name': 'PushPin Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -50,7 +50,7 @@ class Module(framework.module):
 
     def write_markup(self, template, filename, content):
         temp_content = open(template).read()
-        page = temp_content % (self.options['latitude']['value'], self.options['longitude']['value'], self.options['radius']['value'], content)
+        page = temp_content % (self.options['latitude'], self.options['longitude'], self.options['radius'], content)
         file = codecs.open(filename, 'w', 'utf-8')
         file.write(page)
         file.close()
@@ -58,12 +58,12 @@ class Module(framework.module):
     def module_run(self):
         sources = self.query('SELECT COUNT(source), source FROM pushpin GROUP BY source')
         media_content, map_content = self.build_content(sources)
-        self.write_markup('./data/template_media.html', self.options['media_filename']['value'], media_content)
-        self.output('Media data written to \'%s\'' % (self.options['media_filename']['value']))
-        self.write_markup('./data/template_map.html', self.options['map_filename']['value'], map_content)
-        self.output('Mapping data written to \'%s\'' % (self.options['map_filename']['value']))
+        self.write_markup('./data/template_media.html', self.options['media_filename'], media_content)
+        self.output('Media data written to \'%s\'' % (self.options['media_filename']))
+        self.write_markup('./data/template_map.html', self.options['map_filename'], map_content)
+        self.output('Mapping data written to \'%s\'' % (self.options['map_filename']))
 
         w = webbrowser.get()
-        w.open(self.options['media_filename']['value'])
+        w.open(self.options['media_filename'])
         time.sleep(2)
-        w.open(self.options['map_filename']['value'])
+        w.open(self.options['map_filename'])

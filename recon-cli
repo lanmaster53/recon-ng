@@ -8,6 +8,9 @@ import base
 
 def recon_cli(args):
     x = base.Recon(mode=1)
+    # check for and run version check
+    if args.check:
+        if not x.version_check(): return
     # set the given workspace
     if args.workspace: x.do_workspace(args.workspace)
     # set given global options
@@ -24,7 +27,7 @@ def recon_cli(args):
         return
     # exit if module not specified
     if not args.module:
-        print '%s[!] Module required.%s' % (R, N)
+        print('%s[!] Module required.%s' % (R, N))
         return
     # load the module
     y = x.do_load(args.module)
@@ -50,5 +53,6 @@ parser.add_argument('-M', help='show modules', dest='show_modules', default=Fals
 parser.add_argument('-m', help='specify the module', metavar='module', dest='module', action='store')
 parser.add_argument('-O', help='show available module options', dest='show', default=False, action='store_true')
 parser.add_argument('-o', help='set a module option (can be used more than once)', metavar='name=value', dest='options', default=[], action='append')
+parser.add_argument('--no-check', help='disable version check', dest='check', default=True, action='store_false')
 args = parser.parse_args()
 recon_cli(args)

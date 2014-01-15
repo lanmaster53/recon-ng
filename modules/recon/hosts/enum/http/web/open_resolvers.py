@@ -19,7 +19,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        ips = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL ORDER BY ip_address')
+        ips = self.get_source(self.options['source'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL ORDER BY ip_address')
         classCs = []
 
         # for each ip, get it's class C equivalent and add to a list

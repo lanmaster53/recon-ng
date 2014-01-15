@@ -15,8 +15,8 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        username = self.options['username']['value']
-        password = self.options['password']['value']
+        username = self.options['username']
+        password = self.options['password']
         key = self.get_key('jigsaw_api')
 
         url = 'https://www.jigsaw.com/rest/user.json'

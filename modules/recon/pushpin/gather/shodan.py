@@ -6,9 +6,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('latitude', self.goptions['latitude']['value'], 'yes', self.goptions['latitude']['desc'])
-        self.register_option('longitude', self.goptions['longitude']['value'], 'yes', self.goptions['longitude']['desc'])
-        self.register_option('radius', self.goptions['radius']['value'], 'yes', 'radius in kilometers')
+        self.register_option('latitude', self.global_options['latitude']['value'], 'yes', self.global_options['latitude']['desc'])
+        self.register_option('longitude', self.global_options['longitude']['value'], 'yes', self.global_options['longitude']['desc'])
+        self.register_option('radius', self.global_options['radius']['value'], 'yes', 'radius in kilometers')
         self.register_option('restrict', True, 'yes', 'limit number of api requests to \'REQUESTS\'')
         self.register_option('requests', 1, 'yes', 'maximum number of api requests to make')
         self.info = {
@@ -19,11 +19,11 @@ class Module(framework.module):
                                   'Shodan \'geo\' searches can take a long time to complete. If receiving connection timeout errors, increase the global SOCKET_TIMEOUT option.']
                      }
     def module_run(self):
-        lat = self.options['latitude']['value']
-        lon = self.options['longitude']['value']
-        rad = self.options['radius']['value']
+        lat = self.options['latitude']
+        lon = self.options['longitude']
+        rad = self.options['radius']
         query = 'geo:%f,%f,%d' % (lat, lon, rad)
-        limit = self.options['requests']['value'] if self.options['restrict']['value'] else 0
+        limit = self.options['requests'] if self.options['restrict'] else 0
         results = self.search_shodan_api(query, limit)
         new = 0
         for host in results:

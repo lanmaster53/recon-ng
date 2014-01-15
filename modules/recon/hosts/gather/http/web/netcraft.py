@@ -11,7 +11,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
         self.info = {
                      'Name': 'Netcraft Hostname Enumerator',
                      'Author': 'thrapt (thrapt@gmail.com)',
@@ -20,7 +20,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        domain = self.options['domain']['value']
+        domain = self.options['domain']
         url = 'http://searchdns.netcraft.com/'        
         payload = {'restriction': 'site+ends+with', 'host': domain}
         pattern = '<td align\=\"left\">\s*<a href=\"http://(.*?)/"'

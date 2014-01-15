@@ -22,7 +22,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
 
         cookiejar = CookieJar()
         url = 'http://toolbar.netcraft.com/site_report?url=www.google.com'

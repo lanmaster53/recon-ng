@@ -17,7 +17,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        addresses = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
+        addresses = self.get_source(self.options['source'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
 
         for address in addresses:
             url = 'http://whois.arin.net/rest/ip/%s/pft.txt' % (address)
