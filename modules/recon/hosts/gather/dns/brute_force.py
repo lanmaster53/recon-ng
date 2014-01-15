@@ -10,8 +10,8 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
-        self.register_option('regex', '%s$' % (self.global_options['domain']['value']), 'no', 'regex to match for adding results to the database')
+        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
+        self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.register_option('wordlist', './data/hostnames.txt', 'yes', 'path to hostname wordlist')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.register_option('attempts', 3, 'yes', 'Number of retry attempts per host')

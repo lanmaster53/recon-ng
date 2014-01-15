@@ -6,7 +6,7 @@ class Module(framework.module):
     def __init__(self, params):
         framework.module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'info\' for options)')
-        self.register_option('company', self.global_options['company']['value'], 'yes', self.global_options['company']['desc'])
+        self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
             'Name': 'Rapportive Contact Enumerator',
             'Author': 'Quentin Kaiser (@qkaiser, contact[at]quentinkaiser.be) and Tim Tomes (@LaNMaSteR53)',

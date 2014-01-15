@@ -6,9 +6,9 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('latitude', self.global_options['latitude']['value'], 'yes', self.global_options['latitude']['desc'])
-        self.register_option('longitude', self.global_options['longitude']['value'], 'yes', self.global_options['longitude']['desc'])
-        self.register_option('radius', self.global_options['radius']['value'], 'yes', 'radius in kilometers')
+        self.register_option('latitude', self.global_options['latitude'], 'yes', self.global_options.description['latitude'])
+        self.register_option('longitude', self.global_options['longitude'], 'yes', self.global_options.description['longitude'])
+        self.register_option('radius', self.global_options['radius'], 'yes', 'radius in kilometers')
         self.register_option('restrict', True, 'yes', 'limit number of api requests to \'REQUESTS\'')
         self.register_option('requests', 1, 'yes', 'maximum number of api requests to make')
         self.info = {
