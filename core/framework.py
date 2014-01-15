@@ -1114,7 +1114,19 @@ class module(cmd.Cmd):
         return [x for x in options if x.startswith(text)]
 
 #=================================================
-# SUPPORT CLASSES AND FUNCTIONS
+# SUPPORT FUNCTIONS
+#=================================================
+
+def is_writeable(filename):
+    try:
+        fp = open(filename, 'ab')
+        fp.close()
+        return True
+    except IOError:
+        return False
+
+#=================================================
+# SUPPORT CLASSES
 #=================================================
 
 class FrameworkException(Exception):
@@ -1138,13 +1150,12 @@ class Options(dict):
             del self.description[name]
         
     def _boolify(self, value):
-        # Will throw an exception if value is not a string representation of a boolean
         return {'true':True, 'false':False}[value.lower()]
         
     def _autoconvert(self, value):
-        if value is None or value is True or value is False:
+        if value in (None, True, False):
             return value
-        elif (isinstance(value, str) or isinstance(value, unicode)) and value.lower() in ['none', "''", '""']:
+        elif (isinstance(value, basestring)) and value.lower() in ('none', "''", '""'):
             return None
         for fn in (self._boolify, int, float):
             try: return fn(value)
@@ -1169,12 +1180,3 @@ class Options(dict):
         
     def description(self, name):
         return self.description[name] if name in self.description else ''
-
-
-def is_writeable(filename):
-    try:
-        fp = open(filename, 'ab')
-        fp.close()
-        return True
-    except IOError:
-        return False

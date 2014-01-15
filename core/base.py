@@ -202,14 +202,20 @@ class Recon(framework.module):
         if os.path.exists(config_path):
             try:
                 config_data = json.loads(open(config_path, 'rb').read())
-                for key in config_data: self.options[key] = config_data[key]
+                for key in config_data:
+                    self.options[key] = config_data[key]['value']
+                    self.options.required[key] = config_data[key]['reqd']
+                    self.options.description[key] = config_data[key]['desc']
             except:
                 self.error('Corrupt config file.')
 
     def save_config(self):
+        config_data = {}
+        for key in self.options:
+            config_data[key] = {'value':self.options[key], 'reqd':self.options.required[key], 'desc':self.options.description[key]}
         config_path = '%s/config.dat' % (self.workspace)
         config_file = open(config_path, 'wb')
-        json.dump(self.options, config_file)
+        json.dump(config_data, config_file, indent=4)
         config_file.close()
 
     #==================================================
