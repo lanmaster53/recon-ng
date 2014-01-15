@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('company', self.global_options['company']['value'], 'yes', self.global_options['company']['desc'])
+        self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

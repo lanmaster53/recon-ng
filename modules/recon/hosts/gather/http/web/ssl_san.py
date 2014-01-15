@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain']['value'], 'yes', 'domain to check for subject alternative names (SAN)')
+        self.register_option('domain', self.global_options['domain'], 'yes', 'domain to check for subject alternative names (SAN)')
         self.info = {
                      'Name': 'SSL SAN Lookup',
                      'Author': 'Zach Grace (@ztgrace) zgrace@403labs.com',

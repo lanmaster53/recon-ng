@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('company', self.global_options['company']['value'], 'yes', self.global_options['company']['desc'])
+        self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.register_option('hashtags', '#xss #sqli #breached #hacked #pwnd', 'yes', 'list of hashtags to search for')
         self.info = {
                      'Name': 'WasCompanyHacked Twitter Search',

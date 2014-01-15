@@ -9,7 +9,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
+        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.info = {
                      'Name': 'Google Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
