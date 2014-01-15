@@ -33,8 +33,8 @@ class Module(framework.module):
         # store if True and only 1 set of coordinates is returned
         if store:
             if len(resp.json['results']) == 1:
-                self.global_options['latitude']['value'] = lat
-                self.global_options['longitude']['value'] = lon
+                self.global_options['latitude'] = lat
+                self.global_options['longitude'] = lon
                 self.verbose('Global options, latitude and longitude, set.')
             elif len(resp.json['results']) > 1:
                 self.output('More than 1 result returned. Global options not set.')

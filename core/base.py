@@ -31,7 +31,7 @@ __builtin__.script = 0
 __builtin__.load = 0
 
 # framework variables
-__builtin__.global_options = {}
+__builtin__.global_options = framework.Options()
 __builtin__.keys = {}
 __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
@@ -202,14 +202,14 @@ class Recon(framework.module):
         if os.path.exists(config_path):
             try:
                 config_data = json.loads(open(config_path, 'rb').read())
-                for key in config_data: self.module_options[key] = config_data[key]
+                for key in config_data: self.options[key] = config_data[key]
             except:
                 self.error('Corrupt config file.')
 
     def save_config(self):
         config_path = '%s/config.dat' % (self.workspace)
         config_file = open(config_path, 'wb')
-        json.dump(self.module_options, config_file)
+        json.dump(self.options, config_file)
         config_file.close()
 
     #==================================================
@@ -243,9 +243,9 @@ class Recon(framework.module):
             self.help_set()
             return
         name = options[0].lower()
-        if name in self.module_options:
+        if name in self.options:
             value = ' '.join(options[1:])
-            self.module_options[name]['value'] = self.autoconvert(value)
+            self.options[name] = value
             print('%s => %s' % (name.upper(), value))
             self.save_config()
         else: self.error('Invalid option.')
@@ -283,7 +283,7 @@ class Recon(framework.module):
         # notify the user if runtime errors exist in the module
         try: y = sys.modules[loadedname].Module((prompt, modulename))
         except Exception:
-            if self.module_options['debug']['value']:
+            if self.options['debug']:
                 print('%s%s' % (R, '-'*60))
                 traceback.print_exc()
                 print('%s%s' % ('-'*60, N))

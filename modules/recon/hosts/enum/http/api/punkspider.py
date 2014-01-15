@@ -8,7 +8,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('string', '"%s"' % (self.global_options['domain']['value']), 'yes', 'string to search for')
+        self.register_option('string', '"%s"' % (self.global_options['domain']), 'yes', 'string to search for')
         self.register_option('type', 'url', 'yes', 'type of search (see \'info\' for options)')
         self.register_option('bsqli', True, 'yes', 'search for blind sqli')
         self.register_option('sqli', True, 'yes', 'search for sqli')

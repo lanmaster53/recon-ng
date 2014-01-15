@@ -7,7 +7,7 @@ class Module(framework.module):
         framework.module.__init__(self, params)
         self.register_option('filename', '%s/results.html' % (self.workspace), 'yes', 'path and filename for report output')
         self.register_option('sanitize', True, 'yes', 'mask sensitive data in the report')
-        self.register_option('company', self.global_options['company']['value'], 'yes', 'name for report header')
+        self.register_option('company', self.global_options['company'], 'yes', 'name for report header')
         self.info = {
                      'Name': 'HTML Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

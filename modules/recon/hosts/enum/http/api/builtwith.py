@@ -7,7 +7,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('host', self.global_options['domain']['value'], 'yes', 'target host')
+        self.register_option('host', self.global_options['domain'], 'yes', 'target host')
         self.info = {
                      'Name': 'BuiltWith Server-side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

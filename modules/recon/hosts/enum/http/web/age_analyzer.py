@@ -6,7 +6,7 @@ class Module(framework.module):
 
     def __init__(self, params):
         framework.module.__init__(self, params)
-        self.register_option('host', self.global_options['domain']['value'], 'yes', 'fully qualified target hostname')
+        self.register_option('host', self.global_options['domain'], 'yes', 'fully qualified target hostname')
         self.info = {
                      'Name': 'Age Analyzer Lookup',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',
