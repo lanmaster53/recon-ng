@@ -1,11 +1,11 @@
-import framework
+from framework import *
 # unique to module
 import re
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
@@ -46,7 +46,7 @@ class Module(framework.module):
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': linkedin_key, 'client_secret': linkedin_secret}
         resp = self.request(url, method='POST', payload=payload)
         if 'error' in resp.json:
-            raise framework.FrameworkException(resp.json['error_description'])
+            raise FrameworkException(resp.json['error_description'])
         access_token = resp.json['access_token']
         self.add_key(token_name, access_token)
         return access_token

@@ -1,10 +1,10 @@
-import framework
+from framework import *
 # unique to module
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'info\' for options)')
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
@@ -22,7 +22,7 @@ class Module(framework.module):
             pass
         resp = self.request('https://rapportive.com/login_status?user_email=%s@mail.com' % (self.random_str(15)))
         if 'error' in resp.json:
-            raise framework.FrameworkException(resp.json['error'])
+            raise FrameworkException(resp.json['error'])
         session_token = resp.json['session_token']
         self.add_key(token_name, session_token)
         return session_token

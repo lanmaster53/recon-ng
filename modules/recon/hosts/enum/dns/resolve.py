@@ -1,11 +1,11 @@
-import framework
+from framework import *
 # unique to module
 import dns.resolver
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.register_option('overwrite', False, 'yes', 'overwrite exisitng ip addresses')

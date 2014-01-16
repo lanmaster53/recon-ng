@@ -1,14 +1,14 @@
-import framework
+from framework import *
 # unique to module
 import re
 from hashlib import sha1
 from hmac import new as hmac
 import socket
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('username', None, 'yes', 'username to validate')
         self.info = {
                      'Name': 'NameChk.com Username Validator',

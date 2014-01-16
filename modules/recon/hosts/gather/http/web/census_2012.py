@@ -1,11 +1,11 @@
-import framework
+from framework import *
 # unique to module
 import re
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.register_option('store_table', None, 'no', 'name for a table to create in the database and store the complete result set')
         self.register_option('store_column', None, 'no', 'name for a column to create in the hosts table and store open port information')
@@ -73,13 +73,13 @@ class Module(framework.module):
         # store data
         if table:
             try: self.add_table(table, tdata, header=True)
-            except framework.FrameworkException as e:
+            except FrameworkException as e:
                 self.error(e.message)
         if column:
             try:
                 try:
                     self.add_column('hosts', column)
-                except framework.FrameworkException as e:
+                except FrameworkException as e:
                     self.error(e.message)
                     self.alert('Overwriting the existing \'%s\' column.' % (column))
                 # combine the port data from duplicate addresses
@@ -90,5 +90,5 @@ class Module(framework.module):
                     rdata[item[0]].append(item[1])
                 for item in rdata:
                     self.query('UPDATE hosts SET "%s"=? WHERE ip_address=?' % (column), (','.join(rdata[item]), item))
-            except framework.FrameworkException as e:
+            except FrameworkException as e:
                 self.error(e.message)

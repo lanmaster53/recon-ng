@@ -1,10 +1,10 @@
-import framework
+from framework import *
 # unique to module
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('host', None, 'no', 'fully qualified domain name')
         self.register_option('address', None, 'no', 'ip address')
         self.register_option('region', None, 'no', 'city, state or region')
