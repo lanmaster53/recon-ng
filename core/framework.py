@@ -40,7 +40,7 @@ class module(cmd.Cmd):
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.options = self.global_options = __builtin__.global_options
         # remove global options reference for module context
-        if self.modulename != 'core':
+        if self.modulename != 'base':
             self.options = Options()
         self.keys = __builtin__.keys
         self.workspace = __builtin__.workspace
@@ -527,6 +527,8 @@ class module(cmd.Cmd):
 
     def register_option(self, name, value, reqd, desc):
         self.options.init_option(name=name.lower(), value=value, required=reqd, description=desc)
+        # needs to be optimized rather than ran on every register
+        self.load_config()
 
     def validate_options(self):
         for option in self.options:
@@ -535,6 +537,47 @@ class module(cmd.Cmd):
                 if self.options.required[option].lower() == 'yes' and not self.options[option]:
                     raise FrameworkException('Value required for the \'%s\' option.' % (option))
         return
+
+    def load_config(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        # don't bother loading if a config file doesn't exist
+        if os.path.exists(config_path):
+            # retrieve saved config data
+            config_file = open(config_path, 'rb')
+            try:
+                config_data = json.loads(config_file.read())
+            except ValueError:
+                # file is corrupt, nothing to load, exit gracefully
+                pass
+            else:
+                # set option values
+                for key in self.options:
+                    try:
+                        self.options[key] = config_data[self.modulename][key]
+                    except KeyError:
+                        # invalid key, contnue to load valid keys
+                        continue
+            finally:
+                config_file.close()
+
+    def save_config(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        # create a config file if one doesn't exist
+        open(config_path, 'ab').close()
+        # retrieve saved config data
+        config_file = open(config_path, 'rb')
+        try:
+            config_data = json.loads(config_file.read())
+        except ValueError:
+            # file is empty or corrupt, nothing to load
+            config_data = {}
+        config_file.close()
+        # overwrite the old config data with option values
+        config_data[self.modulename] = self.options
+        # write the new config data to the config file
+        config_file = open(config_path, 'wb')
+        json.dump(config_data, config_file, indent=4)
+        config_file.close()
 
     def get_source(self, params, query=None):
         prefix = params.split()[0].lower()
@@ -796,8 +839,9 @@ class module(cmd.Cmd):
         name = options[0].lower()
         if name in self.options:
             value = ' '.join(options[1:])
-            print('%s => %s' % (name.upper(), value))
             self.options[name] = value
+            print('%s => %s' % (name.upper(), value))
+            self.save_config()
         else: self.error('Invalid option.')
 
     def do_unset(self, params):
@@ -1150,6 +1194,7 @@ class Options(dict):
             del self.description[name]
         
     def _boolify(self, value):
+        # designed to throw an exception if value is not a string representation of a boolean
         return {'true':True, 'false':False}[value.lower()]
         
     def _autoconvert(self, value):
@@ -1168,15 +1213,9 @@ class Options(dict):
         self[name] = value
         self.required[name] = required
         self.description[name] = description
-        
-    def value(self, name):
-        return self[name] if name in self else None
-    
-    def required(self, name):
-        if name not in self.required: return False
-        if self.required[name].lower() == 'yes': return True
-        if self.required[name].lower() == 'true': return True
-        return False
-        
-    def description(self, name):
-        return self.description[name] if name in self.description else ''
+
+    def serialize(self):
+        data = {}
+        for key in self:
+            data[key] = self[key]
+        return data

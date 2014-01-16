@@ -63,7 +63,7 @@ class Recon(framework.module):
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         self.prompt_template = '%s[%s] > '
         self.base_prompt = self.prompt_template % ('', self.name)
-        framework.module.__init__(self, (self.base_prompt, 'core'))
+        framework.module.__init__(self, (self.base_prompt, 'base'))
         self.init_home()
         self.init_global_options()
         self.load_modules()
@@ -197,27 +197,6 @@ class Recon(framework.module):
         self.load_config()
         return True
 
-    def load_config(self):
-        config_path = '%s/config.dat' % (self.workspace)
-        if os.path.exists(config_path):
-            try:
-                config_data = json.loads(open(config_path, 'rb').read())
-                for key in config_data:
-                    self.options[key] = config_data[key]['value']
-                    self.options.required[key] = config_data[key]['reqd']
-                    self.options.description[key] = config_data[key]['desc']
-            except:
-                self.error('Corrupt config file.')
-
-    def save_config(self):
-        config_data = {}
-        for key in self.options:
-            config_data[key] = {'value':self.options[key], 'reqd':self.options.required[key], 'desc':self.options.description[key]}
-        config_path = '%s/config.dat' % (self.workspace)
-        config_file = open(config_path, 'wb')
-        json.dump(config_data, config_file, indent=4)
-        config_file.close()
-
     #==================================================
     # COMMAND METHODS
     #==================================================
@@ -241,20 +220,6 @@ class Recon(framework.module):
     def do_banner(self, params):
         '''Displays the banner'''
         self.show_banner()
-
-    def do_set(self, params):
-        '''Sets global options'''
-        options = params.split()
-        if len(options) < 2:
-            self.help_set()
-            return
-        name = options[0].lower()
-        if name in self.options:
-            value = ' '.join(options[1:])
-            self.options[name] = value
-            print('%s => %s' % (name.upper(), value))
-            self.save_config()
-        else: self.error('Invalid option.')
 
     def do_workspace(self, params):
         '''Sets the workspace'''
