@@ -79,8 +79,10 @@ class Recon(Framework):
             if remote != local:
                 self.alert('Your version of Recon-ng does not match the latest release.')
                 self.alert('Please update or use the \'--no-check\' switch to continue using the old version.')
-                self.output('Remote version: %s' % (remote))
-                self.output('Local version:  %s' % (local))
+                self.alert('Read the migration notes for pre-requisites before upgrading.')
+                self.output('Migration Notes: https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/#!migration-notes')
+                self.output('Remote version:  %s' % (remote))
+                self.output('Local version:   %s' % (local))
             return local == remote
         except:
             return True
