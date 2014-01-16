@@ -1,13 +1,13 @@
-from framework import *
+import framework
 # unique to module
 import re
 import textwrap
 import time
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.info = {
                      'Name': 'XSSed Host Lookup',

@@ -1,10 +1,10 @@
-from framework import *
+import framework
 # unique to module
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('latitude', self.global_options['latitude'], 'yes', self.global_options.description['latitude'])
         self.register_option('longitude', self.global_options['longitude'], 'yes', self.global_options.description['longitude'])
         self.info = {

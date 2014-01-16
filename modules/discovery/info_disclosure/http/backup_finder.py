@@ -1,10 +1,10 @@
-from framework import *
+import framework
 # unique to module
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.register_option('uri', 'wp-config.php', 'yes', 'URI to the original filename')
         self.register_option('searchstr', '<?php', 'yes', 'string to search for in the response for false positive reduction')

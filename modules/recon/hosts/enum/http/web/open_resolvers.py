@@ -1,13 +1,13 @@
-from framework import *
+import framework
 # unique to module
 from cookielib import CookieJar
 import re
 import time
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Open Recursive DNS Resolvers Check',
