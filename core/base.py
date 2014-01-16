@@ -4,20 +4,16 @@ __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
 execfile('VERSION')
 
-import urllib2
-import hashlib
-import datetime
-import os
 import errno
-import json
-import sys
-import random
 import imp
-import sqlite3
-import traceback
+import json
+import os
+import random
 import re
+import sys
+import traceback
 import __builtin__
-import framework
+from framework import *
 
 # colors for output
 __builtin__.N  = '\033[m' # native
@@ -31,7 +27,7 @@ __builtin__.script = 0
 __builtin__.load = 0
 
 # framework variables
-__builtin__.global_options = framework.Options()
+__builtin__.global_options = Options()
 __builtin__.keys = {}
 __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
@@ -53,7 +49,7 @@ __builtin__._print = print
 # override the builtin print function with the new print function
 __builtin__.print = spool_print
 
-class Recon(framework.module):
+class Recon(Framework):
     def __init__(self, mode=0):
         # modes:
         # 0 == console (default)
@@ -63,7 +59,7 @@ class Recon(framework.module):
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         self.prompt_template = '%s[%s] > '
         self.base_prompt = self.prompt_template % ('', self.name)
-        framework.module.__init__(self, (self.base_prompt, 'core'))
+        Framework.__init__(self, (self.base_prompt, 'base'))
         self.init_home()
         self.init_global_options()
         self.load_modules()
@@ -83,8 +79,10 @@ class Recon(framework.module):
             if remote != local:
                 self.alert('Your version of Recon-ng does not match the latest release.')
                 self.alert('Please update or use the \'--no-check\' switch to continue using the old version.')
-                self.output('Remote version: %s' % (remote))
-                self.output('Local version:  %s' % (local))
+                self.alert('Read the migration notes for pre-requisites before upgrading.')
+                self.output('Migration Notes: https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/#!migration-notes')
+                self.output('Remote version:  %s' % (remote))
+                self.output('Local version:   %s' % (local))
             return local == remote
         except:
             return True
@@ -197,27 +195,6 @@ class Recon(framework.module):
         self.load_config()
         return True
 
-    def load_config(self):
-        config_path = '%s/config.dat' % (self.workspace)
-        if os.path.exists(config_path):
-            try:
-                config_data = json.loads(open(config_path, 'rb').read())
-                for key in config_data:
-                    self.options[key] = config_data[key]['value']
-                    self.options.required[key] = config_data[key]['reqd']
-                    self.options.description[key] = config_data[key]['desc']
-            except:
-                self.error('Corrupt config file.')
-
-    def save_config(self):
-        config_data = {}
-        for key in self.options:
-            config_data[key] = {'value':self.options[key], 'reqd':self.options.required[key], 'desc':self.options.description[key]}
-        config_path = '%s/config.dat' % (self.workspace)
-        config_file = open(config_path, 'wb')
-        json.dump(config_data, config_file, indent=4)
-        config_file.close()
-
     #==================================================
     # COMMAND METHODS
     #==================================================
@@ -242,20 +219,6 @@ class Recon(framework.module):
         '''Displays the banner'''
         self.show_banner()
 
-    def do_set(self, params):
-        '''Sets global options'''
-        options = params.split()
-        if len(options) < 2:
-            self.help_set()
-            return
-        name = options[0].lower()
-        if name in self.options:
-            value = ' '.join(options[1:])
-            self.options[name] = value
-            print('%s => %s' % (name.upper(), value))
-            self.save_config()
-        else: self.error('Invalid option.')
-
     def do_workspace(self, params):
         '''Sets the workspace'''
         if not params:
@@ -267,7 +230,7 @@ class Recon(framework.module):
     def do_load(self, params):
         '''Loads selected module'''
         try: self.validate_options()
-        except framework.FrameworkException as e:
+        except FrameworkException as e:
             self.error(e.message)
             return
         if not params:

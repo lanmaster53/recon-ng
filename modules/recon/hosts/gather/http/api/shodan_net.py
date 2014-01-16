@@ -1,11 +1,11 @@
-import framework
+from framework import *
 # unique to module
 import re
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('netblock', self.global_options['netblock'], 'yes', self.global_options.description['netblock'])
         self.register_option('restrict', 1, 'yes', 'limit number of api requests (0 = unrestricted)')
         self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')

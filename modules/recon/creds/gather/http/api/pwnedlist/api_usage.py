@@ -1,10 +1,10 @@
-import framework
+from framework import *
 # unique to module
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.info = {
                      'Name': 'PwnedList - API Usage Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

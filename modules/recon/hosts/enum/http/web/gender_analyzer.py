@@ -1,11 +1,11 @@
-import framework
+from framework import *
 # unique to module
 import re
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('host', self.global_options['domain'], 'yes', 'fully qualified target hostname')
         self.info = {
                      'Name': 'Gender Analyzer Lookup',

@@ -1,11 +1,11 @@
-import framework
+from framework import *
 # unique to module
 import csv
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('source', 'all', 'yes', 'source of data for the report (see \'info\' for options)')
         self.register_option('filename', '%s/results.csv' % (self.workspace), 'yes', 'path and filename for report output')
         self.info = {

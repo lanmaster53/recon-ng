@@ -1,12 +1,12 @@
-import framework
+from framework import *
 # unique to module
 import urllib
 import time
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.register_option('keywords', None, 'no', 'additional keywords to identify company')
         self.info = {

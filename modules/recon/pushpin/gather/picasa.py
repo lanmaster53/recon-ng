@@ -1,12 +1,12 @@
-import framework
+from framework import *
 # unique to module
 import math
 from datetime import datetime
 
-class Module(framework.module):
+class Module(Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        Framework.__init__(self, params)
         self.register_option('latitude', self.global_options['latitude'], 'yes', self.global_options.description['latitude'])
         self.register_option('longitude', self.global_options['longitude'], 'yes', self.global_options.description['longitude'])
         self.register_option('radius', self.global_options['radius'], 'yes', 'radius in kilometers')
