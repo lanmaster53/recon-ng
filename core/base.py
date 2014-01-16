@@ -4,20 +4,16 @@ __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
 execfile('VERSION')
 
-import urllib2
-import hashlib
-import datetime
-import os
 import errno
-import json
-import sys
-import random
 import imp
-import sqlite3
-import traceback
+import json
+import os
+import random
 import re
+import sys
+import traceback
 import __builtin__
-import framework
+from framework import *
 
 # colors for output
 __builtin__.N  = '\033[m' # native
@@ -31,7 +27,7 @@ __builtin__.script = 0
 __builtin__.load = 0
 
 # framework variables
-__builtin__.global_options = framework.Options()
+__builtin__.global_options = Options()
 __builtin__.keys = {}
 __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
@@ -53,7 +49,7 @@ __builtin__._print = print
 # override the builtin print function with the new print function
 __builtin__.print = spool_print
 
-class Recon(framework.module):
+class Recon(Framework):
     def __init__(self, mode=0):
         # modes:
         # 0 == console (default)
@@ -63,7 +59,7 @@ class Recon(framework.module):
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
         self.prompt_template = '%s[%s] > '
         self.base_prompt = self.prompt_template % ('', self.name)
-        framework.module.__init__(self, (self.base_prompt, 'base'))
+        Framework.__init__(self, (self.base_prompt, 'base'))
         self.init_home()
         self.init_global_options()
         self.load_modules()
@@ -232,7 +228,7 @@ class Recon(framework.module):
     def do_load(self, params):
         '''Loads selected module'''
         try: self.validate_options()
-        except framework.FrameworkException as e:
+        except FrameworkException as e:
             self.error(e.message)
             return
         if not params:

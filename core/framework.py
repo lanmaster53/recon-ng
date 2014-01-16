@@ -1,25 +1,22 @@
 from __future__ import print_function
 import cmd
-import random
-import string
-import sqlite3
-import re
-import os
-import sys
-import struct
-import textwrap
-import socket
-import time
-import hmac
-import hashlib
-import HTMLParser
-import subprocess
-import traceback
-import webbrowser
-import urllib
-import urllib2
 import cookielib
+import hashlib
+import hmac
 import json
+import HTMLParser
+import os
+import random
+import re
+import socket
+import sqlite3
+import string
+import struct
+import subprocess
+import sys
+import textwrap
+import time
+import traceback
 import __builtin__
 # prep python path for supporting modules
 sys.path.append('./libs/')
@@ -27,7 +24,7 @@ import aes
 import dragons
 import mechanize
 
-class module(cmd.Cmd):
+class Framework(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
         self.prompt = (params[0])
