@@ -1,9 +1,9 @@
-from framework import *
+import framework
 import re
 
-class Module(Framework):
+class Module(framework.Framework):
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', 'domain to search')
         self.info = {
                      'Name': 'RedIRIS PGP Key Owner Lookup',

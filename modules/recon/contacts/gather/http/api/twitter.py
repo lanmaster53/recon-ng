@@ -1,12 +1,12 @@
-from framework import *
+import framework
 # unique to module
 import re
 import sys
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('handle', '@lanmaster53', 'yes', 'target twitter handle')
         self.register_option('dtg', None, 'no', 'date-time group in the form YYYY-MM-DD')
         self.info = {

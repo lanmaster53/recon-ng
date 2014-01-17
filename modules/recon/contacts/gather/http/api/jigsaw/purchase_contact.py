@@ -1,11 +1,11 @@
-from framework import *
+import framework
 # unique to module
 import time
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('username', None, 'yes', 'jigsaw account username')
         self.register_option('password', None, 'yes', 'jigsaw account password')
         self.register_option('contact', None, 'yes', 'jigsaw contact id')

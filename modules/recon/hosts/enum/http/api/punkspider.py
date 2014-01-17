@@ -1,13 +1,13 @@
-from framework import *
+import framework
 # unique to module
 import urllib
 import json
 import re
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('string', '"%s"' % (self.global_options['domain']), 'yes', 'string to search for')
         self.register_option('type', 'url', 'yes', 'type of search (see \'info\' for options)')
         self.register_option('bsqli', True, 'yes', 'search for blind sqli')

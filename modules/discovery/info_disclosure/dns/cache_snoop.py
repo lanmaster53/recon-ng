@@ -1,13 +1,13 @@
-from framework import *
+import framework
 # unique to module
 import os
 import dns
 import re
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('nameserver', None, 'yes', 'ip address of target\'s nameserver')
         self.register_option('domains', './data/av_domains.lst', 'yes', 'domain or list of domains to snoop for')
         self.info = {

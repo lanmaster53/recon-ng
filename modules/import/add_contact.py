@@ -1,10 +1,10 @@
-from framework import *
+import framework
 # unique to module
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('fname', None, 'yes', 'first name')
         self.register_option('lname', None, 'yes', 'last name')
         self.register_option('title', None, 'yes', 'job title')

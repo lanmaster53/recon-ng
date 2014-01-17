@@ -1,12 +1,12 @@
 # packages required for framework integration
-from framework import *
+import framework
 # module specific packages
 import csv
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('filename', None, 'yes', 'path and filename for csv input')
         self.register_option('column_separator', ',', 'yes', 'character that separates each column value')
         self.register_option('quote_character', '', 'no', 'character that surrounds each column value')
@@ -29,7 +29,7 @@ class Module(Framework):
         orig_quote = self.options['quote_character']
         orig_has_header = self.options['has_header']
         
-        Framework.do_set(self, params)
+        framework.Framework.do_set(self, params)
 
         filename = self.options['filename']
         sep = self.options['column_separator']
