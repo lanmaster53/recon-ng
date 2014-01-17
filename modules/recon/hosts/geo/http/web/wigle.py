@@ -1,13 +1,13 @@
-from framework import *
+import framework
 # unique to module
 from cookielib import CookieJar
 import math
 import re
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('username', None, 'yes', 'wigle account username')
         self.register_option('password', None, 'yes', 'wigle account password')
         self.register_option('latitude', None, 'yes', 'latitude of center point')

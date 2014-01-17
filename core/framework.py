@@ -253,6 +253,14 @@ class Framework(cmd.Cmd):
     def random_str(self, length):
         return ''.join(random.choice(string.lowercase) for i in range(length))
 
+    def is_writeable(self, filename):
+        try:
+            fp = open(filename, 'ab')
+            fp.close()
+            return True
+        except IOError:
+            return False
+
     #==================================================
     # OUTPUT METHODS
     #==================================================
@@ -955,7 +963,7 @@ class Framework(cmd.Cmd):
             if not __builtin__.record:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
-                    if not is_writeable(filename):
+                    if not self.is_writeable(filename):
                         self.output('Cannot record commands to \'%s\'.' % (filename))
                     else:
                         __builtin__.record = filename
@@ -983,7 +991,7 @@ class Framework(cmd.Cmd):
             if not __builtin__.spool:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
-                    if not is_writeable(filename):
+                    if not self.is_writeable(filename):
                         self.output('Cannot spool output to \'%s\'.' % (filename))
                     else:
                         __builtin__.spool = open(filename, 'ab')
@@ -1153,18 +1161,6 @@ class Framework(cmd.Cmd):
         options = ['modules', 'options', 'workspaces', 'schema']
         options.extend(tables)
         return [x for x in options if x.startswith(text)]
-
-#=================================================
-# SUPPORT FUNCTIONS
-#=================================================
-
-def is_writeable(filename):
-    try:
-        fp = open(filename, 'ab')
-        fp.close()
-        return True
-    except IOError:
-        return False
 
 #=================================================
 # SUPPORT CLASSES

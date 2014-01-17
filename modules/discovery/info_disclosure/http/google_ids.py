@@ -1,11 +1,11 @@
-from framework import *
+import framework
 # unique to module
 import re
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('url', None, 'yes', 'the URL of the website with the Analytics/AdSense code')
         self.info = {
                      'Name': 'Google Analytics/AdSense Host Lookup',

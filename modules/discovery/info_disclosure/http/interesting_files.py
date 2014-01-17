@@ -1,13 +1,13 @@
-from framework import *
+import framework
 # unique to module
 import warnings
 import gzip
 from StringIO import StringIO
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.register_option('download', True, 'yes', 'download discovered files')
         self.register_option('protocol', 'http', 'yes', 'request protocol')

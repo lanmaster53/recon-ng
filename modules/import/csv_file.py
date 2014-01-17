@@ -1,12 +1,12 @@
 # packages required for framework integration
-from framework import *
+import framework
 # module specific packages
 import csv
 
-class Module(Framework):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        Framework.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('filename', None, 'yes', 'path and filename for csv input')
         self.register_option('column_separator', ',', 'yes', 'character that separates each column value')
         self.register_option('quote_character', '', 'no', 'character that surrounds each column value')
@@ -52,7 +52,7 @@ class Module(Framework):
         return True
 
     def do_set(self, params):
-        Framework.do_set(self, params)
+        framework.Framework.do_set(self, params)
         
         if not self._validate_options():
             return
@@ -63,8 +63,7 @@ class Module(Framework):
         except IOError:
             self.error('%s could not be opened. The file may not exist.' % self.options['filename'])
         except AssertionError:
-            self.error('The number of columns in each row is inconsistent. \
-            Try checking the input file, changing the column separator, or changing the quote character.')
+            self.error('The number of columns in each row is inconsistent. Try checking the input file, changing the column separator, or changing the quote character.')
         else:
             self.register_options()
     
