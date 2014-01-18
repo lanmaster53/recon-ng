@@ -773,14 +773,14 @@ class Framework(cmd.Cmd):
             rest=None
         )
 
-    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, redirect=True):
+    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, content='', redirect=True):
         request = dragons.Request()
         request.user_agent = self.global_options['user-agent']
         request.debug = self.global_options['debug']
         request.proxy = self.global_options['proxy']
         request.timeout = timeout or self.global_options['timeout']
         request.redirect = redirect
-        return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth)
+        return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth, content=content)
 
     def browser(self):
         '''Returns a mechanize.Browser object configured with the framework's global options.'''
