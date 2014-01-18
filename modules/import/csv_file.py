@@ -61,7 +61,7 @@ class Module(framework.Framework):
         try:
             self.values = self.parse_file()
         except IOError:
-            self.error('%s could not be opened. The file may not exist.' % self.options['filename'])
+            self.error('\'%s\' could not be opened. The file may not exist.' % self.options['filename'])
         except AssertionError:
             self.error('The number of columns in each row is inconsistent. Try checking the input file, changing the column separator, or changing the quote character.')
         else:
