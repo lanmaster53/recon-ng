@@ -1149,7 +1149,7 @@ class Framework(cmd.Cmd):
     complete_spool = complete_record
 
     def complete_set(self, text, *ignored):
-        return [x for x in self.options if x.startswith(text)]
+        return [x.upper() for x in self.options if x.upper().startswith(text.upper())]
     complete_unset = complete_set
 
     def complete_show(self, text, line, *ignored):
