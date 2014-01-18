@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Recon-ng Reconnaissance Report</title>
+<script type="text/javascript">
+function showhide(id) {
+    obj = document.getElementById(id);
+    hide = document.getElementById("hide-" + id);
+    show = document.getElementById("show-" + id);
+    if (obj.style.display == "none") {
+        show.removeAttribute('style');
+        hide.removeAttribute('style');
+        obj.removeAttribute('style');
+    } else {
+        obj.style.display = "none";
+        hide.style.display = "none";
+        show.style.display = "inline";
+    }
+}
+</script>
+<style>
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: .75em;
+}
+.main {
+    width: 1000px;
+    padding: 0 10px;
+    /*text-align: center;*//*centers all the elements on the page*/
+    display: table;
+    margin: 0 auto;
+    border: 2px solid gray;
+}
+.title {
+    font-size: 3em;
+}
+.subtitle {
+    font-size: 2em;
+}
+p {
+    margin: 5px 7px 5px 7px;
+}
+table, div {
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+}
+.container {
+    display:inline-block;
+    text-align: left; /*left justifies the table caption*/
+    border: 2px solid gray;
+    margin: 0 0 10px 0;
+    width: 100%%; /*expands tables all the way across*/
+}
+table {
+    border-spacing: 10px 5px;
+    margin: -5px auto 5px auto;
+    text-align: left;
+}
+th {
+    text-align: center;
+    border-bottom: 2px solid black;
+}
+.leak {
+    margin: 10px 0;
+}
+a[id*="-"] {
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.25em;
+}
+a[id*="show-"] {
+    display: none;
+}
+.footer {
+    text-align: center;
+}
+.centered {
+    text-align: center;
+}
+</style>
+</head>
+<body>
+    <div class="main">
+        <div class='title'>%s</div>
+        <div class='subtitle'>Recon-ng Reconnaissance Report</div>
+        <hr>
+        <div>
+<!-- START -->
+%s
+<!-- END -->
+        </div>
+        <hr>
+        <p class="footer">Created by: %s<br />%s</p>
+    </div>
+</body>
+</html>
