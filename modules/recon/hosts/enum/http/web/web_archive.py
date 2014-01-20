@@ -3,11 +3,11 @@ import framework
 import re
 from datetime import date
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.info = {
                      'Name': 'Web Archive Lookup',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',

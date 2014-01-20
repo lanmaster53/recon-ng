@@ -1,11 +1,11 @@
 import framework
 # unique to module
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain']['value'], 'no', 'target email domain')
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'no', 'target email domain')
         self.register_option('pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
         self.register_option('max-length', 30, 'yes', 'maximum length of email address prefix or username')
         self.register_option('overwrite', False, 'yes', 'overwrite exisitng email addresses')

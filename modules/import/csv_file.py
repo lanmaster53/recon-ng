@@ -3,10 +3,10 @@ import framework
 # module specific packages
 import csv
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('filename', None, 'yes', 'path and filename for csv input')
         self.register_option('column_separator', ',', 'yes', 'character that separates each column value')
         self.register_option('quote_character', '', 'no', 'character that surrounds each column value')
@@ -21,35 +21,51 @@ class Module(framework.module):
                                   'This module is very powerful and can seriously pollute a database. Backing up the database before importing is encouraged.',
                                   ]
                      }
-        self.values = []
-
-    def do_set(self, params):
-        orig_filename = self.options['filename']
-        orig_sep = self.options['column_separator']
-        orig_quote = self.options['quote_character']
-        orig_has_header = self.options['has_header']
         
-        framework.module.do_set(self, params)
-
+        self.values = []
+        # account for the fact that module options are stored and preloaded from a config file
+        self._validate_options()
+            
+    def _validate_options(self):
         filename = self.options['filename']
         sep = self.options['column_separator']
         quote = self.options['quote_character']
-        has_header = self.options['has_header']
+        
+        if not filename:
+            # there is currently no valid file so remove all the options file-specific options
+            self.values = []
+            self.register_options()
+            return False
+        if not sep or len(sep) != 1:
+            self.error('COLUMN_SEPARATOR is required and must only contain one character.')
+            # there is currently no valid separator so remove all the options file-specific options
+            self.values = []
+            self.register_options()
+            return False
+        if quote and len(quote) > 1:
+            self.error('QUOTE_CHARACTER is optional but must not contain more than one character.')
+            # there is currently no valid quote so remove all the options file-specific options
+            self.values = []
+            self.register_options()
+            return False
+            
+        return True
 
-        # if anything has changed, repopulate the modules options
-        if filename != orig_filename \
-            or sep != orig_sep \
-            or quote != orig_quote \
-            or has_header != orig_has_header:
-            try:
-                self.values = self.parse_file(filename, sep, quote)
-            except IOError:
-                self.error('%s could not be opened. The file may not exist.' % filename)
-            except AssertionError:
-                self.error('The number of columns in each row is inconsistent. \
-                Try checking the input file, changing the column separator, or changing the quote character.')
-            else:
-                self.register_options()
+    def do_set(self, params):
+        framework.Framework.do_set(self, params)
+        
+        if not self._validate_options():
+            return
+            
+        # repopulate the module's options
+        try:
+            self.values = self.parse_file()
+        except IOError:
+            self.error('\'%s\' could not be opened. The file may not exist.' % self.options['filename'])
+        except AssertionError:
+            self.error('The number of columns in each row is inconsistent. Try checking the input file, changing the column separator, or changing the quote character.')
+        else:
+            self.register_options()
     
     def module_run(self):
         if not self.values or len(self.values) == 0:
@@ -101,24 +117,21 @@ class Module(framework.module):
                 self.error('There was a problem inserting the previous row into the database. Please check your settings.')
                 return
 
-    def parse_file(self, filename=None, sep=None, quote=None):
-        if filename is None:
-            filename = self.options['filename']
-        if sep is None:
-            sep = self.options['column_separator']
-        if quote is None:
-            quote = self.options['quote_character']
-        if filename is None or sep is None:
+    def parse_file(self):
+        filename = self.options['filename']
+        if not filename:
             raise IOError
-
+        sep = self.options['column_separator']
+        quote = self.options['quote_character']
         has_header = self.options['has_header']
         values = []
 
         with open(filename, 'rb') as infile:
+            # if sep is not a one character string, csv.reader will raise a TypeError
             if not quote:
-                csvreader = csv.reader(infile, delimiter=sep, quoting=csv.QUOTE_NONE)
+                csvreader = csv.reader(infile, delimiter=str(sep), quoting=csv.QUOTE_NONE)
             else:
-                csvreader = csv.reader(infile, delimiter=sep, quotechar=quote)
+                csvreader = csv.reader(infile, delimiter=str(sep), quotechar=str(quote))
 
             # get each line from the file and separate it into columns based on sep
             for row in csvreader:
@@ -136,14 +149,15 @@ class Module(framework.module):
         return values
 
     def register_options(self):
-        if not self.values or len(self.values) == 0:
-            return
-
-        # remove any old options
+        # remove any old file-specific options
         options = self.options.keys()
         for option in options:
             if option.startswith('csv_'):
                 del self.options[option]
+        
+        # if there are no values, then there is nothing left to do
+        if not self.values or len(self.values) == 0:
+            return
 
         # add the new options
         has_header = self.options['has_header']

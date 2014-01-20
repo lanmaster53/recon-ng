@@ -3,10 +3,10 @@ import framework
 import re
 from xml.dom.minidom import parseString
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Noisette MD5 Hash Lookup',

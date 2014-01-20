@@ -4,12 +4,12 @@ import dns.resolver
 import dns.reversename
 import re
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('netblock', self.global_options['netblock']['value'], 'yes', self.global_options['netblock']['desc'])
-        self.register_option('regex', '%s$' % (self.global_options['domain']['value']), 'no', 'regex to match for adding results to the database')
+        framework.Framework.__init__(self, params)
+        self.register_option('netblock', self.global_options['netblock'], 'yes', self.global_options.description['netblock'])
+        self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
         self.info = {

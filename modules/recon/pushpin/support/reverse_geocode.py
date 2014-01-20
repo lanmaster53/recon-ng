@@ -1,12 +1,12 @@
 import framework
 # unique to module
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('latitude', self.global_options['latitude']['value'], 'yes', self.global_options['latitude']['desc'])
-        self.register_option('longitude', self.global_options['longitude']['value'], 'yes', self.global_options['longitude']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('latitude', self.global_options['latitude'], 'yes', self.global_options.description['latitude'])
+        self.register_option('longitude', self.global_options['longitude'], 'yes', self.global_options.description['longitude'])
         self.info = {
             'Name': 'Reverse Geocoder',
             'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',

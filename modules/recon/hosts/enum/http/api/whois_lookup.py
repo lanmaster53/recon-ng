@@ -2,10 +2,10 @@ import framework
 # unique to module
 from urlparse import urlparse
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Whois Query',

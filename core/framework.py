@@ -1,25 +1,22 @@
 from __future__ import print_function
 import cmd
-import random
-import string
-import sqlite3
-import re
-import os
-import sys
-import struct
-import textwrap
-import socket
-import time
-import hmac
-import hashlib
-import HTMLParser
-import subprocess
-import traceback
-import webbrowser
-import urllib
-import urllib2
 import cookielib
+import hashlib
+import hmac
 import json
+import HTMLParser
+import os
+import random
+import re
+import socket
+import sqlite3
+import string
+import struct
+import subprocess
+import sys
+import textwrap
+import time
+import traceback
 import __builtin__
 # prep python path for supporting modules
 sys.path.append('./libs/')
@@ -27,7 +24,7 @@ import aes
 import dragons
 import mechanize
 
-class module(cmd.Cmd):
+class Framework(cmd.Cmd):
     def __init__(self, params):
         cmd.Cmd.__init__(self)
         self.prompt = (params[0])
@@ -38,10 +35,10 @@ class module(cmd.Cmd):
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
-        self.module_options = self.global_options = __builtin__.global_options
+        self.options = self.global_options = __builtin__.global_options
         # remove global options reference for module context
-        if self.modulename != 'core':
-            self.module_options = {}
+        if self.modulename != 'base':
+            self.options = Options()
         self.keys = __builtin__.keys
         self.workspace = __builtin__.workspace
         self.home = __builtin__.home
@@ -109,18 +106,6 @@ class module(cmd.Cmd):
     #==================================================
     # SUPPORT METHODS
     #==================================================
-
-    def boolify(self, s):
-        return {'true': True, 'false': False}[s.lower()]
-
-    def autoconvert(self, s):
-        if s.lower() in ['none', "''", '""']:
-            return None
-        for fn in (self.boolify, int, float):
-            try: return fn(s)
-            except ValueError: pass
-            except KeyError: pass
-        return s
 
     def display_modules(self, modules):
         key_len = len(max(modules, key=len)) + len(self.spacer)
@@ -268,6 +253,14 @@ class module(cmd.Cmd):
     def random_str(self, length):
         return ''.join(random.choice(string.lowercase) for i in range(length))
 
+    def is_writeable(self, filename):
+        try:
+            fp = open(filename, 'ab')
+            fp.close()
+            return True
+        except IOError:
+            return False
+
     #==================================================
     # OUTPUT METHODS
     #==================================================
@@ -289,7 +282,7 @@ class module(cmd.Cmd):
 
     def verbose(self, line):
         '''Formats and presents output if in verbose mode.'''
-        if self.global_options['verbose']['value']:
+        if self.global_options['verbose']:
             self.output(line)
 
     def heading(self, line, level=1):
@@ -491,11 +484,11 @@ class module(cmd.Cmd):
 
     def query(self, query, values=()):
         '''Queries the database and returns the results as a list.'''
-        if self.global_options['debug']['value']: self.output(query)
+        if self.global_options['debug']: self.output(query)
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
         if values:
-            if self.global_options['debug']['value']: self.output(repr(values))
+            if self.global_options['debug']: self.output(repr(values))
             cur.execute(query, values)
         else:
             cur.execute(query)
@@ -517,19 +510,19 @@ class module(cmd.Cmd):
     def display_options(self, params):
         '''Lists options'''
         spacer = self.spacer
-        if self.module_options:
+        if self.options:
             pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
-            key_len = len(max(self.module_options, key=len))
+            key_len = len(max(self.options, key=len))
             if key_len < 4: key_len = 4
-            val_len = len(max([self.to_unicode_str(self.module_options[x]['value']) for x in self.module_options], key=len))
+            val_len = len(max([self.to_unicode_str(self.options[x]) for x in self.options], key=len))
             if val_len < 13: val_len = 13
             print('')
             print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description'))
             print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11))
-            for key in sorted(self.module_options):
-                value = self.module_options[key]['value'] if self.module_options[key]['value'] != None else ''
-                reqd = self.module_options[key]['reqd']
-                desc = self.module_options[key]['desc']
+            for key in sorted(self.options):
+                value = self.options[key] if self.options[key] != None else ''
+                reqd = self.options.required[key]
+                desc = self.options.description[key]
                 print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc))
             print('')
         else:
@@ -538,15 +531,58 @@ class module(cmd.Cmd):
             print('')
 
     def register_option(self, name, value, reqd, desc):
-        self.module_options[name.lower()] = {'value':value, 'reqd':reqd, 'desc':desc}
+        self.options.init_option(name=name.lower(), value=value, required=reqd, description=desc)
+        # needs to be optimized rather than ran on every register
+        self.load_config()
 
     def validate_options(self):
-        for option in self.module_options:
+        for option in self.options:
             # if value type is bool or int, then we know the options is set
-            if not type(self.module_options[option]['value']) in [bool, int]:
-                if self.module_options[option]['reqd'].lower() == 'yes' and not self.module_options[option]['value']:
+            if not type(self.options[option]) in [bool, int]:
+                if self.options.required[option].lower() == 'yes' and not self.options[option]:
                     raise FrameworkException('Value required for the \'%s\' option.' % (option))
         return
+
+    def load_config(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        # don't bother loading if a config file doesn't exist
+        if os.path.exists(config_path):
+            # retrieve saved config data
+            config_file = open(config_path, 'rb')
+            try:
+                config_data = json.loads(config_file.read())
+            except ValueError:
+                # file is corrupt, nothing to load, exit gracefully
+                pass
+            else:
+                # set option values
+                for key in self.options:
+                    try:
+                        self.options[key] = config_data[self.modulename][key]
+                    except KeyError:
+                        # invalid key, contnue to load valid keys
+                        continue
+            finally:
+                config_file.close()
+
+    def save_config(self):
+        config_path = '%s/config.dat' % (self.workspace)
+        # create a config file if one doesn't exist
+        open(config_path, 'ab').close()
+        # retrieve saved config data
+        config_file = open(config_path, 'rb')
+        try:
+            config_data = json.loads(config_file.read())
+        except ValueError:
+            # file is empty or corrupt, nothing to load
+            config_data = {}
+        config_file.close()
+        # overwrite the old config data with option values
+        config_data[self.modulename] = self.options
+        # write the new config data to the config file
+        config_file = open(config_path, 'wb')
+        json.dump(config_data, config_file, indent=4)
+        config_file.close()
 
     def get_source(self, params, query=None):
         prefix = params.split()[0].lower()
@@ -737,30 +773,30 @@ class module(cmd.Cmd):
             rest=None
         )
 
-    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, redirect=True):
+    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, content='', redirect=True):
         request = dragons.Request()
-        request.user_agent = self.global_options['user-agent']['value']
-        request.debug = self.global_options['debug']['value']
-        request.proxy = self.global_options['proxy']['value']
-        request.timeout = timeout or self.global_options['timeout']['value']
+        request.user_agent = self.global_options['user-agent']
+        request.debug = self.global_options['debug']
+        request.proxy = self.global_options['proxy']
+        request.timeout = timeout or self.global_options['timeout']
         request.redirect = redirect
-        return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth)
+        return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth, content=content)
 
     def browser(self):
         '''Returns a mechanize.Browser object configured with the framework's global options.'''
         br = mechanize.Browser()
         # set the user-agent header
-        br.addheaders = [('User-agent', self.global_options['user-agent']['value'])]
+        br.addheaders = [('User-agent', self.global_options['user-agent'])]
         # set debug options
-        if self.global_options['debug']['value']:
+        if self.global_options['debug']:
             br.set_debug_http(True)
             br.set_debug_redirects(True)
             br.set_debug_responses(True)
         # set proxy
-        if self.global_options['proxy']['value']:
-            br.set_proxies({'http': self.global_options['proxy']['value'], 'https': self.global_options['proxy']['value']})
+        if self.global_options['proxy']:
+            br.set_proxies({'http': self.global_options['proxy'], 'https': self.global_options['proxy']})
         # set timeout
-        socket.setdefaulttimeout(self.global_options['timeout']['value'])
+        socket.setdefaulttimeout(self.global_options['timeout'])
         return br
 
     #==================================================
@@ -806,10 +842,11 @@ class module(cmd.Cmd):
             self.help_set()
             return
         name = options[0].lower()
-        if name in self.module_options:
+        if name in self.options:
             value = ' '.join(options[1:])
+            self.options[name] = value
             print('%s => %s' % (name.upper(), value))
-            self.module_options[name]['value'] = self.autoconvert(value)
+            self.save_config()
         else: self.error('Invalid option.')
 
     def do_unset(self, params):
@@ -850,7 +887,7 @@ class module(cmd.Cmd):
             return
         conn = sqlite3.connect('%s/data.db' % (self.workspace))
         cur = conn.cursor()
-        if self.global_options['debug']['value']: self.output(params)
+        if self.global_options['debug']: self.output(params)
         try: cur.execute(params)
         except sqlite3.OperationalError as e:
             self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
@@ -926,7 +963,7 @@ class module(cmd.Cmd):
             if not __builtin__.record:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
-                    if not is_writeable(filename):
+                    if not self.is_writeable(filename):
                         self.output('Cannot record commands to \'%s\'.' % (filename))
                     else:
                         __builtin__.record = filename
@@ -954,7 +991,7 @@ class module(cmd.Cmd):
             if not __builtin__.spool:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
-                    if not is_writeable(filename):
+                    if not self.is_writeable(filename):
                         self.output('Cannot spool output to \'%s\'.' % (filename))
                     else:
                         __builtin__.spool = open(filename, 'ab')
@@ -983,10 +1020,6 @@ class module(cmd.Cmd):
 
     def do_run(self, params):
         '''Runs the module'''
-        # create runtime options dictionary
-        self.options = {}
-        for key in self.module_options:
-            self.options[key] = self.module_options[key]['value']
         try:
             self.validate_options()
             self.module_run()
@@ -995,15 +1028,13 @@ class module(cmd.Cmd):
         except socket.timeout as e:
             self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
         except Exception as e:
-            if self.global_options['debug']['value']:
+            if self.global_options['debug']:
                 print('%s%s' % (R, '-'*60))
                 traceback.print_exc()
                 print('%s%s' % ('-'*60, N))
             self.error(e.__str__())
         finally:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
-        # clean up
-        del self.options
 
     def module_run(self):
         pass
@@ -1118,7 +1149,7 @@ class module(cmd.Cmd):
     complete_spool = complete_record
 
     def complete_set(self, text, *ignored):
-        return [x for x in self.module_options if x.startswith(text)]
+        return [x.upper() for x in self.options if x.upper().startswith(text.upper())]
     complete_unset = complete_set
 
     def complete_show(self, text, line, *ignored):
@@ -1132,16 +1163,52 @@ class module(cmd.Cmd):
         return [x for x in options if x.startswith(text)]
 
 #=================================================
-# SUPPORT CLASSES AND FUNCTIONS
+# SUPPORT CLASSES
 #=================================================
 
 class FrameworkException(Exception):
     pass
 
-def is_writeable(filename):
-    try:
-        fp = open(filename, 'ab')
-        fp.close()
-        return True
-    except IOError:
-        return False
+class Options(dict):
+    def __init__(self, *args, **kwargs):
+        self.required = {}
+        self.description = {}
+        
+        super(Options, self).__init__(*args, **kwargs)
+           
+    def __setitem__(self, name, value):
+        super(Options, self).__setitem__(name, self._autoconvert(value))
+           
+    def __delitem__(self, name):
+        super(Options, self).__delitem__(name)
+        if name in self.required:
+            del self.required[name]
+        if name in self.description:
+            del self.description[name]
+        
+    def _boolify(self, value):
+        # designed to throw an exception if value is not a string representation of a boolean
+        return {'true':True, 'false':False}[value.lower()]
+        
+    def _autoconvert(self, value):
+        if value in (None, True, False):
+            return value
+        elif (isinstance(value, basestring)) and value.lower() in ('none', "''", '""'):
+            return None
+        for fn in (self._boolify, int, float):
+            try: return fn(value)
+            except ValueError: pass
+            except KeyError: pass
+            except AttributeError: pass
+        return value
+        
+    def init_option(self, name, value=None, required=False, description=''):
+        self[name] = value
+        self.required[name] = required
+        self.description[name] = description
+
+    def serialize(self):
+        data = {}
+        for key in self:
+            data[key] = self[key]
+        return data

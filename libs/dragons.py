@@ -13,8 +13,10 @@ class Request(object):
         self.timeout = None if 'timeout' not in kwargs else kwargs['timeout']
         self.redirect = True if 'redirect' not in kwargs else kwargs['redirect']
 
-    def send(self, url, method='GET', payload=None, headers=None, cookiejar=None, auth=None):
+    def send(self, url, method='GET', payload=None, headers=None, cookiejar=None, auth=None, content=''):
         '''Makes a web request and returns a response object.'''
+        if method.upper() != 'POST' and content:
+            raise RequestException('Invalid content type for the %s method: %s' % (method, content))
         # prime local mutable variables to prevent persistence
         if payload is None: payload = {}
         if headers is None: headers = {}
@@ -24,7 +26,11 @@ class Request(object):
         # process user-agent header
         headers['User-Agent'] = self.user_agent
         # process payload
-        payload = urllib.urlencode(payload)
+        if content.upper() == 'JSON':
+            headers['Content-Type'] = 'application/json'
+            payload = json.dumps(payload)
+        else:
+            payload = urllib.urlencode(payload)
         # process basic authentication
         if len(auth) == 2:
             authorization = ('%s:%s' % (auth[0], auth[1])).encode('base64').replace('\n', '')

@@ -4,10 +4,10 @@ import framework
 import re
 import json
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('adobe_db', './data/adobe_top_100.json', 'yes', 'JSON file containing the Adobe hashes and passwords')
         self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'info\' for options)')
         self.info = {

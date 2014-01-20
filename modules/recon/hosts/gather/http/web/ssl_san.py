@@ -3,11 +3,11 @@ import framework
 import re
 
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain']['value'], 'yes', 'domain to check for subject alternative names (SAN)')
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', 'domain to check for subject alternative names (SAN)')
         self.info = {
                      'Name': 'SSL SAN Lookup',
                      'Author': 'Zach Grace (@ztgrace) zgrace@403labs.com',

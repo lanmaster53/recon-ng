@@ -2,10 +2,10 @@ import framework
 # unique to module
 import re
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.register_option('store_table', None, 'no', 'name for a table to create in the database and store the complete result set')
         self.register_option('store_column', None, 'no', 'name for a column to create in the hosts table and store open port information')

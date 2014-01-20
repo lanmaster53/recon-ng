@@ -2,13 +2,13 @@ import framework
 # unique to module
 import re
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain']['value'], 'yes', self.global_options['domain']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.register_option('restrict', 1, 'yes', 'limit number of api requests (0 = unrestricted)')
-        self.register_option('regex', '%s$' % (self.global_options['domain']['value']), 'no', 'regex to match for adding results to the database')
+        self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

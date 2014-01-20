@@ -1,10 +1,10 @@
 import framework
 # unique to module
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('address', None, 'yes', 'address to geocode')
         self.register_option('store', True , 'yes', 'store the obtained coordinates to latitude, longitude')
         self.info = {
@@ -33,8 +33,8 @@ class Module(framework.module):
         # store if True and only 1 set of coordinates is returned
         if store:
             if len(resp.json['results']) == 1:
-                self.global_options['latitude']['value'] = lat
-                self.global_options['longitude']['value'] = lon
+                self.global_options['latitude'] = lat
+                self.global_options['longitude'] = lon
                 self.verbose('Global options, latitude and longitude, set.')
             elif len(resp.json['results']) > 1:
                 self.output('More than 1 result returned. Global options not set.')

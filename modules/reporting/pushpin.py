@@ -5,15 +5,15 @@ import webbrowser
 import time
 import codecs
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('map_filename', '%s/pushpin_map.html' % (self.workspace), 'yes', 'path and filename for pushpin map report')
         self.register_option('media_filename', '%s/pushpin_media.html' % (self.workspace), 'yes', 'path and filename for pushpin media report')
-        self.register_option('latitude', self.global_options['latitude']['value'], 'yes', 'latitude of the epicenter')
-        self.register_option('longitude', self.global_options['longitude']['value'], 'yes', 'longitude of the epicenter')
-        self.register_option('radius', self.global_options['radius']['value'], 'yes', 'radius from the epicenter in kilometers')
+        self.register_option('latitude', self.global_options['latitude'], 'yes', 'latitude of the epicenter')
+        self.register_option('longitude', self.global_options['longitude'], 'yes', 'longitude of the epicenter')
+        self.register_option('radius', self.global_options['radius'], 'yes', 'radius from the epicenter in kilometers')
         self.info = {
                      'Name': 'PushPin Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

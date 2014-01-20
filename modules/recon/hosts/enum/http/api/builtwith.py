@@ -3,11 +3,11 @@ import framework
 import json
 import textwrap
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('host', self.global_options['domain']['value'], 'yes', 'target host')
+        framework.Framework.__init__(self, params)
+        self.register_option('host', self.global_options['domain'], 'yes', 'target host')
         self.info = {
                      'Name': 'BuiltWith Server-side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

@@ -3,11 +3,11 @@ import framework
 import urllib
 import time
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('company', self.global_options['company']['value'], 'yes', self.global_options['company']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.register_option('keywords', None, 'no', 'additional keywords to identify company')
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',

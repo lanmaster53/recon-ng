@@ -1,10 +1,10 @@
 import framework
 import re
 
-class Module(framework.module):
+class Module(framework.Framework):
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain']['value'], 'yes', 'domain to search')
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', 'domain to search')
         self.info = {
                      'Name': 'RedIRIS PGP Key Owner Lookup',
                      'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
