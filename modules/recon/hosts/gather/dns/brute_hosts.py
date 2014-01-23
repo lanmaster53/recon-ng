@@ -3,7 +3,6 @@ import framework
 import dns.resolver
 import os.path
 import random
-import string
 import re
 
 class Module(framework.Framework):
@@ -30,7 +29,6 @@ class Module(framework.Framework):
         resolver = dns.resolver.get_default_resolver()
         resolver.nameservers = [self.options['nameserver']]
         resolver.lifetime = 2
-        #resolver.timeout = 2
         cnt = 0
         new = 0
         try:
@@ -77,4 +75,4 @@ class Module(framework.Framework):
             self.output('%d total hosts found.' % (cnt))
             if new: self.alert('%d NEW hosts found!' % (new))
         else:
-            self.error('Wordlist file not found.')
+            self.error('Wordlist file (\'%s\') not found.' % (wordlist))
