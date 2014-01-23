@@ -36,7 +36,7 @@ class Module(framework.Framework):
             for host in hosts:
                 omit_domain = ' -domain:%s' % (host)
 
-                if len(query)+len(omit_domain)<1024:
+                if len(query)+len(omit_domain)<1425:
                     query += omit_domain
                 else:
                     #No point in searching after this - no more domains can be added to the filter
