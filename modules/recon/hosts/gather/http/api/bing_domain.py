@@ -19,17 +19,14 @@ class Module(framework.Framework):
     def module_run(self):
         domain = self.options['domain']
         iterations = self.options['iterations']
-        page_size = 50
-
-        result_set = page_size
+        num_pages = 1
 
         hosts = []
         current_iteration = 0
         cnt = 0
         base_query = '\'domain:%s' % (domain)
-        query_limit_reached = False
 
-        while query_limit_reached == False and current_iteration<iterations:
+        while current_iteration<iterations:
 
             query = base_query
 
@@ -41,12 +38,12 @@ class Module(framework.Framework):
                 else:
                     #No point in searching after this - no more domains can be added to the filter
                     self.verbose('Query limit reached. No further queries after this.')
-                    query_limit_reached = True
+                    current_iteration = iterations
                     break
 
             query += '\''
 
-            results = self.search_bing_api(query, result_set)
+            results = self.search_bing_api(query, num_pages)
             if not results:
                 self.verbose('No additional hosts discovered for \'%s\'.' % (domain))
 
@@ -61,7 +58,7 @@ class Module(framework.Framework):
                     new_results_found = True
 
             if new_results_found == False:
-                result_set += page_size
+                num_pages += 1
 
             current_iteration+=1
 
