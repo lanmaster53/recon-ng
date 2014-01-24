@@ -13,7 +13,7 @@ class Module(framework.Framework):
                      'Name': 'Bing API Hostname Enumerator',
                      'Author': 'Marcus Watson (@BranMacMuffin)',
                      'Description': 'Leverages the Bing API and "domain:" advanced search operator and updates the \'hosts\' table of the database with the results.',
-                     'Comments': ['Iterations are designed to set a limit on the number of times the API is queried.']
+                     'Comments': ['Iterations are designed to set a limit on the number of times the process repeats to minimise API hits.']
                      }
 
     def module_run(self):
@@ -60,7 +60,7 @@ class Module(framework.Framework):
             if new_results_found == False:
                 num_pages += 1
 
-            current_iteration+=num_pages
+            current_iteration+=1
 
         self.output('%d total hosts found.' % (len(hosts)))
         if cnt>0: self.alert('%d NEW hosts found!' % (cnt))
