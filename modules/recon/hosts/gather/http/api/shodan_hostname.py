@@ -7,14 +7,14 @@ class Module(framework.Framework):
     def __init__(self, params):
         framework.Framework.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
-        self.register_option('restrict', 1, 'yes', 'limit number of api requests (0 = unrestricted)')
+        self.register_option('limit', 1, 'yes', 'limit number of api requests (0 = unlimited)')
         self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator and updates the \'hosts\' table of the database with the results.',
                      'Comments': [
-                                  'Note: \'RESTRICT\' option limits the number of API requests in order to prevent API query exhaustion.'
+                                  'Note: \'LIMIT\' option limits the number of API requests in order to prevent API query exhaustion.'
                                   ]
                      }
 
@@ -24,7 +24,7 @@ class Module(framework.Framework):
         cnt = 0
         new = 0
         query = 'hostname:%s' % (domain)
-        limit = self.options['restrict']
+        limit = self.options['limit']
         results = self.search_shodan_api(query, limit)
         for host in results:
             if not 'hostnames' in host.keys():
