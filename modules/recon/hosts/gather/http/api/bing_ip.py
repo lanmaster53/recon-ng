@@ -10,7 +10,7 @@ class Module(framework.Framework):
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.info = {
-                     'Name': 'Bing IP Neighbor Enumerator',
+                     'Name': 'Bing API IP Neighbor Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages the Bing API and "ip:" advanced search operator to enumerate other virtual hosts sharing the same IP address.',
                      'Comments': [
@@ -27,7 +27,6 @@ class Module(framework.Framework):
         for address in addresses:
             query = '\'ip:%s\'' % (address)
             results = self.search_bing_api(query)
-            if type(results) != list: break
             if not results: self.verbose('No additional hosts discovered at \'%s\'.' % (address))
             for result in results:
                 host = urlparse(result['Url']).netloc
