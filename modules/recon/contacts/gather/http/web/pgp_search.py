@@ -6,9 +6,9 @@ class Module(framework.Framework):
         framework.Framework.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', 'domain to search')
         self.info = {
-                     'Name': 'RedIRIS PGP Key Owner Lookup',
+                     'Name': 'PGP Key Owner Lookup',
                      'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
-                     'Description': 'Searches pgp.rediris for email addresses for the given domain.',
+                     'Description': 'Searches the MIT public PGP key server for email addresses of the given domain.',
                      'Comments': [
                                   'Inspiration from theHarvester.py by Christan Martorella: cmarorella[at]edge-seecurity.com'
                                   ]
@@ -17,7 +17,7 @@ class Module(framework.Framework):
     def module_run(self):
         domain = self.options['domain']
 
-        url = 'http://pgp.rediris.es/pks/lookup'
+        url = 'http://pgp.mit.edu/pks/lookup'
         payload= {'search' : self.options['domain'] }
         resp = self.request(url, payload=payload)
 
