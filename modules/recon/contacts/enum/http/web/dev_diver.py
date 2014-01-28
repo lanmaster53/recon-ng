@@ -22,7 +22,7 @@ class Module(framework.Framework):
         url = 'https://github.com/%s' % username
         resp = self.request(url)
         gitName = re.search('<span class="vcard-fullname" itemprop="name">(.+?)</span>', resp.text)
-        if gitName.group(0): 
+        if gitName:
             self.alert('Github username found - (%s)' % url)
             gitDesc = re.search('<meta name="description" content="(.+)" />', resp.text)
             gitJoin = re.search('<span class="join-date">(.+?)</span>', resp.text)
@@ -50,7 +50,7 @@ class Module(framework.Framework):
         url = 'https://bitbucket.org/%s' % username
         resp = self.request(url)
         bbName = re.search('<h1 title="Username:.+">(.+)</h1>', resp.text)      
-        if not bbName.group(0):
+        if not bbName:
             # Before we give up on the user not being on Bitbucket, let's search
             urlSearch = 'https://bitbucket.org/repo/all?name=%s' % username
             respSearch = self.request(url)
@@ -73,9 +73,9 @@ class Module(framework.Framework):
             self.urlRepos.append([url, 'Bitbucket'])
             if bbJoin: self.dateJoin.append([bbJoin.group(1), 'Bitbucket'])
             if bbRepositories: self.repositories.append([', '.join(bbRepositories), 'Bitbucket'])
-
-            fname, lname = bbName.group(1).split(' ')
-            self.add_contact(fname, lname, None, None, None, None)
+ 	    if ' ' in bbName.group(1):
+            	fname, lname = bbName.group(1).split(' ')
+                self.add_contact(fname, lname, None, None, None, None)
         else:
             self.output('Bitbucket username not found.')
         
@@ -94,9 +94,9 @@ class Module(framework.Framework):
             if sfJoin: self.dateJoin.append([sfJoin.group(1), 'Sourceforge'])
             if sfMyOpenID: self.other.append(['URL (Open ID)', sfMyOpenID.group(1), 'Sourceforge'])
             if sfRepositories: self.repositories.append([', '.join(sfRepositories), 'Sourceforge'])
-
-            fname, lname = sfName.group(1).split(' ')
-            self.add_contact(fname, lname, None, None, None, None)
+ 	    if ' ' in sfName.group(1):
+            	fname, lname = sfName.group(1).split(' ')
+                self.add_contact(fname, lname, None, None, None, None)
         else:
             self.output('Sourceforge username not found.')
 
@@ -159,9 +159,9 @@ class Module(framework.Framework):
             if gitoPersonalUrl: self.urlPersonal.append([gitoPersonalUrl.group(1), 'Gitorious'])
             if gitoAvatar: self.urlAvatar.append([gitoAvatar.group(1), 'Gitorious'])
             if gitoProjects: self.repositories.append([', '.join(gitoProjects), 'Gitorious'])
-
-            fname, lname = gitoName.group(1).split(' ')
-            self.add_contact(fname, lname, None, gitoEmail, None, None)
+ 	    if ' ' in gitoName.group(1):
+            	fname, lname = gitoName.group(1).split(' ')
+                self.add_contact(fname, lname, None, gitoEmail, None, None)
         else:
             self.output('Gitorious username not found.')          
     
