@@ -67,12 +67,12 @@ class Module(framework.Framework):
         if not tdata:
             self.output('No scan data available.')
             return
-        tdata.insert(0, ['address', 'port', 'hostname'])
-        self.table(tdata, header=True)
+        header = ['address', 'port', 'hostname']
+        self.table(tdata, header=header)
 
         # store data
         if table:
-            try: self.add_table(table, tdata, header=True)
+            try: self.add_table(table, tdata, header=header)
             except framework.FrameworkException as e:
                 self.error(e.message)
         if column:

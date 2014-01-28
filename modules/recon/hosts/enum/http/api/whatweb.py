@@ -37,9 +37,9 @@ class Module(framework.Framework):
 
             # output data
             for jsonobj in jsonobjs:
-                tdata = [['Plugin', 'String'],['Target', jsonobj['target']]]
+                tdata = [['Target', jsonobj['target']]]
                 for plugin in jsonobj['plugins']:
                     if 'string' in jsonobj['plugins'][plugin]:
                         value = ', '.join(jsonobj['plugins'][plugin]['string'])
                         tdata.append([plugin, value])
-                if tdata: self.table(tdata, header=True)
+                if tdata: self.table(tdata, header=['Plugin', 'String'])

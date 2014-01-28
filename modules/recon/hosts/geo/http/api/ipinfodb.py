@@ -44,8 +44,8 @@ class Module(framework.Framework):
                 data.append(host)
                 self.query('UPDATE hosts SET region=?, country=?, latitude=?, longitude=? WHERE ip_address=?', tuple(data))
 
-            tdata = [['Host Info', 'Value']]
+            tdata = []
             for key in jsonobj:
                 tdata.append([key, jsonobj[key]])
             # output the results in table format
-            self.table(tdata, True)
+            self.table(tdata, header=['Host Info', 'Value'])

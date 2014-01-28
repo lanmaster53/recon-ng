@@ -18,7 +18,7 @@ class Module(framework.Framework):
         host  = self.options['host']
 
         # request the scan
-        details = [['Check', 'Status']]
+        details = []
         configs = []
         url = 'https://asafaweb.com/Scan?Url=%s' % (host)
         self.verbose('URL: %s' % url)
@@ -38,6 +38,6 @@ class Module(framework.Framework):
 
         # Output the results in table format
         if len(details) > 1:
-            self.table(details, True)
+            self.table(details, header=['Check', 'Status'])
         else:
             self.output('No results found.')

@@ -31,10 +31,10 @@ class Module(framework.Framework):
 
         # output table of sites info
         if self.global_options['verbose']:
-            tdata = [['Code', 'Name']]
+            tdata = []
             for site in sites:
                 tdata.append([site[1], site[0]])
-            self.table(tdata, True)
+            self.table(tdata, header=['Code', 'Name'])
 
         # retrive statuses
         key = "1Sx8srDg1u57Ei2wqX65ymPGXu0f7uAig13u"

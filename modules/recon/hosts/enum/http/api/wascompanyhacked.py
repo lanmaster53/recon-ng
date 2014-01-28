@@ -42,7 +42,6 @@ class Module(framework.Framework):
             text = ' '.join(status['text'].split())
             tdata.append([user, date, text])
         if tdata:
-            tdata.insert(0, ['From', 'Date', 'Text'])
-            self.table(tdata, header=True)
+            self.table(tdata, header=['From', 'Date', 'Text'])
         else:
             self.output('No results found.')

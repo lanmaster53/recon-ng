@@ -48,10 +48,8 @@ class Module(framework.Framework):
                     cell = re.findall(r'>(.*?)<', row)
                     raw  = [cell[0], cell[1], cell[2], cell[3], cell[4]]
                     history.append([x.strip() for x in raw])
-                if len(history) > 0:
-                    header = ['OS', 'Server', 'Last Changed', 'IP Address', 'Owner']
-                    history.insert(0, header)
-                    self.table(history, True)
+                if history:
+                    self.table(history, header=['OS', 'Server', 'Last Changed', 'IP Address', 'Owner'])
             else:
                 self.output('No results found for \'%s\'.' % host)
             if len(hosts) > 1:

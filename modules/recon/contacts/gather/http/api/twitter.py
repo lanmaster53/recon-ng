@@ -27,17 +27,13 @@ class Module(framework.Framework):
         # search for mentions tweeted by the given handle
         self.output('Searching for users mentioned by the given handle.')
         self.search_handle_tweets()
-        if self.tdata:
-            self.tdata.insert(0, header)
-            self.table(self.tdata, header=True)
+        if self.tdata: self.table(self.tdata, header=header)
 
         self.tdata = []
         # search for tweets mentioning the given handle
         self.output('Searching for users who mentioned the given handle.')
         self.search_handle_mentions()
-        if self.tdata:
-            self.tdata.insert(0, header)
-            self.table(self.tdata, header=True)
+        if self.tdata: self.table(self.tdata, header=header)
 
     def handle_options(self):
         '''

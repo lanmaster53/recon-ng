@@ -126,29 +126,28 @@ class Framework(cmd.Cmd):
         for name in os.listdir(path):
             if os.path.isdir('%s/%s' % (path, name)):
                 dirnames.append([name])
-        dirnames.insert(0, ['Workspaces'])
-        self.table(dirnames, header=True)
+        self.table(dirnames, header=['Workspaces'])
 
     def display_dashboard(self):
         # display activity table
         self.heading('Activity Summary')
         rows = self.query('SELECT * FROM dashboard ORDER BY 1')
-        tdata = [['Module', 'Runs']]
+        tdata = []
         for row in rows:
             tdata.append(row)
         if rows:
-            self.table(tdata, header=True)
+            self.table(tdata, header=['Module', 'Runs'])
         else:
             print('\n%sThis workspace has no record of activity.' % (self.spacer))
         # display sumary results table
         self.heading('Results Summary')
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        tdata = [['Category', 'Quantity']]
+        tdata = []
         for table in tables:
             if not table in ['leaks', 'dashboard']:
                 count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
                 tdata.append([table.title(), count])
-        self.table(tdata, header=True)
+        self.table(tdata, header=['Category', 'Quantity'])
 
     def to_unicode_str(self, obj, encoding='utf-8'):
         # checks if obj is a string and converts if not
@@ -297,9 +296,11 @@ class Framework(cmd.Cmd):
             print('%s%s' % (self.spacer, line.title()))
             print('%s%s' % (self.spacer, self.ruler*len(line)))
 
-    def table(self, data, header=False):
+    def table(self, data, header=[]):
         '''Accepts a list of rows and outputs a table.'''
         tdata = list(data)
+        if header:
+            tdata.insert(0, header)
         if len(set([len(x) for x in tdata])) > 1:
             raise FrameworkException('Row lengths not consistent.')
         lens = []
@@ -402,7 +403,7 @@ class Framework(cmd.Cmd):
 
         return self.insert('pushpin', data, data.keys())
 
-    def add_table(self, table, data, header=False):
+    def add_table(self, table, data, header=[]):
         '''Adds a table to the database and populates it with data.
         table - the name of the table to create.
         header - whether or not the first row of tdata consists of headers.
@@ -410,6 +411,8 @@ class Framework(cmd.Cmd):
 
         reserved = ['leaks']
         tdata = list(data)
+        if header:
+            tdata.insert(0, header)
         table = self.to_unicode_str(table).lower()
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         if table in tables + reserved:
@@ -611,8 +614,7 @@ class Framework(cmd.Cmd):
         for key in sorted(self.keys):
             tdata.append([key, self.keys[key]])
         if tdata:
-            tdata.insert(0, ['Name', 'Value'])
-            self.table(tdata, header=True)
+            self.table(tdata, header=['Name', 'Value'])
         else: self.output('No API keys stored.')
 
     def save_keys(self):
@@ -898,8 +900,7 @@ class Framework(cmd.Cmd):
                 self.output('No data returned.')
             else:
                 header = tuple([x[0] for x in cur.description])
-                tdata.insert(0, header)
-                self.table(tdata, header=True)
+                self.table(tdata, header=header)
                 self.output('%d rows returned' % (len(tdata)-1)) # -1 to account for header row
         else:
             conn.commit()

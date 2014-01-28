@@ -66,9 +66,9 @@ class Module(framework.Framework):
 
         # display search results
         if tdata:
-            tdata.insert(0, ['Host', 'Time'] + vuln_types)
-            self.table(tdata, header=True)
-            if table: self.add_table(table, tdata, header=True)
+            header = ['Host', 'Time'] + vuln_types
+            self.table(tdata, header=header)
+            if table: self.add_table(table, tdata, header=header)
         else:
             self.output('No vulnerabilities found.')
 

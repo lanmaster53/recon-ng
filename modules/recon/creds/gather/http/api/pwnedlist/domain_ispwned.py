@@ -49,6 +49,6 @@ class Module(framework.Framework):
             self.alert('Domain \'%s\' has publicly compromised accounts!' % (domain))
             tdata.append([jsonobj['domain'], str(jsonobj['num_entries']), jsonobj['first_seen'], jsonobj['last_seen']])
         if tdata:
-            tdata.insert(0, ['Domain', 'Pwned_Accounts', 'First_Seen', 'Last_Seen'])
-            self.table(tdata, header=True)
-            if table: self.add_table(table, tdata, header=True)
+            header = ['Domain', 'Pwned_Accounts', 'First_Seen', 'Last_Seen']
+            self.table(tdata, header=header)
+            if table: self.add_table(table, tdata, header=header)

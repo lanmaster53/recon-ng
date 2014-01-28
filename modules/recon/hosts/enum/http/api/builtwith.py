@@ -45,7 +45,5 @@ class Module(framework.Framework):
                     tdata.append([tag.title(), name])
 
             if len(tdata) > 0:
-                header = ['Tag', 'Name']
                 tdata.insert(0, ['Profile URL', fqdn])
-                tdata.insert(0, header)
-                self.table(tdata, True)
+                self.table(tdata, header=['Tag', 'Name'])

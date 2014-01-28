@@ -31,5 +31,4 @@ class Module(framework.Framework):
             tdata.append((result['geometry']['location_type'], result['formatted_address']))
         # output the table
         if tdata:
-            tdata.insert(0, ('Type', 'Address'))
-            self.table(tdata, header=True)
+            self.table(tdata, header=['Type', 'Address'])

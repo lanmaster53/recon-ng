@@ -94,10 +94,9 @@ class Module(framework.Framework):
             page +=1
         if nodes:
             tdata = []
-            nodes.insert(0, header)
             for node in nodes:
                 tdata.append([node[1], node[2], node[4], node[9], node[11], node[12], node[13], node[16]])
-            self.table(tdata, header=True)
+            self.table(tdata, header=header)
             self.output('%d access points found.' % (len(nodes)-1))
         else:
             self.output('No access points found.')
