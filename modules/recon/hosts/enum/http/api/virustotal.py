@@ -95,8 +95,7 @@ class Module(framework.Framework):
         else:
             self.sleep = 30
 
-        self.alert(self.sleep)
-
+        
         hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         
         for host in hosts:
