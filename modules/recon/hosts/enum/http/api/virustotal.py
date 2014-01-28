@@ -9,23 +9,15 @@ class Module(framework.Framework):
 
     def __init__(self, params):
         framework.Framework.__init__(self, params)        
-        self.register_option('search', '', 'yes', 'Information to search results for')    
-        self.register_option('non_clean', 'True', 'yes', 'Shows only non-clean sites in the URL scan')     
+        self.register_option('search', '', 'yes', 'Information to search results for')       
         self.info = {
                      'Name': 'Virus Total Lookup',
                      'Author': 'Steven Dumolt (@dumolts)',
                      'Description': 'Uses Virus Total to gather data',
-                     'Comments': ['NON_CLEAN options: [ True | False ]','SEARCH format options: [ URL | HOSTNAME | IP ]']
+                     'Comments': ['SEARCH format options: [ URL | HOSTNAME | IP ]']
                     }
 
-    def isIP(self,str):
-        IP_REGEX = r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
-        if not re.match(IP_REGEX,str) is None:
-            return True
-        else:
-            return False
-
-    def domainSearch(self,str):
+    def _domain_search(self,str):
         url = "https://www.virustotal.com/vtapi/v2/domain/report"
         payload = {'domain': str,'apikey':self.get_key('VirusTotal')}        
         resp = self.request(url, method="GET", payload=payload)
@@ -40,7 +32,7 @@ class Module(framework.Framework):
         else:
             self.error(resp.json['verbose_msg'])
 
-    def ipSearch(self,str):
+    def _ip_search(self,str):
         url = "https://www.virustotal.com/vtapi/v2/ip-address/report"
         payload = {'ip': str,'apikey':self.get_key('VirusTotal')}        
         resp = self.request(url, method="GET", payload=payload)
@@ -56,7 +48,7 @@ class Module(framework.Framework):
         else:
             self.error(resp.json['verbose_msg'])
 
-    def urlSearch(self,str):
+    def _url_search(self,str):
         url = "https://www.virustotal.com/vtapi/v2/url/report"
         payload = {'resource': str,'apikey':self.get_key('VirusTotal')}
         resp = self.request(url, method="POST", payload=payload)
@@ -66,7 +58,7 @@ class Module(framework.Framework):
             tdata.append(['Scanner', 'Result'])
             clean=[]
             for k in sorted(resp.json['scans']):
-                if self.options['non_clean'] == True:
+                if self.global_options['verbose'] == True:
                     if resp.json['scans'][k]['detected'] == True or not 'clean' in resp.json['scans'][k]['result']:    
                         tdata.append([k,resp.json['scans'][k]['result']])
                     else:
@@ -82,8 +74,9 @@ class Module(framework.Framework):
     
     def module_run(self):        
         x=urlparse(self.options['search'])
+
        
-        self.urlSearch(self.options['search'])        
+        self._url_search(self.options['search'])        
 
         if 'http' in x.scheme:
             site = x.netloc
@@ -95,10 +88,10 @@ class Module(framework.Framework):
 
         invalidChar = [':','/','\\']
         if not any(invalid in site for invalid in invalidChar): 
-            if self.isIP(site)== True:
-                self.ipSearch(site)            
+            if re.search(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', site):
+                self._ip_search(site)            
             else:
-                self.domainSearch(site)
+                self._domain_search(site)
         
                 
         
