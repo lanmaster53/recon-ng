@@ -8,8 +8,8 @@ class Module(framework.Framework):
         framework.Framework.__init__(self, params)
         self.register_option('table', 'hosts', 'yes', 'source table of the data for the list')
         self.register_option('column', 'ip_address', 'yes', 'source column of the data for the list')
-        self.register_option('unique', False, 'yes', 'only return unique items from the dataset')
-        self.register_option('nulls', True, 'yes', 'include nulls in the dataset')
+        self.register_option('unique', True, 'yes', 'only return unique items from the dataset')
+        self.register_option('nulls', False, 'yes', 'include nulls in the dataset')
         self.register_option('filename', '%s/list.txt' % (self.workspace), 'yes', 'path and filename for output')
         self.info = {
                      'Name': 'List Creator',
