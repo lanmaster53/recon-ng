@@ -1,24 +1,21 @@
-#!/usr/bin/env python
+from __future__ import print_function
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-__version__   = '1.4.3'
+execfile('VERSION')
 
-import datetime
-import os
 import errno
-import json
-import sys
-import random
 import imp
-import sqlite3
+import json
+import os
+import random
+import re
+import sys
 import traceback
 import __builtin__
 import framework
 
-# define colors for output
-# note: color in prompt effects
-# rendering of command history
+# colors for output
 __builtin__.N  = '\033[m' # native
 __builtin__.R  = '\033[31m' # red
 __builtin__.G  = '\033[32m' # green
@@ -27,16 +24,32 @@ __builtin__.B  = '\033[34m' # blue
 
 # mode flags
 __builtin__.script = 0
-__builtin__.record = 0
 __builtin__.load = 0
 
-# set global framework options
-__builtin__.goptions = {}
+# framework variables
+__builtin__.global_options = framework.Options()
 __builtin__.keys = {}
 __builtin__.loaded_modules = {}
 __builtin__.workspace = ''
+__builtin__.home = ''
+__builtin__.record = None
+__builtin__.spool = None
 
-class Recon(framework.module):
+# spooling system
+def spool_print(*args, **kwargs):
+    if __builtin__.spool:
+        __builtin__.spool.write('%s\n' % (args[0]))
+        __builtin__.spool.flush()
+    if 'console' in kwargs and kwargs['console'] is False:
+        return
+    # new print function must still use the old print function via the backup
+    __builtin__._print(*args, **kwargs)
+# make a builtin backup of the original print function
+__builtin__._print = print
+# override the builtin print function with the new print function
+__builtin__.print = spool_print
+
+class Recon(framework.Framework):
     def __init__(self, mode=0):
         # modes:
         # 0 == console (default)
@@ -44,62 +57,86 @@ class Recon(framework.module):
         # 2 == gui
         self.mode = mode
         self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
-        prompt = '%s > ' % (self.name)
-        framework.module.__init__(self, (prompt, 'core'))
-        self.init_goptions()
-        self.options = self.goptions
+        self.prompt_template = '%s[%s] > '
+        self.base_prompt = self.prompt_template % ('', self.name)
+        framework.Framework.__init__(self, (self.base_prompt, 'base'))
+        self.init_home()
+        self.init_global_options()
         self.load_modules()
         self.load_keys()
         if self.mode == 0: self.show_banner()
-        self.init_workspace()
+        self.init_workspace('default')
 
     #==================================================
     # SUPPORT METHODS
     #==================================================
 
-    def init_goptions(self):
-        self.register_option('workspace', 'default', 'yes', 'current workspace name', self.goptions)
-        self.register_option('rec_file', './data/cmd.rc', 'yes', 'path to resource file for \'record\'', self.goptions)
-        self.register_option('domain', None, 'no', 'target domain', self.goptions)
-        self.register_option('company', None, 'no', 'target company name', self.goptions)
-        self.register_option('latitude', None, 'no', 'target latitudinal position', self.goptions)
-        self.register_option('longitude', None, 'no', 'target longitudinal position', self.goptions)
-        self.register_option('radius', None, 'no', 'radius of interest relative to latitude and longitude', self.goptions)
-        self.register_option('user-agent', 'Recon-ng/%s' % (__version__), 'yes', 'user-agent string', self.goptions)
-        self.register_option('proxy', False, 'yes', 'proxy all requests', self.goptions)
-        self.register_option('proxy_server', '127.0.0.1:8080', 'yes', 'proxy server', self.goptions)
-        self.register_option('socket_timeout', 10, 'yes', 'socket timeout in seconds', self.goptions)
-        self.register_option('verbose', True,  'yes', 'enable verbose output', self.goptions)
-        self.register_option('debug', False,  'yes', 'enable debugging output', self.goptions)
+    def version_check(self):
+        try:
+            pattern = "'([\d\.]*)'"
+            remote = re.search(pattern, self.request('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').raw).group(1)
+            local = re.search(pattern, open('VERSION').read()).group(1)
+            if remote != local:
+                self.alert('Your version of Recon-ng does not match the latest release.')
+                self.alert('Please update or use the \'--no-check\' switch to continue using the old version.')
+                self.alert('Read the migration notes for pre-requisites before upgrading.')
+                self.output('Migration Notes: https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/#!migration-notes')
+                self.output('Remote version:  %s' % (remote))
+                self.output('Local version:   %s' % (local))
+            return local == remote
+        except:
+            return True
+
+    def init_home(self):
+        self.home = __builtin__.home = '%s/.recon-ng' % os.path.expanduser('~')
+        if not os.path.exists(self.home):
+            os.makedirs(self.home)
+
+    def init_global_options(self):
+        self.register_option('domain', None, 'no', 'target domain')
+        self.register_option('company', None, 'no', 'target company name')
+        self.register_option('netblock', None, 'no', 'target netblock (CIDR)')
+        self.register_option('latitude', None, 'no', 'target latitudinal position')
+        self.register_option('longitude', None, 'no', 'target longitudinal position')
+        self.register_option('radius', None, 'no', 'radius relative to latitude and longitude')
+        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
+        self.register_option('proxy', None, 'no', 'proxy server <address>:<port>')
+        self.register_option('timeout', 10, 'yes', 'socket timeout in seconds')
+        self.register_option('verbose', True,  'yes', 'enable verbose output')
+        self.register_option('debug', False,  'yes', 'enable debugging output')
 
     def load_modules(self, reload=False):
         self.loaded_category = {}
         self.loaded_modules = __builtin__.loaded_modules
         if reload: self.output('Reloading...')
-        for dirpath, dirnames, filenames in os.walk('./modules/'):
-            if len(filenames) > 0:
-                mod_category = dirpath.split('/')[2]
-                if not mod_category in self.loaded_category: self.loaded_category[mod_category] = []
-                for filename in [f for f in filenames if f.endswith('.py')]:
-                    # this (as opposed to sys.path.append) allows for module reloading
-                    mod_name = filename.split('.')[0]
-                    mod_dispname = '%s%s%s' % (self.module_delimiter.join(dirpath.split('/')[2:]), self.module_delimiter, mod_name)
-                    mod_loadname = mod_dispname.replace(self.module_delimiter, '_')
-                    mod_loadpath = os.path.join(dirpath, filename)
-                    mod_file = open(mod_loadpath, 'rb')
-                    try:
-                        imp.load_source(mod_loadname, mod_loadpath, mod_file)
-                        __import__(mod_loadname)
-                        self.loaded_category[mod_category].append(mod_loadname)
-                        self.loaded_modules[mod_dispname] = mod_loadname
-                    except:
-                        print '-'*60
-                        traceback.print_exc()
-                        print '-'*60
-                        self.error('Unable to load module: %s' % (mod_name))
+        for path in ('./modules/', '%s/modules/' % self.home):
+            for dirpath, dirnames, filenames in os.walk(path):
+                # remove hidden files and directories
+                filenames = [f for f in filenames if not f[0] == '.']
+                dirnames[:] = [d for d in dirnames if not d[0] == '.']
+                if len(filenames) > 0:
+                    mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
+                    if not mod_category in self.loaded_category: self.loaded_category[mod_category] = []
+                    for filename in [f for f in filenames if f.endswith('.py')]:
+                        # this (as opposed to sys.path.append) allows for module reloading
+                        mod_name = filename.split('.')[0]
+                        mod_dispname = '%s%s%s' % (self.module_delimiter.join(re.split('/modules/', dirpath)[-1].split('/')), self.module_delimiter, mod_name)
+                        mod_loadname = mod_dispname.replace(self.module_delimiter, '_')
+                        mod_loadpath = os.path.join(dirpath, filename)
+                        mod_file = open(mod_loadpath, 'rb')
+                        try:
+                            imp.load_source(mod_loadname, mod_loadpath, mod_file)
+                            __import__(mod_loadname)
+                            self.loaded_category[mod_category].append(mod_loadname)
+                            self.loaded_modules[mod_dispname] = mod_loadname
+                        except:
+                            print('-'*60)
+                            traceback.print_exc()
+                            print('-'*60)
+                            self.error('Unable to load module: %s' % (mod_name))
 
     def load_keys(self):
-        key_path = './data/keys.dat'
+        key_path = '%s/keys.dat' % (self.home)
         if os.path.exists(key_path):
             try:
                 key_data = json.loads(open(key_path, 'rb').read())
@@ -110,17 +147,17 @@ class Recon(framework.module):
     def show_banner(self):
         banner = open('./core/banner').read()
         banner_len = len(max(banner.split('\n'), key=len))
-        print banner
-        print '{0:^{1}}'.format('%s[%s v%s Copyright (C) %s, %s]%s' % (O, self.name, __version__, datetime.datetime.now().year, __author__, N), banner_len+8) # +8 compensates for the color bytes
-        print ''
+        print(banner)
+        print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8)) # +8 compensates for the color bytes
+        print('')
         counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
         count_len = len(max([str(x[0]) for x in counts], key=len))
         for count in sorted(counts, reverse=True):
             cnt = '[%d]' % (count[0])
-            print '%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N)
+            print('%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N))
             # create dynamic easter egg command based on counts
             setattr(self, 'do_%d' % count[0], self.menu_egg)
-        print ''
+        print('')
 
     def menu_egg(self, params):
         eggs = [
@@ -136,12 +173,11 @@ class Recon(framework.module):
                 'Your mother called. She wants her menu driven UI back.',
                 'What\'s the samurai password?'
                 ]
-        print random.choice(eggs)
+        print(random.choice(eggs))
         return 
 
-    def init_workspace(self, workspace=None):
-        workspace = workspace if workspace is not None else self.options['workspace']['value']
-        workspace = './workspaces/%s' % (workspace)
+    def init_workspace(self, workspace):
+        workspace = '%s/workspaces/%s' % (self.home, workspace)
         try:
             os.makedirs(workspace)
         except OSError as e:
@@ -149,29 +185,15 @@ class Recon(framework.module):
                 self.error(e.__str__())
                 return False
         self.workspace = __builtin__.workspace = workspace
+        self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.init_goptions()
+        self.init_global_options()
         self.load_config()
         return True
-
-    def load_config(self):
-        config_path = '%s/config.dat' % (self.workspace)
-        if os.path.exists(config_path):
-            try:
-                config_data = json.loads(open(config_path, 'rb').read())
-                for key in config_data: self.options[key] = config_data[key]
-            except:
-                self.error('Corrupt config file.')
-
-    def save_config(self):
-        config_path = '%s/config.dat' % (self.workspace)
-        config_file = open(config_path, 'wb')
-        json.dump(self.options, config_file)
-        config_file.close()
 
     #==================================================
     # COMMAND METHODS
@@ -197,25 +219,13 @@ class Recon(framework.module):
         '''Displays the banner'''
         self.show_banner()
 
-    def do_set(self, params):
-        '''Sets global options'''
-        options = params.split()
-        if len(options) < 2:
-            self.help_set()
+    def do_workspace(self, params):
+        '''Sets the workspace'''
+        if not params:
+            self.help_workspace()
             return
-        name = options[0].lower()
-        if name in self.options:
-            value = ' '.join(options[1:])
-            init = False
-            # validate workspace
-            if name == 'workspace':
-                if not self.init_workspace(value):
-                    self.error('Unable to create \'%s\' workspace.' % (value))
-                    return
-            self.options[name]['value'] = self.autoconvert(value)
-            print '%s => %s' % (name.upper(), value)
-            self.save_config()
-        else: self.error('Invalid option.')
+        if not self.init_workspace(params):
+            self.error('Unable to create \'%s\' workspace.' % (value))
 
     def do_load(self, params):
         '''Loads selected module'''
@@ -238,17 +248,21 @@ class Recon(framework.module):
             return
         modulename = modules[0]
         loadedname = self.loaded_modules[modulename]
-        prompt = '%s [%s] > ' % (self.name, modulename.split(self.module_delimiter)[-1])
+        prompt = self.prompt_template % (self.prompt[:-3], modulename.split(self.module_delimiter)[-1])
         # notify the user if runtime errors exist in the module
         try: y = sys.modules[loadedname].Module((prompt, modulename))
         except Exception:
-            self.error('Error in module: %s' % (traceback.format_exc().splitlines()[-1]))
+            if self.options['debug']:
+                print('%s%s' % (R, '-'*60))
+                traceback.print_exc()
+                print('%s%s' % ('-'*60, N))
+            self.error('ModuleError: %s' % (traceback.format_exc().splitlines()[-1]))
             return
         # return the loaded module if in command line mode
         if self.mode == 1: return y
         try: y.cmdloop()
         except KeyboardInterrupt:
-            print ''
+            print('')
     do_use = do_load
 
     def do_run(self, params):
@@ -260,14 +274,15 @@ class Recon(framework.module):
     #==================================================
 
     def help_info(self):
-        print 'Usage: info <module>'
+        print('Usage: info <module>')
+
+    def help_workspace(self):
+        print('Usage: workspace <string>')
 
     #==================================================
     # COMPLETE METHODS
     #==================================================
 
-    def complete_set(self, text, line, *ignored):
-        args = line.split()
-        if len(args) > 1 and args[1].lower() == 'workspace':
-            return [name for name in os.listdir('./workspaces') if name.startswith(text) and os.path.isdir('./workspaces/%s' % (name))]
-        return [x for x in self.options if x.startswith(text)]
+    def complete_workspace(self, text, *ignored):
+        path = '%s/workspaces' % (self.home)
+        return [name for name in os.listdir(path) if name.startswith(text) and os.path.isdir('%s/%s' % (path, name))]

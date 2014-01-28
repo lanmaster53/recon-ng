@@ -3,11 +3,11 @@ import framework
 import re
 from datetime import date
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.info = {
                      'Name': 'Web Archive Lookup',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',
@@ -16,7 +16,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        domain  = self.options['domain']['value']
+        domain  = self.options['domain']
 
         # Get the first year the domain was archived
         url = 'http://web.archive.org/web/*/%s' % (domain)
@@ -28,7 +28,7 @@ class Module(framework.module):
         if match:
             first_year = match.group(1)
         else:
-            self.output('No results found')
+            self.output('No results found.')
             return
 
         # iterate through years until this year
@@ -54,4 +54,4 @@ class Module(framework.module):
             self.table(details, True)
             self.output('%d archives found.' % (cnt))
         else:
-            self.output('No results found')
+            self.output('No results found.')

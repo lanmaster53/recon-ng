@@ -72,7 +72,7 @@ def inet_ntoa(address):
         if current_len > best_len:
             best_start = start
             best_len = current_len
-    if best_len > 0:
+    if best_len > 1:
         if best_start == 0 and \
            (best_len == 6 or
             best_len == 5 and chunks[5] == 'ffff'):

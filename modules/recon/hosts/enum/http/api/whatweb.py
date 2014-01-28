@@ -2,10 +2,10 @@ import framework
 # unique to module
 import json
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'WhatWeb Web Technologies scan',
@@ -18,7 +18,7 @@ class Module(framework.module):
 
     def module_run(self):
         # handle sources
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         
         url = 'http://whatweb.net/whatweb.php'
         for host in hosts:

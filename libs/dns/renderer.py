@@ -305,7 +305,7 @@ class Renderer(object):
     def write_header(self):
         """Write the DNS message header.
 
-        Writing the DNS message header is done asfter all sections
+        Writing the DNS message header is done after all sections
         have been rendered, but before the optional TSIG signature
         is added.
         """

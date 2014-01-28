@@ -45,6 +45,8 @@ DSANSEC3SHA1 = 6
 RSASHA1NSEC3SHA1 = 7
 RSASHA256 = 8
 RSASHA512 = 10
+ECDSAP256SHA256 = 13
+ECDSAP384SHA384 = 14
 INDIRECT = 252
 PRIVATEDNS = 253
 PRIVATEOID = 254
@@ -60,6 +62,8 @@ _algorithm_by_text = {
     'RSASHA256' : RSASHA256,
     'RSASHA512' : RSASHA512,
     'INDIRECT' : INDIRECT,
+    'ECDSAP256SHA256' : ECDSAP256SHA256,
+    'ECDSAP384SHA384' : ECDSAP384SHA384,
     'PRIVATEDNS' : PRIVATEDNS,
     'PRIVATEOID' : PRIVATEOID,
     }
@@ -126,14 +130,15 @@ def make_ds(name, key, algorithm, origin=None):
     return dns.rdata.from_wire(dns.rdataclass.IN, dns.rdatatype.DS, dsrdata, 0,
                                len(dsrdata))
 
-def _find_key(keys, rrsig):
+def _find_candidate_keys(keys, rrsig):
+    candidate_keys=[]
     value = keys.get(rrsig.signer)
     if value is None:
         return None
     if isinstance(value, dns.node.Node):
         try:
-            rdataset = node.find_rdataset(dns.rdataclass.IN,
-                                          dns.rdatatype.DNSKEY)
+            rdataset = value.find_rdataset(dns.rdataclass.IN,
+                                           dns.rdatatype.DNSKEY)
         except KeyError:
             return None
     else:
@@ -141,8 +146,8 @@ def _find_key(keys, rrsig):
     for rdata in rdataset:
         if rdata.algorithm == rrsig.algorithm and \
                key_id(rdata) == rrsig.key_tag:
-            return rdata
-    return None
+            candidate_keys.append(rdata)
+    return candidate_keys
 
 def _is_rsa(algorithm):
     return algorithm in (RSAMD5, RSASHA1,
@@ -152,6 +157,9 @@ def _is_rsa(algorithm):
 def _is_dsa(algorithm):
     return algorithm in (DSA, DSANSEC3SHA1)
 
+def _is_ecdsa(algorithm):
+    return _have_ecdsa and (algorithm in (ECDSAP256SHA256, ECDSAP384SHA384))
+
 def _is_md5(algorithm):
     return algorithm == RSAMD5
 
@@ -160,7 +168,10 @@ def _is_sha1(algorithm):
                          DSANSEC3SHA1, RSASHA1NSEC3SHA1)
 
 def _is_sha256(algorithm):
-    return algorithm == RSASHA256
+    return algorithm in (RSASHA256, ECDSAP256SHA256)
+
+def _is_sha384(algorithm):
+    return algorithm == ECDSAP384SHA384
 
 def _is_sha512(algorithm):
     return algorithm == RSASHA512
@@ -172,6 +183,8 @@ def _make_hash(algorithm):
         return dns.hash.get('SHA1')()
     if _is_sha256(algorithm):
         return dns.hash.get('SHA256')()
+    if _is_sha384(algorithm):
+        return dns.hash.get('SHA384')()
     if _is_sha512(algorithm):
         return dns.hash.get('SHA512')()
     raise ValidationFailure, 'unknown hash for algorithm %u' % algorithm
@@ -217,100 +230,125 @@ def _validate_rrsig(rrset, rrsig, keys, origin=None, now=None):
     if isinstance(origin, (str, unicode)):
         origin = dns.name.from_text(origin, dns.name.root)
 
-    key = _find_key(keys, rrsig)
-    if not key:
-        raise ValidationFailure, 'unknown key'
+    for candidate_key in _find_candidate_keys(keys, rrsig):
+        if not candidate_key:
+            raise ValidationFailure, 'unknown key'
 
-    # For convenience, allow the rrset to be specified as a (name, rdataset)
-    # tuple as well as a proper rrset
-    if isinstance(rrset, tuple):
-        rrname = rrset[0]
-        rdataset = rrset[1]
-    else:
-        rrname = rrset.name
-        rdataset = rrset
+        # For convenience, allow the rrset to be specified as a (name, rdataset)
+        # tuple as well as a proper rrset
+        if isinstance(rrset, tuple):
+            rrname = rrset[0]
+            rdataset = rrset[1]
+        else:
+            rrname = rrset.name
+            rdataset = rrset
 
-    if now is None:
-        now = time.time()
-    if rrsig.expiration < now:
-        raise ValidationFailure, 'expired'
-    if rrsig.inception > now:
-        raise ValidationFailure, 'not yet valid'
+        if now is None:
+            now = time.time()
+        if rrsig.expiration < now:
+            raise ValidationFailure, 'expired'
+        if rrsig.inception > now:
+            raise ValidationFailure, 'not yet valid'
 
-    hash = _make_hash(rrsig.algorithm)
+        hash = _make_hash(rrsig.algorithm)
 
-    if _is_rsa(rrsig.algorithm):
-        keyptr = key.key
-        (bytes,) = struct.unpack('!B', keyptr[0:1])
-        keyptr = keyptr[1:]
-        if bytes == 0:
-            (bytes,) = struct.unpack('!H', keyptr[0:2])
-            keyptr = keyptr[2:]
-        rsa_e = keyptr[0:bytes]
-        rsa_n = keyptr[bytes:]
-        keylen = len(rsa_n) * 8
-        pubkey = Crypto.PublicKey.RSA.construct(
-            (Crypto.Util.number.bytes_to_long(rsa_n),
-             Crypto.Util.number.bytes_to_long(rsa_e)))
-        sig = (Crypto.Util.number.bytes_to_long(rrsig.signature),)
-    elif _is_dsa(rrsig.algorithm):
-        keyptr = key.key
-        (t,) = struct.unpack('!B', keyptr[0:1])
-        keyptr = keyptr[1:]
-        octets = 64 + t * 8
-        dsa_q = keyptr[0:20]
-        keyptr = keyptr[20:]
-        dsa_p = keyptr[0:octets]
-        keyptr = keyptr[octets:]
-        dsa_g = keyptr[0:octets]
-        keyptr = keyptr[octets:]
-        dsa_y = keyptr[0:octets]
-        pubkey = Crypto.PublicKey.DSA.construct(
-            (Crypto.Util.number.bytes_to_long(dsa_y),
-             Crypto.Util.number.bytes_to_long(dsa_g),
-             Crypto.Util.number.bytes_to_long(dsa_p),
-             Crypto.Util.number.bytes_to_long(dsa_q)))
-        (dsa_r, dsa_s) = struct.unpack('!20s20s', rrsig.signature[1:])
-        sig = (Crypto.Util.number.bytes_to_long(dsa_r),
-               Crypto.Util.number.bytes_to_long(dsa_s))
-    else:
-        raise ValidationFailure, 'unknown algorithm %u' % rrsig.algorithm
+        if _is_rsa(rrsig.algorithm):
+            keyptr = candidate_key.key
+            (bytes,) = struct.unpack('!B', keyptr[0:1])
+            keyptr = keyptr[1:]
+            if bytes == 0:
+                (bytes,) = struct.unpack('!H', keyptr[0:2])
+                keyptr = keyptr[2:]
+            rsa_e = keyptr[0:bytes]
+            rsa_n = keyptr[bytes:]
+            keylen = len(rsa_n) * 8
+            pubkey = Crypto.PublicKey.RSA.construct(
+                (Crypto.Util.number.bytes_to_long(rsa_n),
+                 Crypto.Util.number.bytes_to_long(rsa_e)))
+            sig = (Crypto.Util.number.bytes_to_long(rrsig.signature),)
+        elif _is_dsa(rrsig.algorithm):
+            keyptr = candidate_key.key
+            (t,) = struct.unpack('!B', keyptr[0:1])
+            keyptr = keyptr[1:]
+            octets = 64 + t * 8
+            dsa_q = keyptr[0:20]
+            keyptr = keyptr[20:]
+            dsa_p = keyptr[0:octets]
+            keyptr = keyptr[octets:]
+            dsa_g = keyptr[0:octets]
+            keyptr = keyptr[octets:]
+            dsa_y = keyptr[0:octets]
+            pubkey = Crypto.PublicKey.DSA.construct(
+                (Crypto.Util.number.bytes_to_long(dsa_y),
+                 Crypto.Util.number.bytes_to_long(dsa_g),
+                 Crypto.Util.number.bytes_to_long(dsa_p),
+                 Crypto.Util.number.bytes_to_long(dsa_q)))
+            (dsa_r, dsa_s) = struct.unpack('!20s20s', rrsig.signature[1:])
+            sig = (Crypto.Util.number.bytes_to_long(dsa_r),
+                   Crypto.Util.number.bytes_to_long(dsa_s))
+        elif _is_ecdsa(rrsig.algorithm):
+            if rrsig.algorithm == ECDSAP256SHA256:
+                curve = ecdsa.curves.NIST256p
+                key_len = 32
+                digest_len = 32
+            elif rrsig.algorithm == ECDSAP384SHA384:
+                curve = ecdsa.curves.NIST384p
+                key_len = 48
+                digest_len = 48
+            else:
+                # shouldn't happen
+                raise ValidationFailure, 'unknown ECDSA curve'
+            keyptr = candidate_key.key
+            x = Crypto.Util.number.bytes_to_long(keyptr[0:key_len])
+            y = Crypto.Util.number.bytes_to_long(keyptr[key_len:key_len * 2])
+            assert ecdsa.ecdsa.point_is_valid(curve.generator, x, y)
+            point = ecdsa.ellipticcurve.Point(curve.curve, x, y, curve.order)
+            verifying_key = ecdsa.keys.VerifyingKey.from_public_point(point,
+                                                                      curve)
+            pubkey = ECKeyWrapper(verifying_key, key_len)
+            r = rrsig.signature[:key_len]
+            s = rrsig.signature[key_len:]
+            sig = ecdsa.ecdsa.Signature(Crypto.Util.number.bytes_to_long(r),
+                                        Crypto.Util.number.bytes_to_long(s))
+        else:
+            raise ValidationFailure, 'unknown algorithm %u' % rrsig.algorithm
 
-    hash.update(_to_rdata(rrsig, origin)[:18])
-    hash.update(rrsig.signer.to_digestable(origin))
+        hash.update(_to_rdata(rrsig, origin)[:18])
+        hash.update(rrsig.signer.to_digestable(origin))
 
-    if rrsig.labels < len(rrname) - 1:
-        suffix = rrname.split(rrsig.labels + 1)[1]
-        rrname = dns.name.from_text('*', suffix)
-    rrnamebuf = rrname.to_digestable(origin)
-    rrfixed = struct.pack('!HHI', rdataset.rdtype, rdataset.rdclass,
-                          rrsig.original_ttl)
-    rrlist = sorted(rdataset);
-    for rr in rrlist:
-        hash.update(rrnamebuf)
-        hash.update(rrfixed)
-        rrdata = rr.to_digestable(origin)
-        rrlen = struct.pack('!H', len(rrdata))
-        hash.update(rrlen)
-        hash.update(rrdata)
+        if rrsig.labels < len(rrname) - 1:
+            suffix = rrname.split(rrsig.labels + 1)[1]
+            rrname = dns.name.from_text('*', suffix)
+        rrnamebuf = rrname.to_digestable(origin)
+        rrfixed = struct.pack('!HHI', rdataset.rdtype, rdataset.rdclass,
+                              rrsig.original_ttl)
+        rrlist = sorted(rdataset);
+        for rr in rrlist:
+            hash.update(rrnamebuf)
+            hash.update(rrfixed)
+            rrdata = rr.to_digestable(origin)
+            rrlen = struct.pack('!H', len(rrdata))
+            hash.update(rrlen)
+            hash.update(rrdata)
 
-    digest = hash.digest()
+        digest = hash.digest()
 
-    if _is_rsa(rrsig.algorithm):
-        # PKCS1 algorithm identifier goop
-        digest = _make_algorithm_id(rrsig.algorithm) + digest
-        padlen = keylen // 8 - len(digest) - 3
-        digest = chr(0) + chr(1) + chr(0xFF) * padlen + chr(0) + digest
-    elif _is_dsa(rrsig.algorithm):
-        pass
-    else:
-        # Raise here for code clarity; this won't actually ever happen
-        # since if the algorithm is really unknown we'd already have
-        # raised an exception above
-        raise ValidationFailure, 'unknown algorithm %u' % rrsig.algorithm
+        if _is_rsa(rrsig.algorithm):
+            # PKCS1 algorithm identifier goop
+            digest = _make_algorithm_id(rrsig.algorithm) + digest
+            padlen = keylen // 8 - len(digest) - 3
+            digest = chr(0) + chr(1) + chr(0xFF) * padlen + chr(0) + digest
+        elif _is_dsa(rrsig.algorithm) or _is_ecdsa(rrsig.algorithm):
+            pass
+        else:
+            # Raise here for code clarity; this won't actually ever happen
+            # since if the algorithm is really unknown we'd already have
+            # raised an exception above
+            raise ValidationFailure, 'unknown algorithm %u' % rrsig.algorithm
 
-    if not pubkey.verify(digest, sig):
-        raise ValidationFailure, 'verify failure'
+        if pubkey.verify(digest, sig):
+            return
+    raise ValidationFailure, 'verify failure'
 
 def _validate(rrset, rrsigset, keys, origin=None, now=None):
     """Validate an RRset
@@ -370,3 +408,21 @@ try:
 except ImportError:
     validate = _need_pycrypto
     validate_rrsig = _need_pycrypto
+
+try:
+    import ecdsa
+    import ecdsa.ecdsa
+    import ecdsa.ellipticcurve
+    import ecdsa.keys
+    _have_ecdsa = True
+
+    class ECKeyWrapper(object):
+        def __init__(self, key, key_len):
+            self.key = key
+            self.key_len = key_len
+        def verify(self, digest, sig):
+            diglong = Crypto.Util.number.bytes_to_long(digest)
+            return self.key.pubkey.verifies(diglong, sig)
+
+except ImportError:
+    _have_ecdsa = False

@@ -2,10 +2,10 @@ import framework
 # unique to module
 import re
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.register_option('store_table', None, 'no', 'name for a table to create in the database and store the complete result set')
         self.register_option('store_column', None, 'no', 'name for a column to create in the hosts table and store open port information')
@@ -14,7 +14,7 @@ class Module(framework.module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the Internet Census 2012 data through Exfiltrated.com to enumerate open ports on target hosts.',
                      'Comments': [
-                                  'Source options: [ X.X.X.X-Y.Y.Y.Y | X.X.X.X/XX | db | <address> | ./path/to/file | query <sql> ]',
+                                  'Source options: [ <range> | <cidr> | db | <address> | ./path/to/file | query <sql> ]',
                                   'This module updates only previously harvested hosts when using the \'store_column\' option.',
                                   'http://exfiltrated.com/querystart.php'
                                   ]
@@ -23,7 +23,7 @@ class Module(framework.module):
     def module_run(self):
 
         # configure module input
-        source = self.options['source']['value']
+        source = self.options['source']
         ranges = []
         if re.search('\d+\.\d+\.\d+\.\d+[\s\-/]', source):
             raw_ranges = source.split(',')
@@ -44,8 +44,8 @@ class Module(framework.module):
                 ranges.append((address, address))
 
         # begin module processing
-        table = self.options['store_table']['value']
-        column = self.options['store_column']['value']
+        table = self.options['store_table']
+        column = self.options['store_column']
         tdata = []
         for ips in ranges:
             first = ips[0]

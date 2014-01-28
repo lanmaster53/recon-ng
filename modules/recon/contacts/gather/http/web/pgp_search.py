@@ -1,29 +1,29 @@
 import framework
 import re
 
-class Module(framework.module):
+class Module(framework.Framework):
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', 'domain to search')
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', 'domain to search')
         self.info = {
-                     'Name': 'RedIRIS PGP Key Owner Lookup',
+                     'Name': 'PGP Key Owner Lookup',
                      'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
-                     'Description': 'Searches pgp.rediris for email addresses for the given domain.',
+                     'Description': 'Searches the MIT public PGP key server for email addresses of the given domain.',
                      'Comments': [
                                   'Inspiration from theHarvester.py by Christan Martorella: cmarorella[at]edge-seecurity.com'
                                   ]
                      }
 
     def module_run(self):
-        domain = self.options['domain']['value']
+        domain = self.options['domain']
 
-        url = 'http://pgp.rediris.es/pks/lookup'
-        payload= {'search' : self.options['domain']['value'] }
+        url = 'http://pgp.mit.edu/pks/lookup'
+        payload= {'search' : self.options['domain'] }
         resp = self.request(url, payload=payload)
 
         results = []
-        results.extend(re.findall('([^>]*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;<' % (self.options['domain']['value']), resp.text))
-        results.extend(re.findall('[\s]{10,}(\w.*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;' % (self.options['domain']['value']), resp.text))
+        results.extend(re.findall('([^>]*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;<' % (self.options['domain']), resp.text))
+        results.extend(re.findall('[\s]{10,}(\w.*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;' % (self.options['domain']), resp.text))
         results = list(set(results))
         if not results:
             self.output('No results found.')

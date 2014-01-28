@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+import argparse
+import sys
+# prep python path for base module
+sys.path.append('./core/')
+import base
+
+def recon_ui(args):
+    # set up command completion
+    try:
+        import readline
+    except ImportError:
+        print('%s[!] Module \'readline\' not available. Tab complete disabled.%s' % (R, N))
+    else:
+        import rlcompleter
+        if 'libedit' in readline.__doc__:
+            readline.parse_and_bind('bind ^I rl_complete')
+        else:
+            readline.parse_and_bind('tab: complete')
+        readline.set_completer_delims(readline.get_completer_delims().replace('/', ''))
+        # for possible future use to format command completion output
+        #readline.set_completion_display_matches_hook(display_hook)
+    x = base.Recon()
+    # check for and run version check
+    if args.check:
+        if not x.version_check(): return
+    # check for and load workspace
+    if args.workspace: x.do_workspace(args.workspace)
+    # check for and run script session
+    if args.script_file: x.do_resource(args.script_file)
+    try: x.cmdloop()
+    except KeyboardInterrupt: print('')
+
+description = '%%(prog)s - %s %s' % (base.__author__, base.__email__)
+parser = argparse.ArgumentParser(description=description, version=base.__version__)
+parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
+parser.add_argument('-r', help='load commands from a resource file', metavar='filename', dest='script_file', action='store')
+parser.add_argument('--no-check', help='disable version check', dest='check', default=True, action='store_false')
+args = parser.parse_args()
+recon_ui(args)

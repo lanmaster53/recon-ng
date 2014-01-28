@@ -1,11 +1,11 @@
 import framework
 # unique to module
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -21,7 +21,7 @@ class Module(framework.module):
         decrypt_key = secret[:16]
         iv = self.get_key('pwnedlist_iv')
 
-        domain = self.options['domain']['value']
+        domain = self.options['domain']
 
         # API query guard
         if not self.api_guard(10000): return
@@ -48,11 +48,13 @@ class Module(framework.module):
             # extract creds
             for cred in jsonobj['accounts']:
                 username = cred['plain']
-                password = self.aes_decrypt(cred['password'], decrypt_key, iv)
+                password = self.aes_decrypt(cred['password'], decrypt_key, iv) if cred['password'] else cred['password']
                 leak = cred['leak_id']
-                self.output('%s:%s' % (username, password))
                 cnt += 1
                 new += self.add_cred(username, password, None, leak)
+                # clean up the password for output
+                if not password: password = ''
+                self.output('%s:%s' % (username, password))
             # paginate
             if jsonobj['token']:
                 payload['token'] = jsonobj['token']

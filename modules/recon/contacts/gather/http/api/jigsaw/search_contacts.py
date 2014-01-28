@@ -3,11 +3,11 @@ import framework
 import urllib
 import time
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('company', self.goptions['company']['value'], 'yes', self.goptions['company']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.register_option('keywords', None, 'no', 'additional keywords to identify company')
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
@@ -24,8 +24,8 @@ class Module(framework.module):
 
     def get_company_id(self):
         self.output('Gathering Company IDs...')
-        company_name = self.options['company']['value']
-        keywords = self.options['keywords']['value']
+        company_name = self.options['company']
+        keywords = self.options['keywords']
         all_companies = []
         cnt = 0
         size = 50
@@ -50,7 +50,7 @@ class Module(framework.module):
                 # jigsaw rate limits requests per second to the api
                 time.sleep(.25)
         if len(all_companies) == 0:
-            self.output('No Contacts Available for Companies Matching \'%s\'.' % (self.options['company']['value']))
+            self.output('No Contacts Available for Companies Matching \'%s\'.' % (self.options['company']))
             return
         if len(all_companies) == 1:
             company_id = all_companies[0][0]

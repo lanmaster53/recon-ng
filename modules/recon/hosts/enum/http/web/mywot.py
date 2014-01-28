@@ -2,11 +2,11 @@ import framework
 # unique to module
 import re
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.info = {
                      'Name': 'MyWOT Domain Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
@@ -15,7 +15,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        domain = self.options['domain']['value']
+        domain = self.options['domain']
 
         url = 'http://api.mywot.com/0.4/public_query2?target=%s' % (domain)
         self.verbose('URL: %s' % url)

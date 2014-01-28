@@ -2,10 +2,10 @@ import framework
 # unique to module
 import os
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
@@ -23,7 +23,7 @@ class Module(framework.module):
         decrypt_key = secret[:16]
         iv = self.get_key('pwnedlist_iv')
 
-        accounts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')
+        accounts = self.get_source(self.options['source'], 'SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')
 
         # API query guard
         if not self.api_guard(1): return
@@ -42,7 +42,7 @@ class Module(framework.module):
             self.error('Invalid JSON response.\n%s' % (resp.text))
             return
         if len(jsonobj['results']) == 0:
-            self.output('No results returned')
+            self.output('No results returned.')
         else:
             cnt = 0
             new = 0

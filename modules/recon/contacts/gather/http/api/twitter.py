@@ -1,13 +1,12 @@
 import framework
 # unique to module
-import urllib
 import re
 import sys
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('handle', '@lanmaster53', 'yes', 'target twitter handle')
         self.register_option('dtg', None, 'no', 'date-time group in the form YYYY-MM-DD')
         self.info = {
@@ -18,6 +17,7 @@ class Module(framework.module):
                                   'Twitter only saves tweets for 6-8 days at this time.'
                                   ]
                      }
+
     def module_run(self):
         self.bearer_token = self.get_twitter_oauth_token()
         self.handle_options()
@@ -45,10 +45,10 @@ class Module(framework.module):
         Sets two properties of this class instance, self.handle and self.dtg.
         '''
         # handle
-        handle = self.options['handle']['value']
+        handle = self.options['handle']
         self.handle = handle if not handle.startswith('@') else handle[1:]
         # dtg
-        dtg = self.options['dtg']['value']
+        dtg = self.options['dtg']
         if not dtg:
             dtg = '2011-01-01'
         elif not re.match(r'\d\d\d\d-\d\d-\d\d', dtg):

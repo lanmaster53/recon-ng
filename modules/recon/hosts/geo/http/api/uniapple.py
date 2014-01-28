@@ -2,10 +2,10 @@ import framework
 # unique to module
 import json
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Uniapple GeoIP',
@@ -17,7 +17,7 @@ class Module(framework.module):
                      }
    
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
 
         for host in hosts:
             # request the scan
@@ -29,7 +29,7 @@ class Module(framework.module):
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (host, resp.text))
                 continue
 
-            if self.options['source']['value'] == 'db':
+            if self.options['source'] == 'db':
                 location = []
                 for name in ['city', 'region']:
                     if jsonobj[name]: location.append(str(jsonobj[name]))

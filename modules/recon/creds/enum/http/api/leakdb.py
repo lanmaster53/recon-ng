@@ -1,10 +1,10 @@
 import framework
 # unique to module
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'leakdb Hash Lookup',
@@ -17,7 +17,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        hashes = self.get_source(self.options['source']['value'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
+        hashes = self.get_source(self.options['source'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
 
         # lookup each hash
         url = 'http://api.leakdb.abusix.com'

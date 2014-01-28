@@ -4,22 +4,26 @@ import warnings
 import gzip
 from StringIO import StringIO
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.register_option('download', True, 'yes', 'download discovered files')
+        self.register_option('protocol', 'http', 'yes', 'request protocol')
+        self.register_option('port', 80, 'yes', 'request port')
+
         self.info = {
                      'Name': 'Interesting File Finder',
-                     'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), and Jay Turla (@shipcod3)',
+                     'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), Jay Turla (@shipcod3), and Mark Jeffery',
                      'Description': 'Checks hosts for interesting files in predictable locations.',
                      'Comments': [
                                   'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
-                                  'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status/',
+                                  'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status, jmx-console/, admin-console/, web-console/',
                                   'Google Dorks:',
                                   '%sinurl:robots.txt ext:txt' % (self.spacer),
                                   '%sinurl:elmah.axd ext:axd intitle:"Error log for"' % (self.spacer),
+                                  '%sinurl:server-status "Apache Status"' % (self.spacer),
                                   ]
                      }
 
@@ -35,11 +39,12 @@ class Module(framework.module):
         return data_ct
 
     def module_run(self):
-        hosts = self.get_source(self.options['source']['value'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        download = self.options['download']['value']
+        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
+        download = self.options['download']
+        protocol = self.options['protocol']
+        port = self.options['port']
         # ignore unicode warnings when trying to ungzip text type 200 repsonses
         warnings.simplefilter("ignore")
-        protocols = ['http', 'https']
         # (filename, string to search for to prevent false positive)
         filetypes = [
                      ('robots.txt', 'user-agent:'),
@@ -50,34 +55,37 @@ class Module(framework.module):
                      ('test.php', 'phpinfo()'),
                      ('elmah.axd', 'Error Log for'),
                      ('server-status', '>Apache Status<'),
+                     ('jmx-console/', 'JBoss'), #JBoss 5.1.0.GA
+                     ('admin-console/', 'index.seam'), #JBoss 5.1.0.GA
+                     ('web-console/', 'Administration'), #JBoss 5.1.0.GA
                      ]
         cnt = 0
         for host in hosts:
-            for proto in protocols:
-                for (filename, verify) in filetypes:
-                    url = '%s://%s/%s' % (proto, host, filename)
-                    try:
-                        resp = self.request(url, timeout=2, redirect=False)
-                        code = resp.status_code
-                    except KeyboardInterrupt:
-                        raise KeyboardInterrupt
-                    except:
-                        code = 'Error'
-                    if code == 200:
-                        # uncompress if necessary
-                        text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text
-                        # check for file type since many custom 404s are returned as 200s
-                        if verify.lower() in text.lower():
-                            self.alert('%s => %s. \'%s\' found!' % (url, code, filename))
-                            if download:
-                                filepath = '%s/%s_%s_%s' % (self.workspace, proto, host, filename)
-                                dl = open(filepath, 'wb')
-                                dl.write(resp.text.encode(resp.encoding) if resp.encoding else resp.text)
-                                dl.close()
-                            cnt += 1
-                        else:
-                            self.output('%s => %s. \'%s\' found but unverified.' % (url, code, filename))
+            for (filename, verify) in filetypes:
+                url = '%s://%s:%d/%s' % (protocol, host, port, filename)
+                try:
+                    resp = self.request(url, timeout=2, redirect=False)
+                    code = resp.status_code
+                except KeyboardInterrupt:
+                    raise KeyboardInterrupt
+                except:
+                    code = 'Error'
+                if code == 200:
+                    # uncompress if necessary
+                    text = ('.gz' in filename and self.uncompress(resp.text)) or resp.text
+                    # check for file type since many custom 404s are returned as 200s
+                    if verify.lower() in text.lower():
+                        self.alert('%s => %s. \'%s\' found!' % (url, code, filename))
+                        # urls that end with '/' are not necessary to download
+                        if download and not filename.endswith("/"):
+                            filepath = '%s/%s_%s_%s' % (self.workspace, protocol, host, filename)
+                            dl = open(filepath, 'wb')
+                            dl.write(resp.text.encode(resp.encoding) if resp.encoding else resp.text)
+                            dl.close()
+                        cnt += 1
                     else:
-                        self.verbose('%s => %s' % (url, code))
+                        self.output('%s => %s. \'%s\' found but unverified.' % (url, code, filename))
+                else:
+                    self.verbose('%s => %s' % (url, code))
         self.output('%d interesting files found.' % (cnt))
         if download: self.output('...downloaded to \'%s/\'' % (self.workspace))

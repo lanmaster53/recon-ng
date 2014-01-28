@@ -1,10 +1,10 @@
 import framework
 # unique to module
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Should I Change My Password Breach Check',
@@ -16,7 +16,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        emails = self.get_source(self.options['source']['value'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
+        emails = self.get_source(self.options['source'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
         
         total = 0
         emailsFound = 0
@@ -33,7 +33,7 @@ class Module(framework.module):
             # if any breaches were found, show the number found and the last found date
             if numFound != "0":
                 last = jsonobj['last']
-                self.alert('%s => breached! Seen %s times as recent as %s.' % (emailstr, numFound, last))
+                self.alert('%s => Found! Seen %s times as recent as %s.' % (emailstr, numFound, last))
                 emailsFound += 1
             else:
                 self.verbose('%s => safe.' % (emailstr))

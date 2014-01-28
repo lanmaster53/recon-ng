@@ -1,10 +1,10 @@
 import framework
 # unique to module
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
+        framework.Framework.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of leak ids for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
@@ -16,16 +16,16 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        leak_ids = self.get_source(self.options['source']['value'], 'SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
+        leak_ids = self.get_source(self.options['source'], 'SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
 
         columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
         if not columns:
             self.output('Please run the \'leaks_dump\' module to populate the database and try again.')
             return
-        print self.ruler*50
+        print(self.ruler*50)
         for leak_id in leak_ids:
             values = self.query('SELECT "%s" FROM leaks WHERE leak_id = \'%s\'' % ('", "'.join(columns), leak_id))[0]
             for i in range(0,len(columns)):
                 title = ' '.join(columns[i].split('_')).title()
                 self.output('%s: %s' % (title, values[i]))
-            print self.ruler*50
+            print(self.ruler*50)

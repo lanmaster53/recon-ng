@@ -419,7 +419,7 @@ class Name(object):
             else:
                 if not compress is None and len(n) > 1:
                     pos = file.tell()
-                    if pos < 0xc000:
+                    if pos <= 0x3fff:
                         compress[n] = pos
                 l = len(label)
                 file.write(chr(l))

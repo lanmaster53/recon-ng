@@ -22,6 +22,11 @@ import socket
 import sys
 import time
 
+try:
+    import threading as _threading
+except ImportError:
+    import dummy_threading as _threading
+
 import dns.exception
 import dns.flags
 import dns.ipv4
@@ -39,6 +44,10 @@ if sys.platform == 'win32':
 
 class NXDOMAIN(dns.exception.DNSException):
     """The query name does not exist."""
+    pass
+
+class YXDOMAIN(dns.exception.DNSException):
+    """The query name is too long after DNAME substitution."""
     pass
 
 # The definition of the Timeout exception has moved from here to the
@@ -212,8 +221,9 @@ class Cache(object):
         self.data = {}
         self.cleaning_interval = cleaning_interval
         self.next_cleaning = time.time() + self.cleaning_interval
+        self.lock = _threading.Lock()
 
-    def maybe_clean(self):
+    def _maybe_clean(self):
         """Clean the cache if it's time to do so."""
 
         now = time.time()
@@ -236,11 +246,15 @@ class Cache(object):
         @rtype: dns.resolver.Answer object or None
         """
 
-        self.maybe_clean()
-        v = self.data.get(key)
-        if v is None or v.expiration <= time.time():
-            return None
-        return v
+        try:
+            self.lock.acquire()
+            self._maybe_clean()
+            v = self.data.get(key)
+            if v is None or v.expiration <= time.time():
+                return None
+            return v
+        finally:
+            self.lock.release()
 
     def put(self, key, value):
         """Associate key and value in the cache.
@@ -251,8 +265,12 @@ class Cache(object):
         @type value: dns.resolver.Answer object
         """
 
-        self.maybe_clean()
-        self.data[key] = value
+        try:
+            self.lock.acquire()
+            self._maybe_clean()
+            self.data[key] = value
+        finally:
+            self.lock.release()
 
     def flush(self, key=None):
         """Flush the cache.
@@ -264,12 +282,16 @@ class Cache(object):
         @type key: (dns.name.Name, int, int) tuple or None
         """
 
-        if not key is None:
-            if self.data.has_key(key):
-                del self.data[key]
-        else:
-            self.data = {}
-            self.next_cleaning = time.time() + self.cleaning_interval
+        try:
+            self.lock.acquire()
+            if not key is None:
+                if self.data.has_key(key):
+                    del self.data[key]
+            else:
+                self.data = {}
+                self.next_cleaning = time.time() + self.cleaning_interval
+        finally:
+            self.lock.release()
 
 class LRUCacheNode(object):
     """LRUCache node.
@@ -322,6 +344,7 @@ class LRUCache(object):
         self.data = {}
         self.set_max_size(max_size)
         self.sentinel = LRUCacheNode(None, None)
+        self.lock = _threading.Lock()
 
     def set_max_size(self, max_size):
         if max_size < 1:
@@ -336,17 +359,21 @@ class LRUCache(object):
         query name, rdtype, and rdclass.
         @rtype: dns.resolver.Answer object or None
         """
-        node = self.data.get(key)
-        if node is None:
-            return None
-        # Unlink because we're either going to move the node to the front
-        # of the LRU list or we're going to free it.
-        node.unlink()
-        if node.value.expiration <= time.time():
-            del self.data[node.key]
-            return None
-        node.link_after(self.sentinel)
-        return node.value
+        try:
+            self.lock.acquire()
+            node = self.data.get(key)
+            if node is None:
+                return None
+            # Unlink because we're either going to move the node to the front
+            # of the LRU list or we're going to free it.
+            node.unlink()
+            if node.value.expiration <= time.time():
+                del self.data[node.key]
+                return None
+            node.link_after(self.sentinel)
+            return node.value
+        finally:
+            self.lock.release()
 
     def put(self, key, value):
         """Associate key and value in the cache.
@@ -356,17 +383,21 @@ class LRUCache(object):
         @param value: The answer being cached
         @type value: dns.resolver.Answer object
         """
-        node = self.data.get(key)
-        if not node is None:
-            node.unlink()
-            del self.data[node.key]
-        while len(self.data) >= self.max_size:
-            node = self.sentinel.prev
-            node.unlink()
-            del self.data[node.key]
-        node = LRUCacheNode(key, value)
-        node.link_after(self.sentinel)
-        self.data[key] = node
+        try:
+            self.lock.acquire()
+            node = self.data.get(key)
+            if not node is None:
+                node.unlink()
+                del self.data[node.key]
+            while len(self.data) >= self.max_size:
+                node = self.sentinel.prev
+                node.unlink()
+                del self.data[node.key]
+            node = LRUCacheNode(key, value)
+            node.link_after(self.sentinel)
+            self.data[key] = node
+        finally:
+            self.lock.release()
 
     def flush(self, key=None):
         """Flush the cache.
@@ -377,19 +408,23 @@ class LRUCache(object):
         @param key: the key to flush
         @type key: (dns.name.Name, int, int) tuple or None
         """
-        if not key is None:
-            node = self.data.get(key)
-            if not node is None:
-                node.unlink()
-                del self.data[node.key]
-        else:
-            node = self.sentinel.next
-            while node != self.sentinel:
-                next = node.next
-                node.prev = None
-                node.next = None
-                node = next
-            self.data = {}
+        try:
+            self.lock.acquire()
+            if not key is None:
+                node = self.data.get(key)
+                if not node is None:
+                    node.unlink()
+                    del self.data[node.key]
+            else:
+                node = self.sentinel.next
+                while node != self.sentinel:
+                    next = node.next
+                    node.prev = None
+                    node.next = None
+                    node = next
+                self.data = {}
+        finally:
+            self.lock.release()
 
 class Resolver(object):
     """DNS stub resolver
@@ -429,6 +464,9 @@ class Resolver(object):
     @type flags: int
     @ivar cache: The cache to use.  The default is None.
     @type cache: dns.resolver.Cache object
+    @ivar retry_servfail: should we retry a nameserver if it says SERVFAIL?
+    The default is 'false'.
+    @type retry_servfail: bool
     """
     def __init__(self, filename='/etc/resolv.conf', configure=True):
         """Initialize a resolver instance.
@@ -469,6 +507,7 @@ class Resolver(object):
         self.payload = 0
         self.cache = None
         self.flags = None
+        self.retry_servfail = False
 
     def read_resolv_conf(self, f):
         """Process f as a file in the /etc/resolv.conf format.  If f is
@@ -723,6 +762,7 @@ class Resolver(object):
         @rtype: dns.resolver.Answer instance
         @raises Timeout: no answers could be found in the specified lifetime
         @raises NXDOMAIN: the query name does not exist
+        @raises YXDOMAIN: the query name is too long after DNAME substitution
         @raises NoAnswer: the response did not contain an answer and
         raise_on_no_answer is True.
         @raises NoNameservers: no non-broken nameservers are available to
@@ -828,6 +868,8 @@ class Resolver(object):
                         response = None
                         continue
                     rcode = response.rcode()
+                    if rcode == dns.rcode.YXDOMAIN:
+                        raise YXDOMAIN
                     if rcode == dns.rcode.NOERROR or \
                            rcode == dns.rcode.NXDOMAIN:
                         break
@@ -836,7 +878,7 @@ class Resolver(object):
                     # rcode in it.  Remove the server from the mix if
                     # the rcode isn't SERVFAIL.
                     #
-                    if rcode != dns.rcode.SERVFAIL:
+                    if rcode != dns.rcode.SERVFAIL or not self.retry_servfail:
                         nameservers.remove(nameserver)
                     response = None
                 if not response is None:

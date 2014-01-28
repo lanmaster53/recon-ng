@@ -5,11 +5,11 @@ import re
 import time
 import random
 
-class Module(framework.module):
+class Module(framework.Framework):
 
     def __init__(self, params):
-        framework.module.__init__(self, params)
-        self.register_option('domain', self.goptions['domain']['value'], 'yes', self.goptions['domain']['desc'])
+        framework.Framework.__init__(self, params)
+        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.info = {
                      'Name': 'Yahoo Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -18,7 +18,7 @@ class Module(framework.module):
                      }
 
     def module_run(self):
-        domain = self.options['domain']['value']
+        domain = self.options['domain']
         base_url = 'http://search.yahoo.com/search'
         base_query = 'site:' + domain
         pattern = 'url>(?:<b>)*(?:\w*://)*(\S+?)\.(?:<b>)*%s[^<]*</b>' % (domain)
