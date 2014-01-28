@@ -40,6 +40,9 @@ class Module(framework.Framework):
                 last = re.search('ago, on (.+?).</li>', content).group(1)
                 self.alert('%s => %s! Seen %s times as recent as %s.' % (account, status, qty, last))
                 pwned += self.add_cred(account)
+            elif '<h4>Error!</h4>' in content:
+                self.error('Too many requests have been made.')
+                break
             else:
                 self.error('%s => Response not understood.' % (account))
                 continue
