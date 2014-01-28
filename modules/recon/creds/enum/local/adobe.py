@@ -13,7 +13,7 @@ class Module(framework.Framework):
         self.info = {
                      'Name': 'Adobe Hash Lookup',
                      'Author': 'Ethan Robish (@EthanRobish)',
-                     'Description': 'This module identifies Adobe hashes based on the leak id, moves them to the hash column, and changes the hash type to \'Adobe\'.  It then uses a local Adobe hash database to perform a reverse hash lookup and updates the \'creds\' table with any passwords it finds.',
+                     'Description': 'This module identifies Adobe hashes based on the leak id, moves them to the hash column, and changes the hash type to \'Adobe\'. It then uses a local Adobe hash database to perform a reverse hash lookup and updates the \'creds\' table with any passwords it finds.',
                      'Comments': [
                                   'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
                                   'Hash types supported: Adobe\'s base64 format',
