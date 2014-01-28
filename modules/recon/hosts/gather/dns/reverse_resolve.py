@@ -15,12 +15,12 @@ class Module(framework.Framework):
         self.info = {
                      'Name': 'Reverse Resolver',
                      'Author': 'John Babio (@3vi1john)',
-                     'Description': 'Does a reverse lookup of IP address to hostname for the given subnet.',
+                     'Description': 'Does a reverse lookup of IP address to hostname for the given netblock.',
                      'Comments': []
                      }
 
     def module_run(self):
-        addresses = self.cidr_to_list(self.options['subnet'])
+        addresses = self.cidr_to_list(self.options['netblock'])
         regex = self.options['regex']
         resolver = dns.resolver.get_default_resolver()
         resolver.nameservers = [self.options['nameserver']]
