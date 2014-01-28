@@ -22,14 +22,13 @@ class Module(framework.Framework):
         url = 'https://github.com/%s' % username
         resp = self.request(url)
         gitName = re.search('<span class="vcard-fullname" itemprop="name">(.+?)</span>', resp.text)
-        if gitName: 
+        if gitName.group(0): 
             self.alert('Github username found - (%s)' % url)
             gitDesc = re.search('<meta name="description" content="(.+)" />', resp.text)
             gitJoin = re.search('<span class="join-date">(.+?)</span>', resp.text)
             gitLoc = re.search('<span class="octicon octicon-location"></span>(.+?)</li>', resp.text)
             gitPersonalUrl = re.search('<span class="octicon octicon-link"></span><a href="(.+?)" class="url"', resp.text)
             gitAvatar = re.search('<img class="avatar" height="220" src="(.+?)"', resp.text)
-            gitEmail = re.search('<a class="email js-obfuscate-email" data-email="(.+?)"', resp.text)
             self.name.append([gitName.group(1), 'Github'])
             self.urlRepos.append([url, 'Github'])
             if gitJoin: 
@@ -38,10 +37,9 @@ class Module(framework.Framework):
             if gitDesc: self.other.append(['Description', gitDesc.group(1), 'Github'])
             if gitPersonalUrl: self.urlPersonal.append([gitPersonalUrl.group(1), 'Github'])
             if gitAvatar: self.urlAvatar.append([gitAvatar.group(1), 'Github'])
-            if gitEmail: self.other.append(['Email', urllib.unquote(gitEmail.group(1)), 'Github'])
-
-            fname, lname = gitName.group(1).split(' ')
-            self.add_contact(fname, lname, None, urllib.unquote(gitEmail.group(1)), None, None)
+            if ' ' in gitName.group(1):
+            	fname, lname = gitName.group(1).split(' ')
+            	self.add_contact(fname, lname, None, None, None, None)
         else:
             self.output('Github username not found.')
     
@@ -52,7 +50,7 @@ class Module(framework.Framework):
         url = 'https://bitbucket.org/%s' % username
         resp = self.request(url)
         bbName = re.search('<h1 title="Username:.+">(.+)</h1>', resp.text)      
-        if not bbName:
+        if not bbName.group(0):
             # Before we give up on the user not being on Bitbucket, let's search
             urlSearch = 'https://bitbucket.org/repo/all?name=%s' % username
             respSearch = self.request(url)
