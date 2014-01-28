@@ -52,7 +52,8 @@ class Module(framework.Framework):
                                 soa = answer.name.to_text()[:-1]
                                 self.alert('%s => (SOA) %s - Host found!' % (host, soa))
                                 cnt += 1
-                                new += self.add_host(soa)
+                                # use "host" rather than "soa" as sometimes the SOA record has a CNAME
+                                new += self.add_host(host)
                     # break out of the loop
                     attempt = max_attempts
             self.output('%d total hosts found.' % (cnt))
