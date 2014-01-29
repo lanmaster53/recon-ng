@@ -2,10 +2,10 @@ import framework
 # unique to module
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'no', 'target email domain')
         self.register_option('pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
         self.register_option('substitute', '-', 'yes', 'character to substitute for invalid email address characters')

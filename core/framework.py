@@ -24,7 +24,12 @@ import aes
 import dragons
 import mechanize
 
+#=================================================
+# FRAMEWORK CLASS
+#=================================================
+
 class Framework(cmd.Cmd):
+
     def __init__(self, params):
         cmd.Cmd.__init__(self)
         self.prompt = (params[0])
@@ -106,48 +111,6 @@ class Framework(cmd.Cmd):
     #==================================================
     # SUPPORT METHODS
     #==================================================
-
-    def display_modules(self, modules):
-        key_len = len(max(modules, key=len)) + len(self.spacer)
-        last_category = ''
-        for module in sorted(modules):
-            category = module.split(self.module_delimiter)[0]
-            if category != last_category:
-                # print header
-                last_category = category
-                self.heading(last_category)
-            # print module
-            print('%s%s' % (self.spacer*2, module))
-        print('')
-
-    def display_workspaces(self):
-        dirnames = []
-        path = '%s/workspaces' % (self.home)
-        for name in os.listdir(path):
-            if os.path.isdir('%s/%s' % (path, name)):
-                dirnames.append([name])
-        self.table(dirnames, header=['Workspaces'])
-
-    def display_dashboard(self):
-        # display activity table
-        self.heading('Activity Summary')
-        rows = self.query('SELECT * FROM dashboard ORDER BY 1')
-        tdata = []
-        for row in rows:
-            tdata.append(row)
-        if rows:
-            self.table(tdata, header=['Module', 'Runs'])
-        else:
-            print('\n%sThis workspace has no record of activity.' % (self.spacer))
-        # display sumary results table
-        self.heading('Results Summary')
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        tdata = []
-        for table in tables:
-            if not table in ['leaks', 'dashboard']:
-                count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
-                tdata.append([table.title(), count])
-        self.table(tdata, header=['Category', 'Quantity'])
 
     def to_unicode_str(self, obj, encoding='utf-8'):
         # checks if obj is a string and converts if not
@@ -333,22 +296,6 @@ class Framework(cmd.Cmd):
     # DATABASE METHODS
     #==================================================
 
-    def display_schema(self):
-        '''Displays the database schema'''
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        for table in tables:
-            columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
-            name_len = len(max([x[0] for x in columns], key=len))
-            type_len = len(max([x[1] for x in columns], key=len))
-            print('')
-            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
-            print('%s| %s |' % (self.spacer, table.center(name_len+type_len+3)))
-            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
-            for column in columns:
-                print('%s| %s | %s |' % (self.spacer, column[0].ljust(name_len), column[1].center(type_len)))
-            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
-        print('')
-
     def add_host(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
         '''Adds a host to the database and returns the affected row count.'''
         data = dict(
@@ -510,29 +457,6 @@ class Framework(cmd.Cmd):
     # OPTIONS METHODS
     #==================================================
 
-    def display_options(self, params):
-        '''Lists options'''
-        spacer = self.spacer
-        if self.options:
-            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
-            key_len = len(max(self.options, key=len))
-            if key_len < 4: key_len = 4
-            val_len = len(max([self.to_unicode_str(self.options[x]) for x in self.options], key=len))
-            if val_len < 13: val_len = 13
-            print('')
-            print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description'))
-            print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11))
-            for key in sorted(self.options):
-                value = self.options[key] if self.options[key] != None else ''
-                reqd = self.options.required[key]
-                desc = self.options.description[key]
-                print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc))
-            print('')
-        else:
-            if params != 'info': print('')
-            print('%sNo options available for this module.' % (spacer))
-            print('')
-
     def register_option(self, name, value, reqd, desc):
         self.options.init_option(name=name.lower(), value=value, required=reqd, description=desc)
         # needs to be optimized rather than ran on every register
@@ -609,7 +533,7 @@ class Framework(cmd.Cmd):
     # API KEY METHODS
     #==================================================
 
-    def display_keys(self):
+    def list_keys(self):
         tdata = []
         for key in sorted(self.keys):
             tdata.append([key, self.keys[key]])
@@ -802,6 +726,108 @@ class Framework(cmd.Cmd):
         return br
 
     #==================================================
+    # SHOW METHODS
+    #==================================================
+
+    def get_show_names(self):
+        # Any method beginning with "show_" will be parsed
+        # and added as a subcommand for the show command.
+        prefix = 'show_'
+        return [x[len(prefix):] for x in self.get_names() if x.startswith(prefix)]
+
+    def show_modules(self, param):
+        # process parameter according to type
+        if type(param) is list:
+            modules = param
+        elif param:
+            modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
+            if not modules:
+                self.error('Invalid module category.')
+                return
+        else:
+            modules = __builtin__.loaded_modules
+        # display the modules
+        key_len = len(max(modules, key=len)) + len(self.spacer)
+        last_category = ''
+        for module in sorted(modules):
+            category = module.split(self.module_delimiter)[0]
+            if category != last_category:
+                # print header
+                last_category = category
+                self.heading(last_category)
+            # print module
+            print('%s%s' % (self.spacer*2, module))
+        print('')
+
+    def show_workspaces(self):
+        dirnames = []
+        path = '%s/workspaces' % (self.home)
+        for name in os.listdir(path):
+            if os.path.isdir('%s/%s' % (path, name)):
+                dirnames.append([name])
+        self.table(dirnames, header=['Workspaces'])
+
+    def show_dashboard(self):
+        # display activity table
+        self.heading('Activity Summary')
+        rows = self.query('SELECT * FROM dashboard ORDER BY 1')
+        tdata = []
+        for row in rows:
+            tdata.append(row)
+        if rows:
+            self.table(tdata, header=['Module', 'Runs'])
+        else:
+            print('\n%sThis workspace has no record of activity.' % (self.spacer))
+        # display sumary results table
+        self.heading('Results Summary')
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
+        tdata = []
+        for table in tables:
+            if not table in ['leaks', 'dashboard']:
+                count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
+                tdata.append([table.title(), count])
+        self.table(tdata, header=['Category', 'Quantity'])
+
+    def show_schema(self):
+        '''Displays the database schema'''
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
+        for table in tables:
+            columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
+            name_len = len(max([x[0] for x in columns], key=len))
+            type_len = len(max([x[1] for x in columns], key=len))
+            print('')
+            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
+            print('%s| %s |' % (self.spacer, table.center(name_len+type_len+3)))
+            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
+            for column in columns:
+                print('%s| %s | %s |' % (self.spacer, column[0].ljust(name_len), column[1].center(type_len)))
+            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
+        print('')
+
+    def show_options(self):
+        '''Lists options'''
+        spacer = self.spacer
+        if self.options:
+            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
+            key_len = len(max(self.options, key=len))
+            if key_len < 4: key_len = 4
+            val_len = len(max([self.to_unicode_str(self.options[x]) for x in self.options], key=len))
+            if val_len < 13: val_len = 13
+            print('')
+            print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description'))
+            print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11))
+            for key in sorted(self.options):
+                value = self.options[key] if self.options[key] != None else ''
+                reqd = self.options.required[key]
+                desc = self.options.description[key]
+                print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc))
+            print('')
+        else:
+            print('')
+            print('%sNo options available for this module.' % (spacer))
+            print('')
+
+    #==================================================
     # COMMAND METHODS
     #==================================================
 
@@ -813,29 +839,6 @@ class Framework(cmd.Cmd):
     def do_back(self, params):
         '''Exits current prompt level'''
         return True
-
-    def do_info(self, params):
-        '''Displays module information'''
-        if params: self.alert('Command parameters ignored in module context.')
-        self.info['Path'] = 'modules/%s.py' % (self.modulename)
-        print('')
-        # meta
-        for item in ['Name', 'Path', 'Author']:
-            print('%s: %s' % (item.rjust(10), self.info[item]))
-        print('')
-        # options
-        print('Options:')
-        self.display_options('info')
-        # description
-        print('Description:')
-        print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
-        print('')
-        # comments
-        if self.info['Comments']:
-            print('Comments:')
-            for comment in self.info['Comments']:
-                print('%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer)))
-            print('')
 
     def do_set(self, params):
         '''Sets module options'''
@@ -863,14 +866,12 @@ class Framework(cmd.Cmd):
         params = params.split()
         arg = params.pop(0).lower()
         if arg == 'list':
-            self.display_keys()
-            return
+            self.list_keys()
         elif arg in ['add', 'update']:
             if len(params) == 2:
                 self.add_key(params[0], params[1])
                 self.output('Key \'%s\' added.' % (params[0]))
             else: print('Usage: keys [add|update] <name> <value>')
-            return
         elif arg == 'delete':
             if len(params) == 1:
                 try:
@@ -880,7 +881,8 @@ class Framework(cmd.Cmd):
                 else:
                     self.output('Key \'%s\' deleted.' % (params[0]))
             else: print('Usage: keys delete <name>')
-            return
+        else:
+            self.help_keys()
 
     def do_query(self, params):
         '''Queries the database'''
@@ -906,40 +908,25 @@ class Framework(cmd.Cmd):
             conn.commit()
             self.output('%d rows affected.' % (cur.rowcount))
         conn.close()
-        return
 
     def do_show(self, params):
         '''Shows various framework items'''
         if not params:
             self.help_show()
             return
-        arg = params.lower()
-        if arg.split()[0] == 'modules':
-            if len(arg.split()) > 1:
-                param = arg.split()[1]
-                modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
-                if not modules:
-                    self.error('Invalid module category.')
-                    return
+        params = params.lower().split()
+        arg = params[0]
+        params = ' '.join(params[1:])
+        if arg in self.get_show_names():
+            func = getattr(self, 'show_' + arg)
+            if arg == 'modules':
+                func(params)
             else:
-                modules = __builtin__.loaded_modules
-            self.display_modules(modules)
-            return
-        elif arg == 'options':
-            self.display_options(None)
-            return
-        elif arg == 'dashboard':
-            self.display_dashboard()
-            return
-        elif arg == 'workspaces':
-            self.display_workspaces()
-            return
-        elif arg == 'schema':
-            self.display_schema()
-            return
+                func()
         elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
             self.do_query('SELECT * FROM "%s" ORDER BY 1' % (arg))
-            return
+        else:
+            self.help_show()
 
     def do_search(self, params):
         '''Searches available modules'''
@@ -952,7 +939,7 @@ class Framework(cmd.Cmd):
         if not modules:
             self.error('No modules found containing \'%s\'.' % (text))
         else:
-            self.display_modules(modules)
+            self.show_modules(modules)
 
     def do_record(self, params):
         '''Records commands to a resource file'''
@@ -1019,27 +1006,6 @@ class Framework(cmd.Cmd):
         if stdout: print('%s%s%s' % (O, stdout, N), end='')
         if stderr: print('%s%s%s' % (R, stderr, N), end='')
 
-    def do_run(self, params):
-        '''Runs the module'''
-        try:
-            self.validate_options()
-            self.module_run()
-        except KeyboardInterrupt:
-            print('')
-        except socket.timeout as e:
-            self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
-        except Exception as e:
-            if self.global_options['debug']:
-                print('%s%s' % (R, '-'*60))
-                traceback.print_exc()
-                print('%s%s' % ('-'*60, N))
-            self.error(e.__str__())
-        finally:
-            self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
-
-    def module_run(self):
-        pass
-
     def do_resource(self, params):
         '''Executes commands from a resource file'''
         if not params:
@@ -1048,10 +1014,8 @@ class Framework(cmd.Cmd):
         if os.path.exists(params):
             sys.stdin = open(params)
             __builtin__.script = 1
-            return
         else:
             self.error('Script file \'%s\' not found.' % (params))
-            return
 
     def do_load(self, params):
         '''Loads selected module'''
@@ -1066,7 +1030,7 @@ class Framework(cmd.Cmd):
                 self.error('Invalid module name.')
             else:
                 self.output('Multiple modules match \'%s\'.' % params)
-                self.display_modules(modules)
+                self.show_modules(modules)
             return
         import StringIO
         # compensation for stdin being used for scripting and loading
@@ -1114,18 +1078,19 @@ class Framework(cmd.Cmd):
 
     def help_set(self):
         print('Usage: set <option> <value>')
-        self.display_options(None)
+        self.show_options()
 
     def help_unset(self):
         print('Usage: unset <option>')
-        self.display_options(None)
+        self.show_options()
 
     def help_shell(self):
         print('Usage: [shell|!] <command>')
         print('...or just type a command at the prompt.')
 
     def help_show(self):
-        print('Usage: show [modules|options|dashboard|workspaces|schema|<table>]')
+        options = sorted(self.get_show_names() + ['<table>'])
+        print('Usage: show [%s]' % ('|'.join(options)))
 
     #==================================================
     # COMPLETE METHODS
@@ -1143,7 +1108,7 @@ class Framework(cmd.Cmd):
 
     def complete_load(self, text, *ignored):
         return [x for x in __builtin__.loaded_modules if x.startswith(text)]
-    complete_info = complete_use = complete_load
+    complete_use = complete_load
 
     def complete_record(self, text, *ignored):
         return [x for x in ['start', 'stop', 'status'] if x.startswith(text)]
@@ -1159,9 +1124,77 @@ class Framework(cmd.Cmd):
             if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
             else: return [x for x in __builtin__.loaded_modules]
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        options = ['modules', 'options', 'workspaces', 'schema']
-        options.extend(tables)
+        options = set(self.get_show_names() + tables)
         return [x for x in options if x.startswith(text)]
+
+#=================================================
+# MODULE CLASS
+#=================================================
+
+class Module(Framework):
+
+    def __init__(self, params):
+        Framework.__init__(self, params)
+
+    #==================================================
+    # SHOW METHODS
+    #==================================================
+
+    def show_source(self):
+        if self.modulename is 'base':
+            self.output('Source code is not available in the current context.')
+        else:
+            filename = 'modules/%s.py' % (self.modulename)    
+            print(open(filename).read())
+
+    def show_info(self):
+        if self.modulename is 'base':
+            self.output('Module information is not available in the current context.')
+        else:
+            self.info['Path'] = 'modules/%s.py' % (self.modulename)
+            print('')
+            # meta
+            for item in ['Name', 'Path', 'Author']:
+                print('%s: %s' % (item.rjust(10), self.info[item]))
+            print('')
+            # options
+            print('Options:', end='')
+            self.show_options()
+            # description
+            print('Description:')
+            print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
+            print('')
+            # comments
+            if self.info['Comments']:
+                print('Comments:')
+                for comment in self.info['Comments']:
+                    print('%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer)))
+                print('')
+
+    #==================================================
+    # COMMAND METHODS
+    #==================================================
+
+    def do_run(self, params):
+        '''Runs the module'''
+        try:
+            self.validate_options()
+            self.module_run()
+        except KeyboardInterrupt:
+            print('')
+        except socket.timeout as e:
+            self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
+        except Exception as e:
+            if self.global_options['debug']:
+                print('%s%s' % (R, '-'*60))
+                traceback.print_exc()
+                print('%s%s' % ('-'*60, N))
+            self.error(e.__str__())
+        finally:
+            self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
+
+    def module_run(self):
+        pass
 
 #=================================================
 # SUPPORT CLASSES
@@ -1171,6 +1204,7 @@ class FrameworkException(Exception):
     pass
 
 class Options(dict):
+
     def __init__(self, *args, **kwargs):
         self.required = {}
         self.description = {}

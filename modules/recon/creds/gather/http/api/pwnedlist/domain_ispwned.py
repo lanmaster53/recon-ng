@@ -1,10 +1,10 @@
 import framework
 # unique to module
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('source', self.global_options['domain'], 'yes', 'source of domains for module input (see \'info\' for options)')
         self.register_option('store_table', None, 'no', 'name of database table to store the results or data will not be stored')
         self.info = {

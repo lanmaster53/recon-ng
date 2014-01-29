@@ -2,10 +2,10 @@ import framework
 # unique to module
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',

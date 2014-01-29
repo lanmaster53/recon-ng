@@ -2,10 +2,10 @@ import framework
 # unique to module
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('host', self.global_options['domain'], 'yes', 'fully qualified target hostname')
         self.info = {
                      'Name': 'ASP Security Analyzer',

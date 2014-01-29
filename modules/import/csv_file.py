@@ -3,10 +3,10 @@ import framework
 # module specific packages
 import csv
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('filename', None, 'yes', 'path and filename for csv input')
         self.register_option('column_separator', ',', 'yes', 'character that separates each column value')
         self.register_option('quote_character', '', 'no', 'character that surrounds each column value')
@@ -52,7 +52,7 @@ class Module(framework.Framework):
         return True
 
     def do_set(self, params):
-        framework.Framework.do_set(self, params)
+        framework.Module.do_set(self, params)
         
         if not self._validate_options():
             return

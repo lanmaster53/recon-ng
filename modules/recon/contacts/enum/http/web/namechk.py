@@ -5,10 +5,10 @@ from hashlib import sha1
 from hmac import new as hmac
 import socket
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('username', None, 'yes', 'username to validate')
         self.info = {
                      'Name': 'NameChk.com Username Validator',

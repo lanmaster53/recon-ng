@@ -1,10 +1,10 @@
 import framework
 # unique to module
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('address', None, 'yes', 'address to geocode')
         self.register_option('store', True , 'yes', 'store the obtained coordinates to latitude, longitude')
         self.info = {
