@@ -36,7 +36,6 @@ class Framework(cmd.Cmd):
         self.modulename = params[1]
         self.ruler = '-'
         self.spacer = '  '
-        self.module_delimiter = '/' # match line ~21 recon-ng.py
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
@@ -747,7 +746,7 @@ class Framework(cmd.Cmd):
         key_len = len(max(modules, key=len)) + len(self.spacer)
         last_category = ''
         for module in sorted(modules):
-            category = module.split(self.module_delimiter)[0]
+            category = module.split('/')[0]
             if category != last_category:
                 # print header
                 last_category = category
