@@ -1216,17 +1216,22 @@ class Options(dict):
     def _boolify(self, value):
         # designed to throw an exception if value is not a string representation of a boolean
         return {'true':True, 'false':False}[value.lower()]
-        
+
     def _autoconvert(self, value):
         if value in (None, True, False):
             return value
         elif (isinstance(value, basestring)) and value.lower() in ('none', "''", '""'):
             return None
+        orig = value
         for fn in (self._boolify, int, float):
-            try: return fn(value)
+            try:
+                value = fn(value)
+                break
             except ValueError: pass
             except KeyError: pass
             except AttributeError: pass
+        if type(value) is int and '.' in str(orig):
+            return float(orig)
         return value
         
     def init_option(self, name, value=None, required=False, description=''):
