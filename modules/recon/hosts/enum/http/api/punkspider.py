@@ -4,10 +4,10 @@ import urllib
 import json
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('search_str', '"%s"' % (self.global_options['domain']), 'yes', 'string to search for')
         self.register_option('search_type', 'url', 'yes', 'type of search (see \'info\' for options)')
         self.register_option('bsqli', True, 'yes', 'search for blind SQL injection')
@@ -66,9 +66,9 @@ class Module(framework.Framework):
 
         # display search results
         if tdata:
-            tdata.insert(0, ['Host', 'Time'] + vuln_types)
-            self.table(tdata, header=True)
-            if table: self.add_table(table, tdata, header=True)
+            header = ['Host', 'Time'] + vuln_types
+            self.table(tdata, header=header)
+            if table: self.add_table(table, tdata, header=header)
         else:
             self.output('No vulnerabilities found.')
 

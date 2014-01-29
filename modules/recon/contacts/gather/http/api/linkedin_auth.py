@@ -2,10 +2,10 @@ import framework
 # unique to module
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
@@ -72,6 +72,8 @@ class Module(framework.Framework):
             if not 'values' in jsonobj['people']:
                 break
             for contact in jsonobj['people']['values']:
+                # the headline field does not exist when a connection is private
+                # only public connections can be harvested beyond the 1st degree
                 if 'headline' in contact:
                     fname = self.html_unescape(re.split('[\s]',contact['firstName'])[0])
                     lname = self.html_unescape(re.split('[,;]',contact['lastName'])[0])

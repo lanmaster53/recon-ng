@@ -3,10 +3,10 @@ import framework
 import dns.resolver
 import os.path
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.register_option('suffixes', './data/suffixes.txt', 'yes', 'path to public suffix wordlist')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
@@ -52,7 +52,8 @@ class Module(framework.Framework):
                                 soa = answer.name.to_text()[:-1]
                                 self.alert('%s => (SOA) %s - Host found!' % (host, soa))
                                 cnt += 1
-                                new += self.add_host(soa)
+                                # use "host" rather than "soa" as sometimes the SOA record has a CNAME
+                                new += self.add_host(host)
                     # break out of the loop
                     attempt = max_attempts
             self.output('%d total hosts found.' % (cnt))

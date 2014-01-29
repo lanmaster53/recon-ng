@@ -1,13 +1,14 @@
 import framework
 # unique to module
 from cookielib import CookieJar
+import urllib
 import re
 import time
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Open Recursive DNS Resolvers Check',
@@ -41,13 +42,14 @@ class Module(framework.Framework):
         allFound = []
         # for each subnet, look for open resolvers
         for subnet in classCs:
-            url = 'http://openresolverproject.org/search.cgi?botnet=yessir&search_for=%s.0/24' % (subnet)
+            subnet = '%s.0/24' % (subnet)
+            url = 'http://openresolverproject.org/search2.cgi?botnet=yessir&search_for=%s' % (urllib.quote_plus(subnet))
             self.verbose('URL: %s' % url)
 
             # build the request as expected by the open resolver project
-            response = self.request(url, headers={"Referer":"http://openresolverproject.org"}, cookiejar=cookiejar)
+            response = self.request(url, headers={'Referer':'http://openresolverproject.org'}, cookiejar=cookiejar)
 
-            rows = re.findall("<TR>.+</TR>", response.text)
+            rows = re.findall('<TR>.+</TR>', response.text)
             # skip the first row since that is the table header
             for row in rows[1:]:
                 # if the rcode (field 4) is 0, there was no error so display
@@ -56,9 +58,9 @@ class Module(framework.Framework):
                     allFound.append(fields)
 
         if len(allFound) > 0:
-            tableData = [["IP Queried", "Responding IP (if different)", "Time Detected"]]
+            tableData = []
             for host in allFound:
                 tableData.append([host.group(1), host.group(2), time.ctime(float(host.group(3)))])
-            self.table(tableData, header=True)
-            self.output("Total open resolvers: %d" % len(allFound))
-        else: self.output("No open resolvers found.")
+            self.table(tableData, header=['IP Queried', 'Responding IP (if different)', 'Time Detected'])
+            self.output('Total open resolvers: %d' % len(allFound))
+        else: self.output('No open resolvers found.')

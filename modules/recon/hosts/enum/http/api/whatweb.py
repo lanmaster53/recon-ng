@@ -2,10 +2,10 @@ import framework
 # unique to module
 import json
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'WhatWeb Web Technologies scan',
@@ -37,9 +37,9 @@ class Module(framework.Framework):
 
             # output data
             for jsonobj in jsonobjs:
-                tdata = [['Plugin', 'String'],['Target', jsonobj['target']]]
+                tdata = [['Target', jsonobj['target']]]
                 for plugin in jsonobj['plugins']:
                     if 'string' in jsonobj['plugins'][plugin]:
                         value = ', '.join(jsonobj['plugins'][plugin]['string'])
                         tdata.append([plugin, value])
-                if tdata: self.table(tdata, header=True)
+                if tdata: self.table(tdata, header=['Plugin', 'String'])

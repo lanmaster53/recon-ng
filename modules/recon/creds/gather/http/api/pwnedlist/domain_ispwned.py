@@ -1,10 +1,10 @@
 import framework
 # unique to module
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('source', self.global_options['domain'], 'yes', 'source of domains for module input (see \'info\' for options)')
         self.register_option('store_table', None, 'no', 'name of database table to store the results or data will not be stored')
         self.info = {
@@ -49,6 +49,6 @@ class Module(framework.Framework):
             self.alert('Domain \'%s\' has publicly compromised accounts!' % (domain))
             tdata.append([jsonobj['domain'], str(jsonobj['num_entries']), jsonobj['first_seen'], jsonobj['last_seen']])
         if tdata:
-            tdata.insert(0, ['Domain', 'Pwned_Accounts', 'First_Seen', 'Last_Seen'])
-            self.table(tdata, header=True)
-            if table: self.add_table(table, tdata, header=True)
+            header = ['Domain', 'Pwned_Accounts', 'First_Seen', 'Last_Seen']
+            self.table(tdata, header=header)
+            if table: self.add_table(table, tdata, header=header)

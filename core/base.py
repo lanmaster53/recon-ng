@@ -50,6 +50,7 @@ __builtin__._print = print
 __builtin__.print = spool_print
 
 class Recon(framework.Framework):
+
     def __init__(self, mode=0):
         # modes:
         # 0 == console (default)
@@ -144,21 +145,6 @@ class Recon(framework.Framework):
             except:
                 self.error('Corrupt key file.')
 
-    def show_banner(self):
-        banner = open('./core/banner').read()
-        banner_len = len(max(banner.split('\n'), key=len))
-        print(banner)
-        print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8)) # +8 compensates for the color bytes
-        print('')
-        counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
-        count_len = len(max([str(x[0]) for x in counts], key=len))
-        for count in sorted(counts, reverse=True):
-            cnt = '[%d]' % (count[0])
-            print('%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N))
-            # create dynamic easter egg command based on counts
-            setattr(self, 'do_%d' % count[0], self.menu_egg)
-        print('')
-
     def menu_egg(self, params):
         eggs = [
                 'Really? A menu option? Try again.',
@@ -196,28 +182,31 @@ class Recon(framework.Framework):
         return True
 
     #==================================================
+    # SHOW METHODS
+    #==================================================
+
+    def show_banner(self):
+        banner = open('./core/banner').read()
+        banner_len = len(max(banner.split('\n'), key=len))
+        print(banner)
+        print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8)) # +8 compensates for the color bytes
+        print('')
+        counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
+        count_len = len(max([str(x[0]) for x in counts], key=len))
+        for count in sorted(counts, reverse=True):
+            cnt = '[%d]' % (count[0])
+            print('%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N))
+            # create dynamic easter egg command based on counts
+            setattr(self, 'do_%d' % count[0], self.menu_egg)
+        print('')
+
+    #==================================================
     # COMMAND METHODS
     #==================================================
 
     def do_reload(self, params):
         '''Reloads all modules'''
         self.load_modules(True)
-
-    def do_info(self, params):
-        '''Displays module information'''
-        if not params:
-            self.help_info()
-            return
-        try:
-            modulename = self.loaded_modules[params]
-            y = sys.modules[modulename].Module((None, params))
-            y.do_info(None)
-        except (KeyError, AttributeError):
-            self.error('Invalid module name.')
-
-    def do_banner(self, params):
-        '''Displays the banner'''
-        self.show_banner()
 
     def do_workspace(self, params):
         '''Sets the workspace'''
@@ -244,7 +233,7 @@ class Recon(framework.Framework):
                 self.error('Invalid module name.')
             else:
                 self.output('Multiple modules match \'%s\'.' % params)
-                self.display_modules(modules)
+                self.show_modules(modules)
             return
         modulename = modules[0]
         loadedname = self.loaded_modules[modulename]
@@ -265,16 +254,9 @@ class Recon(framework.Framework):
             print('')
     do_use = do_load
 
-    def do_run(self, params):
-        '''Not available'''
-        self.output('Command \'run\' reserved for future use.')
-
     #==================================================
     # HELP METHODS
     #==================================================
-
-    def help_info(self):
-        print('Usage: info <module>')
 
     def help_workspace(self):
         print('Usage: workspace <string>')

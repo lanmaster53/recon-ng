@@ -4,10 +4,10 @@ import dns.resolver
 import dns.reversename
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('netblock', self.global_options['netblock'], 'yes', self.global_options.description['netblock'])
         self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
@@ -15,12 +15,12 @@ class Module(framework.Framework):
         self.info = {
                      'Name': 'Reverse Resolver',
                      'Author': 'John Babio (@3vi1john)',
-                     'Description': 'Does a reverse lookup of IP address to hostname for the given subnet.',
+                     'Description': 'Does a reverse lookup of IP address to hostname for the given netblock.',
                      'Comments': []
                      }
 
     def module_run(self):
-        addresses = self.cidr_to_list(self.options['subnet'])
+        addresses = self.cidr_to_list(self.options['netblock'])
         regex = self.options['regex']
         resolver = dns.resolver.get_default_resolver()
         resolver.nameservers = [self.options['nameserver']]

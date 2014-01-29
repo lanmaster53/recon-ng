@@ -2,10 +2,10 @@ import framework
 # unique to module
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'info\' for options)')
         self.register_option('store_table', None, 'no', 'name for a table to create in the database and store the complete result set')
         self.register_option('store_column', None, 'no', 'name for a column to create in the hosts table and store open port information')
@@ -67,12 +67,12 @@ class Module(framework.Framework):
         if not tdata:
             self.output('No scan data available.')
             return
-        tdata.insert(0, ['address', 'port', 'hostname'])
-        self.table(tdata, header=True)
+        header = ['address', 'port', 'hostname']
+        self.table(tdata, header=header)
 
         # store data
         if table:
-            try: self.add_table(table, tdata, header=True)
+            try: self.add_table(table, tdata, header=header)
             except framework.FrameworkException as e:
                 self.error(e.message)
         if column:

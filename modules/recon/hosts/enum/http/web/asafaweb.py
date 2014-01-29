@@ -2,10 +2,10 @@ import framework
 # unique to module
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('host', self.global_options['domain'], 'yes', 'fully qualified target hostname')
         self.info = {
                      'Name': 'ASP Security Analyzer',
@@ -18,7 +18,7 @@ class Module(framework.Framework):
         host  = self.options['host']
 
         # request the scan
-        details = [['Check', 'Status']]
+        details = []
         configs = []
         url = 'https://asafaweb.com/Scan?Url=%s' % (host)
         self.verbose('URL: %s' % url)
@@ -38,6 +38,6 @@ class Module(framework.Framework):
 
         # Output the results in table format
         if len(details) > 1:
-            self.table(details, True)
+            self.table(details, header=['Check', 'Status'])
         else:
             self.output('No results found.')

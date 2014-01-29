@@ -4,10 +4,10 @@ import re
 import time
 import urllib
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('username', None, 'yes', 'username to validate')
         self.info = {
                      'Name': 'Dev Diver Repository Activity Examiner',
@@ -199,7 +199,6 @@ class Module(framework.Framework):
         # Print Final Output Table
         if self.name or self.dateJoin:
             self.tdata = []
-            self.tdata.append(['Parameter', 'Value', 'Site'])
             if self.name: self.build_table(self.name, 'Real Name')
             if self.dateJoin: self.build_table(sorted(self.dateJoin), 'Date Joined')
             if self.urlRepos: self.build_table(sorted(self.urlRepos), 'URL (Repository)')
@@ -208,6 +207,6 @@ class Module(framework.Framework):
             if self.urlPersonal: self.build_table(sorted(self.urlPersonal), 'URL (Personal)')
             if self.other: self.build_table(sorted(self.other), 'Other')
             
-            self.table(self.tdata, True)
+            self.table(self.tdata, header=['Parameter', 'Value', 'Site'])
         else:
            self.error('%s not found at any repository.' % username)

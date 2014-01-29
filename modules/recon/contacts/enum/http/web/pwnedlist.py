@@ -3,10 +3,10 @@ import framework
 import hashlib
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'PwnedList Validator',
@@ -40,6 +40,9 @@ class Module(framework.Framework):
                 last = re.search('ago, on (.+?).</li>', content).group(1)
                 self.alert('%s => %s! Seen %s times as recent as %s.' % (account, status, qty, last))
                 pwned += self.add_cred(account)
+            elif '<h4>Error!</h4>' in content:
+                self.error('Too many requests have been made.')
+                break
             else:
                 self.error('%s => Response not understood.' % (account))
                 continue

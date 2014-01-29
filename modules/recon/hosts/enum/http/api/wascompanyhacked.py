@@ -3,10 +3,10 @@ import framework
 import re
 import datetime
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.register_option('hashtags', '#xss #sqli #breached #hacked #pwnd', 'yes', 'list of hashtags to search for')
         self.info = {
@@ -42,7 +42,6 @@ class Module(framework.Framework):
             text = ' '.join(status['text'].split())
             tdata.append([user, date, text])
         if tdata:
-            tdata.insert(0, ['From', 'Date', 'Text'])
-            self.table(tdata, header=True)
+            self.table(tdata, header=['From', 'Date', 'Text'])
         else:
             self.output('No results found.')
