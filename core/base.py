@@ -61,6 +61,7 @@ class Recon(framework.Framework):
         self.prompt_template = '%s[%s] > '
         self.base_prompt = self.prompt_template % ('', self.name)
         framework.Framework.__init__(self, (self.base_prompt, 'base'))
+        self.options = self.global_options
         self.init_home()
         self.init_global_options()
         self.load_modules()
