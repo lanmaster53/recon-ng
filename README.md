@@ -6,12 +6,12 @@ Recon-ng has a look and feel similar to the Metasploit Framework, reducing the l
 
 Recon-ng is a completely modular framework and makes it easy for even the newest of Python developers to contribute. Each module is a subclass of the "module" class. The "module" class is a customized "cmd" interpreter equipped with built-in functionality that provides simple interfaces to common tasks such as standardizing output, interacting with the database, making web requests, and managing API keys. Therefore, all the hard work has been done. Building modules is simple and takes little more than a few minutes. See the [Development Guide](https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/Development%20Guide) for more information.
 
-### Sponsors
+## Sponsors
 
 [![Black Hills Information Security](http://www.blackhillsinfosec.com/_images/BHIS-Logo.png)](http://www.blackhillsinfosec.com)
 
 Consulting | Research | Development | Training
 
-### Donations
+## Donations
 
 Recon-ng is free software. However, large amounts of time and effort go into its continued development. If you are interested in financialy supporting the development of Recon-ng, please send your donation to tjt1980[at]gmail.com via PayPal. Thank you.
