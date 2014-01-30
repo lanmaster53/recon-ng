@@ -112,7 +112,7 @@ class Module(framework.Module):
                 else:
                     self._domain_search(site)
 
-            sleep(self.options['sleep'])
+            if host != hosts[-1]: sleep(self.options['sleep'])
 
 
         
