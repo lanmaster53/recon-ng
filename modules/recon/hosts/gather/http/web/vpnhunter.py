@@ -1,9 +1,9 @@
 import framework
 # unique to module
 
-class Module(framework.Framework):
+class Module(framework.Module):
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', 'domain to check for remote access')
         self.info = {
             'Name': 'VPNHunter Lookup',

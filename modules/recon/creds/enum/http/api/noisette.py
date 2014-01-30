@@ -1,12 +1,11 @@
 import framework
 # unique to module
 import re
-from xml.dom.minidom import parseString
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'info\' for options)')
         self.info = {
                      'Name': 'Noisette MD5 Hash Lookup',
@@ -26,7 +25,7 @@ class Module(framework.Framework):
         for hashstr in hashes:
             payload = {'hash': hashstr}
             resp = self.request(url, payload=payload)
-            dom = parseString(resp.text)
+            dom = resp.xml
             hashtype = "MD5"
             nodes = dom.getElementsByTagName('string')
             if len(nodes) > 0:

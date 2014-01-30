@@ -4,10 +4,10 @@ from cookielib import CookieJar
 import math
 import re
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('username', None, 'yes', 'wigle account username')
         self.register_option('password', None, 'yes', 'wigle account password')
         self.register_option('latitude', None, 'yes', 'latitude of center point')
@@ -94,10 +94,9 @@ class Module(framework.Framework):
             page +=1
         if nodes:
             tdata = []
-            nodes.insert(0, header)
             for node in nodes:
                 tdata.append([node[1], node[2], node[4], node[9], node[11], node[12], node[13], node[16]])
-            self.table(tdata, header=True)
+            self.table(tdata, header=header)
             self.output('%d access points found.' % (len(nodes)-1))
         else:
             self.output('No access points found.')

@@ -21,7 +21,7 @@ def recon_ui(args):
         readline.set_completer_delims(readline.get_completer_delims().replace('/', ''))
         # for possible future use to format command completion output
         #readline.set_completion_display_matches_hook(display_hook)
-    x = base.Recon()
+    x = base.Recon(base.Mode.CONSOLE)
     # check for and run version check
     if args.check:
         if not x.version_check(): return

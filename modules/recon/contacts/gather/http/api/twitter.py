@@ -3,10 +3,10 @@ import framework
 import re
 import sys
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('handle', '@lanmaster53', 'yes', 'target twitter handle')
         self.register_option('dtg', None, 'no', 'date-time group in the form YYYY-MM-DD')
         self.info = {
@@ -27,17 +27,13 @@ class Module(framework.Framework):
         # search for mentions tweeted by the given handle
         self.output('Searching for users mentioned by the given handle.')
         self.search_handle_tweets()
-        if self.tdata:
-            self.tdata.insert(0, header)
-            self.table(self.tdata, header=True)
+        if self.tdata: self.table(self.tdata, header=header)
 
         self.tdata = []
         # search for tweets mentioning the given handle
         self.output('Searching for users who mentioned the given handle.')
         self.search_handle_mentions()
-        if self.tdata:
-            self.tdata.insert(0, header)
-            self.table(self.tdata, header=True)
+        if self.tdata: self.table(self.tdata, header=header)
 
     def handle_options(self):
         '''

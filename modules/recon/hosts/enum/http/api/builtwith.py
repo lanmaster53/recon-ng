@@ -3,10 +3,10 @@ import framework
 import json
 import textwrap
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('host', self.global_options['domain'], 'yes', 'target host')
         self.info = {
                      'Name': 'BuiltWith Server-side Enumerator',
@@ -45,7 +45,5 @@ class Module(framework.Framework):
                     tdata.append([tag.title(), name])
 
             if len(tdata) > 0:
-                header = ['Tag', 'Name']
                 tdata.insert(0, ['Profile URL', fqdn])
-                tdata.insert(0, header)
-                self.table(tdata, True)
+                self.table(tdata, header=['Tag', 'Name'])

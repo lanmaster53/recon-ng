@@ -7,7 +7,7 @@ sys.path.append('./core/')
 import base
 
 def recon_cli(args):
-    x = base.Recon(mode=1)
+    x = base.Recon(mode=base.Mode.CLI)
     # check for and run version check
     if args.check:
         if not x.version_check(): return

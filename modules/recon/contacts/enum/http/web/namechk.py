@@ -5,10 +5,10 @@ from hashlib import sha1
 from hmac import new as hmac
 import socket
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)
+        framework.Module.__init__(self, params)
         self.register_option('username', None, 'yes', 'username to validate')
         self.info = {
                      'Name': 'NameChk.com Username Validator',
@@ -31,10 +31,10 @@ class Module(framework.Framework):
 
         # output table of sites info
         if self.global_options['verbose']:
-            tdata = [['Code', 'Name']]
+            tdata = []
             for site in sites:
                 tdata.append([site[1], site[0]])
-            self.table(tdata, True)
+            self.table(tdata, header=['Code', 'Name'])
 
         # retrive statuses
         key = "1Sx8srDg1u57Ei2wqX65ymPGXu0f7uAig13u"
