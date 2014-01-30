@@ -1,7 +1,6 @@
 import framework
 # unique to module
 import re
-from xml.dom.minidom import parseString
 
 class Module(framework.Module):
 
@@ -26,7 +25,7 @@ class Module(framework.Module):
         for hashstr in hashes:
             payload = {'hash': hashstr}
             resp = self.request(url, payload=payload)
-            dom = parseString(resp.text)
+            dom = resp.xml
             hashtype = "MD5"
             nodes = dom.getElementsByTagName('string')
             if len(nodes) > 0:

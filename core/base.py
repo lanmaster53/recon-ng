@@ -51,21 +51,18 @@ __builtin__.print = spool_print
 
 class Recon(framework.Framework):
 
-    def __init__(self, mode=0):
-        # modes:
-        # 0 == console (default)
-        # 1 == cli
-        # 2 == gui
+    def __init__(self, mode):
         self.mode = mode
-        self.name = 'recon-ng' #os.path.basename(__file__).split('.')[0]
+        self.name = 'recon-ng'
         self.prompt_template = '%s[%s] > '
         self.base_prompt = self.prompt_template % ('', self.name)
         framework.Framework.__init__(self, (self.base_prompt, 'base'))
+        self.options = self.global_options
         self.init_home()
         self.init_global_options()
         self.load_modules()
         self.load_keys()
-        if self.mode == 0: self.show_banner()
+        if self.mode == Mode.CONSOLE: self.show_banner()
         self.init_workspace('default')
 
     #==================================================
@@ -80,8 +77,9 @@ class Recon(framework.Framework):
             if remote != local:
                 self.alert('Your version of Recon-ng does not match the latest release.')
                 self.alert('Please update or use the \'--no-check\' switch to continue using the old version.')
-                self.alert('Read the migration notes for pre-requisites before upgrading.')
-                self.output('Migration Notes: https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/#!migration-notes')
+                if remote.split('.')[0] != local.split('.')[0]:
+                    self.alert('Read the migration notes for pre-requisites before upgrading.')
+                    self.output('Migration Notes: https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/#!migration-notes')
                 self.output('Remote version:  %s' % (remote))
                 self.output('Local version:   %s' % (local))
             return local == remote
@@ -121,8 +119,8 @@ class Recon(framework.Framework):
                     for filename in [f for f in filenames if f.endswith('.py')]:
                         # this (as opposed to sys.path.append) allows for module reloading
                         mod_name = filename.split('.')[0]
-                        mod_dispname = '%s%s%s' % (self.module_delimiter.join(re.split('/modules/', dirpath)[-1].split('/')), self.module_delimiter, mod_name)
-                        mod_loadname = mod_dispname.replace(self.module_delimiter, '_')
+                        mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
+                        mod_loadname = mod_dispname.replace('/', '_')
                         mod_loadpath = os.path.join(dirpath, filename)
                         mod_file = open(mod_loadpath, 'rb')
                         try:
@@ -237,7 +235,7 @@ class Recon(framework.Framework):
             return
         modulename = modules[0]
         loadedname = self.loaded_modules[modulename]
-        prompt = self.prompt_template % (self.prompt[:-3], modulename.split(self.module_delimiter)[-1])
+        prompt = self.prompt_template % (self.prompt[:-3], modulename.split('/')[-1])
         # notify the user if runtime errors exist in the module
         try: y = sys.modules[loadedname].Module((prompt, modulename))
         except Exception:
@@ -248,7 +246,7 @@ class Recon(framework.Framework):
             self.error('ModuleError: %s' % (traceback.format_exc().splitlines()[-1]))
             return
         # return the loaded module if in command line mode
-        if self.mode == 1: return y
+        if self.mode == Mode.CLI: return y
         try: y.cmdloop()
         except KeyboardInterrupt:
             print('')
@@ -268,3 +266,16 @@ class Recon(framework.Framework):
     def complete_workspace(self, text, *ignored):
         path = '%s/workspaces' % (self.home)
         return [name for name in os.listdir(path) if name.startswith(text) and os.path.isdir('%s/%s' % (path, name))]
+
+#=================================================
+# SUPPORT CLASSES
+#=================================================
+
+class Mode(object):
+   '''Contains constants that represent the state of the interpreter.'''
+   CONSOLE = 0
+   CLI     = 1
+   GUI     = 2
+   
+   def __init__(self):
+       raise NotImplementedError('This class should never be instantiated.')

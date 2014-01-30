@@ -36,14 +36,10 @@ class Framework(cmd.Cmd):
         self.modulename = params[1]
         self.ruler = '-'
         self.spacer = '  '
-        self.module_delimiter = '/' # match line ~21 recon-ng.py
         self.nohelp = '%s[!] No help on %%s%s' % (R, N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
-        self.options = self.global_options = __builtin__.global_options
-        # remove global options reference for module context
-        if self.modulename != 'base':
-            self.options = Options()
+        self.global_options = __builtin__.global_options
         self.keys = __builtin__.keys
         self.workspace = __builtin__.workspace
         self.home = __builtin__.home
@@ -750,7 +746,7 @@ class Framework(cmd.Cmd):
         key_len = len(max(modules, key=len)) + len(self.spacer)
         last_category = ''
         for module in sorted(modules):
-            category = module.split(self.module_delimiter)[0]
+            category = module.split('/')[0]
             if category != last_category:
                 # print header
                 last_category = category
@@ -1135,41 +1131,36 @@ class Module(Framework):
 
     def __init__(self, params):
         Framework.__init__(self, params)
+        self.options = Options()
 
     #==================================================
     # SHOW METHODS
     #==================================================
 
     def show_source(self):
-        if self.modulename is 'base':
-            self.output('Source code is not available in the current context.')
-        else:
-            filename = 'modules/%s.py' % (self.modulename)    
-            print(open(filename).read())
+        filename = 'modules/%s.py' % (self.modulename)    
+        print(open(filename).read())
 
     def show_info(self):
-        if self.modulename is 'base':
-            self.output('Module information is not available in the current context.')
-        else:
-            self.info['Path'] = 'modules/%s.py' % (self.modulename)
+        self.info['Path'] = 'modules/%s.py' % (self.modulename)
+        print('')
+        # meta
+        for item in ['Name', 'Path', 'Author']:
+            print('%s: %s' % (item.rjust(10), self.info[item]))
+        print('')
+        # options
+        print('Options:', end='')
+        self.show_options()
+        # description
+        print('Description:')
+        print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
+        print('')
+        # comments
+        if self.info['Comments']:
+            print('Comments:')
+            for comment in self.info['Comments']:
+                print('%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer)))
             print('')
-            # meta
-            for item in ['Name', 'Path', 'Author']:
-                print('%s: %s' % (item.rjust(10), self.info[item]))
-            print('')
-            # options
-            print('Options:', end='')
-            self.show_options()
-            # description
-            print('Description:')
-            print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
-            print('')
-            # comments
-            if self.info['Comments']:
-                print('Comments:')
-                for comment in self.info['Comments']:
-                    print('%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer)))
-                print('')
 
     #==================================================
     # COMMAND METHODS
@@ -1224,17 +1215,22 @@ class Options(dict):
     def _boolify(self, value):
         # designed to throw an exception if value is not a string representation of a boolean
         return {'true':True, 'false':False}[value.lower()]
-        
+
     def _autoconvert(self, value):
         if value in (None, True, False):
             return value
         elif (isinstance(value, basestring)) and value.lower() in ('none', "''", '""'):
             return None
+        orig = value
         for fn in (self._boolify, int, float):
-            try: return fn(value)
+            try:
+                value = fn(value)
+                break
             except ValueError: pass
             except KeyError: pass
             except AttributeError: pass
+        if type(value) is int and '.' in str(orig):
+            return float(orig)
         return value
         
     def init_option(self, name, value=None, required=False, description=''):

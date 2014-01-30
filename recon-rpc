@@ -38,7 +38,7 @@ class ReconState:
     def init(self):
         sid = str(uuid.uuid4())
         self.sessions[sid] = {
-            "recon": base.Recon(mode=1),
+            "recon": base.Recon(base.Mode.CLI),
             "module": None
         }
         self.sessions[sid]["module"] = self.sessions[sid]["recon"]
