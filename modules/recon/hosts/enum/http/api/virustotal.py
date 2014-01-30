@@ -7,10 +7,10 @@ from time import sleep
 import re
 
 
-class Module(framework.Framework):
+class Module(framework.Module):
 
     def __init__(self, params):
-        framework.Framework.__init__(self, params)        
+        framework.Module.__init__(self, params)        
         self.register_option('source', 'db', 'yes', 'Information to search results for')       
         self.register_option('sleep', '30', 'yes', 'Sleep after each system')  
         self.info = {
@@ -36,8 +36,8 @@ class Module(framework.Framework):
                 tdata.append([k['ip_address'],k['last_resolved']])
 
             if tdata:
-                tdata.insert(0,['Ip Address', 'Last Resolved'])
-                self.table(tdata,True)
+                tdata.insert(0,)
+                self.table(tdata,header=['Ip Address', 'Last Resolved'])
 
         else:
             self.error(resp.json['verbose_msg'])
@@ -55,8 +55,7 @@ class Module(framework.Framework):
                 tdata.append([k['hostname'],k['last_resolved']])
 
             if tdata:
-                tdata.insert(0,['Hostname', 'Last Resolved'])
-                self.table(tdata,True)
+                self.table(tdata,header=['Hostname', 'Last Resolved'])
         else:
             self.error(resp.json['verbose_msg'])
 
@@ -78,8 +77,7 @@ class Module(framework.Framework):
                 else: 
                     tdata.append([k,resp.json['scans'][k]['result']])
             if tdata:
-                tdata.insert(0, ['Scanner', 'Result'])
-                self.table(tdata, True)
+                self.table(tdata, header=['Scanner', 'Result'])
             
             if clean:
                 self.output('Clean Scanners:' + ','.join(clean))
@@ -89,11 +87,6 @@ class Module(framework.Framework):
     def module_run(self):        
 
         self.api_key=self.get_key('virustotal_api')
-
-        if isinstance(self.options['sleep'],int):
-            self.sleep = self.options['sleep']
-        else:
-            self.sleep = 30
 
         
         hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
@@ -119,7 +112,7 @@ class Module(framework.Framework):
                 else:
                     self._domain_search(site)
 
-            sleep(self.sleep)
+            sleep(self.options['sleep'])
 
 
         
