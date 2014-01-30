@@ -1,12 +1,12 @@
-import framework
+import module
 # unique to module
 import re
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
+        module.Module.__init__(self, params)
+        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'show info\' for options)')
         self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.info = {
                      'Name': 'My-IP-Neighbors.com Lookup',

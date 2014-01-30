@@ -49,6 +49,10 @@ __builtin__._print = print
 # override the builtin print function with the new print function
 __builtin__.print = spool_print
 
+#=================================================
+# BASE CLASS
+#=================================================
+
 class Recon(framework.Framework):
 
     def __init__(self, mode):

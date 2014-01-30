@@ -1,15 +1,15 @@
-import framework
+import module
 # unique to module
 import urllib
 import json
 import re
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('search_str', '"%s"' % (self.global_options['domain']), 'yes', 'string to search for')
-        self.register_option('search_type', 'url', 'yes', 'type of search (see \'info\' for options)')
+        self.register_option('search_type', 'url', 'yes', 'type of search (see \'show info\' for options)')
         self.register_option('bsqli', True, 'yes', 'search for blind SQL injection')
         self.register_option('sqli', True, 'yes', 'search for SQL injection')
         self.register_option('xss', True, 'yes', 'search for Cross-Site Scripting')

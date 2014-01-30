@@ -1,4 +1,4 @@
-import framework
+import module
 # unique to module
 from cookielib import CookieJar
 import re
@@ -7,11 +7,11 @@ import urllib
 import time
 import random
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
+        module.Module.__init__(self, params)
+        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'show info\' for options)')
         self.info = {
                      'Name': 'Hosting History',
                      'Author': 'thrapt (thrapt@gmail.com)',

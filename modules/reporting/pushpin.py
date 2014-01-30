@@ -1,14 +1,14 @@
-import framework
+import module
 # unique to module
 import re
 import webbrowser
 import time
 import codecs
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('map_filename', '%s/pushpin_map.html' % (self.workspace), 'yes', 'path and filename for pushpin map report')
         self.register_option('media_filename', '%s/pushpin_media.html' % (self.workspace), 'yes', 'path and filename for pushpin media report')
         self.register_option('latitude', self.global_options['latitude'], 'yes', 'latitude of the epicenter')

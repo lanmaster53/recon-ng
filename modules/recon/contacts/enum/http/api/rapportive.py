@@ -1,12 +1,12 @@
-import framework
+import module
 # unique to module
 import urllib
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'info\' for options)')
+        module.Module.__init__(self, params)
+        self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'show info\' for options)')
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
             'Name': 'Rapportive Contact Enumerator',
@@ -23,15 +23,16 @@ class Module(framework.Module):
             pass
         resp = self.request('https://rapportive.com/login_status?user_email=%s@mail.com' % (self.random_str(15)))
         if 'error' in resp.json:
-            raise framework.FrameworkException(resp.json['error'])
+            self.error(resp.json['error'])
+            return None
         session_token = resp.json['session_token']
         self.add_key(token_name, session_token)
         return session_token
 
     def module_run(self):
-
         emails = self.get_source(self.options['source'], "SELECT DISTINCT email FROM contacts ORDER BY email")
         session_token = self.get_rapportive_session_token()
+        if session_token is None: return
         headers = {'X-Session-Token' : session_token}
         cnt = 0
         new = 0

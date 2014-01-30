@@ -1,12 +1,12 @@
-import framework
+import module
 # unique to module
 import re
 import datetime
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.register_option('hashtags', '#xss #sqli #breached #hacked #pwnd', 'yes', 'list of hashtags to search for')
         self.info = {

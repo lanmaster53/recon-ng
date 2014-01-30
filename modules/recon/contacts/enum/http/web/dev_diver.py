@@ -1,13 +1,13 @@
-import framework
+import module
 # unique to module
 import re
 import time
 import urllib
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('username', None, 'yes', 'username to validate')
         self.info = {
                      'Name': 'Dev Diver Repository Activity Examiner',
