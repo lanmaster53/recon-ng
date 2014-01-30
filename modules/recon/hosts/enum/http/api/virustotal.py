@@ -36,7 +36,6 @@ class Module(framework.Module):
                 tdata.append([k['ip_address'],k['last_resolved']])
 
             if tdata:
-                tdata.insert(0,)
                 self.table(tdata,header=['Ip Address', 'Last Resolved'])
 
         else:
