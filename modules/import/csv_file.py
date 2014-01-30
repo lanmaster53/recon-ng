@@ -24,48 +24,11 @@ class Module(framework.Module):
         
         self.values = []
         # account for the fact that module options are stored and preloaded from a config file
-        self._validate_options()
+        self.generate_dynamic_options()
             
-    def _validate_options(self):
-        filename = self.options['filename']
-        sep = self.options['column_separator']
-        quote = self.options['quote_character']
-        
-        if not filename:
-            # there is currently no valid file so remove all the options file-specific options
-            self.values = []
-            self.register_options()
-            return False
-        if not sep or len(sep) != 1:
-            self.error('COLUMN_SEPARATOR is required and must only contain one character.')
-            # there is currently no valid separator so remove all the options file-specific options
-            self.values = []
-            self.register_options()
-            return False
-        if quote and len(quote) > 1:
-            self.error('QUOTE_CHARACTER is optional but must not contain more than one character.')
-            # there is currently no valid quote so remove all the options file-specific options
-            self.values = []
-            self.register_options()
-            return False
-            
-        return True
-
     def do_set(self, params):
         framework.Module.do_set(self, params)
-        
-        if not self._validate_options():
-            return
-            
-        # repopulate the module's options
-        try:
-            self.values = self.parse_file()
-        except IOError:
-            self.error('\'%s\' could not be opened. The file may not exist.' % self.options['filename'])
-        except AssertionError:
-            self.error('The number of columns in each row is inconsistent. Try checking the input file, changing the column separator, or changing the quote character.')
-        else:
-            self.register_options()
+        self.generate_dynamic_options()
     
     def module_run(self):
         if not self.values or len(self.values) == 0:
@@ -117,6 +80,45 @@ class Module(framework.Module):
                 self.error('There was a problem inserting the previous row into the database. Please check your settings.')
                 return
 
+    def generate_dynamic_options(self):
+        if not self._validate_options():
+            return
+            
+        # repopulate the module's options
+        try:
+            self.values = self.parse_file()
+        except IOError:
+            self.error('\'%s\' could not be opened. The file may not exist.' % self.options['filename'])
+        except AssertionError:
+            self.error('The number of columns in each row is inconsistent. Try checking the input file, changing the column separator, or changing the quote character.')
+        else:
+            self.register_options()
+            
+    def _validate_options(self):    # begins with an underscore so as not to conflict with the parent class's validate_options method
+        filename = self.options['filename']
+        sep = self.options['column_separator']
+        quote = self.options['quote_character']
+        
+        if not filename:
+            # there is currently no valid file so remove all the options file-specific options
+            self.values = []
+            self.register_options()
+            return False
+        if not sep or len(sep) != 1:
+            self.error('COLUMN_SEPARATOR is required and must only contain one character.')
+            # there is currently no valid separator so remove all the options file-specific options
+            self.values = []
+            self.register_options()
+            return False
+        if quote and len(quote) > 1:
+            self.error('QUOTE_CHARACTER is optional but must not contain more than one character.')
+            # there is currently no valid quote so remove all the options file-specific options
+            self.values = []
+            self.register_options()
+            return False
+            
+        return True
+        
     def parse_file(self):
         filename = self.options['filename']
         if not filename:
