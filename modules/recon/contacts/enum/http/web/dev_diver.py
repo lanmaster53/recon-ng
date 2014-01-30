@@ -38,8 +38,10 @@ class Module(framework.Module):
             if gitPersonalUrl: self.urlPersonal.append([gitPersonalUrl.group(1), 'Github'])
             if gitAvatar: self.urlAvatar.append([gitAvatar.group(1), 'Github'])
             if ' ' in gitName.group(1):
-            	fname, lname = gitName.group(1).split(' ')
-            	self.add_contact(fname, lname, None, None, None, None)
+            	fname, lname = gitName.group(1).split()
+            	self.add_contact(fname, lname, 'Github account')
+            else:
+            	self.add_contact(None, gitName.group(1), 'Github account')
         else:
             self.output('Github username not found.')
     
@@ -74,8 +76,10 @@ class Module(framework.Module):
             if bbJoin: self.dateJoin.append([bbJoin.group(1), 'Bitbucket'])
             if bbRepositories: self.repositories.append([', '.join(bbRepositories), 'Bitbucket'])
  	    if ' ' in bbName.group(1):
-            	fname, lname = bbName.group(1).split(' ')
-                self.add_contact(fname, lname, None, None, None, None)
+            	fname, lname = bbName.group(1).split()
+                self.add_contact(fname, lname, 'Bitbucket account')
+            else:
+            	self.add_contact(None, bbName.group(1), 'Bitbucket account')
         else:
             self.output('Bitbucket username not found.')
         
@@ -95,8 +99,10 @@ class Module(framework.Module):
             if sfMyOpenID: self.other.append(['URL (Open ID)', sfMyOpenID.group(1), 'Sourceforge'])
             if sfRepositories: self.repositories.append([', '.join(sfRepositories), 'Sourceforge'])
  	    if ' ' in sfName.group(1):
-            	fname, lname = sfName.group(1).split(' ')
-                self.add_contact(fname, lname, None, None, None, None)
+            	fname, lname = sfName.group(1).split()
+                self.add_contact(fname, lname, 'Sourceforge account')
+            else:
+            	self.add_contact(None, sfName.group(1), 'Sourceforge account')
         else:
             self.output('Sourceforge username not found.')
 
@@ -160,8 +166,10 @@ class Module(framework.Module):
             if gitoAvatar: self.urlAvatar.append([gitoAvatar.group(1), 'Gitorious'])
             if gitoProjects: self.repositories.append([', '.join(gitoProjects), 'Gitorious'])
  	    if ' ' in gitoName.group(1):
-            	fname, lname = gitoName.group(1).split(' ')
-                self.add_contact(fname, lname, None, gitoEmail, None, None)
+            	fname, lname = gitoName.group(1).split()
+                self.add_contact(fname, lname, 'Gitorious account', gitoEmail)
+            else:
+            	self.add_contact(None, gitoName.group(1), 'Gitorious account')
         else:
             self.output('Gitorious username not found.')          
     
@@ -193,7 +201,7 @@ class Module(framework.Module):
         self.codeplex(username)
         self.freecode(username)
         self.gitorious(username)
-        
+       
         # Print Final Output Table
         if self.name or self.dateJoin:
             self.tdata = []
