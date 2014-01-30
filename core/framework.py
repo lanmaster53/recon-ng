@@ -501,7 +501,10 @@ class Framework(cmd.Cmd):
             config_data = {}
         config_file.close()
         # overwrite the old config data with option values
-        config_data[self.modulename] = self.options
+        config_data[self.modulename] = dict(self.options)
+        for key in config_data[self.modulename].keys():
+            if config_data[self.modulename][key] is None:
+                del config_data[self.modulename][key]
         # write the new config data to the config file
         config_file = open(config_path, 'wb')
         json.dump(config_data, config_file, indent=4)
