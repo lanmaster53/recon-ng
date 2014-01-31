@@ -1,15 +1,14 @@
-# packages required for framework integration
-import framework
+import module
 # module specific packages
 from urlparse import urlparse
 from time import sleep
 import re
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'info\' for options)')
+        module.Module.__init__(self, params)
+        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'show info\' for options)')
         self.register_option('sleep', '30', 'yes', 'seconds to wait between processing hosts')
         self.info = {
                      'Name': 'VirusTotal Host Lookup',

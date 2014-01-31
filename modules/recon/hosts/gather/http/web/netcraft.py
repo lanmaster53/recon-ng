@@ -1,4 +1,4 @@
-import framework
+import module
 # unique to module
 from cookielib import CookieJar
 import urllib
@@ -7,10 +7,10 @@ import hashlib
 import time
 import random
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.info = {
                      'Name': 'Netcraft Hostname Enumerator',

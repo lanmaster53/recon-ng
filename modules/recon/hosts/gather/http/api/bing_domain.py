@@ -1,12 +1,12 @@
-import framework
+import module
 # unique to module
 from urlparse import urlparse
 import re
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.register_option('limit', 0, 'yes', 'limit number of api requests (0 = unlimited)')
         self.info = {

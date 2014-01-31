@@ -1,15 +1,14 @@
-# packages required for framework integration
-import framework
+import module
 # module specific packages
 import re
 import json
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('adobe_db', './data/adobe_top_100.json', 'yes', 'JSON file containing the Adobe hashes and passwords')
-        self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'info\' for options)')
+        self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'show info\' for options)')
         self.info = {
                      'Name': 'Adobe Hash Lookup',
                      'Author': 'Ethan Robish (@EthanRobish)',

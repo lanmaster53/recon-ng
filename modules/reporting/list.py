@@ -1,11 +1,11 @@
-import framework
+import module
 # unique to module
 import csv
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('table', 'hosts', 'yes', 'source table of the data for the list')
         self.register_option('column', 'ip_address', 'yes', 'source column of the data for the list')
         self.register_option('unique', True, 'yes', 'only return unique items from the dataset')

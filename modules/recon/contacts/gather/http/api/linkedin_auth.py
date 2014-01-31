@@ -1,11 +1,11 @@
-import framework
+import module
 # unique to module
 import re
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
@@ -46,13 +46,15 @@ class Module(framework.Module):
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': linkedin_key, 'client_secret': linkedin_secret}
         resp = self.request(url, method='POST', payload=payload)
         if 'error' in resp.json:
-            raise framework.FrameworkException(resp.json['error_description'])
+            self.error(resp.json['error_description'])
+            return None
         access_token = resp.json['access_token']
         self.add_key(token_name, access_token)
         return access_token
 
     def module_run(self):
         access_token = self.get_linkedin_access_token()
+        if access_token is None: return
         count = 25
         url = 'https://api.linkedin.com/v1/people-search:(people:(id,first-name,last-name,headline,location:(name,country:(code))))'
         payload = {'format': 'json', 'company-name': self.options['company'], 'current-company': 'true', 'count': count, 'oauth2_access_token': access_token}

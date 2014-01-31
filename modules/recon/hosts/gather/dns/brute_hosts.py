@@ -1,14 +1,14 @@
-import framework
+import module
 # unique to module
 import dns.resolver
 import os.path
 import random
 import re
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
         self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.register_option('wordlist', './data/hostnames.txt', 'yes', 'path to hostname wordlist')

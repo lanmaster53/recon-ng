@@ -1,13 +1,13 @@
-import framework
+import module
 # unique to module
 import dns.resolver
 import dns.reversename
 import re
 
-class Module(framework.Module):
+class Module(module.Module):
 
     def __init__(self, params):
-        framework.Module.__init__(self, params)
+        module.Module.__init__(self, params)
         self.register_option('netblock', self.global_options['netblock'], 'yes', self.global_options.description['netblock'])
         self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
