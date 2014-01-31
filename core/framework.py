@@ -153,7 +153,7 @@ class Framework(cmd.Cmd):
             print('%s%s' % (self.spacer, line.title()))
             print('%s%s' % (self.spacer, self.ruler*len(line)))
 
-    def table(self, data, header=[]):
+    def table(self, data, header=[], title=''):
         '''Accepts a list of rows and outputs a table.'''
         tdata = list(data)
         if header:
@@ -174,6 +174,10 @@ class Framework(cmd.Cmd):
             print('')
             print(separator)
             # ascii table data
+            if title:
+                # what if the title is wider than the columns?
+                print('%s| %s |' % (self.spacer, title.center(sum(lens) + (3*(cols-1)))))
+                print(separator)
             if header:
                 rdata = tdata.pop(0)
                 data_sub = tuple([rdata[i].center(lens[i]) for i in range(0,cols)])
@@ -364,41 +368,30 @@ class Framework(cmd.Cmd):
         self.table(dirnames, header=['Workspaces'])
 
     def show_dashboard(self):
-        # display activity table
-        self.heading('Activity Summary')
         rows = self.query('SELECT * FROM dashboard ORDER BY 1')
-        tdata = []
-        for row in rows:
-            tdata.append(row)
         if rows:
-            self.table(tdata, header=['Module', 'Runs'])
+            # display activity table
+            tdata = []
+            for row in rows:
+                tdata.append(row)
+            self.table(tdata, header=['Module', 'Runs'], title='Activity Summary')
+            # display sumary results table
+            tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
+            tdata = []
+            for table in tables:
+                if not table in ['leaks', 'dashboard']:
+                    count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
+                    tdata.append([table.title(), count])
+            self.table(tdata, header=['Category', 'Quantity'], title='Results Summary')
         else:
-            print('\n%sThis workspace has no record of activity.' % (self.spacer))
-        # display sumary results table
-        self.heading('Results Summary')
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        tdata = []
-        for table in tables:
-            if not table in ['leaks', 'dashboard']:
-                count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
-                tdata.append([table.title(), count])
-        self.table(tdata, header=['Category', 'Quantity'])
+            print('\n%sThis workspace has no record of activity.\n' % (self.spacer))
 
     def show_schema(self):
         '''Displays the database schema'''
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         for table in tables:
             columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
-            name_len = len(max([x[0] for x in columns], key=len))
-            type_len = len(max([x[1] for x in columns], key=len))
-            print('')
-            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
-            print('%s| %s |' % (self.spacer, table.center(name_len+type_len+3)))
-            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
-            for column in columns:
-                print('%s| %s | %s |' % (self.spacer, column[0].ljust(name_len), column[1].center(type_len)))
-            print('%s+%s+' % (self.spacer, self.ruler*(name_len+type_len+5)))
-        print('')
+            self.table(columns, title=table)
 
     def show_options(self):
         '''Lists options'''
