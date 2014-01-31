@@ -22,14 +22,13 @@ class Module(module.Module):
         url = 'https://github.com/%s' % username
         resp = self.request(url)
         gitName = re.search('<span class="vcard-fullname" itemprop="name">(.+?)</span>', resp.text)
-        if gitName: 
+        if gitName:
             self.alert('Github username found - (%s)' % url)
             gitDesc = re.search('<meta name="description" content="(.+)" />', resp.text)
             gitJoin = re.search('<span class="join-date">(.+?)</span>', resp.text)
             gitLoc = re.search('<span class="octicon octicon-location"></span>(.+?)</li>', resp.text)
             gitPersonalUrl = re.search('<span class="octicon octicon-link"></span><a href="(.+?)" class="url"', resp.text)
             gitAvatar = re.search('<img class="avatar" height="220" src="(.+?)"', resp.text)
-            gitEmail = re.search('<a class="email js-obfuscate-email" data-email="(.+?)"', resp.text)
             self.name.append([gitName.group(1), 'Github'])
             self.urlRepos.append([url, 'Github'])
             if gitJoin: 
@@ -38,10 +37,11 @@ class Module(module.Module):
             if gitDesc: self.other.append(['Description', gitDesc.group(1), 'Github'])
             if gitPersonalUrl: self.urlPersonal.append([gitPersonalUrl.group(1), 'Github'])
             if gitAvatar: self.urlAvatar.append([gitAvatar.group(1), 'Github'])
-            if gitEmail: self.other.append(['Email', urllib.unquote(gitEmail.group(1)), 'Github'])
-
-            fname, lname = gitName.group(1).split(' ')
-            self.add_contact(fname, lname, None, urllib.unquote(gitEmail.group(1)), None, None)
+            if ' ' in gitName.group(1):
+            	fname, lname = gitName.group(1).split()
+            	self.add_contact(fname, lname, 'Github account')
+            else:
+            	self.add_contact(None, gitName.group(1), 'Github account')
         else:
             self.output('Github username not found.')
     
@@ -75,9 +75,11 @@ class Module(module.Module):
             self.urlRepos.append([url, 'Bitbucket'])
             if bbJoin: self.dateJoin.append([bbJoin.group(1), 'Bitbucket'])
             if bbRepositories: self.repositories.append([', '.join(bbRepositories), 'Bitbucket'])
-
-            fname, lname = bbName.group(1).split(' ')
-            self.add_contact(fname, lname, None, None, None, None)
+ 	    if ' ' in bbName.group(1):
+            	fname, lname = bbName.group(1).split()
+                self.add_contact(fname, lname, 'Bitbucket account')
+            else:
+            	self.add_contact(None, bbName.group(1), 'Bitbucket account')
         else:
             self.output('Bitbucket username not found.')
         
@@ -96,9 +98,11 @@ class Module(module.Module):
             if sfJoin: self.dateJoin.append([sfJoin.group(1), 'Sourceforge'])
             if sfMyOpenID: self.other.append(['URL (Open ID)', sfMyOpenID.group(1), 'Sourceforge'])
             if sfRepositories: self.repositories.append([', '.join(sfRepositories), 'Sourceforge'])
-
-            fname, lname = sfName.group(1).split(' ')
-            self.add_contact(fname, lname, None, None, None, None)
+ 	    if ' ' in sfName.group(1):
+            	fname, lname = sfName.group(1).split()
+                self.add_contact(fname, lname, 'Sourceforge account')
+            else:
+            	self.add_contact(None, sfName.group(1), 'Sourceforge account')
         else:
             self.output('Sourceforge username not found.')
 
@@ -161,9 +165,11 @@ class Module(module.Module):
             if gitoPersonalUrl: self.urlPersonal.append([gitoPersonalUrl.group(1), 'Gitorious'])
             if gitoAvatar: self.urlAvatar.append([gitoAvatar.group(1), 'Gitorious'])
             if gitoProjects: self.repositories.append([', '.join(gitoProjects), 'Gitorious'])
-
-            fname, lname = gitoName.group(1).split(' ')
-            self.add_contact(fname, lname, None, gitoEmail, None, None)
+ 	    if ' ' in gitoName.group(1):
+            	fname, lname = gitoName.group(1).split()
+                self.add_contact(fname, lname, 'Gitorious account', gitoEmail)
+            else:
+            	self.add_contact(None, gitoName.group(1), 'Gitorious account')
         else:
             self.output('Gitorious username not found.')          
     
@@ -195,7 +201,7 @@ class Module(module.Module):
         self.codeplex(username)
         self.freecode(username)
         self.gitorious(username)
-        
+       
         # Print Final Output Table
         if self.name or self.dateJoin:
             self.tdata = []
