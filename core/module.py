@@ -18,7 +18,6 @@ import framework
 # prep python path for supporting modules
 sys.path.append('./libs/')
 import aes
-import mechanize
 
 #=================================================
 # MODULE CLASS
@@ -418,23 +417,6 @@ class Module(framework.Framework):
             comment_url=None,
             rest=None
         )
-
-    def browser(self):
-        '''Returns a mechanize.Browser object configured with the framework's global options.'''
-        br = mechanize.Browser()
-        # set the user-agent header
-        br.addheaders = [('User-agent', self.global_options['user-agent'])]
-        # set debug options
-        if self.global_options['debug']:
-            br.set_debug_http(True)
-            br.set_debug_redirects(True)
-            br.set_debug_responses(True)
-        # set proxy
-        if self.global_options['proxy']:
-            br.set_proxies({'http': self.global_options['proxy'], 'https': self.global_options['proxy']})
-        # set timeout
-        socket.setdefaulttimeout(self.global_options['timeout'])
-        return br
 
     #==================================================
     # SHOW METHODS
