@@ -7,6 +7,7 @@ import socket
 import sqlite3
 import subprocess
 import sys
+import time
 import __builtin__
 # prep python path for supporting modules
 sys.path.append('./libs/')
@@ -155,7 +156,7 @@ class Framework(cmd.Cmd):
             print('%s%s' % (self.spacer, line.title()))
             print('%s%s' % (self.spacer, self.ruler*len(line)))
 
-    def table(self, data, header=[], title=''):
+    def table(self, data, header=[], title='', store=False):
         '''Accepts a list of rows and outputs a table.'''
         tdata = list(data)
         if header:
@@ -164,8 +165,19 @@ class Framework(cmd.Cmd):
             raise FrameworkException('Row lengths not consistent.')
         lens = []
         cols = len(tdata[0])
+        # create a list of max widths for each column
         for i in range(0,cols):
             lens.append(len(max([self.to_unicode_str(x[i]) if x[i] != None else '' for x in tdata], key=len)))
+        # calculate dynamic widths based on the title
+        title_len = len(title)
+        tdata_len = sum(lens) + (3*(cols-1))
+        diff = title_len - tdata_len
+        if diff > 0:
+            diff_per = diff / cols
+            lens = [x+diff_per for x in lens]
+            diff_mod = diff % cols
+            for x in range(0, diff_mod):
+                lens[x] += 1
         # build ascii table
         if len(tdata) > 0:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
@@ -177,8 +189,7 @@ class Framework(cmd.Cmd):
             print(separator)
             # ascii table data
             if title:
-                # what if the title is wider than the columns?
-                print('%s| %s |' % (self.spacer, title.center(sum(lens) + (3*(cols-1)))))
+                print('%s| %s |' % (self.spacer, title.center(tdata_len)))
                 print(separator)
             if header:
                 rdata = tdata.pop(0)
@@ -191,6 +202,15 @@ class Framework(cmd.Cmd):
             # bottom of ascii table
             print(separator)
             print('')
+        if store:
+            # store the table
+            table = title if title else self.modulename.split('/')[-1]
+            # generate a unique table name
+            table = '%s (%s)' % (table, time.strftime('%m/%d %H:%M:%S', time.localtime()))
+            self.add_table(table, data, header)
+
+    def add_table(self, *args, **kwargs):
+        raise NotImplementedError('Method reserved for subclasses.')
 
     #==================================================
     # DATABASE METHODS
@@ -511,7 +531,7 @@ class Framework(cmd.Cmd):
             else:
                 header = tuple([x[0] for x in cur.description])
                 self.table(tdata, header=header)
-                self.output('%d rows returned' % (len(tdata)-1)) # -1 to account for header row
+                self.output('%d rows returned' % (len(tdata)))
         else:
             conn.commit()
             self.output('%d rows affected.' % (cur.rowcount))
@@ -522,6 +542,7 @@ class Framework(cmd.Cmd):
         if not params:
             self.help_show()
             return
+        _params = params
         params = params.lower().split()
         arg = params[0]
         params = ' '.join(params[1:])
@@ -531,8 +552,8 @@ class Framework(cmd.Cmd):
                 func(params)
             else:
                 func()
-        elif arg in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
-            self.do_query('SELECT * FROM "%s" ORDER BY 1' % (arg))
+        elif _params in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
+            self.do_query('SELECT * FROM "%s" ORDER BY 1' % (_params))
         else:
             self.help_show()
 

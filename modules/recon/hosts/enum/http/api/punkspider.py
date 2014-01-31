@@ -18,7 +18,7 @@ class Module(module.Module):
         self.register_option('osci', True, 'yes', 'search for OS command injection')
         self.register_option('xpathi', True, 'yes', 'search for XPath injection')
         self.register_option('show_vulns', True, 'yes', 'if found, display vulnerabily information')
-        self.register_option('store_table', None, 'no', 'name of database table to store results')
+        self.register_option('store_table', False, 'no', 'store the results in a database table')
         self.info = {
                      'Name': 'PunkSPIDER Vulnerabilty Finder',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
@@ -36,7 +36,6 @@ class Module(module.Module):
             self.error('Invalid search type \'%s\'.' % (search_type))
             return
         search_str = self.options['search_str']
-        table = self.options['store_table']
         url = 'http://punkspider.hyperiongray.com/service/search/domain/'
         payload = {'searchKey': search_type, 'searchValue': search_str, 'filterType': 'OR'}
         payload['filters'] = []
@@ -67,8 +66,7 @@ class Module(module.Module):
         # display search results
         if tdata:
             header = ['Host', 'Time'] + vuln_types
-            self.table(tdata, header=header)
-            if table: self.add_table(table, tdata, header=header)
+            self.table(tdata, header=header, title='PunkSPIDER', store=self.options['store_table'])
         else:
             self.output('No vulnerabilities found.')
 
