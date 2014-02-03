@@ -8,17 +8,94 @@ import sqlite3
 import subprocess
 import sys
 import time
-import __builtin__
+#import __builtin__
 # prep python path for supporting modules
 sys.path.append('./libs/')
 import dragons
 import mechanize
 
 #=================================================
+# SUPPORT CLASSES
+#=================================================
+
+class FrameworkException(Exception):
+    pass
+
+class Colors(object):
+    N = '\033[m' # native
+    R = '\033[31m' # red
+    G = '\033[32m' # green
+    O = '\033[33m' # orange
+    B = '\033[34m' # blue
+
+class Options(dict):
+
+    def __init__(self, *args, **kwargs):
+        self.required = {}
+        self.description = {}
+        
+        super(Options, self).__init__(*args, **kwargs)
+           
+    def __setitem__(self, name, value):
+        super(Options, self).__setitem__(name, self._autoconvert(value))
+           
+    def __delitem__(self, name):
+        super(Options, self).__delitem__(name)
+        if name in self.required:
+            del self.required[name]
+        if name in self.description:
+            del self.description[name]
+        
+    def _boolify(self, value):
+        # designed to throw an exception if value is not a string representation of a boolean
+        return {'true':True, 'false':False}[value.lower()]
+
+    def _autoconvert(self, value):
+        if value in (None, True, False):
+            return value
+        elif (isinstance(value, basestring)) and value.lower() in ('none', "''", '""'):
+            return None
+        orig = value
+        for fn in (self._boolify, int, float):
+            try:
+                value = fn(value)
+                break
+            except ValueError: pass
+            except KeyError: pass
+            except AttributeError: pass
+        if type(value) is int and '.' in str(orig):
+            return float(orig)
+        return value
+        
+    def init_option(self, name, value=None, required=False, description=''):
+        self[name] = value
+        self.required[name] = required
+        self.description[name] = description
+
+    def serialize(self):
+        data = {}
+        for key in self:
+            data[key] = self[key]
+        return data
+
+#=================================================
 # FRAMEWORK CLASS
 #=================================================
 
 class Framework(cmd.Cmd):
+    
+    # mode flags
+    script = 0
+    load = 0
+
+    # framework variables
+    global_options = Options()
+    keys = {}
+    loaded_modules = {}
+    workspace = ''
+    home = ''
+    record = None
+    spool = None
 
     def __init__(self, params):
         cmd.Cmd.__init__(self)
@@ -26,13 +103,13 @@ class Framework(cmd.Cmd):
         self.modulename = params[1]
         self.ruler = '-'
         self.spacer = '  '
-        self.nohelp = '%s[!] No help on %%s%s' % (R, N)
+        self.nohelp = '%s[!] No help on %%s%s' % (Colors.R, Colors.N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
-        self.global_options = __builtin__.global_options
-        self.keys = __builtin__.keys
-        self.workspace = __builtin__.workspace
-        self.home = __builtin__.home
+        #self.global_options = __builtin__.global_options
+        #self.keys = __builtin__.keys
+        #self.workspace = __builtin__.workspace
+        #self.home = __builtin__.home
         self.rpc_cache = []
 
     #==================================================
@@ -48,18 +125,18 @@ class Framework(cmd.Cmd):
         return 0
 
     def precmd(self, line):
-        if __builtin__.load:
+        if Framework.load:
             print('\r', end='')
-        if __builtin__.script:
+        if Framework.script:
             print('%s' % (line))
-        if __builtin__.record:
-            recorder = open(__builtin__.record, 'ab')
+        if Framework.record:
+            recorder = open(Framework.record, 'ab')
             recorder.write(('%s\n' % (line)).encode('utf-8'))
             recorder.flush()
             recorder.close()
-        if __builtin__.spool:
-            __builtin__.spool.write('%s%s\n' % (self.prompt, line))
-            __builtin__.spool.flush()
+        if Framework.spool:
+            Framework.spool.write('%s%s\n' % (self.prompt, line))
+            Framework.spool.flush()
         return line
 
     def onecmd(self, line):
@@ -69,8 +146,8 @@ class Framework(cmd.Cmd):
         if line == 'EOF':
             # reset stdin for raw_input
             sys.stdin = sys.__stdin__
-            __builtin__.script = 0
-            __builtin__.load = 0
+            Framework.script = 0
+            Framework.load = 0
             return 0
         if cmd is None:
             return self.default(line)
@@ -129,15 +206,15 @@ class Framework(cmd.Cmd):
         if not re.search('[.,;!?]$', line):
             line += '.'
         line = line[:1].upper() + line[1:]
-        print('%s[!] %s%s' % (R, self.to_unicode(line), N))
+        print('%s[!] %s%s' % (Colors.R, self.to_unicode(line), Colors.N))
 
     def output(self, line):
         '''Formats and presents normal output.'''
-        print('%s[*]%s %s' % (B, N, self.to_unicode(line)))
+        print('%s[*]%s %s' % (Colors.B, Colors.N, self.to_unicode(line)))
 
     def alert(self, line):
         '''Formats and presents important output.'''
-        print('%s[*]%s %s' % (G, N, self.to_unicode(line)))
+        print('%s[*]%s %s' % (Colors.G, Colors.N, self.to_unicode(line)))
 
     def verbose(self, line):
         '''Formats and presents output if in verbose mode.'''
@@ -379,12 +456,12 @@ class Framework(cmd.Cmd):
         if type(param) is list:
             modules = param
         elif param:
-            modules = [x for x in __builtin__.loaded_modules if x.startswith(param)]
+            modules = [x for x in Framework.loaded_modules if x.startswith(param)]
             if not modules:
                 self.error('Invalid module category.')
                 return
         else:
-            modules = __builtin__.loaded_modules
+            modules = Framework.loaded_modules
         # display the modules
         key_len = len(max(modules, key=len)) + len(self.spacer)
         last_category = ''
@@ -564,7 +641,7 @@ class Framework(cmd.Cmd):
             return
         text = params.split()[0]
         self.output('Searching for \'%s\'...' % (text))
-        modules = [x for x in __builtin__.loaded_modules if text in x]
+        modules = [x for x in Framework.loaded_modules if text in x]
         if not modules:
             self.error('No modules found containing \'%s\'.' % (text))
         else:
@@ -577,23 +654,23 @@ class Framework(cmd.Cmd):
             return
         arg = params.lower()
         if arg.split()[0] == 'start':
-            if not __builtin__.record:
+            if not Framework.record:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
                     if not self.is_writeable(filename):
                         self.output('Cannot record commands to \'%s\'.' % (filename))
                     else:
-                        __builtin__.record = filename
-                        self.output('Recording commands to \'%s\'.' % (__builtin__.record))
+                        Framework.record = filename
+                        self.output('Recording commands to \'%s\'.' % (Framework.record))
                 else: self.help_record()
             else: self.output('Recording is already started.')
         elif arg == 'stop':
-            if __builtin__.record:
-                self.output('Recording stopped. Commands saved to \'%s\'.' % (__builtin__.record))
-                __builtin__.record = None
+            if Framework.record:
+                self.output('Recording stopped. Commands saved to \'%s\'.' % (Framework.record))
+                Framework.record = None
             else: self.output('Recording is already stopped.')
         elif arg == 'status':
-            status = 'started' if __builtin__.record else 'stopped'
+            status = 'started' if Framework.record else 'stopped'
             self.output('Command recording is %s.' % (status))
         else:
             self.help_record()
@@ -605,23 +682,23 @@ class Framework(cmd.Cmd):
             return
         arg = params.lower()
         if arg.split()[0] == 'start':
-            if not __builtin__.spool:
+            if not Framework.spool:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
                     if not self.is_writeable(filename):
                         self.output('Cannot spool output to \'%s\'.' % (filename))
                     else:
-                        __builtin__.spool = open(filename, 'ab')
-                        self.output('Spooling output to \'%s\'.' % (__builtin__.spool.name))
+                        Framework.spool = open(filename, 'ab')
+                        self.output('Spooling output to \'%s\'.' % (Framework.spool.name))
                 else: self.help_spool()
             else: self.output('Spooling is already started.')
         elif arg == 'stop':
-            if __builtin__.spool:
-                self.output('Spooling stopped. Output saved to \'%s\'.' % (__builtin__.spool.name))
-                __builtin__.spool = None
+            if Framework.spool:
+                self.output('Spooling stopped. Output saved to \'%s\'.' % (Framework.spool.name))
+                Framework.spool = None
             else: self.output('Spooling is already stopped.')
         elif arg == 'status':
-            status = 'started' if __builtin__.spool else 'stopped'
+            status = 'started' if Framework.spool else 'stopped'
             self.output('Output spooling is %s.' % (status))
         else:
             self.help_spool()
@@ -632,8 +709,8 @@ class Framework(cmd.Cmd):
         self.output('Command: %s' % (params))
         stdout = proc.stdout.read()
         stderr = proc.stderr.read()
-        if stdout: print('%s%s%s' % (O, stdout, N), end='')
-        if stderr: print('%s%s%s' % (R, stderr, N), end='')
+        if stdout: print('%s%s%s' % (Colors.O, stdout, Colors.N), end='')
+        if stderr: print('%s%s%s' % (Colors.R, stderr, Colors.N), end='')
 
     def do_resource(self, params):
         '''Executes commands from a resource file'''
@@ -642,7 +719,7 @@ class Framework(cmd.Cmd):
             return
         if os.path.exists(params):
             sys.stdin = open(params)
-            __builtin__.script = 1
+            Framework.script = 1
         else:
             self.error('Script file \'%s\' not found.' % (params))
 
@@ -652,7 +729,7 @@ class Framework(cmd.Cmd):
             self.help_load()
             return
         # finds any modules that contain params
-        modules = [params] if params in __builtin__.loaded_modules else [x for x in __builtin__.loaded_modules if params in x]
+        modules = [params] if params in Framework.loaded_modules else [x for x in Framework.loaded_modules if params in x]
         # notify the user if none or multiple modules are found
         if len(modules) != 1:
             if not modules:
@@ -663,11 +740,11 @@ class Framework(cmd.Cmd):
             return
         import StringIO
         # compensation for stdin being used for scripting and loading
-        if __builtin__.script:
+        if Framework.script:
             end_string = sys.stdin.read()
         else:
             end_string = 'EOF'
-            __builtin__.load = 1
+            Framework.load = 1
         sys.stdin = StringIO.StringIO('load %s\n%s' % (modules[0], end_string))
         return True
     do_use = do_load
@@ -736,7 +813,7 @@ class Framework(cmd.Cmd):
         return [x for x in options if x.startswith(text)]
 
     def complete_load(self, text, *ignored):
-        return [x for x in __builtin__.loaded_modules if x.startswith(text)]
+        return [x for x in Framework.loaded_modules if x.startswith(text)]
     complete_use = complete_load
 
     def complete_record(self, text, *ignored):
@@ -750,65 +827,9 @@ class Framework(cmd.Cmd):
     def complete_show(self, text, line, *ignored):
         args = line.split()
         if len(args) > 1 and args[1].lower() == 'modules':
-            if len(args) > 2: return [x for x in __builtin__.loaded_modules if x.startswith(args[2])]
-            else: return [x for x in __builtin__.loaded_modules]
+            if len(args) > 2: return [x for x in Framework.loaded_modules if x.startswith(args[2])]
+            else: return [x for x in Framework.loaded_modules]
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         options = set(self.get_show_names() + tables)
         return [x for x in options if x.startswith(text)]
 
-#=================================================
-# SUPPORT CLASSES
-#=================================================
-
-class FrameworkException(Exception):
-    pass
-
-class Options(dict):
-
-    def __init__(self, *args, **kwargs):
-        self.required = {}
-        self.description = {}
-        
-        super(Options, self).__init__(*args, **kwargs)
-           
-    def __setitem__(self, name, value):
-        super(Options, self).__setitem__(name, self._autoconvert(value))
-           
-    def __delitem__(self, name):
-        super(Options, self).__delitem__(name)
-        if name in self.required:
-            del self.required[name]
-        if name in self.description:
-            del self.description[name]
-        
-    def _boolify(self, value):
-        # designed to throw an exception if value is not a string representation of a boolean
-        return {'true':True, 'false':False}[value.lower()]
-
-    def _autoconvert(self, value):
-        if value in (None, True, False):
-            return value
-        elif (isinstance(value, basestring)) and value.lower() in ('none', "''", '""'):
-            return None
-        orig = value
-        for fn in (self._boolify, int, float):
-            try:
-                value = fn(value)
-                break
-            except ValueError: pass
-            except KeyError: pass
-            except AttributeError: pass
-        if type(value) is int and '.' in str(orig):
-            return float(orig)
-        return value
-        
-    def init_option(self, name, value=None, required=False, description=''):
-        self[name] = value
-        self.required[name] = required
-        self.description[name] = description
-
-    def serialize(self):
-        data = {}
-        for key in self:
-            data[key] = self[key]
-        return data
