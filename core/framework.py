@@ -276,7 +276,7 @@ class Framework(cmd.Cmd):
             finally:
                 config_file.close()
 
-    def save_config(self):
+    def save_config(self, name):
         config_path = '%s/config.dat' % (self.workspace)
         # create a config file if one doesn't exist
         open(config_path, 'ab').close()
@@ -288,11 +288,17 @@ class Framework(cmd.Cmd):
             # file is empty or corrupt, nothing to load
             config_data = {}
         config_file.close()
-        # overwrite the old config data with option values
-        config_data[self.modulename] = dict(self.options)
-        for key in config_data[self.modulename].keys():
-            if config_data[self.modulename][key] is None:
-                del config_data[self.modulename][key]
+        # create a container for the current module
+        if self.modulename not in config_data:
+            config_data[self.modulename] = {}
+        # set the new option value in the config
+        config_data[self.modulename][name] = self.options[name]
+        # remove the option if it has been unset
+        if config_data[self.modulename][name] is None:
+            del config_data[self.modulename][name]
+        # remove the module container if it is empty
+        if not config_data[self.modulename]:
+            del config_data[self.modulename]
         # write the new config data to the config file
         config_file = open(config_path, 'wb')
         json.dump(config_data, config_file, indent=4)
@@ -479,7 +485,7 @@ class Framework(cmd.Cmd):
             value = ' '.join(options[1:])
             self.options[name] = value
             print('%s => %s' % (name.upper(), value))
-            self.save_config()
+            self.save_config(name)
         else: self.error('Invalid option.')
 
     def do_unset(self, params):
