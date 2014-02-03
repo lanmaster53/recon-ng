@@ -438,27 +438,28 @@ class Framework(cmd.Cmd):
             columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
             self.table(columns, title=table)
 
-    def show_options(self):
+    def show_options(self, options=None):
         '''Lists options'''
-        spacer = self.spacer
-        if self.options:
-            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
-            key_len = len(max(self.options, key=len))
+        if options is None:
+            options = self.options
+        if options:
+            pattern = '%s%%s  %%s  %%s  %%s' % (self.spacer)
+            key_len = len(max(options, key=len))
             if key_len < 4: key_len = 4
-            val_len = len(max([self.to_unicode_str(self.options[x]) for x in self.options], key=len))
+            val_len = len(max([self.to_unicode_str(options[x]) for x in options], key=len))
             if val_len < 13: val_len = 13
             print('')
             print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description'))
             print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11))
-            for key in sorted(self.options):
-                value = self.options[key] if self.options[key] != None else ''
-                reqd = self.options.required[key]
-                desc = self.options.description[key]
+            for key in sorted(options):
+                value = options[key] if options[key] != None else ''
+                reqd = options.required[key]
+                desc = options.description[key]
                 print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc))
             print('')
         else:
             print('')
-            print('%sNo options available for this module.' % (spacer))
+            print('%sNo options available for this module.' % (self.spacer))
             print('')
 
     #==================================================
