@@ -6,7 +6,7 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params)
         self.register_option('source', self.global_options['domain'], 'yes', 'source of domains for module input (see \'show info\' for options)')
-        self.register_option('store_table', None, 'no', 'name of database table to store the results or data will not be stored')
+        self.register_option('store_table', False, 'no', 'store the results in a database table')
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -50,5 +50,4 @@ class Module(module.Module):
             tdata.append([jsonobj['domain'], str(jsonobj['num_entries']), jsonobj['first_seen'], jsonobj['last_seen']])
         if tdata:
             header = ['Domain', 'Pwned_Accounts', 'First_Seen', 'Last_Seen']
-            self.table(tdata, header=header)
-            if table: self.add_table(table, tdata, header=header)
+            self.table(tdata, header=header, store=self.options['store_table'])

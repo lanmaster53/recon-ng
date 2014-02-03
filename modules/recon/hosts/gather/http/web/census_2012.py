@@ -7,7 +7,7 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'show info\' for options)')
-        self.register_option('store_table', None, 'no', 'name for a table to create in the database and store the complete result set')
+        self.register_option('store_table', False, 'no', 'store the results in a database table')
         self.register_option('store_column', None, 'no', 'name for a column to create in the hosts table and store open port information')
         self.info = {
                      'Name': 'Internet Census 2012 Lookup',
@@ -44,8 +44,6 @@ class Module(module.Module):
                 ranges.append((address, address))
 
         # begin module processing
-        table = self.options['store_table']
-        column = self.options['store_column']
         tdata = []
         for ips in ranges:
             first = ips[0]
@@ -68,14 +66,8 @@ class Module(module.Module):
             self.output('No scan data available.')
             return
         header = ['address', 'port', 'hostname']
-        self.table(tdata, header=header)
-
-        # store data
-        if table:
-            try: self.add_table(table, tdata, header=header)
-            except Exception as e:
-                self.error(e.message)
-        if column:
+        self.table(tdata, header=header, title='Census 2012', store=self.options['store_table'])
+        if self.options['store_column']:
             try:
                 try:
                     self.add_column('hosts', column)
