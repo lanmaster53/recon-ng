@@ -285,7 +285,7 @@ class Framework(cmd.Cmd):
             finally:
                 config_file.close()
 
-    def save_config(self):
+    def save_config(self, name):
         config_path = '%s/config.dat' % (self.workspace)
         # create a config file if one doesn't exist
         open(config_path, 'ab').close()
@@ -297,11 +297,17 @@ class Framework(cmd.Cmd):
             # file is empty or corrupt, nothing to load
             config_data = {}
         config_file.close()
-        # overwrite the old config data with option values
-        config_data[self.modulename] = dict(self.options)
-        for key in config_data[self.modulename].keys():
-            if config_data[self.modulename][key] is None:
-                del config_data[self.modulename][key]
+        # create a container for the current module
+        if self.modulename not in config_data:
+            config_data[self.modulename] = {}
+        # set the new option value in the config
+        config_data[self.modulename][name] = self.options[name]
+        # remove the option if it has been unset
+        if config_data[self.modulename][name] is None:
+            del config_data[self.modulename][name]
+        # remove the module container if it is empty
+        if not config_data[self.modulename]:
+            del config_data[self.modulename]
         # write the new config data to the config file
         config_file = open(config_path, 'wb')
         json.dump(config_data, config_file, indent=4)
@@ -441,27 +447,28 @@ class Framework(cmd.Cmd):
             columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
             self.table(columns, title=table)
 
-    def show_options(self):
+    def show_options(self, options=None):
         '''Lists options'''
-        spacer = self.spacer
-        if self.options:
-            pattern = '%s%%s  %%s  %%s  %%s' % (spacer)
-            key_len = len(max(self.options, key=len))
+        if options is None:
+            options = self.options
+        if options:
+            pattern = '%s%%s  %%s  %%s  %%s' % (self.spacer)
+            key_len = len(max(options, key=len))
             if key_len < 4: key_len = 4
-            val_len = len(max([self.to_unicode_str(self.options[x]) for x in self.options], key=len))
+            val_len = len(max([self.to_unicode_str(options[x]) for x in options], key=len))
             if val_len < 13: val_len = 13
             print('')
             print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description'))
             print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11))
-            for key in sorted(self.options):
-                value = self.options[key] if self.options[key] != None else ''
-                reqd = self.options.required[key]
-                desc = self.options.description[key]
+            for key in sorted(options):
+                value = options[key] if options[key] != None else ''
+                reqd = options.required[key]
+                desc = options.description[key]
                 print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc))
             print('')
         else:
             print('')
-            print('%sNo options available for this module.' % (spacer))
+            print('%sNo options available for this module.' % (self.spacer))
             print('')
 
     #==================================================
@@ -488,7 +495,7 @@ class Framework(cmd.Cmd):
             value = ' '.join(options[1:])
             self.options[name] = value
             print('%s => %s' % (name.upper(), value))
-            self.save_config()
+            self.save_config(name)
         else: self.error('Invalid option.')
 
     def do_unset(self, params):

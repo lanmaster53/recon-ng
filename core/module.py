@@ -447,6 +447,9 @@ class Module(framework.Framework):
                 print('%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer)))
             print('')
 
+    def show_globals(self):
+        self.show_options(self.global_options)
+
     #==================================================
     # COMMAND METHODS
     #==================================================
