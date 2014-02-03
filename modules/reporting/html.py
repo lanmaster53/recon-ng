@@ -28,8 +28,8 @@ class Module(module.Module):
         row_content = ''
         for row in rows:
             values = [self.to_unicode_str(x) if x != None else u'' for x in row]
-            if table == 'creds' and self.options['sanitize'] and values[1] != '<no password found>':
-                values[1] = '%s%s%s' % (values[1][:1], '*'*(len(values[1])-2), values[1][-1:])
+            if all((table == 'creds', self.options['sanitize'], values[1])):
+                values[1] = '<omitted>'
             row_content += '<tr><td>%s</td></tr>\n' % ('</td><td>'.join([self.html_escape(x) for x in values]))
         table_content += '<div class="container">\n%s\n%s\n<table id="%s">\n%s\n%s</table>\n</div><br />\n' % (table_show, table_hide, table, row_headers, row_content)
         return table_content
