@@ -15,31 +15,12 @@ import traceback
 import __builtin__
 import framework
 
-# colors for output
-__builtin__.N  = '\033[m' # native
-__builtin__.R  = '\033[31m' # red
-__builtin__.G  = '\033[32m' # green
-__builtin__.O  = '\033[33m' # orange
-__builtin__.B  = '\033[34m' # blue
-
-# mode flags
-__builtin__.script = 0
-__builtin__.load = 0
-
-# framework variables
-__builtin__.global_options = framework.Options()
-__builtin__.keys = {}
-__builtin__.loaded_modules = {}
-__builtin__.workspace = ''
-__builtin__.home = ''
-__builtin__.record = None
-__builtin__.spool = None
 
 # spooling system
 def spool_print(*args, **kwargs):
-    if __builtin__.spool:
-        __builtin__.spool.write('%s\n' % (args[0]))
-        __builtin__.spool.flush()
+    if framework.Framework.spool:
+        framework.Framework.spool.write('%s\n' % (args[0]))
+        framework.Framework.spool.flush()
     if 'console' in kwargs and kwargs['console'] is False:
         return
     # new print function must still use the old print function via the backup
@@ -91,7 +72,7 @@ class Recon(framework.Framework):
             return True
 
     def init_home(self):
-        self.home = __builtin__.home = '%s/.recon-ng' % os.path.expanduser('~')
+        self.home = framework.Framework.home = '%s/.recon-ng' % os.path.expanduser('~')
         if not os.path.exists(self.home):
             os.makedirs(self.home)
 
@@ -110,7 +91,7 @@ class Recon(framework.Framework):
 
     def load_modules(self, reload=False):
         self.loaded_category = {}
-        self.loaded_modules = __builtin__.loaded_modules
+        self.loaded_modules = framework.Framework.loaded_modules
         if reload: self.output('Reloading...')
         for path in ('./modules/', '%s/modules/' % self.home):
             for dirpath, dirnames, filenames in os.walk(path):
@@ -172,7 +153,7 @@ class Recon(framework.Framework):
             if e.errno != errno.EEXIST:
                 self.error(e.__str__())
                 return False
-        self.workspace = __builtin__.workspace = workspace
+        self.workspace = framework.Framework.workspace = workspace
         self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
@@ -191,13 +172,13 @@ class Recon(framework.Framework):
         banner = open('./core/banner').read()
         banner_len = len(max(banner.split('\n'), key=len))
         print(banner)
-        print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (O, self.name, __version__, __author__, N), banner_len+8)) # +8 compensates for the color bytes
+        print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (framework.Colors.O, self.name, __version__, __author__, framework.Colors.N), banner_len+8)) # +8 compensates for the color bytes
         print('')
         counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
         count_len = len(max([str(x[0]) for x in counts], key=len))
         for count in sorted(counts, reverse=True):
             cnt = '[%d]' % (count[0])
-            print('%s%s %s modules%s' % (B, cnt.ljust(count_len+2), count[1].title(), N))
+            print('%s%s %s modules%s' % (framework.Colors.B, cnt.ljust(count_len+2), count[1].title(), framework.Colors.N))
             # create dynamic easter egg command based on counts
             setattr(self, 'do_%d' % count[0], self.menu_egg)
         print('')
@@ -244,9 +225,9 @@ class Recon(framework.Framework):
         try: y = sys.modules[loadedname].Module((prompt, modulename))
         except Exception:
             if self.options['debug']:
-                print('%s%s' % (R, '-'*60))
+                print('%s%s' % (framework.Colors.R, '-'*60))
                 traceback.print_exc()
-                print('%s%s' % ('-'*60, N))
+                print('%s%s' % ('-'*60, framework.Colors.N))
             self.error('ModuleError: %s' % (traceback.format_exc().splitlines()[-1]))
             return
         # return the loaded module if in command line mode
