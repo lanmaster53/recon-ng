@@ -15,7 +15,6 @@ import traceback
 import __builtin__
 import framework
 
-
 # spooling system
 def spool_print(*args, **kwargs):
     if framework.Framework.spool:
