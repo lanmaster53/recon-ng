@@ -7,12 +7,12 @@ class Module(module.Module):
         module.Module.__init__(self, params)
         self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'show info\' for options)')
         self.info = {
-                     'Name': 'Noisette MD5 Hash Lookup',
+                     'Name': 'Hashes.org Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Uses the Noisette.ch hash database to perform a reverse hash lookup and updates the \'creds\' table of the database with the positive results.',
+                     'Description': 'Uses the Hashes.org API to perform a reverse hash lookup and updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
-                                  'Hash types supported: MD5'
+                                  'Hash types supported: MD5, MD4, NTLM, LM, DOUBLEMD5, TRIPLEMD5, MD5SHA1, SHA1, MYSQL5, SHA1MD5, DOUBLESHA1, RIPEMD160'
                                   ]
                      }
 
@@ -20,16 +20,15 @@ class Module(module.Module):
         hashes = self.get_source(self.options['source'], 'SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
 
         # lookup each hash
-        url = 'http://md5.noisette.ch/md5.php'
+        url = 'https://hashes.org/api.php'
         for hashstr in hashes:
-            payload = {'hash': hashstr}
+            payload = {'do': 'check', 'hash1': hashstr}
             resp = self.request(url, payload=payload)
             dom = resp.xml
-            nodes = dom.getElementsByTagName('string')
-            if len(nodes) > 0:
-                plaintext = nodes[0].firstChild.data
+            if dom.getElementsByTagName('found')[0].firstChild.data == 'true':
+                plaintext = dom.getElementsByTagName('plain')[0].firstChild.data
                 if hashstr != plaintext:
-                    hashtype = "MD5"
+                    hashtype = dom.getElementsByTagName('type')[0].firstChild.data
                     self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
                     self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
                     continue
