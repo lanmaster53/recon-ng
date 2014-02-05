@@ -465,9 +465,9 @@ class Module(framework.Framework):
             self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
         except Exception as e:
             if self.global_options['debug']:
-                print('%s%s' % (R, '-'*60))
+                print('%s%s' % (framework.Color.R, '-'*60))
                 traceback.print_exc()
-                print('%s%s' % ('-'*60, N))
+                print('%s%s' % ('-'*60, framework.Color.N))
             self.error(e.__str__())
         finally:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})

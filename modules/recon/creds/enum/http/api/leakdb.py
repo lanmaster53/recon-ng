@@ -24,14 +24,12 @@ class Module(module.Module):
         for hashstr in hashes:
             payload = {'j': hashstr}
             resp = self.request(url, payload=payload)
-            if resp.json: jsonobj = resp.json
-            else:
-                self.error('Invalid JSON response for \'%s\'.\n%s' % (account, resp.text))
-                continue
+            jsonobj = resp.json
             if jsonobj['found'] == "true":
                 plaintext = jsonobj['hashes'][0]["plaintext"]
-                hashtype = jsonobj['type'].upper()
-                self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
-                self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
-            else:
-                self.verbose('Value not found for hash: %s' % (hashstr))
+                if hashstr != plaintext:
+                    hashtype = jsonobj['type'].upper()
+                    self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
+                    self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
+                    continue
+            self.verbose('Value not found for hash: %s' % (hashstr))

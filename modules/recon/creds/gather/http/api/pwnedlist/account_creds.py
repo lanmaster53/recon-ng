@@ -30,7 +30,7 @@ class Module(module.Module):
 
         # setup API call
         method = 'accounts.query'
-        url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+        url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
 
         # build the payload
         payload = {'account_identifier': ','.join(accounts), 'daysAgo': 0}

@@ -30,7 +30,7 @@ class Module(module.Module):
         tdata = []
         # setup API call
         method = 'domains.info'
-        url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+        url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
         for domain in domains:
             payload = {'domain_identifier': domain}
             payload = self.build_pwnedlist_payload(payload, method, key, secret)
