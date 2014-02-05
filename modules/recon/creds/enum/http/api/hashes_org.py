@@ -8,7 +8,7 @@ class Module(module.Module):
         self.register_option('source', 'db', 'yes', 'source of hashes for module input (see \'show info\' for options)')
         self.info = {
                      'Name': 'Hashes.org Hash Lookup',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
+                     'Author': 'Tim Tomes (@LaNMaSteR53) and Mike Lisi (@MikeCodesThings)',
                      'Description': 'Uses the Hashes.org API to perform a reverse hash lookup and updates the \'creds\' table of the database with the positive results.',
                      'Comments': [
                                   'Source options: [ db | <hash> | ./path/to/file | query <sql> ]',
