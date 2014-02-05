@@ -18,7 +18,7 @@ class Module(module.Module):
 
         # setup API call
         method = 'usage.info'
-        url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+        url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
         payload = {}
         payload = self.build_pwnedlist_payload(payload, method, key, secret)
         # make request

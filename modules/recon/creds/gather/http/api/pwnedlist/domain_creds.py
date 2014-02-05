@@ -28,7 +28,7 @@ class Module(module.Module):
 
         # setup API call
         method = 'domains.query'
-        url = 'https://pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+        url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
         payload = {'domain_identifier': domain, 'daysAgo': 0}
 
         cnt = 0
