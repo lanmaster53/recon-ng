@@ -24,10 +24,10 @@ class Module(module.Module):
         for hashstr in hashes:
             payload = {'hash': hashstr}
             resp = self.request(url, payload=payload)
-            dom = resp.xml
-            nodes = dom.getElementsByTagName('string')
-            if len(nodes) > 0:
-                plaintext = nodes[0].firstChild.data
+            tree = resp.xml
+            elements = tree.findall('string')
+            if len(elements) > 0:
+                plaintext = elements[0].text
                 if hashstr != plaintext:
                     hashtype = "MD5"
                     self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))

@@ -84,8 +84,8 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
 
     http_error_301 = http_error_303 = http_error_307 = http_error_302
 
-import xml.dom.minidom
-import xml.parsers.expat
+import xml.etree.ElementTree
+import StringIO
 
 class ResponseObject(object):
 
@@ -118,8 +118,8 @@ class ResponseObject(object):
     @property
     def xml(self):
         try:
-            return xml.dom.minidom.parseString(self.text)
-        except xml.parsers.expat.ExpatError:
+            return xml.etree.ElementTree.parse(StringIO.StringIO(self.text))
+        except xml.etree.ElementTree.ParseError:
             return None
 
 class RequestException(Exception):

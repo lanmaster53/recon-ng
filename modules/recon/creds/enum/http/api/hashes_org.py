@@ -24,11 +24,11 @@ class Module(module.Module):
         for hashstr in hashes:
             payload = {'do': 'check', 'hash1': hashstr}
             resp = self.request(url, payload=payload)
-            dom = resp.xml
-            if dom.getElementsByTagName('found')[0].firstChild.data == 'true':
-                plaintext = dom.getElementsByTagName('plain')[0].firstChild.data
+            tree = resp.xml
+            if tree.find('found').text == 'true':
+                plaintext = tree.find('plain').text
                 if hashstr != plaintext:
-                    hashtype = dom.getElementsByTagName('type')[0].firstChild.data
+                    hashtype = tree.find('type').text
                     self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
                     self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
                     continue
