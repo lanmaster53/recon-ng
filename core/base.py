@@ -83,7 +83,7 @@ class Recon(framework.Framework):
         self.register_option('longitude', None, 'no', 'target longitudinal position in (decimal)')
         self.register_option('radius', None, 'no', 'radius relative to latitude and longitude')
         self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
-        self.register_option('proxy', None, 'no', 'proxy server (<address>:<port>)')
+        self.register_option('proxy', None, 'no', 'proxy server (address:port)')
         self.register_option('timeout', 10, 'yes', 'socket timeout (seconds)')
         self.register_option('verbose', True,  'yes', 'enable verbose output')
         self.register_option('debug', False,  'yes', 'enable debugging output')
