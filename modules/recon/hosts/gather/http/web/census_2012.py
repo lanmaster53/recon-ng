@@ -67,7 +67,8 @@ class Module(module.Module):
             return
         header = ['address', 'port', 'hostname']
         self.table(tdata, header=header, title='Census 2012', store=self.options['store_table'])
-        if self.options['store_column']:
+        column = self.options['store_column']
+        if column:
             try:
                 try:
                     self.add_column('hosts', column)
