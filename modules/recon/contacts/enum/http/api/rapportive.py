@@ -30,8 +30,9 @@ class Module(module.Module):
         return session_token
 
     def module_run(self):
-        emails = self.get_source(self.options['source'], "SELECT DISTINCT email FROM contacts ORDER BY email")
+        emails = self.get_source(self.options['source'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
         session_token = self.get_rapportive_session_token()
+        # normally handled as a FrameworkException, but needed here due to how the session token is retrieved
         if session_token is None: return
         headers = {'X-Session-Token' : session_token}
         cnt = 0
