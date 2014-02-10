@@ -23,7 +23,9 @@ class Module(module.Module):
         q = dns.resolver.get_default_resolver()
         q.nameservers = [self.options['nameserver']]
         q.lifetime = 3
-        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts ORDER BY host' if overwrite else 'SELECT DISTINCT host FROM hosts WHERE ip_address IS NULL ORDER BY host')
+        extra = '' if overwrite else ' AND ip_address IS NULL'
+        query = 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL%s ORDER BY host' % (extra)
+        hosts = self.get_source(self.options['source'], query)
 
         for host in hosts:
             found = False
