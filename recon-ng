@@ -5,13 +5,14 @@ import sys
 # prep python path for base module
 sys.path.append('./core/')
 import base
+from framework import Colors
 
 def recon_ui(args):
     # set up command completion
     try:
         import readline
     except ImportError:
-        print('%s[!] Module \'readline\' not available. Tab complete disabled.%s' % (R, N))
+        print('%s[!] Module \'readline\' not available. Tab complete disabled.%s' % (Colors.R, Colors.N))
     else:
         import rlcompleter
         if 'libedit' in readline.__doc__:
