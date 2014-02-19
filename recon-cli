@@ -5,6 +5,7 @@ import sys
 # prep python path for base module
 sys.path.append('./core/')
 import base
+from framework import Colors
 
 def recon_cli(args):
     x = base.Recon(mode=base.Mode.CLI)
@@ -27,7 +28,7 @@ def recon_cli(args):
         return
     # exit if module not specified
     if not args.module:
-        print('%s[!] Module required.%s' % (R, N))
+        print('%s[!] Module required.%s' % (Colors.R, Colors.N))
         return
     # load the module
     y = x.do_load(args.module)
