@@ -15,7 +15,6 @@ class Module(module.Module):
                      'Name': 'Contact Adder',
                      'Author': 'Drumm',
                      'Description': 'Manually adds a contact.',
-                     'Comments':[]
                      }
 
     def module_run(self):

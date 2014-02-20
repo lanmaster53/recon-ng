@@ -11,7 +11,6 @@ class Module(module.Module):
                      'Name': 'Jigsaw - Point Usage Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the Jigsaw API for the point usage statistics of the given account.',
-                     'Comments': []
                      }
 
     def module_run(self):

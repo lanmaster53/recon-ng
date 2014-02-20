@@ -15,7 +15,6 @@ class Module(module.Module):
                      'Name': 'Bing Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Harvests hosts from Bing.com by using the \'site\' search operator and updates the \'hosts\' table of the database with the results.',
-                     'Comments': []
                      }
 
     def module_run(self):

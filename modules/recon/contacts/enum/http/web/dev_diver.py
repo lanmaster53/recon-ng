@@ -13,7 +13,6 @@ class Module(module.Module):
                      'Name': 'Dev Diver Repository Activity Examiner',
                      'Author': 'Micah Hoffman (@WebBreacher)',
                      'Description': 'This module takes a username and searches common, public code repositories for information about that username.',
-                     'Comments': []
                      }
 
     # Add a method for each repository

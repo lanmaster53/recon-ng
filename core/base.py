@@ -63,7 +63,7 @@ class Recon(framework.Framework):
                 self.alert('Please update or use the \'--no-check\' switch to continue using the old version.')
                 if remote.split('.')[0] != local.split('.')[0]:
                     self.alert('Read the migration notes for pre-requisites before upgrading.')
-                    self.output('Migration Notes: https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/#!migration-notes')
+                    self.output('Migration Notes: https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/Usage%20Guide#!migration-notes')
                 self.output('Remote version:  %s' % (remote))
                 self.output('Local version:   %s' % (local))
             return local == remote

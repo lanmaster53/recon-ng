@@ -18,7 +18,6 @@ class Module(module.Module):
                      'Name': 'PushPin Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Creates a media and map HTML report for all of the PushPin data stored in the database.',
-                     'Comments': []
                      }
 
     def remove_nl(self, x, repl=''):

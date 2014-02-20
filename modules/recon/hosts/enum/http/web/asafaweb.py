@@ -11,7 +11,6 @@ class Module(module.Module):
                      'Name': 'ASP Security Analyzer',
                      'Author': 'Brendan Coles (bcoles[at]gmail.com)',
                      'Description': 'Scans a given host for ASP security configuration vulnerabilities with ASafaWeb (Automated Security Analyser for ASP.NET Websites). https://asafaweb.com/',
-                     'Comments': []
                      }
    
     def module_run(self):

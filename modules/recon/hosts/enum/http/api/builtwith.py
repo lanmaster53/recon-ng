@@ -12,7 +12,6 @@ class Module(module.Module):
                      'Name': 'BuiltWith Server-side Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages the BuiltWith API to identify server-side technologies.',
-                     'Comments': []
                      }
 
     def module_run(self):

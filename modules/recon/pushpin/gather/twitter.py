@@ -14,7 +14,6 @@ class Module(module.Module):
                      'Name': 'Twitter Geolocation Search',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Searches Twitter for media in specified proximity to the given location.',
-                     'Comments': []
                      }
     def module_run(self):
         self.bearer_token = self.get_twitter_oauth_token()

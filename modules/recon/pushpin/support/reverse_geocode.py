@@ -8,11 +8,10 @@ class Module(module.Module):
         self.register_option('latitude', self.global_options['latitude'], 'yes', self.global_options.description['latitude'])
         self.register_option('longitude', self.global_options['longitude'], 'yes', self.global_options.description['longitude'])
         self.info = {
-            'Name': 'Reverse Geocoder',
-            'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-            'Description': 'Call the Google Maps API to obtain an address from coordinates.',
-            'Comments': []
-        }
+                     'Name': 'Reverse Geocoder',
+                     'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
+                     'Description': 'Call the Google Maps API to obtain an address from coordinates.',
+                     }
 
     def module_run(self):
         lat = self.options['latitude']

@@ -11,7 +11,6 @@ class Module(module.Module):
                      'Name': 'Google Analytics/AdSense Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
                      'Description': 'Provide this module with a URL (or domain) and it will visit that page and look for a Google Analytics "UA-#####" and Google AdSense "pub-####" ID in the page source. Then it will look up other sites that use that same code. This can show you sites that may be administered or coded by a single group.',
-                     'Comments': []
                      }
                      
     def lookup_ewhois(self, val, key):

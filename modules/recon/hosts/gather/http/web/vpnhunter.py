@@ -6,11 +6,10 @@ class Module(module.Module):
         module.Module.__init__(self, params)
         self.register_option('domain', self.global_options['domain'], 'yes', 'domain to check for remote access')
         self.info = {
-            'Name': 'VPNHunter Lookup',
-            'Author': 'Quentin Kaiser (contact[at]quentinkaiser.be)',
-            'Description': 'Checks vpnhunter.com for SSL VPNs, remote accesses, email portals and generic login sites.',
-            'Comments': []
-        }
+                     'Name': 'VPNHunter Lookup',
+                     'Author': 'Quentin Kaiser (contact[at]quentinkaiser.be)',
+                     'Description': 'Checks vpnhunter.com for SSL VPNs, remote accesses, email portals and generic login sites.',
+                     }
 
     def module_run(self):
 

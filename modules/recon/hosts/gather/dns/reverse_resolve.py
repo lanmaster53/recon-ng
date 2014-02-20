@@ -16,7 +16,6 @@ class Module(module.Module):
                      'Name': 'Reverse Resolver',
                      'Author': 'John Babio (@3vi1john)',
                      'Description': 'Does a reverse lookup of IP address to hostname for the given netblock.',
-                     'Comments': []
                      }
 
     def module_run(self):

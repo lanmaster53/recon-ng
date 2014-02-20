@@ -18,7 +18,6 @@ class Module(module.Module):
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Brute forces host names using DNS and updates the \'hosts\' table of the database with the results.',
-                     'Comments': []
                      }
 
     def module_run(self):

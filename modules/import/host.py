@@ -15,7 +15,6 @@ class Module(module.Module):
                      'Name': 'Host Adder',
                      'Author': 'Drumm, Zach Grace (@ztgrace)',
                      'Description': 'Manually adds a host.',
-                     'Comments':[]
                      }
 
     def module_run(self):

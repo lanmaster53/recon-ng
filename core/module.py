@@ -432,19 +432,21 @@ class Module(framework.Framework):
     def show_info(self):
         self.info['Path'] = 'modules/%s.py' % (self.modulename)
         print('')
-        # meta
-        for item in ['Name', 'Path', 'Author']:
-            print('%s: %s' % (item.rjust(10), self.info[item]))
+        # meta info
+        for item in ['Name', 'Path', 'Author', 'Version']:
+            if item in self.info:
+                print('%s: %s' % (item.rjust(10), self.info[item]))
         print('')
+        # description
+        if 'Description' in self.info:
+            print('Description:')
+            print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
+            print('')
         # options
         print('Options:', end='')
         self.show_options()
-        # description
-        print('Description:')
-        print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
-        print('')
         # comments
-        if self.info['Comments']:
+        if 'Comments' in self.info and self.info['Comments']:
             print('Comments:')
             for comment in self.info['Comments']:
                 print('%s%s' % (self.spacer, textwrap.fill('* %s' % (comment), 100, subsequent_indent=self.spacer)))

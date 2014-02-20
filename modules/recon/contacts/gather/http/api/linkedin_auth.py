@@ -11,7 +11,6 @@ class Module(module.Module):
                      'Name': 'LinkedIn Authenticated Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Harvests contacts from the LinkedIn.com API using an authenticated connections network and updates the \'contacts\' table of the database with the results.',
-                     'Comments': []
                      }
 
     def get_linkedin_access_token(self):

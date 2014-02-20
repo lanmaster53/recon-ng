@@ -8,11 +8,10 @@ class Module(module.Module):
         self.register_option('address', None, 'yes', 'address to geocode')
         self.register_option('store', True , 'yes', 'store the obtained coordinates to latitude, longitude')
         self.info = {
-            'Name': 'Address Geocoder',
-            'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-            'Description': 'Call the Google Maps API to obtain coordinates from an address.',
-            'Comments': []
-        }
+                     'Name': 'Address Geocoder',
+                     'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
+                     'Description': 'Call the Google Maps API to obtain coordinates from an address.',
+                     }
 
     def module_run(self):
         address = self.options['address']

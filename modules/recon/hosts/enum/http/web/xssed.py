@@ -13,7 +13,6 @@ class Module(module.Module):
                      'Name': 'XSSed Host Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
                      'Description': 'Checks XSSed.com for XSS records for the given domain and displays the first 20 results.',
-                     'Comments': []
                      }
    
     def module_run(self):
