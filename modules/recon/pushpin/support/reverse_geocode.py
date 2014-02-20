@@ -11,7 +11,6 @@ class Module(module.Module):
             'Name': 'Reverse Geocoder',
             'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
             'Description': 'Call the Google Maps API to obtain an address from coordinates.',
-            'Comments': []
         }
 
     def module_run(self):

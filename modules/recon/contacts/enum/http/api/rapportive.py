@@ -12,7 +12,6 @@ class Module(module.Module):
             'Name': 'Rapportive Contact Enumerator',
             'Author': 'Quentin Kaiser (@qkaiser, contact[at]quentinkaiser.be) and Tim Tomes (@LaNMaSteR53)',
             'Description': 'Harvests contact information from the Rapportive.com API and updates the \'contacts\' table of the database with the results.',
-            'Comments': []
         }
 
     def get_rapportive_session_token(self):

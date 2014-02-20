@@ -12,7 +12,6 @@ class Module(module.Module):
                      'Name': 'CSV File Creator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Creates a CSV file containing the specified harvested data types.',
-                     'Comments': []
                      }
 
     def module_run(self):

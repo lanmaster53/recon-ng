@@ -14,7 +14,6 @@ class Module(module.Module):
                      'Name': 'Picasa Geolocation Search',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Searches Picasa for media in specified proximity to the given location.',
-                     'Comments': []
                      }
     def module_run(self):
         lat = self.options['latitude']

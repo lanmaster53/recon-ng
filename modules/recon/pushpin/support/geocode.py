@@ -11,7 +11,6 @@ class Module(module.Module):
             'Name': 'Address Geocoder',
             'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
             'Description': 'Call the Google Maps API to obtain coordinates from an address.',
-            'Comments': []
         }
 
     def module_run(self):

@@ -14,7 +14,6 @@ class Module(module.Module):
                      'Name': 'HTML Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Creates a HTML report.',
-                     'Comments': []
                      }
 
     def build_table(self, table):

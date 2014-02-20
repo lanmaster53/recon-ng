@@ -9,7 +9,6 @@ class Module(module.Module):
             'Name': 'VPNHunter Lookup',
             'Author': 'Quentin Kaiser (contact[at]quentinkaiser.be)',
             'Description': 'Checks vpnhunter.com for SSL VPNs, remote accesses, email portals and generic login sites.',
-            'Comments': []
         }
 
     def module_run(self):

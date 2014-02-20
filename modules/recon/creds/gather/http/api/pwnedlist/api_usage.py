@@ -9,7 +9,6 @@ class Module(module.Module):
                      'Name': 'PwnedList - API Usage Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Queries the PwnedList API for account usage statistics.',
-                     'Comments': []
                      }
 
     def module_run(self):

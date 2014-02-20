@@ -13,7 +13,6 @@ class Module(module.Module):
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Harvests contacts from the Jigsaw.com API and updates the \'contacts\' table of the database with the results.',
-                     'Comments': []
                      }
 
     def module_run(self):

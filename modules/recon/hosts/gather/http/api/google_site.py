@@ -11,7 +11,6 @@ class Module(module.Module):
                      'Name': 'Google CSE Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages the Google Custom Search Engine API to harvest hosts using the \'site\' search operator and updates the \'hosts\' table of the database with the results.',
-                     'Comments': []
                      }
 
     def module_run(self):

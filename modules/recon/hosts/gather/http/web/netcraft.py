@@ -16,7 +16,6 @@ class Module(module.Module):
                      'Name': 'Netcraft Hostname Enumerator',
                      'Author': 'thrapt (thrapt@gmail.com)',
                      'Description': 'Harvests hosts from Netcraft.com and updates the \'hosts\' table of the database with the results.',
-                     'Comments': []
                      }
 
     def module_run(self):

@@ -15,7 +15,6 @@ class Module(module.Module):
                      'Name': 'List Creator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Creates a file containing a list of records from the database.',
-                     'Comments': []
                      }
 
     def module_run(self):

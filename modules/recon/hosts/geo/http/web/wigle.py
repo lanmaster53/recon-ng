@@ -17,7 +17,6 @@ class Module(module.Module):
                      'Name': 'WiGLE Access Point Finder',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Leverages WiGLE.net to return a list of Access Points in promixity to the given location.',
-                     'Comments': []
                      }
 
     # degrees to radians
