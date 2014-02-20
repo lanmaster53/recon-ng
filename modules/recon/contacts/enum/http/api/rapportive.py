@@ -9,10 +9,10 @@ class Module(module.Module):
         self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'show info\' for options)')
         self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
         self.info = {
-            'Name': 'Rapportive Contact Enumerator',
-            'Author': 'Quentin Kaiser (@qkaiser, contact[at]quentinkaiser.be) and Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Harvests contact information from the Rapportive.com API and updates the \'contacts\' table of the database with the results.',
-        }
+                     'Name': 'Rapportive Contact Enumerator',
+                     'Author': 'Quentin Kaiser (@qkaiser, contact[at]quentinkaiser.be) and Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Harvests contact information from the Rapportive.com API and updates the \'contacts\' table of the database with the results.',
+                     }
 
     def get_rapportive_session_token(self):
         token_name = 'rapportive_token'
