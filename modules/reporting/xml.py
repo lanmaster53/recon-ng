@@ -12,6 +12,7 @@ class Module(module.Module):
         self.info = {
                      'Name': 'XML Report Generator',
                      'Author': 'Eric Humphries (@e2fsck) and Tim Tomes (@LaNMaSteR53)',
+                     'Version': 'v0.0.2',
                      'Description': 'Creates a XML report.',
                      'Comments': []
                      }
