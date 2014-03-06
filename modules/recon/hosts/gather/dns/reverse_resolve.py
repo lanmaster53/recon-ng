@@ -30,16 +30,20 @@ class Module(module.Module):
         for address in addresses:
             try:
                 addr = dns.reversename.from_address(address)
-                host = str(resolver.query(addr,'PTR')[0])
-                host = host[:-1] # slice trailing dot
-                if not regex or re.search(regex, host):
-                    new += self.add_host(host, address)
-                cnt += 1
-                self.alert('%s => %s' % (address, host))
+                hosts = resolver.query(addr,'PTR')
             except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                 self.verbose('%s => No record found.' % (address))
             except dns.resolver.Timeout:
                 self.verbose('%s => Request timed out.' % (address))
+            except (dns.resolver.NoNameservers):
+                self.error('Invalid nameserver.')
+                return
+            for host in hosts:
+                host = str(host)[:-1] # slice the trailing dot
+                if not regex or re.search(regex, host):
+                    new += self.add_host(host, address)
+                cnt += 1
+                self.alert('%s => %s' % (address, host))
 
         self.output('%d total hosts found.' % (cnt))
         if new: self.alert('%d NEW hosts found!' % (new))
