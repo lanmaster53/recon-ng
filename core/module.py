@@ -321,8 +321,8 @@ class Module(framework.Framework):
 
     def search_shodan_api(self, query, limit=0):
         api_key = self.get_key('shodan_api')
-        url = 'http://www.shodanhq.com/api/search'
-        payload = {'q': query, 'key': api_key}
+        url = 'https://api.shodan.io/shodan/host/search'
+        payload = {'query': query, 'key': api_key}
         results = []
         cnt = 1
         page = 1
