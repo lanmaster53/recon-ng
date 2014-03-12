@@ -38,12 +38,13 @@ class Module(module.Module):
             except (dns.resolver.NoNameservers):
                 self.error('Invalid nameserver.')
                 return
-            for host in hosts:
-                host = str(host)[:-1] # slice the trailing dot
-                if not regex or re.search(regex, host):
-                    new += self.add_host(host, address)
-                cnt += 1
-                self.alert('%s => %s' % (address, host))
+            else:
+                for host in hosts:
+                    host = str(host)[:-1] # slice the trailing dot
+                    if not regex or re.search(regex, host):
+                        new += self.add_host(host, address)
+                    cnt += 1
+                    self.alert('%s => %s' % (address, host))
 
         self.output('%d total hosts found.' % (cnt))
         if new: self.alert('%d NEW hosts found!' % (new))
