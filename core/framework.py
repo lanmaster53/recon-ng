@@ -436,6 +436,8 @@ class Framework(cmd.Cmd):
         # set proxy
         if self.global_options['proxy']:
             br.set_proxies({'http': self.global_options['proxy'], 'https': self.global_options['proxy']})
+        # additional settings
+        br.set_handle_robots(False)
         # set timeout
         socket.setdefaulttimeout(self.global_options['timeout'])
         return br
@@ -748,6 +750,11 @@ class Framework(cmd.Cmd):
         sys.stdin = StringIO.StringIO('load %s\n%s' % (modules[0], end_string))
         return True
     do_use = do_load
+
+    def do_pdb(self, params):
+        '''Starts a Python Debugger session'''
+        import pdb
+        pdb.set_trace()
 
     #==================================================
     # HELP METHODS
