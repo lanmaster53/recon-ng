@@ -170,6 +170,7 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
+        self.query('PRAGMA user_version = 1')
 
     def migrate_db(self):
         db_version = self.query('PRAGMA user_version')[0][0]
