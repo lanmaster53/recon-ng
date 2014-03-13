@@ -6,6 +6,7 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params)
         self.register_option('fname', None, 'yes', 'first name')
+        self.register_option('mname', None, 'yes', 'middle name')
         self.register_option('lname', None, 'yes', 'last name')
         self.register_option('title', None, 'yes', 'job title')
         self.register_option('email', None, 'no', 'email address')
@@ -18,5 +19,5 @@ class Module(module.Module):
                      }
 
     def module_run(self):
-        if self.add_contact(self.options['fname'], self.options['lname'], self.options['title'], self.options['email'], self.options['region'], self.options['country']):
+        if self.add_contact(self.options['fname'], self.options['lname'], self.options['title'], self.options['mname'], self.options['email'], self.options['region'], self.options['country']):
             self.output('Contact successfully added.')

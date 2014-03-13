@@ -33,11 +33,11 @@ class Module(module.Module):
         new = 0
         for contact in results:
             name = contact[0].strip()
-            first, middle, last = self.parse_name(name)
+            fname, mname, lname = self.parse_name(name)
             email = contact[1]
             self.output('%s (%s)' % (name, email))
             cnt += 1
             if email.lower().endswith(domain.lower()):
-                new += self.add_contact(first, last, 'PGP key association', email)
+                new += self.add_contact(fname=fname, mname=mname, lname=lname, email=email, title='PGP key association')
         self.output('%d total contacts found.' % (cnt))
         if new: self.alert('%d NEW contacts found!' % (new))
