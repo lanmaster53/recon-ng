@@ -4,11 +4,9 @@ import hashlib
 import hmac
 import HTMLParser
 import os
-import random
 import re
 import socket
 import sqlite3
-import string
 import struct
 import sys
 import textwrap
@@ -119,9 +117,6 @@ class Module(framework.Framework):
             return False
         return True
 
-    def random_str(self, length):
-        return ''.join(random.choice(string.lowercase) for i in range(length))
-
     def parse_name(self, string):
         elements = [self.html_unescape(x) for x in string.strip().split()]
         # remove prefixes and suffixes
@@ -165,10 +160,11 @@ class Module(framework.Framework):
 
         return self.insert('hosts', data, ('host', 'ip_address'))
 
-    def add_contact(self, fname, lname, title, email=None, region=None, country=None):
+    def add_contact(self, fname, lname, title, mname=None, email=None, region=None, country=None):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
             fname = self.to_unicode(fname),
+            mname = self.to_unicode(mname),
             lname = self.to_unicode(lname),
             title = self.to_unicode(title),
             email = self.to_unicode(email),
@@ -176,7 +172,7 @@ class Module(framework.Framework):
             country = self.to_unicode(country),
         )
 
-        return self.insert('contacts', data, ('fname', 'lname', 'title', 'email'))
+        return self.insert('contacts', data, ('fname', 'mname', 'lname', 'title', 'email'))
 
     def add_cred(self, username, password=None, hashtype=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''
