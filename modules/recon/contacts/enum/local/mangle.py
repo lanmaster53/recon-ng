@@ -16,28 +16,32 @@ class Module(module.Module):
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact and updating the \'contacts\' table of the database with the results.',
                      'Comments': [
-                                  'Pattern options: <fi>,<fn>,<li>,<ln>',
+                                  'Pattern options: <fi>,<fn>,<mi>,<mn>,<li>,<ln>',
                                   'Example:         <fi>.<ln> => j.doe@domain.com',
                                   'Note: Omit the \'domain\' option to create usernames'
                                   ]
                      }
 
     def module_run(self):
-        contacts = self.query('SELECT rowid, fname, lname FROM contacts ORDER BY fname' if self.options['overwrite'] else 'SELECT rowid, fname, lname FROM contacts WHERE email IS NULL ORDER BY fname')
+        contacts = self.query('SELECT rowid, fname, mname, lname FROM contacts ORDER BY fname' if self.options['overwrite'] else 'SELECT rowid, fname, mname, lname FROM contacts WHERE email IS NULL ORDER BY fname')
         if len(contacts) == 0:
             self.error('No contacts to mangle.')
             return
         for contact in contacts:
             row = contact[0]
             fname = contact[1]
-            lname = contact[2]
+            mname = contact[2]
+            lname = contact[3]
             email = self.options['pattern']
             sub_pattern = '[\s]'
             substitute = self.options['substitute']
-            items = {'<fn>': '', '<fi>': '', '<ln>': '', '<li>': ''}
+            items = {'<fn>': '', '<fi>': '', '<mn>': '', '<mi>': '', '<ln>': '', '<li>': ''}
             if fname:
                 items['<fn>'] = re.sub(sub_pattern, substitute, fname.lower())
                 items['<fi>'] = fname[:1].lower()
+            if mname:
+                items['<mn>'] = re.sub(sub_pattern, substitute, mname.lower())
+                items['<mi>'] = mname[:1].lower()
             if lname:
                 items['<ln>'] = re.sub(sub_pattern, substitute, lname.lower())
                 items['<li>'] = lname[:1].lower()
