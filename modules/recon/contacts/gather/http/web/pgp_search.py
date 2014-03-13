@@ -33,20 +33,7 @@ class Module(module.Module):
         new = 0
         for contact in results:
             name = contact[0].strip()
-            names = name.split(' ')
-            if len(names) == 2:
-                first = names[0]
-                last = names[1]
-            elif len(names) > 2:
-                if '.' in names[1] or len(names[1]) == 1:
-                    first = names[0]
-                    last = names[2]
-                else:
-                    first = names[0]
-                    last = ' '.join(names[1:])
-            else:
-                first = None
-                last = names[0]
+            first, middle, last = self.parse_name(name)
             email = contact[1]
             self.output('%s (%s)' % (name, email))
             cnt += 1
