@@ -117,23 +117,20 @@ class Module(framework.Framework):
             return False
         return True
 
-    def parse_name(self, string):
-        elements = [self.html_unescape(x) for x in string.strip().split()]
+    def parse_name(self, name):
+        elements = [self.html_unescape(x) for x in name.strip().split()]
         # remove prefixes and suffixes
         names = []
         for i in range(0,len(elements)):
-            # preserve middle initials
+            # preserve initials
             if re.search(r'^\w\.$', elements[i]):
                 elements[i] = elements[i][:-1]
             # remove unecessary prefixes and suffixes
             elif re.search(r'(?:\.|^the$)', elements[i], re.IGNORECASE):
                 continue
             names.append(elements[i])
-        # join everything in the fname field if too long to be a name
-        if len(names) > 4:
-            return ' '.join(names), None, None
-        # join the last 2 elements if a double last name
-        if len(names) == 4:
+        # make sense of the remaining elements
+        if len(names) > 3:
             names[2:] = [' '.join(names[2:])]
         # clean up any remaining garbage characters
         names = [re.sub(r'[,]', '', x) for x in names]
