@@ -2,9 +2,11 @@ from __future__ import print_function
 import cmd
 import json
 import os
+import random
 import re
 import socket
 import sqlite3
+import string
 import subprocess
 import sys
 import time
@@ -189,6 +191,9 @@ class Framework(cmd.Cmd):
             return True
         except IOError:
             return False
+
+    def random_str(self, length):
+        return ''.join(random.choice(string.lowercase) for i in range(length))
 
     #==================================================
     # OUTPUT METHODS

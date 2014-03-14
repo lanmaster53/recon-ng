@@ -146,22 +146,41 @@ class Recon(framework.Framework):
 
     def init_workspace(self, workspace):
         workspace = '%s/workspaces/%s' % (self.home, workspace)
+        new = False
         try:
             os.makedirs(workspace)
+            new = True
         except OSError as e:
             if e.errno != errno.EEXIST:
                 self.error(e.__str__())
                 return False
+        # set workspace attributes
         self.workspace = framework.Framework.workspace = workspace
         self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
-        self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
+        # configure new database or conduct migrations
+        self.create_db() if new else self.migrate_db()
+        # load workspace configuration
         self.init_global_options()
         self.load_config()
         return True
+
+    def create_db(self):
+        self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, mname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
+        self.query('PRAGMA user_version = 1')
+
+    def migrate_db(self):
+        db_version = self.query('PRAGMA user_version')[0][0]
+        if db_version == 0:
+            tmp = self.random_str(20)
+            self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
+            self.query('CREATE TABLE contacts (fname TEXT, mname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
+            self.query('INSERT INTO contacts (fname, lname, email, title, region, country) SELECT fname, lname, email, title, region, country FROM %s' % (tmp))
+            self.query('DROP TABLE %s' % (tmp))
+            self.query('PRAGMA user_version = 1')
 
     #==================================================
     # SHOW METHODS
