@@ -40,7 +40,7 @@ class Module(module.Module):
 
         # must use "while" rather than "for" loop to prevent iterating upon session expiration
         while True:
-            resp = self.request('https://profiles.rapportive.com/contacts/email/%s' % (urllib.quote_plus(email)), headers=headers)
+            resp = self.request('https://profiles.rapportive.com/contacts/email/%s' % (urllib.quote_plus(email.encode('utf-8'))), headers=headers)
             if resp.status_code == 403:
                 # renew token
                 self.output('Renewing expired session token...')
