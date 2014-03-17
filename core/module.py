@@ -445,8 +445,13 @@ class Module(framework.Framework):
     #==================================================
 
     def show_source(self):
-        filename = 'modules/%s.py' % (self.modulename)    
-        print(open(filename).read())
+        filename = 'modules/%s.py' % (self.modulename)
+        with open(filename) as f:
+            content = f.readlines()
+            nums = [str(x) for x in range(1, len(content)+1)]
+            num_len = len(max(nums, key=len))
+            for num in nums:
+                print('%s|%s' % (num.rjust(num_len), content[int(num)-1]), end='')
 
     def show_info(self):
         self.info['Path'] = 'modules/%s.py' % (self.modulename)
