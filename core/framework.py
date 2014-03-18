@@ -766,22 +766,39 @@ class Framework(cmd.Cmd):
     #==================================================
 
     def help_keys(self):
+        print(getattr(self, 'do_keys').__doc__)
+        print('')
         print('Usage: keys [list|add|delete|update]')
+        print('')
 
     def help_load(self):
+        print(getattr(self, 'do_load').__doc__)
+        print('')
         print('Usage: [load|use] <module>')
+        print('')
     help_use = help_load
 
     def help_record(self):
+        print(getattr(self, 'do_record').__doc__)
+        print('')
         print('Usage: record [start <filename>|stop|status]')
+        print('')
 
     def help_spool(self):
+        print(getattr(self, 'do_spool').__doc__)
+        print('')
         print('Usage: spool [start <filename>|stop|status]')
+        print('')
 
     def help_resource(self):
+        print(getattr(self, 'do_resource').__doc__)
+        print('')
         print('Usage: resource <filename>')
+        print('')
 
     def help_query(self):
+        print(getattr(self, 'do_query').__doc__)
+        print('')
         print('Usage: query <sql>')
         print('')
         print('SQL Examples:')
@@ -790,25 +807,39 @@ class Framework(cmd.Cmd):
         print('%s%s' % (self.spacer, 'DELETE FROM table_name WHERE some_column=some_value'))
         print('%s%s' % (self.spacer, 'INSERT INTO table_name (column1, column2,...) VALUES (value1, value2,...)'))
         print('%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value'))
+        print('')
 
     def help_search(self):
+        print(getattr(self, 'do_search').__doc__)
+        print('')
         print('Usage: search <string>')
+        print('')
 
     def help_set(self):
+        print(getattr(self, 'do_set').__doc__)
+        print('')
         print('Usage: set <option> <value>')
         self.show_options()
 
     def help_unset(self):
+        print(getattr(self, 'do_unset').__doc__)
+        print('')
         print('Usage: unset <option>')
         self.show_options()
 
     def help_shell(self):
+        print(getattr(self, 'do_shell').__doc__)
+        print('')
         print('Usage: [shell|!] <command>')
         print('...or just type a command at the prompt.')
+        print('')
 
     def help_show(self):
         options = sorted(self.get_show_names() + ['<table>'])
+        print(getattr(self, 'do_show').__doc__)
+        print('')
         print('Usage: show [%s]' % ('|'.join(options)))
+        print('')
 
     #==================================================
     # COMPLETE METHODS

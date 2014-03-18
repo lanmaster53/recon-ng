@@ -218,7 +218,7 @@ class Recon(framework.Framework):
             self.error('Unable to create \'%s\' workspace.' % (value))
 
     def do_load(self, params):
-        '''Loads selected module'''
+        '''Loads specified module'''
         try: self.validate_options()
         except framework.FrameworkException as e:
             self.error(e.message)
@@ -260,7 +260,10 @@ class Recon(framework.Framework):
     #==================================================
 
     def help_workspace(self):
+        print(getattr(self, 'do_workspace').__doc__)
+        print('')
         print('Usage: workspace <string>')
+        print('')
 
     #==================================================
     # COMPLETE METHODS
