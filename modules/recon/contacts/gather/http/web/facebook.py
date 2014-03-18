@@ -26,9 +26,7 @@ class Module(module.Module):
             if company:
                 self.get_contacts(str(company))
                 self.output('%d total contacts found.' % (self.cnt))
-                if self.new: self.alert('%d NEW contacts found!' % (self.new))
-        else:
-            self.output('Authentication failed.')
+                if self.new: self.alert('%d NEW contacts found!' % (self.new))            
 
     def login(self, username, password):
         self.verbose('Authenticating to Facebook...')
@@ -40,7 +38,14 @@ class Module(module.Module):
         self.br["email"] = username
         self.br["pass"] = password
         resp = self.br.submit()
-        return False if 'login_attempt' in str(resp.info()) else True
+        headers = str(resp.info())
+        if 'login_attempt' in headers:
+            self.output('Authentication failed.')
+            return False
+        if 'checkpoint' in headers:
+            self.output('Checkpoint security is enabled. Disable and try again.')
+            return False
+        return True
 
     def get_company_id(self, company):
         search = '"people who work for %s"' % (company)
