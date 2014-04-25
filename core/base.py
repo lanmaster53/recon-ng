@@ -76,12 +76,6 @@ class Recon(framework.Framework):
             os.makedirs(self.home)
 
     def init_global_options(self):
-        self.register_option('domain', None, 'no', 'target domain')
-        self.register_option('company', None, 'no', 'target company name')
-        self.register_option('netblock', None, 'no', 'target netblock (CIDR)')
-        self.register_option('latitude', None, 'no', 'target latitudinal position (decimal)')
-        self.register_option('longitude', None, 'no', 'target longitudinal position in (decimal)')
-        self.register_option('radius', None, 'no', 'radius relative to latitude and longitude')
         self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
         self.register_option('proxy', None, 'no', 'proxy server (address:port)')
         self.register_option('timeout', 10, 'yes', 'socket timeout (seconds)')
@@ -165,22 +159,46 @@ class Recon(framework.Framework):
         return True
 
     def create_db(self):
+        self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS netblocks (netblock TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS locations (latitude TEXT, longitude TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS contacts (fname TEXT, mname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS pushpin (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.query('PRAGMA user_version = 1')
+        self.query('PRAGMA user_version = 2')
 
     def migrate_db(self):
         db_version = self.query('PRAGMA user_version')[0][0]
         if db_version == 0:
+            # add mname column to contacts table
             tmp = self.random_str(20)
             self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
             self.query('CREATE TABLE contacts (fname TEXT, mname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
             self.query('INSERT INTO contacts (fname, lname, email, title, region, country) SELECT fname, lname, email, title, region, country FROM %s' % (tmp))
             self.query('DROP TABLE %s' % (tmp))
             self.query('PRAGMA user_version = 1')
+        if db_version == 1:
+            # rename name columns
+            tmp = self.random_str(20)
+            self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
+            self.query('CREATE TABLE contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
+            self.query('INSERT INTO contacts (first_name, middle_name, last_name, email, title, region, country) SELECT fname, mname, lname, email, title, region, country FROM %s' % (tmp))
+            self.query('DROP TABLE %s' % (tmp))
+            # rename pushpin table
+            tmp = self.random_str(20)
+            self.query('ALTER TABLE pushpin RENAME TO %s' % (tmp))
+            self.query('CREATE TABLE pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
+            self.query('INSERT INTO pushpins (source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time) SELECT source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time FROM %s' % (tmp))
+            self.query('DROP TABLE %s' % (tmp))
+            # add new tables
+            self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT)')
+            self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT)')
+            self.query('CREATE TABLE IF NOT EXISTS netblocks (netblock TEXT)')
+            self.query('CREATE TABLE IF NOT EXISTS locations (latitude TEXT, longitude TEXT)')
+            self.query('PRAGMA user_version = 2')
 
     #==================================================
     # SHOW METHODS

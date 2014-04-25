@@ -110,12 +110,12 @@ class Module(framework.Framework):
 
     def api_guard(self, num):
         try:
-            ans = raw_input('This operation will decrement the allotted quota by %d. Do you want to continue? [Y/N]: ' % (num))
-            if ans.upper() != 'Y': return False
+            ans = raw_input('This operation will decrement the allotted quota by %d. Do you want to continue? ' % (num))
         except KeyboardInterrupt:
             print('')
             return False
-        return True
+        if ans.upper().startswith('Y'): return True
+        return False
 
     def parse_name(self, name):
         elements = [self.html_unescape(x) for x in name.strip().split()]
@@ -143,61 +143,6 @@ class Module(framework.Framework):
     #==================================================
     # DATABASE METHODS
     #==================================================
-
-    def add_host(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
-        '''Adds a host to the database and returns the affected row count.'''
-        data = dict(
-            host = self.to_unicode(host),
-            ip_address = self.to_unicode(ip_address),
-            region = self.to_unicode(region),
-            country = self.to_unicode(country),
-            latitude = self.to_unicode(latitude),
-            longitude = self.to_unicode(longitude),
-        )
-
-        return self.insert('hosts', data, ('host', 'ip_address'))
-
-    def add_contact(self, fname, lname, title, mname=None, email=None, region=None, country=None):
-        '''Adds a contact to the database and returns the affected row count.'''
-        data = dict(
-            fname = self.to_unicode(fname),
-            mname = self.to_unicode(mname),
-            lname = self.to_unicode(lname),
-            title = self.to_unicode(title),
-            email = self.to_unicode(email),
-            region = self.to_unicode(region),
-            country = self.to_unicode(country),
-        )
-
-        return self.insert('contacts', data, ('fname', 'mname', 'lname', 'title', 'email'))
-
-    def add_cred(self, username, password=None, hashtype=None, leak=None):
-        '''Adds a credential to the database and returns the affected row count.'''
-        data = {}
-        data['username'] = self.to_unicode(username)
-        if password and not self.is_hash(password): data['password'] = self.to_unicode(password)
-        if password and self.is_hash(password): data['hash'] = self.to_unicode(password)
-        if hashtype: data['type'] = self.to_unicode(hashtype)
-        if leak: data['leak'] = self.to_unicode(leak)
-
-        return self.insert('creds', data, data.keys())
-
-    def add_pushpin(self, source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time):
-        '''Adds a contact to the database and returns the affected row count.'''
-        data = dict(
-            source = self.to_unicode(source),
-            screen_name = self.to_unicode(screen_name),
-            profile_name = self.to_unicode(profile_name),
-            profile_url = self.to_unicode(profile_url),
-            media_url = self.to_unicode(media_url),
-            thumb_url = self.to_unicode(thumb_url),
-            message = self.to_unicode(message),
-            latitude = self.to_unicode(latitude),
-            longitude = self.to_unicode(longitude),
-            time = self.to_unicode(time),
-        )
-
-        return self.insert('pushpin', data, data.keys())
 
     def add_table(self, table, data, header=[]):
         '''Adds a table to the database and populates it with data.
@@ -232,54 +177,13 @@ class Module(framework.Framework):
     def add_column(self, table, column):
         '''Adds a column to a database table.'''
         column = self.to_unicode_str(column).lower()
-        columns = [x[1] for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
+        columns = [x[0] for x in self.get_columns(table)]
         if not columns:
             raise framework.FrameworkException('Table \'%s\' does not exist' % (table))
         if column in columns:
             raise framework.FrameworkException('Column \'%s\' already exists in table \'%s\'' % (column, table))
         self.query('ALTER TABLE "%s" ADD COLUMN \'%s\' TEXT' % (table, column))
         self.verbose('\'%s\' column created in the \'%s\' table' % (column, table))
-
-    def insert(self, table, data, unique_columns=[]):
-        '''Inserts items into database and returns the affected row count.
-        table - the table to insert the data into
-        data - the information to insert into the database table in the form of a dictionary
-               where the keys are the column names and the values are the column values
-        unique_columns - a list of column names that should be used to determine if the.
-                         information being inserted is unique'''
-
-        # sanitize the inputs to remove NoneTypes, blank strings, and zeros
-        columns = [x for x in data.keys() if data[x]]
-        unique_columns = [x for x in unique_columns if x in columns]
-        # exit if there is nothing left to insert
-        if not columns: return 0
-
-        if not unique_columns:
-            query = u'INSERT INTO "%s" ("%s") VALUES (%s)' % (
-                table,
-                '", "'.join(columns),
-                ', '.join('?'*len(columns))
-            )
-        else:
-            query = u'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
-                table,
-                '", "'.join(columns),
-                ', '.join('?'*len(columns)),
-                table,
-                ' and '.join(['"%s"=?' % (column) for column in unique_columns])
-            )
-
-        values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
-
-        rowcount = self.query(query, values)
-
-        # build RPC response
-        for key in data.keys():
-            if not data[key]:
-                del data[key]
-        self.rpc_cache.append(data)
-
-        return rowcount
 
     #==================================================
     # OPTIONS METHODS

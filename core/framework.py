@@ -312,6 +312,134 @@ class Framework(cmd.Cmd):
         conn.close()
         return results
 
+    def get_columns(self, table):
+        return [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
+
+    #==================================================
+    # ADD METHODS
+    #==================================================
+
+    def add_domains(self, domain):
+        '''Adds a domain to the database and returns the affected row count.'''
+        data = dict(
+            domain = self.to_unicode(domain)
+        )
+        return self.insert('domains', data, (data.keys()))
+
+    def add_companies(self, company):
+        '''Adds a company to the database and returns the affected row count.'''
+        data = dict(
+            company = self.to_unicode(company)
+        )
+        return self.insert('companies', data, (data.keys()))
+
+    def add_netblocks(self, netblock):
+        '''Adds a netblock to the database and returns the affected row count.'''
+        data = dict(
+            netblock = self.to_unicode(netblock)
+        )
+        return self.insert('netblocks', data, (data.keys()))
+
+    def add_locations(self, latitude, longitude):
+        '''Adds a location to the database and returns the affected row count.'''
+        data = dict(
+            latitude = self.to_unicode(latitude),
+            longitude = self.to_unicode(longitude)
+        )
+        return self.insert('locations', data, (data.keys()))
+
+    def add_hosts(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
+        '''Adds a host to the database and returns the affected row count.'''
+        data = dict(
+            host = self.to_unicode(host),
+            ip_address = self.to_unicode(ip_address),
+            region = self.to_unicode(region),
+            country = self.to_unicode(country),
+            latitude = self.to_unicode(latitude),
+            longitude = self.to_unicode(longitude),
+        )
+        return self.insert('hosts', data, ('host', 'ip_address'))
+
+    def add_contacts(self, fname, lname, title, mname=None, email=None, region=None, country=None):
+        '''Adds a contact to the database and returns the affected row count.'''
+        data = dict(
+            fname = self.to_unicode(fname),
+            mname = self.to_unicode(mname),
+            lname = self.to_unicode(lname),
+            title = self.to_unicode(title),
+            email = self.to_unicode(email),
+            region = self.to_unicode(region),
+            country = self.to_unicode(country),
+        )
+        return self.insert('contacts', data, ('fname', 'mname', 'lname', 'title', 'email'))
+
+    def add_creds(self, username, password=None, hashtype=None, leak=None):
+        '''Adds a credential to the database and returns the affected row count.'''
+        data = {}
+        data['username'] = self.to_unicode(username)
+        if password and not self.is_hash(password): data['password'] = self.to_unicode(password)
+        if password and self.is_hash(password): data['hash'] = self.to_unicode(password)
+        if hashtype: data['type'] = self.to_unicode(hashtype)
+        if leak: data['leak'] = self.to_unicode(leak)
+        return self.insert('creds', data, data.keys())
+
+    def add_pushpins(self, source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time):
+        '''Adds a pushpin to the database and returns the affected row count.'''
+        data = dict(
+            source = self.to_unicode(source),
+            screen_name = self.to_unicode(screen_name),
+            profile_name = self.to_unicode(profile_name),
+            profile_url = self.to_unicode(profile_url),
+            media_url = self.to_unicode(media_url),
+            thumb_url = self.to_unicode(thumb_url),
+            message = self.to_unicode(message),
+            latitude = self.to_unicode(latitude),
+            longitude = self.to_unicode(longitude),
+            time = self.to_unicode(time),
+        )
+        return self.insert('pushpin', data, data.keys())
+
+    def insert(self, table, data, unique_columns=[]):
+        '''Inserts items into database and returns the affected row count.
+        table - the table to insert the data into
+        data - the information to insert into the database table in the form of a dictionary
+               where the keys are the column names and the values are the column values
+        unique_columns - a list of column names that should be used to determine if the.
+                         information being inserted is unique'''
+
+        # sanitize the inputs to remove NoneTypes, blank strings, and zeros
+        columns = [x for x in data.keys() if data[x]]
+        unique_columns = [x for x in unique_columns if x in columns]
+        # exit if there is nothing left to insert
+        if not columns: return 0
+
+        if not unique_columns:
+            query = u'INSERT INTO "%s" ("%s") VALUES (%s)' % (
+                table,
+                '", "'.join(columns),
+                ', '.join('?'*len(columns))
+            )
+        else:
+            query = u'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
+                table,
+                '", "'.join(columns),
+                ', '.join('?'*len(columns)),
+                table,
+                ' and '.join(['"%s"=?' % (column) for column in unique_columns])
+            )
+
+        values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
+
+        rowcount = self.query(query, values)
+
+        # build RPC response
+        for key in data.keys():
+            if not data[key]:
+                del data[key]
+        self.rpc_cache.append(data)
+
+        return rowcount
+
     #==================================================
     # OPTIONS METHODS
     #==================================================
@@ -512,7 +640,7 @@ class Framework(cmd.Cmd):
         '''Displays the database schema'''
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         for table in tables:
-            columns = [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
+            columns = self.get_columns(table)
             self.table(columns, title=table)
 
     def show_options(self, options=None):
@@ -640,6 +768,36 @@ class Framework(cmd.Cmd):
             self.do_query('SELECT * FROM "%s" ORDER BY 1' % (_params))
         else:
             self.help_show()
+
+    def do_add(self, params):
+        '''Adds items to the database'''
+        # get table names for which data can be added
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
+        if params in tables:
+            # add items until user cancels
+            while True:
+                columns = self.get_columns(params)
+                item = {}
+                # prompt user for data
+                for column in columns:
+                    try:
+                        item[column[0]] = raw_input('%s (%s): ' % column)
+                    except KeyboardInterrupt:
+                        print('')
+                        return
+                # add the item to the database
+                func = getattr(self, 'add_' + params)
+                func(**item)
+                # prompt user to continue
+                try:
+                    ans = raw_input('Do you want to add another item? ')
+                except KeyboardInterrupt:
+                    print('')
+                    return
+                if ans.upper().startswith('Y'): continue
+                break
+        else:
+            self.help_add()
 
     def do_search(self, params):
         '''Searches available modules'''
@@ -841,6 +999,13 @@ class Framework(cmd.Cmd):
         print('Usage: show [%s]' % ('|'.join(options)))
         print('')
 
+    def help_add(self):
+        options = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
+        print(getattr(self, 'do_add').__doc__)
+        print('')
+        print('Usage: add [%s]' % ('|'.join(options)))
+        print('')
+
     #==================================================
     # COMPLETE METHODS
     #==================================================
@@ -875,3 +1040,7 @@ class Framework(cmd.Cmd):
         tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
         options = set(self.get_show_names() + tables)
         return [x for x in options if x.startswith(text)]
+
+    def complete_add(self, text, *ignored):
+        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
+        return [x for x in tables if x.startswith(text)]
