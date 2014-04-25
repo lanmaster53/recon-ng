@@ -103,7 +103,11 @@ class Module(module.Module):
             contacts = [values[i:i+6] for i in range(0, len(values), 6)]
             for contact in contacts:
                 fname = self.html_unescape(contact[1])
+                # fname includes the preferred name as an element that needs to be removed
+                fname = ' '.join(fname.split()[:2]) if len(fname.split()) > 2 else fname
                 lname = self.html_unescape(contact[0])
+                name = '%s %s' % (fname, lname)
+                fname, mname, lname = self.parse_name(name)
                 title = self.html_unescape(contact[2])
                 loc1 = self.html_unescape(contact[5])
                 loc2 = self.html_unescape('')
@@ -111,9 +115,9 @@ class Module(module.Module):
                 for item in [loc1, loc2]:
                     if item: region.append(item)
                 region = ', '.join(region)
-                self.output('%s %s - %s (%s)' % (fname, lname, title, region))
+                self.output('%s - %s (%s)' % (name, title, region))
                 cnt += 1
-                new += self.add_contact(fname=fname, lname=lname, title=title, region=region)
+                new += self.add_contact(fname=fname, mname=mname, lname=lname, title=title, region=region)
             payload['page'] += 1
         self.output('%d total contacts found.' % (cnt))
         if new: self.alert('%d NEW contacts found!' % (new))

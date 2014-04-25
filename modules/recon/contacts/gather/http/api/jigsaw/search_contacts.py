@@ -78,7 +78,11 @@ class Module(module.Module):
             for contact in jsonobj['contacts']:
                 contact_id = contact['contactId']
                 fname = self.html_unescape(contact['firstname'])
+                # fname includes the preferred name as an element that needs to be removed
+                fname = ' '.join(fname.split()[:2]) if len(fname.split()) > 2 else fname
                 lname = self.html_unescape(contact['lastname'])
+                name = '%s %s' % (fname, lname)
+                fname, mname, lname = self.parse_name(name)
                 title = self.html_unescape(contact['title'])
                 city = self.html_unescape(contact['city']).title()
                 state = self.html_unescape(contact['state']).upper()
@@ -87,8 +91,8 @@ class Module(module.Module):
                     if item: region.append(item)
                 region = ', '.join(region)
                 country = self.html_unescape(contact['country']).title()
-                self.output('[%s] %s %s - %s (%s - %s)' % (contact_id, fname, lname, title, region, country))
-                new += self.add_contact(fname=fname, lname=lname, title=title, region=region, country=country)
+                self.output('[%s] %s - %s (%s - %s)' % (contact_id, name, title, region, country))
+                new += self.add_contact(fname=fname, mname=mname, lname=lname, title=title, region=region, country=country)
                 tot += 1
             cnt += size
             if cnt > jsonobj['totalHits']: break

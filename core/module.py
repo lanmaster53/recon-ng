@@ -126,14 +126,14 @@ class Module(framework.Framework):
             if re.search(r'^\w\.$', elements[i]):
                 elements[i] = elements[i][:-1]
             # remove unecessary prefixes and suffixes
-            elif re.search(r'(?:\.|^the$)', elements[i], re.IGNORECASE):
+            elif re.search(r'(?:\.|^the$|^jr$|^sr$|^I{2,3}$)', elements[i], re.IGNORECASE):
                 continue
             names.append(elements[i])
         # make sense of the remaining elements
         if len(names) > 3:
             names[2:] = [' '.join(names[2:])]
         # clean up any remaining garbage characters
-        names = [re.sub(r'[,]', '', x) for x in names]
+        names = [re.sub(r"[,']", '', x) for x in names]
         # set values and return names
         fname = names[0]
         mname = names[1] if len(names) >= 3 else None
