@@ -326,12 +326,13 @@ class Framework(cmd.Cmd):
         )
         return self.insert('domains', data, (data.keys()))
 
-    def add_companies(self, company):
+    def add_companies(self, company, description=None):
         '''Adds a company to the database and returns the affected row count.'''
         data = dict(
-            company = self.to_unicode(company)
+            company = self.to_unicode(company),
+            description = self.to_unicode(description)
         )
-        return self.insert('companies', data, (data.keys()))
+        return self.insert('companies', data, ('company'))
 
     def add_netblocks(self, netblock):
         '''Adds a netblock to the database and returns the affected row count.'''

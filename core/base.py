@@ -160,7 +160,7 @@ class Recon(framework.Framework):
 
     def create_db(self):
         self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT, description TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS netblocks (netblock TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS locations (latitude TEXT, longitude TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
@@ -195,7 +195,7 @@ class Recon(framework.Framework):
             self.query('DROP TABLE %s' % (tmp))
             # add new tables
             self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT)')
-            self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT)')
+            self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT, description TEXT)')
             self.query('CREATE TABLE IF NOT EXISTS netblocks (netblock TEXT)')
             self.query('CREATE TABLE IF NOT EXISTS locations (latitude TEXT, longitude TEXT)')
             self.query('PRAGMA user_version = 2')
