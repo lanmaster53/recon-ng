@@ -61,8 +61,7 @@ class ReconState:
         return results
 
     def show(self, param, sid):
-        tables = self.sessions[sid]["module"].query('SELECT name FROM sqlite_master WHERE type=\'table\'')
-        if param in [x[0] for x in tables]:
+        if param in self.sessions[sid]["module"].get_tables():
             return self.sessions[sid]["module"].query('SELECT * FROM %s ORDER BY 1' % (param))
 
     def workspace(self, param, sid):

@@ -22,10 +22,12 @@ class Module(module.Module):
         if not self.api_guard(1): return
 
         # delete leaks table
-        self.query('DROP TABLE IF EXISTS leaks')
-        self.output('Old \'leaks\' table removed from the database.')
-
+        self.output('Purging \'leaks\' table...')
+        self.query('DELETE FROM leaks')
+        self.output('Table data purged.')
+        
         # setup API call
+        self.output('Downloading leak data...')
         method = 'leaks.info'
         url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
         payload = {'daysAgo': 0}
@@ -38,15 +40,8 @@ class Module(module.Module):
             self.error('Invalid JSON response.\n%s' % (resp.text))
             return
 
-        # add leaks table
-        columns = []
-        values = []
-        for key in jsonobj['leaks'][0].keys():
-            columns.append('\'%s\' TEXT' % (key))
-        self.query('CREATE TABLE IF NOT EXISTS leaks (%s)' % (', '.join(columns)))
-        self.output('New \'leaks\' table created.')
-
         # populate leaks table
+        self.output('Populating \'leaks\' table...')
         for leak in jsonobj['leaks']:
-            self.insert('leaks', leak, leak.keys())
-        self.output('%d leaks added to the \'leaks\' table.' % (len(jsonobj['leaks'])))
+            self.add_leaks(**leak)
+        self.output('Table populated with %d leaks.' % (len(jsonobj['leaks'])))

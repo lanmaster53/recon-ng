@@ -8,8 +8,8 @@ class Module(module.Module):
         module.Module.__init__(self, params)
         self.register_option('filename', '%s/results.html' % (self.workspace), 'yes', 'path and filename for report output')
         self.register_option('sanitize', True, 'yes', 'mask sensitive data in the report')
-        self.register_option('company', self.global_options['company'], 'yes', 'name for the report header')
-        self.register_option('creator', None, 'yes', 'name for the report footer')
+        self.register_option('customer', None, 'yes', 'customer name for the report header')
+        self.register_option('creator', None, 'yes', 'creator name for the report footer')
         self.info = {
                      'Name': 'HTML Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -45,7 +45,7 @@ class Module(module.Module):
         # custom summary results table
         table_show = '<a id="show-summary" href="javascript:showhide(\'summary\');"><p>[+] Summary</p></a>'
         table_hide = '<a id="hide-summary" href="javascript:showhide(\'summary\');"><p>[-] Summary</p><hr></a>'
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['leaks', 'dashboard']]
+        tables = self.get_tables()
         row_headers = '<tr><th>table</th><th>count</th></tr>'
         row_content = ''
         for table in tables:
@@ -54,15 +54,15 @@ class Module(module.Module):
         table_content += '<div class="container">\n%s\n%s\n<table id="summary">\n%s\n%s</table>\n</div><br />\n' % (table_show, table_hide, row_headers, row_content)
 
         # main content tables
-        tables = ['hosts', 'contacts', 'creds']
+        tables = ['domains', 'companies', 'netblocks', 'locations', 'hosts', 'contacts', 'creds']
         for table in tables:
             table_content += self.build_table(table)
 
         # table of leaks associated with creds
         leaks = self.query('SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
         if leaks:
-            columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
-            if columns:
+            if self.query('SELECT COUNT(*) FROM leaks')[0][0]:
+                columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
                 table_content += '<div class="container">\n'
                 table_content += '<a id="show-leaks" href="javascript:showhide(\'leaks\');"><p>[+] Associated Leaks</p></a>\n'
                 table_content += '<a id="hide-leaks" href="javascript:showhide(\'leaks\');"><p>[-] Associated Leaks</p></a>\n'
@@ -76,17 +76,17 @@ class Module(module.Module):
                     table_content += '<hr>\n<table class="leak">\n%s</table>\n' % (row_content)
                 table_content += '</div>\n</div><br />'
             else:
-                self.output('Associate leak data omitted. Please run the \'leaks_dump\' module to populate the database and try again.')
+                self.output('Associated leak data omitted. Please run the \'leaks_dump\' module to populate the database and try again.')
 
         # all other tables
         # build exclusions list by extending the list from above
-        tables.extend(['leaks', 'dashboard', 'pushpin'])
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in tables]
+        tables.extend(['leaks', 'pushpins', 'dashboard'])
+        tables = [x for x in self.get_tables() if x not in tables]
         for table in tables:
             table_content += self.build_table(table)
 
-        title = self.options['company'].title()
-        creator = self.options['creator'].title()
+        title = self.options['customer']
+        creator = self.options['creator']
         created = datetime.datetime.now().strftime('%a, %b %d %Y %H:%M:%S')
         markup = template % (title, table_content, creator, created)
         outfile.write(markup.encode('utf-8'))

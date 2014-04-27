@@ -18,11 +18,11 @@ class Module(module.Module):
     def module_run(self):
         leak_ids = self.get_source(self.options['source'], 'SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
 
-        columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
-        if not columns:
+        if not self.query('SELECT COUNT(*) FROM leaks')[0][0]:
             self.output('Please run the \'leaks_dump\' module to populate the database and try again.')
             return
         print(self.ruler*50)
+        columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]
         for leak_id in leak_ids:
             values = self.query('SELECT "%s" FROM leaks WHERE leak_id = \'%s\'' % ('", "'.join(columns), leak_id))[0]
             for i in range(0,len(columns)):

@@ -150,13 +150,12 @@ class Module(framework.Framework):
         header - whether or not the first row of tdata consists of headers.
         data - the information to insert into the database table.'''
 
-        reserved = ['leaks']
         tdata = list(data)
         if header:
             tdata.insert(0, header)
         table = self.to_unicode_str(table).lower()
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        if table in tables + reserved:
+        tables = self.get_tables()
+        if table in tables:
             raise framework.FrameworkException('Table \'%s\' already exists or is a reserved table name' % (table))
         # create database table
         if header:

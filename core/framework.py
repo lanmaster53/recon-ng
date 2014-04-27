@@ -315,6 +315,9 @@ class Framework(cmd.Cmd):
     def get_columns(self, table):
         return [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
 
+    def get_tables(self):
+        return [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
+
     #==================================================
     # ADD METHODS
     #==================================================
@@ -384,6 +387,28 @@ class Framework(cmd.Cmd):
         if leak: data['leak'] = self.to_unicode(leak)
         return self.insert('creds', data, data.keys())
 
+    def add_leaks(self, leak_id, description, source_refs, leak_type, title, import_date, leak_date, attackers, num_entries, score, num_domains_affected, attack_method, target_industries, password_hash, targets, media_refs):
+        '''Adds a leak to the database and returns the affected row count.'''
+        data = dict(
+            leak_id = self.to_unicode(leak_id),
+            description = self.to_unicode(description),
+            source_refs = self.to_unicode(source_refs),
+            leak_type = self.to_unicode(leak_type),
+            title = self.to_unicode(title),
+            import_date = self.to_unicode(import_date),
+            leak_date = self.to_unicode(leak_date),
+            attackers = self.to_unicode(attackers),
+            num_entries = self.to_unicode(num_entries),
+            score = self.to_unicode(score),
+            num_domains_affected = self.to_unicode(num_domains_affected),
+            attack_method = self.to_unicode(attack_method),
+            target_industries = self.to_unicode(target_industries),
+            password_hash = self.to_unicode(password_hash),
+            targets = self.to_unicode(targets),
+            media_refs = self.to_unicode(media_refs)
+        )
+        return self.insert('leaks', data, data.keys())
+
     def add_pushpins(self, source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time):
         '''Adds a pushpin to the database and returns the affected row count.'''
         data = dict(
@@ -398,7 +423,7 @@ class Framework(cmd.Cmd):
             longitude = self.to_unicode(longitude),
             time = self.to_unicode(time),
         )
-        return self.insert('pushpin', data, data.keys())
+        return self.insert('pushpins', data, data.keys())
 
     def insert(self, table, data, unique_columns=[]):
         '''Inserts items into database and returns the affected row count.
@@ -626,20 +651,19 @@ class Framework(cmd.Cmd):
             for row in rows:
                 tdata.append(row)
             self.table(tdata, header=['Module', 'Runs'], title='Activity Summary')
-            # display sumary results table
-            tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
+            # display summary results table
+            tables = self.get_tables()
             tdata = []
             for table in tables:
-                if not table in ['leaks', 'dashboard']:
-                    count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
-                    tdata.append([table.title(), count])
+                count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
+                tdata.append([table.title(), count])
             self.table(tdata, header=['Category', 'Quantity'], title='Results Summary')
         else:
             print('\n%sThis workspace has no record of activity.\n' % (self.spacer))
 
     def show_schema(self):
         '''Displays the database schema'''
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
+        tables = self.get_tables()
         for table in tables:
             columns = self.get_columns(table)
             self.table(columns, title=table)
@@ -765,7 +789,7 @@ class Framework(cmd.Cmd):
                 func(params)
             else:
                 func()
-        elif _params in [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]:
+        elif _params in self.get_tables():
             self.do_query('SELECT * FROM "%s" ORDER BY 1' % (_params))
         else:
             self.help_show()
@@ -773,7 +797,7 @@ class Framework(cmd.Cmd):
     def do_add(self, params):
         '''Adds items to the database'''
         # get table names for which data can be added
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
+        tables = self.get_tables()
         if params in tables:
             # add items until user cancels
             while True:
@@ -994,14 +1018,14 @@ class Framework(cmd.Cmd):
         print('')
 
     def help_show(self):
-        options = sorted(self.get_show_names() + ['<table>'])
+        options = sorted(self.get_show_names() + self.get_tables())
         print(getattr(self, 'do_show').__doc__)
         print('')
         print('Usage: show [%s]' % ('|'.join(options)))
         print('')
 
     def help_add(self):
-        options = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
+        options = sorted(self.get_tables())
         print(getattr(self, 'do_add').__doc__)
         print('')
         print('Usage: add [%s]' % ('|'.join(options)))
@@ -1038,10 +1062,9 @@ class Framework(cmd.Cmd):
         if len(args) > 1 and args[1].lower() == 'modules':
             if len(args) > 2: return [x for x in Framework.loaded_modules if x.startswith(args[2])]
             else: return [x for x in Framework.loaded_modules]
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
-        options = set(self.get_show_names() + tables)
+        options = sorted(self.get_show_names() + self.get_tables())
         return [x for x in options if x.startswith(text)]
 
     def complete_add(self, text, *ignored):
-        tables = [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
+        tables = sorted(self.get_tables())
         return [x for x in tables if x.startswith(text)]
