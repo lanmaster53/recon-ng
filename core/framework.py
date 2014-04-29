@@ -364,18 +364,18 @@ class Framework(cmd.Cmd):
         )
         return self.insert('hosts', data, ('host', 'ip_address'))
 
-    def add_contacts(self, fname, lname, title, mname=None, email=None, region=None, country=None):
+    def add_contacts(self, first_name, last_name, title, middle_name=None, email=None, region=None, country=None):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
-            fname = self.to_unicode(fname),
-            mname = self.to_unicode(mname),
-            lname = self.to_unicode(lname),
+            first_name = self.to_unicode(first_name),
+            middle_name = self.to_unicode(middle_name),
+            last_name = self.to_unicode(last_name),
             title = self.to_unicode(title),
             email = self.to_unicode(email),
             region = self.to_unicode(region),
             country = self.to_unicode(country),
         )
-        return self.insert('contacts', data, ('fname', 'mname', 'lname', 'title', 'email'))
+        return self.insert('contacts', data, ('first_name', 'middle_name', 'last_name', 'title', 'email'))
 
     def add_creds(self, username, password=None, hashtype=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''

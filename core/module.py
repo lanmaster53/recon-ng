@@ -26,6 +26,9 @@ class Module(framework.Framework):
     def __init__(self, params):
         framework.Framework.__init__(self, params)
         self.options = framework.Options()
+        # register a data source option if a default query is specified in the module
+        if hasattr(self, 'default_query'):
+            self.register_option('source', 'db', 'yes', 'input source (db, <string>, <path>, query <sql>)')
 
     #==================================================
     # SUPPORT METHODS
@@ -363,6 +366,11 @@ class Module(framework.Framework):
         for item in ['Name', 'Path', 'Author', 'Version']:
             if item in self.info:
                 print('%s: %s' % (item.rjust(10), self.info[item]))
+        #if hasattr(self, 'default_query'):
+        #    print('%s: %s' % ('Default'.rjust(10), self.default_query))
+        #dirs = self.modulename.split('/')
+        #if dirs[0] == 'recon':
+        #    print('%s: %s => %s' % ('Transform'.rjust(10), dirs[1].upper(), dirs[2].upper()))
         print('')
         # description
         if 'Description' in self.info:
@@ -390,7 +398,13 @@ class Module(framework.Framework):
         '''Runs the module'''
         try:
             self.validate_options()
-            self.module_run()
+            # provide input if a default query is specified in the module
+            if hasattr(self, 'default_query'):
+                #objs = [x[0] for x in self.query(self.default_query)]
+                objs = self.get_source(self.options['source'], self.default_query)
+                self.module_run(objs)
+            else:
+                self.module_run()
         except KeyboardInterrupt:
             print('')
         except socket.timeout as e:
