@@ -17,6 +17,12 @@ function showhide(id) {
         show.style.display = "inline";
     }
 }
+function start() {
+    tables = document.getElementsByName("table");
+    for (i = 0; i < tables.length; ++i) {
+        showhide(tables[i].id);
+    }
+}
 </script>
 <style>
 body {
@@ -30,12 +36,19 @@ body {
     display: table;
     margin: 0 auto;
     border: 2px solid gray;
+    position: relative;
 }
 .title {
     font-size: 3em;
 }
 .subtitle {
     font-size: 2em;
+}
+.link {
+    font-size: 1em;
+    position: absolute;
+    right: 12px;
+    top: 5px;
 }
 p {
     margin: 5px 7px 5px 7px;
@@ -81,10 +94,11 @@ a[id*="show-"] {
 }
 </style>
 </head>
-<body>
+<body onload="start();">
     <div class="main">
         <div class='title'>%s</div>
         <div class='subtitle'>Recon-ng Reconnaissance Report</div>
+        <div class='link'><a href='http://www.recon-ng.com' target="_blank">www.recon-ng.com</a></div>
         <hr>
         <div>
 <!-- START -->

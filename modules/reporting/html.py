@@ -30,7 +30,7 @@ class Module(module.Module):
             if table == 'creds' and values[1] and self.options['sanitize']:
                 values[1] = '<omitted>'
             row_content += '<tr><td>%s</td></tr>\n' % ('</td><td>'.join([self.html_escape(x) for x in values]))
-        table_content += '<div class="container">\n%s\n%s\n<table id="%s">\n%s\n%s</table>\n</div><br />\n' % (table_show, table_hide, table, row_headers, row_content)
+        table_content += '<div class="container">\n%s\n%s\n<table name="table" id="%s">\n%s\n%s</table>\n</div><br />\n' % (table_show, table_hide, table, row_headers, row_content)
         return table_content
 
     def module_run(self):
@@ -66,7 +66,7 @@ class Module(module.Module):
                 table_content += '<div class="container">\n'
                 table_content += '<a id="show-leaks" href="javascript:showhide(\'leaks\');"><p>[+] Associated Leaks</p></a>\n'
                 table_content += '<a id="hide-leaks" href="javascript:showhide(\'leaks\');"><p>[-] Associated Leaks</p></a>\n'
-                table_content += '<div id="leaks">\n'
+                table_content += '<div name="table" id="leaks">\n'
                 for leak in [x[0] for x in leaks]:
                     row_content = ''
                     row = self.query('SELECT * FROM leaks WHERE leak_id=?', (leak,))[0]
