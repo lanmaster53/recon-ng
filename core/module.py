@@ -23,12 +23,13 @@ import aes
 
 class Module(framework.Framework):
 
-    def __init__(self, params):
+    def __init__(self, params, query=None):
         framework.Framework.__init__(self, params)
         self.options = framework.Options()
         # register a data source option if a default query is specified in the module
-        if hasattr(self, 'default_query'):
-            self.register_option('source', 'db', 'yes', 'input source (db, <string>, <path>, query <sql>)')
+        if query is not None:
+            self.default_source = query
+            self.register_option('source', 'default', 'yes', 'source of input (see \'show info\' for details)')
 
     #==================================================
     # SUPPORT METHODS
@@ -111,15 +112,6 @@ class Module(framework.Framework):
             f = f + 1
         return ips
 
-    def api_guard(self, num):
-        try:
-            ans = raw_input('This operation will decrement the allotted quota by %d. Do you want to continue? ' % (num))
-        except KeyboardInterrupt:
-            print('')
-            return False
-        if ans.upper().startswith('Y'): return True
-        return False
-
     def parse_name(self, name):
         elements = [self.html_unescape(x) for x in name.strip().split()]
         # remove prefixes and suffixes
@@ -144,6 +136,18 @@ class Module(framework.Framework):
         return fname, mname, lname
 
     #==================================================
+    # OUTPUT METHODS
+    #==================================================
+
+    def summarize(self, new, total):
+        self.heading('Summary', level=0)
+        if new > 0:
+            method = getattr(self, 'alert')
+        else:
+            method = getattr(self, 'output')
+        method('%d total (%d new) items found.' % (total, new))
+
+    #==================================================
     # DATABASE METHODS
     #==================================================
 
@@ -159,7 +163,7 @@ class Module(framework.Framework):
         table = self.to_unicode_str(table).lower()
         tables = self.get_tables()
         if table in tables:
-            raise framework.FrameworkException('Table \'%s\' already exists or is a reserved table name' % (table))
+            raise framework.FrameworkException('Table \'%s\' already exists or is a reserved table name.' % (table))
         # create database table
         if header:
             rdata = tdata.pop(0)
@@ -174,18 +178,18 @@ class Module(framework.Framework):
             for i in range(0, len(columns)):
                 data[columns[i]] = self.to_unicode(rdata[i])
             self.insert(table, data)
-        self.verbose('\'%s\' table created in the database' % (table))
+        self.verbose('\'%s\' table created.' % (table))
 
     def add_column(self, table, column):
         '''Adds a column to a database table.'''
         column = self.to_unicode_str(column).lower()
         columns = [x[0] for x in self.get_columns(table)]
         if not columns:
-            raise framework.FrameworkException('Table \'%s\' does not exist' % (table))
+            raise framework.FrameworkException('Table \'%s\' does not exist.' % (table))
         if column in columns:
-            raise framework.FrameworkException('Column \'%s\' already exists in table \'%s\'' % (column, table))
+            raise framework.FrameworkException('Column \'%s\' already exists in table \'%s\'.' % (column, table))
         self.query('ALTER TABLE "%s" ADD COLUMN \'%s\' TEXT' % (table, column))
-        self.verbose('\'%s\' column created in the \'%s\' table' % (column, table))
+        self.verbose('\'%s\' column created in the \'%s\' table.' % (column, table))
 
     #==================================================
     # OPTIONS METHODS
@@ -193,7 +197,7 @@ class Module(framework.Framework):
 
     def get_source(self, params, query=None):
         prefix = params.split()[0].lower()
-        if prefix in ['query', 'db']:
+        if prefix in ['query', 'default']:
             query = ' '.join(params.split()[1:]) if prefix == 'query' else query
             try: results = self.query(query)
             except sqlite3.OperationalError as e:
@@ -201,8 +205,10 @@ class Module(framework.Framework):
             if not results:
                 sources = []
             elif len(results[0]) > 1:
-                raise framework.FrameworkException('Too many columns of data as source input.')
-            else: sources = [x[0] for x in results]
+                sources = [x[:len(x)] for x in results]
+                #raise framework.FrameworkException('Too many columns of data as source input.')
+            else:
+                sources = [x[0] for x in results]
         elif os.path.exists(params):
             sources = open(params).read().split()
         else:
@@ -366,8 +372,6 @@ class Module(framework.Framework):
         for item in ['Name', 'Path', 'Author', 'Version']:
             if item in self.info:
                 print('%s: %s' % (item.rjust(10), self.info[item]))
-        #if hasattr(self, 'default_query'):
-        #    print('%s: %s' % ('Default'.rjust(10), self.default_query))
         #dirs = self.modulename.split('/')
         #if dirs[0] == 'recon':
         #    print('%s: %s => %s' % ('Transform'.rjust(10), dirs[1].upper(), dirs[2].upper()))
@@ -376,6 +380,14 @@ class Module(framework.Framework):
         if 'Description' in self.info:
             print('Description:')
             print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
+            print('')
+        # sources
+        if hasattr(self, 'default_source'):
+            print('Source Options:')
+            print('%s%s%s' % (self.spacer, 'default'.ljust(15), self.default_source))
+            print('%s%sstring representing a single input' % (self.spacer, '<string>'.ljust(15)))
+            print('%s%spath to a file containing a list of inputs' % (self.spacer, '<path>'.ljust(15)))
+            print('%s%sdatabase query returning one column of inputs' % (self.spacer, 'query <sql>'.ljust(15)))
             print('')
         # options
         print('Options:', end='')
@@ -398,13 +410,15 @@ class Module(framework.Framework):
         '''Runs the module'''
         try:
             self.validate_options()
+            pre = self.module_pre()
+            params = [pre] if pre is not None else []
             # provide input if a default query is specified in the module
-            if hasattr(self, 'default_query'):
-                #objs = [x[0] for x in self.query(self.default_query)]
-                objs = self.get_source(self.options['source'], self.default_query)
-                self.module_run(objs)
-            else:
-                self.module_run()
+            if hasattr(self, 'default_source'):
+                #objs = [x[0] for x in self.query(self.default_source)]
+                objs = self.get_source(self.options['source'], self.default_source)
+                params.insert(0, objs)
+            self.module_run(*params)
+            self.module_post()
         except KeyboardInterrupt:
             print('')
         except socket.timeout as e:
@@ -418,5 +432,11 @@ class Module(framework.Framework):
         finally:
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
 
+    def module_pre(self):
+        pass
+
     def module_run(self):
+        pass
+
+    def module_post(self):
         pass

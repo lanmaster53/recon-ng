@@ -9,7 +9,6 @@ import sqlite3
 import string
 import subprocess
 import sys
-import time
 # prep python path for supporting modules
 sys.path.append('./libs/')
 import dragons
@@ -220,7 +219,7 @@ class Framework(cmd.Cmd):
             self.output(line)
 
     def heading(self, line, level=1):
-        '''Formats and presents styled banner text'''
+        '''Formats and presents styled header text'''
         line = self.to_unicode(line)
         print('')
         if level == 0:
@@ -280,8 +279,6 @@ class Framework(cmd.Cmd):
         if store:
             # store the table
             table = title if title else self.modulename.split('/')[-1]
-            # generate a unique table name
-            table = '%s (%s)' % (table, time.strftime('%m/%d %H:%M:%S', time.localtime()))
             self.add_table(table, data, header)
 
     def add_table(self, *args, **kwargs):
@@ -790,7 +787,7 @@ class Framework(cmd.Cmd):
             else:
                 func()
         elif _params in self.get_tables():
-            self.do_query('SELECT * FROM "%s" ORDER BY 1' % (_params))
+            self.do_query('SELECT ROWID, * FROM "%s" ORDER BY 2' % (_params))
         else:
             self.help_show()
 
@@ -799,30 +796,35 @@ class Framework(cmd.Cmd):
         # get table names for which data can be added
         tables = self.get_tables()
         if params in tables:
-            # add items until user cancels
-            while True:
-                columns = self.get_columns(params)
-                item = {}
-                # prompt user for data
-                for column in columns:
-                    try:
-                        item[column[0]] = raw_input('%s (%s): ' % column)
-                    except KeyboardInterrupt:
-                        print('')
-                        return
-                # add the item to the database
-                func = getattr(self, 'add_' + params)
-                func(**item)
-                # prompt user to continue
+            columns = self.get_columns(params)
+            item = {}
+            # prompt user for data
+            for column in columns:
                 try:
-                    ans = raw_input('Do you want to add another item? ')
+                    item[column[0]] = raw_input('%s (%s): ' % column)
                 except KeyboardInterrupt:
                     print('')
                     return
-                if ans.upper().startswith('Y'): continue
-                break
+            # add the item to the database
+            func = getattr(self, 'add_' + params)
+            func(**item)
         else:
             self.help_add()
+
+    def do_del(self, params):
+        '''Deletes items from the database'''
+        # get table names for which data can be deleted
+        tables = self.get_tables()
+        if params in tables:
+            try:
+                rowid = raw_input('rowid (INT): ')
+            except KeyboardInterrupt:
+                print('')
+                return
+            # delete the item from the database
+            self.query('DELETE FROM %s WHERE ROWID IS ?' % (params), (rowid,))
+        else:
+            self.help_del()
 
     def do_search(self, params):
         '''Searches available modules'''
@@ -1031,6 +1033,13 @@ class Framework(cmd.Cmd):
         print('Usage: add [%s]' % ('|'.join(options)))
         print('')
 
+    def help_del(self):
+        options = sorted(self.get_tables())
+        print(getattr(self, 'do_del').__doc__)
+        print('')
+        print('Usage: del [%s]' % ('|'.join(options)))
+        print('')
+
     #==================================================
     # COMPLETE METHODS
     #==================================================
@@ -1068,3 +1077,4 @@ class Framework(cmd.Cmd):
     def complete_add(self, text, *ignored):
         tables = sorted(self.get_tables())
         return [x for x in tables if x.startswith(text)]
+    complete_del = complete_add
