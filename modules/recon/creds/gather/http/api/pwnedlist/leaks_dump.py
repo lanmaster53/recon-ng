@@ -48,5 +48,11 @@ class Module(module.Module):
 
         # populate leaks table
         for leak in jsonobj['leaks']:
-            self.insert('leaks', leak, leak.keys())
+            normalized_leak = {}
+            for item in leak:
+                value = leak[item]
+                if type(value) == list:
+                    value = ', '.join(value)
+                normalized_leak[item] = value
+            self.insert('leaks', normalized_leak, normalized_leak.keys())
         self.output('%d leaks added to the \'leaks\' table.' % (len(jsonobj['leaks'])))
