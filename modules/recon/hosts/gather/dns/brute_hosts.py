@@ -8,40 +8,40 @@ import re
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain'], 'yes', self.global_options.description['domain'])
-        self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
+        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.register_option('wordlist', './data/hostnames.txt', 'yes', 'path to hostname wordlist')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
-        self.register_option('attempts', 3, 'yes', 'Number of retry attempts per host')
+        self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
+        self.register_option('attempts', 3, 'yes', 'number of retry attempts per host')
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Brute forces host names using DNS and updates the \'hosts\' table of the database with the results.',
+                     'Description': 'Brute forces host names using DNS. Updates the \'hosts\' table with the results.',
                      }
 
-    def module_run(self):
-        domain = self.options['domain']
-        regex = self.options['regex']
-        wordlist = self.options['wordlist']
+    def module_run(self, domains):
         max_attempts = self.options['attempts']
+        wordlist = self.options['wordlist']
+        if not os.path.exists(wordlist):
+            self.error('Wordlist file (\'%s\') not found.' % (wordlist))
+            return
+        words = open(wordlist).read().split()
         resolver = dns.resolver.get_default_resolver()
         resolver.nameservers = [self.options['nameserver']]
-        resolver.lifetime = 2
+        resolver.lifetime = self.options['timeout']
         cnt = 0
         new = 0
-        try:
-            answers = resolver.query('%s.%s' % (self.random_str(15), domain))
-            self.output('Wildcard DNS entry found. Cannot brute force hostnames.')
-            return
-        except (dns.resolver.NoNameservers, dns.resolver.Timeout):
-            self.error('Invalid nameserver.')
-            return
-        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-            self.verbose('No Wildcard DNS entry found. Attempting to brute force DNS records.')
-            pass
-        if os.path.exists(wordlist):
-            words = open(wordlist).read().split()
+        for domain in domains:
+            self.heading(domain, level=0)
+            try:
+                answers = resolver.query('%s.%s' % (self.random_str(15), domain))
+                self.output('Wildcard DNS entry found for \'%s\'. Cannot brute force hostnames.' % (domain))
+                return
+            except (dns.resolver.NoNameservers, dns.resolver.Timeout):
+                self.error('Invalid nameserver.')
+                return
+            except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+                self.verbose('No Wildcard DNS entry found.')
             for word in words:
                 attempt = 0
                 while attempt < max_attempts:
@@ -65,13 +65,10 @@ class Module(module.Module):
                                     if rdata.rdtype == 5:
                                         cname = rdata.target.to_text()[:-1]
                                         self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
-                                        if not regex or re.search(regex, cname): new += self.add_host(cname)
+                                        new += self.add_hosts(cname)
                                         cnt += 1
                                     # add the host in case a CNAME exists without an A record
-                                    if not regex or re.search(regex, host): new += self.add_host(host)
+                                    new += self.add_hosts(host)
                     # break out of the loop
                     attempt = max_attempts
-            self.output('%d total hosts found.' % (cnt))
-            if new: self.alert('%d NEW hosts found!' % (new))
-        else:
-            self.error('Wordlist file (\'%s\') not found.' % (wordlist))
+        self.summarize(new, cnt)

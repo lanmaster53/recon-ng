@@ -5,26 +5,24 @@ import re
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'show info\' for options)')
-        self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
+        module.Module.__init__(self, params, query='SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
         self.info = {
                      'Name': 'My-IP-Neighbors.com Lookup',
                      'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Checks My-IP-Neighbors.com for other hosts hosted on the same server and updates the \'hosts\' table of the database with the results matching the given regex.',
+                     'Description': 'Checks My-IP-Neighbors.com for virtual hosts on the same server. Updates the \'hosts\' table with the results.',
                      'Comments': [
-                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]',
                                   'Knowing what other hosts are hosted on a provider\'s server can sometimes yield interesting results and help identify additional targets for assessment.'
                                   ]
                      }
    
-    def module_run(self):
-        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        regex = self.options['regex']
-
+    def module_run(self, hosts):
+        # build a regex that matches any of the stored domains
+        domains = [x[0] for x in self.query('SELECT DISTINCT domain from domains WHERE domain IS NOT NULL')]
+        regex = '(?:%s)' % ('|'.join(['\.' + x.replace('.', r'\.') for x in domains]))
         cnt = 0
         new = 0
         for host in hosts:
+            self.heading(host, level=0)
             url = 'http://www.my-ip-neighbors.com/?domain=%s' % (host)
             self.verbose('URL: %s' % url)
             resp = self.request(url)
@@ -35,8 +33,6 @@ class Module(module.Module):
             for result in results:
                 cnt += 1
                 self.output(result)
-                if not regex or re.search(regex, result):
-                    new += self.add_host(result)
-
-        self.output('%d total hosts found.' % (cnt))
-        if new: self.alert('%d NEW hosts found!' % (new))
+                if re.search(regex, result):
+                    new += self.add_hosts(result)
+        self.summarize(new, cnt)

@@ -5,34 +5,27 @@ import dns.resolver
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of hosts for module input (see \'show info\' for options)')
+        module.Module.__init__(self, params, query='SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL AND ip_address IS NULL ORDER BY host')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
-        self.register_option('overwrite', False, 'yes', 'overwrite exisitng ip addresses')
         self.info = {
                      'Name': 'Hostname Resolver',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Resolves the IP addresses for the hosts from the \'hosts\' table of the database and updates the \'hosts\' table with the results.',
+                     'Description': 'Resolves the IP address for a host. Updates the \'hosts\' table with the results.',
                      'Comments': [
-                                  'Source options: [ db | <hostname> | ./path/to/file | query <sql> ]'
-                                  'Note: Nameserver must be in IP form.']
+                                  'Note: Nameserver must be in IP form.'
+                                  ]
                      }
 
-    def module_run(self):
-        overwrite = self.options['overwrite']
+    def module_run(self, hosts):
         q = dns.resolver.get_default_resolver()
         q.nameservers = [self.options['nameserver']]
         q.lifetime = 3
-        extra = '' if overwrite else ' AND ip_address IS NULL'
-        query = 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL%s ORDER BY host' % (extra)
-        hosts = self.get_source(self.options['source'], query)
-
         for host in hosts:
             found = False
             try:
                 answers = q.query(host)
                 for answer in answers:
-                    self.add_host(host, answer.address)
+                    self.add_hosts(host, answer.address)
                     found = True
                     self.output('%s => %s' % (host, answer.address))
                 if found: self.query('DELETE FROM hosts WHERE host=? and ip_address IS NULL', (host,))

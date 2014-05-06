@@ -1,17 +1,17 @@
 import module
 # unique to module
 import urllib
+import re
 
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'show info\' for options)')
-        self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
+        module.Module.__init__(self, params, query='SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
+        self.register_option('regex', None, 'no', 'regex to search the company name and determine a match')
         self.info = {
                      'Name': 'Rapportive Contact Enumerator',
                      'Author': 'Quentin Kaiser (@qkaiser, contact[at]quentinkaiser.be) and Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contact information from the Rapportive.com API and updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contact information from the Rapportive.com API using email addresses as input. Updates the \'contacts\' table with the results.',
                      }
 
     def get_rapportive_session_token(self):
@@ -28,8 +28,7 @@ class Module(module.Module):
         self.add_key(token_name, session_token)
         return session_token
 
-    def module_run(self):
-        emails = self.get_source(self.options['source'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
+    def module_run(self, emails):
         session_token = self.get_rapportive_session_token()
         # normally handled as a FrameworkException, but needed here due to how the session token is retrieved
         if session_token is None: return
@@ -59,9 +58,9 @@ class Module(module.Module):
                     for occupation in contact['occupations']:
                         job_title = occupation['job_title']
                         company = occupation['company']
-                        if self.options['company'].lower() in company.lower():
+                        if not self.options['regex'] or re.search(self.options['regex'], company, re.IGNORECASE):
                             method = getattr(self, 'alert')
-                            new += self.add_contact(first_name, last_name, job_title, email, region)
+                            new += self.add_contacts(first_name, last_name, job_title, email=email, region=region)
                         else:
                             method = getattr(self, 'output')
                         method('%s %s - %s at %s' % (first_name, last_name, job_title, company))
@@ -75,6 +74,4 @@ class Module(module.Module):
                 self.error('Error: %s' % (resp.json['error_code']))
             if not emails: break
             email = emails.pop(0)
-
-        self.output('Information found for %d emails.' % (cnt))
-        if new: self.alert('NEW information found for %d contacts!' % (new))
+        self.summarize(new, cnt)

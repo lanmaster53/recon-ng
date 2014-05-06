@@ -24,9 +24,6 @@ class Module(module.Module):
         password = self.options['password']
         key = self.get_key('jigsaw_api')
 
-        # point guard
-        if not self.api_guard(5): return
-
         url = 'https://www.jigsaw.com/rest/contacts/%s.json' % (self.options['contact'])
         payload = {'token': key, 'username': username, 'password': password, 'purchaseFlag': 'true'}
         resp = self.request(url, payload=payload, redirect=False)

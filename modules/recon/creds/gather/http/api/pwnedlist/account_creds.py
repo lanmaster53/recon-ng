@@ -5,28 +5,21 @@ import os
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'show info\' for options)')
+        module.Module.__init__(self, params, query='SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')
         self.info = {
                      'Name': 'PwnedList - Account Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for credentials associated with the given usernames and updates the \'creds\' table of the database with the results.',
+                     'Description': 'Queries the PwnedList API for credentials associated with the given usernames. Updates the \'creds\' table with the results.',
                      'Comments': [
-                                  'Source options: [ db | email.address@domain.com | ./path/to/file | query <sql> ]',
                                   'API Query Cost: 1 query per request.'
                                   ]
                      }
 
-    def module_run(self):
+    def module_run(self, accounts):
         key = self.get_key('pwnedlist_api')
         secret = self.get_key('pwnedlist_secret')
         decrypt_key = secret[:16]
         iv = self.get_key('pwnedlist_iv')
-
-        accounts = self.get_source(self.options['source'], 'SELECT DISTINCT username FROM creds WHERE username IS NOT NULL and password IS NULL ORDER BY username')
-
-        # API query guard
-        if not self.api_guard(1): return
 
         # setup API call
         method = 'accounts.query'
@@ -52,7 +45,6 @@ class Module(module.Module):
                 leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))
                 cnt += 1
-                new += self.add_cred(username, password, None, leak)
+                new += self.add_creds(username, password, None, leak)
                 self.query('DELETE FROM creds WHERE username = \'%s\' and password IS NULL and hash IS NULL' % (username))
-            self.output('%d total credentials found.' % (cnt))
-            if new: self.alert('%d NEW credentials found!' % (new))
+            self.summarize(new, cnt)

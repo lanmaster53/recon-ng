@@ -4,30 +4,23 @@ import module
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', self.global_options['domain'], 'yes', 'source of domains for module input (see \'show info\' for options)')
+        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.register_option('store_table', False, 'no', 'store the results in a database table')
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for the given domain(s) to determine if any credentials from the domain(s) have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
+                     'Description': 'Queries the PwnedList API for a domain to determine if any associated credentials have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
                      'Comments': [
-                                  'Source options: [ <domain> | ./path/to/file ]',
                                   'API Query Cost: 1 query per request.'
                                   ]
                      }
 
-    def module_run(self):
+    def module_run(self, domains):
         key = self.get_key('pwnedlist_api')
         secret = self.get_key('pwnedlist_secret')
-
-        domains = self.get_source(self.options['source'])
         table = self.options['store_table']
-
-        # API query guard
-        if not self.api_guard(1*len(domains)): return
-
         tdata = []
+
         # setup API call
         method = 'domains.info'
         url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
@@ -50,4 +43,4 @@ class Module(module.Module):
             tdata.append([jsonobj['domain'], str(jsonobj['num_entries']), jsonobj['first_seen'], jsonobj['last_seen']])
         if tdata:
             header = ['Domain', 'Pwned_Accounts', 'First_Seen', 'Last_Seen']
-            self.table(tdata, header=header, store=self.options['store_table'])
+            self.table(tdata, header=header, title='Compromised Domains', store=self.options['store_table'])

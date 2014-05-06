@@ -4,20 +4,14 @@ import module
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of leak ids for module input (see \'show info\' for options)')
+        module.Module.__init__(self, params, query='SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the local database for information associated with the given leak ID(s). The \'leaks_dump\' module must be used to populate the local database before this module will execute successfully.',
-                     'Comments': [
-                                  'Source options: [ db | <leak_id> | ./path/to/file | query <sql> ]'
-                                  ]
+                     'Description': 'Queries the local database for information associated with a leak ID. The \'leaks_dump\' module must be used to populate the local database before this module will execute successfully.'
                      }
 
-    def module_run(self):
-        leak_ids = self.get_source(self.options['source'], 'SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
-
+    def module_run(self, leak_ids):
         if not self.query('SELECT COUNT(*) FROM leaks')[0][0]:
             self.output('Please run the \'leaks_dump\' module to populate the database and try again.')
             return

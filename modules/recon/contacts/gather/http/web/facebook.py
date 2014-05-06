@@ -7,26 +7,26 @@ import urllib
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
+        module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
         self.register_option('username', None, 'yes', 'Facebook account username')
         self.register_option('password', None, 'yes', 'Facebook account password')
         self.info = {
                      'Name': 'Facebook Contact Enumerator',
                      'Author': 'Quentin Kaiser (@qkaiser) and Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from Facebook.com and updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contacts from Facebook.com. Updates the \'contacts\' table with the results.',
                      }
 
-    def module_run(self):
+    def module_run(self, companies):
         self.br = self.browser()
         self.cnt = 0
         self.new = 0
         if self.login(self.options['username'],self.options['password']):
-            company = self.get_company_id(self.options['company'])
-            if company:
-                self.get_contacts(str(company))
-                self.output('%d total contacts found.' % (self.cnt))
-                if self.new: self.alert('%d NEW contacts found!' % (self.new))            
+            for company in companies:
+                self.heading(company, level=0)
+                company_id = self.get_company_id(company)
+                if company_id:
+                    self.get_contacts(str(company_id))
+            self.summarize(self.new, self.cnt)
 
     def login(self, username, password):
         self.verbose('Authenticating to Facebook...')
@@ -57,11 +57,11 @@ class Module(module.Module):
         companies = json.loads(content[9:])['payload']['entities']
         # return nothing if there are no matches
         if not companies:
-            self.output('No Company Matches Found.')
+            self.output('No company matches found.')
             return
         # return a unique match in such exists
         elif len(companies) == 1:
-            self.alert('Unique Company Match Found: %s' % (companies[0]['text']))
+            self.alert('Unique company match found: %s' % (companies[0]['text']))
             return companies[0]['uid']
         # prompt the user to choose from multiple matches
         else:
@@ -69,7 +69,7 @@ class Module(module.Module):
             choices = range(0, len(companies))
             for i in choices:
                 self.output('[%d] %s' % (i, companies[i]['text']))
-            choice = raw_input('Choose a Company [0]: ')
+            choice = raw_input('Choose a company [0]: ')
             # the first choice is the default
             if choice is '':
                 return companies[0]['uid']
@@ -115,4 +115,4 @@ class Module(module.Module):
             title = self.html_unescape(title or 'Employee')
             self.output('%s - %s' % (name, title))
             self.cnt += 1
-            self.new += self.add_contact(fname=fname, mname=mname, lname=lname, title=title)
+            self.new += self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title)

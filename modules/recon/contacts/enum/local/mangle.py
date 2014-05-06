@@ -6,7 +6,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('domain', self.global_options['domain'], 'no', 'target email domain')
+        self.register_option('domain', None, 'no', 'target email domain')
         self.register_option('pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
         self.register_option('substitute', '-', 'yes', 'character to substitute for invalid email address characters')
         self.register_option('max-length', 30, 'yes', 'maximum length of email address prefix or username')
@@ -14,7 +14,7 @@ class Module(module.Module):
         self.info = {
                      'Name': 'Contact Name Mangler',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact and updating the \'contacts\' table of the database with the results.',
+                     'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact. Updates the \'contacts\' table with the results.',
                      'Comments': [
                                   'Pattern options: <fi>,<fn>,<mi>,<mn>,<li>,<ln>',
                                   'Example:         <fi>.<ln> => j.doe@domain.com',
@@ -23,7 +23,7 @@ class Module(module.Module):
                      }
 
     def module_run(self):
-        contacts = self.query('SELECT rowid, fname, mname, lname FROM contacts ORDER BY fname' if self.options['overwrite'] else 'SELECT rowid, fname, mname, lname FROM contacts WHERE email IS NULL ORDER BY fname')
+        contacts = self.query('SELECT rowid, first_name, middle_name, last_name FROM contacts ORDER BY first_name' if self.options['overwrite'] else 'SELECT rowid, first_name, middle_name, last_name FROM contacts WHERE email IS NULL ORDER BY first_name')
         if len(contacts) == 0:
             self.error('No contacts to mangle.')
             return

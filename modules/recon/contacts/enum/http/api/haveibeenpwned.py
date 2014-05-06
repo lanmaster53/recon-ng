@@ -4,20 +4,14 @@ import module
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of accounts for module input (see \'show info\' for options)')
+        module.Module.__init__(self, params, query='SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
         self.info = {
                      'Name': 'HaveIBeenPwned Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) & Tyler Halfpop (@tylerhalfpop)',
-                     'Description': 'Leverages HaveIBeenPwned.com to determine if email addresses are associated with leaked credentials',
-                     'Comments': [
-                                  'Source options: [ db | email.address@domain.com | ./path/to/file | query <sql> ]'
-                                  ]
+                     'Description': 'Leverages HaveIBeenPwned.com to determine if email addresses are associated with leaked credentials'
                      }
 
-    def module_run(self):
-        accounts = self.get_source(self.options['source'], 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
-
+    def module_run(self, accounts):
         # retrieve status
         cnt = 0
         pwned = 0
@@ -33,6 +27,6 @@ class Module(module.Module):
                 continue
             else:
                 self.alert('%s => Found! Seen in the %s data dump.' % (account, resp.json[0]))
-                pwned += 1
+                pwned += self.add_creds(account)
             cnt += 1
-        self.output('%d/%d targets pwned.' % (pwned, cnt))
+        self.summarize(pwned, cnt)

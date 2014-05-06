@@ -5,23 +5,16 @@ import json
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'show info\' for options)')
+        module.Module.__init__(self, params, query='SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL ORDER BY ip_address')
         self.info = {
                      'Name': 'IPInfoDB GeoIP',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages the ipinfodb.com API to geolocate the given host(s) by IP address and updates the \'hosts\' table of the database with the results.',
-                     'Comments': [
-                                  'Source options: [ db | <address> | ./path/to/file | query <sql> ]'
-                                  ]
+                     'Description': 'Leverages the ipinfodb.com API to geolocate a host by IP address. Updates the \'hosts\' table with the results.'
                      }
    
-    def module_run(self):
+    def module_run(self, hosts):
         api_key = self.get_key('ipinfodb_api')
-        hosts = self.get_source(self.options['source'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-
         for host in hosts:
-            # request the scan
             url = 'http://api.ipinfodb.com/v3/ip-city/?key=%s&ip=%s&format=json' % (api_key, host)
             self.verbose('URL: %s' % url)
             resp = self.request(url)
@@ -32,8 +25,8 @@ class Module(module.Module):
             if jsonobj['statusCode'].lower() == 'error':
                 self.error(jsonobj['statusMessage'])
                 continue
-
-            if self.options['source'] == 'db':
+            # only store results if input came from the database
+            if self.options['source'] == 'default':
                 location = []
                 for name in ['cityName', 'regionName']:
                     if jsonobj[name]: location.append(str(jsonobj[name]).title())
@@ -43,9 +36,8 @@ class Module(module.Module):
                 data.append(str(jsonobj['longitude']))
                 data.append(host)
                 self.query('UPDATE hosts SET region=?, country=?, latitude=?, longitude=? WHERE ip_address=?', tuple(data))
-
+            # output the results in table format
             tdata = []
             for key in jsonobj:
                 tdata.append([key, jsonobj[key]])
-            # output the results in table format
             self.table(tdata, header=['Host Info', 'Value'])

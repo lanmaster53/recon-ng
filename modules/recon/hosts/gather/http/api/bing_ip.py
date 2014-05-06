@@ -6,25 +6,21 @@ import re
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('source', 'db', 'yes', 'source of addresses for module input (see \'show info\' for options)')
-        self.register_option('regex', '%s$' % (self.global_options['domain']), 'no', 'regex to match for adding results to the database')
+        module.Module.__init__(self, params, query='SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL ORDER BY ip_address')
         self.info = {
                      'Name': 'Bing API IP Neighbor Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages the Bing API and "ip:" advanced search operator to enumerate other virtual hosts sharing the same IP address.',
-                     'Comments': [
-                                  'Source options: [ db | <address> | ./path/to/file | query <sql> ]',
-                                  ]
+                     'Description': 'Leverages the Bing API and "ip:" advanced search operator to enumerate other virtual hosts sharing the same IP address. Updates the \'hosts\' table with the results.'
                      }
 
-    def module_run(self):
-        addresses = self.get_source(self.options['source'], 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        regex = self.options['regex']
-
+    def module_run(self, addresses):
+        # build a regex that matches any of the stored domains
+        domains = [x[0] for x in self.query('SELECT DISTINCT domain from domains WHERE domain IS NOT NULL')]
+        regex = '(?:%s)' % ('|'.join(['\.' + x.replace('.', r'\.') for x in domains]))
         new = 0
         hosts = []
         for address in addresses:
+            self.heading(address, level=0)
             query = '\'ip:%s\'' % (address)
             results = self.search_bing_api(query)
             if not results: self.verbose('No additional hosts discovered at \'%s\'.' % (address))
@@ -34,8 +30,6 @@ class Module(module.Module):
                     hosts.append(host)
                     self.output(host)
                     # add each host to the database
-                    if not regex or re.search(regex, host):
-                        new += self.add_host(host, address)
-
-        self.output('%d total hosts found.' % (len(hosts)))
-        if new: self.alert('%d NEW hosts found!' % (new))
+                    if re.search(regex, host):
+                        new += self.add_hosts(host, address)
+        self.summarize(new, len(hosts))

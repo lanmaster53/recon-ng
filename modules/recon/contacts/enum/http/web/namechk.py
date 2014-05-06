@@ -13,7 +13,7 @@ class Module(module.Module):
         self.info = {
                      'Name': 'NameChk.com Username Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
-                     'Description': 'Leverages NameChk.com to validate the existance of usernames at specific web sites.',
+                     'Description': 'Leverages NameChk.com to validate the existance of usernames on specific web sites.',
                      'Comments': [
                                   'Note: The global timeout option may need to be increased to support slower sites.']
                      }

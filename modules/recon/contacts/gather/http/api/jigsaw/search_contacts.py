@@ -6,56 +6,58 @@ import time
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('company', self.global_options['company'], 'yes', self.global_options.description['company'])
+        module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
         self.register_option('keywords', None, 'no', 'additional keywords to identify company')
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from the Jigsaw.com API and updates the \'contacts\' table of the database with the results.',
+                     'Description': 'Harvests contacts from the Jigsaw.com API. Updates the \'contacts\' table with the results.'
                      }
 
-    def module_run(self):
+    def module_run(self, companies):
         self.api_key = self.get_key('jigsaw_api')
-        company_id = self.get_company_id()
-        if company_id:
-            self.get_contacts(company_id)
+        self.tot = 0
+        self.new = 0
+        for company in companies:
+            company_id = self.get_company_id(company)
+            if company_id:
+                self.get_contacts(company_id)
+        self.summarize(self.new, self.tot)
 
-    def get_company_id(self):
-        self.output('Gathering Company IDs...')
-        company_name = self.options['company']
+    def get_company_id(self, company_name):
+        self.heading(company_name, level=0)
         keywords = self.options['keywords']
         all_companies = []
         cnt = 0
         size = 50
         params = ' '.join([x for x in [company_name, keywords] if x])
         url = 'https://www.jigsaw.com/rest/searchCompany.json'
-        while True:
-            payload = {'token': self.api_key, 'name': params, 'offset': cnt, 'pageSize': size}
-            self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
-            resp = self.request(url, payload=payload, redirect=False)
-            jsonobj = resp.json
-            if jsonobj['totalHits'] == 0:
-                self.output('No Company Matches Found.')
-                return
-            else:
-                companies = jsonobj['companies']
-                for company in companies:
-                    if company['activeContacts'] > 0:
-                        location = '%s, %s, %s' % (company['city'], company['state'], company['country'])
-                        all_companies.append((company['companyId'], company['name'], company['activeContacts'], location))
-                cnt += size
-                if cnt > jsonobj['totalHits']: break
-                # jigsaw rate limits requests per second to the api
-                time.sleep(.25)
+        #while True:
+        payload = {'token': self.api_key, 'name': params, 'offset': cnt, 'pageSize': size}
+        self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
+        resp = self.request(url, payload=payload, redirect=False)
+        jsonobj = resp.json
+        if jsonobj['totalHits'] == 0:
+            self.output('No company matches found.')
+            return
+        else:
+            companies = jsonobj['companies']
+            for company in companies:
+                if company['activeContacts'] > 0:
+                    location = '%s, %s, %s' % (company['city'], company['state'], company['country'])
+                    all_companies.append((company['companyId'], company['name'], company['activeContacts'], location))
+            #cnt += size
+            #if cnt > jsonobj['totalHits']: break
+            # jigsaw rate limits requests per second to the api
+            #time.sleep(.25)
         if len(all_companies) == 0:
-            self.output('No Contacts Available for Companies Matching \'%s\'.' % (self.options['company']))
+            self.output('No contacts available for companies matching \'%s\'.' % (self.options['company']))
             return
         if len(all_companies) == 1:
             company_id = all_companies[0][0]
             company_name = all_companies[0][1]
             contact_cnt = all_companies[0][2]
-            self.output('Unique Company Match Found: [%s - %s (%s contacts)]' % (company_name, company_id, contact_cnt))
+            self.output('Unique company match found: [%s - %s (%s contacts)]' % (company_name, company_id, contact_cnt))
             return company_id
         id_len = len(max([str(x[0]) for x in all_companies], key=len))
         for company in all_companies:
@@ -65,10 +67,8 @@ class Module(module.Module):
         return company_id
 
     def get_contacts(self, company_id):
-        self.output('Gathering Contacts...')
-        tot = 0
+        self.output('Gathering contacts...')
         cnt = 0
-        new = 0
         size = 100
         url = 'https://www.jigsaw.com/rest/searchContact.json'
         while True:
@@ -92,11 +92,9 @@ class Module(module.Module):
                 region = ', '.join(region)
                 country = self.html_unescape(contact['country']).title()
                 self.output('[%s] %s - %s (%s - %s)' % (contact_id, name, title, region, country))
-                new += self.add_contact(fname=fname, mname=mname, lname=lname, title=title, region=region, country=country)
-                tot += 1
+                self.new += self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region, country=country)
+                self.tot += 1
             cnt += size
             if cnt > jsonobj['totalHits']: break
             # jigsaw rate limits requests per second to the api
             time.sleep(.25)
-        self.output('%d total contacts found.' % (tot))
-        if new: self.alert('%d NEW contacts found!' % (new))

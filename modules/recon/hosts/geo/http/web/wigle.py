@@ -7,16 +7,14 @@ import re
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
+        module.Module.__init__(self, params, query='SELECT latitude, longitude FROM locations WHERE latitude AND longitude IS NOT NULL')
         self.register_option('username', None, 'yes', 'wigle account username')
         self.register_option('password', None, 'yes', 'wigle account password')
-        self.register_option('latitude', None, 'yes', 'latitude of center point')
-        self.register_option('longitude', None, 'yes', 'longitude of center point')
         self.register_option('radius', 0.1, 'yes', 'radius in km from center point to search')
         self.info = {
                      'Name': 'WiGLE Access Point Finder',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages WiGLE.net to return a list of Access Points in promixity to the given location.',
+                     'Description': 'Leverages WiGLE.net to return a list of Access Points in promixity to a location.'
                      }
 
     # degrees to radians
@@ -39,32 +37,24 @@ class Module(module.Module):
         Bd = WGS84_b * math.sin(lat)
         return math.sqrt( (An*An + Bn*Bn)/(Ad*Ad + Bd*Bd) )
 
-    # Bounding box surrounding the point at given coordinates,
+    # bounding box surrounding the point at given coordinates,
     # assuming local approximation of Earth surface as a sphere
     # of radius given by WGS84
     def boundingBox(self, latitudeInDegrees, longitudeInDegrees, halfSideInKm):
         lat = self.deg2rad(latitudeInDegrees)
         lon = self.deg2rad(longitudeInDegrees)
         halfSide = 1000*halfSideInKm
-
-        # Radius of Earth at given latitude
+        # radius of Earth at given latitude
         radius = self.WGS84EarthRadius(lat)
-        # Radius of the parallel at given latitude
+        # radius of the parallel at given latitude
         pradius = radius*math.cos(lat)
-
         latMin = lat - halfSide/radius
         latMax = lat + halfSide/radius
         lonMin = lon - halfSide/pradius
         lonMax = lon + halfSide/pradius
-
         return (self.rad2deg(latMin), self.rad2deg(lonMin), self.rad2deg(latMax), self.rad2deg(lonMax))
 
-    def module_run(self):
-        coords = self.boundingBox(self.options['latitude'], self.options['longitude'], self.options['radius'])
-        latrange1 = coords[0]
-        longrange1 = coords[1]
-        latrange2 = coords[2]
-        longrange2 = coords[3]
+    def module_run(self, locations):
         payload = {}
         payload['credential_0'] = self.options['username']
         payload['credential_1'] = self.options['password']
@@ -72,30 +62,41 @@ class Module(module.Module):
         cookiejar = CookieJar()
         resp = self.request('https://wigle.net/gps/gps/main/login/', method='POST', payload=payload, redirect=False, cookiejar=cookiejar)
         cookiejar = resp.cookiejar
-        payload = {}
-        payload['latrange1'] = str(latrange1)
-        payload['latrange2'] = str(latrange2)
-        payload['longrange1'] = str(longrange1)
-        payload['longrange2'] = str(longrange2)
-        nodes = []
-        page = 1
-        while True:
-            resp = self.request('https://wigle.net/gps/gps/main/confirmquery/', payload=payload, cookiejar=cookiejar)
-            if 'too many queries' in resp.text:
-                self.alert('You\'re account has reached its daily limit of API queries.')
-                break
-            header = re.findall('<th class="searchhead">(.*?)</th>', resp.text)
-            pattern = '<tr class="search".*?href="(.*?)">Get Map</a></td>\s<td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>'
-            nodes.extend(re.findall(pattern, resp.text.replace('&nbsp;', ''), re.DOTALL))
-            if not 'Next100 >>' in resp.text:
-                break
-            payload['pagestart'] = page * 100
-            page +=1
-        if nodes:
-            tdata = []
-            for node in nodes:
-                tdata.append([node[1], node[2], node[4], node[9], node[11], node[12], node[13], node[16]])
-            self.table(tdata, header=header)
-            self.output('%d access points found.' % (len(nodes)-1))
-        else:
-            self.output('No access points found.')
+        for location in locations:
+            self.heading('%s,%s' % location, level=0)
+            latitude = float(location[0])
+            longitude = float(location[1])
+            coords = self.boundingBox(latitude, longitude, self.options['radius'])
+            latrange1 = coords[0]
+            longrange1 = coords[1]
+            latrange2 = coords[2]
+            longrange2 = coords[3]
+            payload = {}
+            payload['latrange1'] = str(latrange1)
+            payload['latrange2'] = str(latrange2)
+            payload['longrange1'] = str(longrange1)
+            payload['longrange2'] = str(longrange2)
+            #self.output(repr(payload))
+            nodes = []
+            page = 1
+            while True:
+                resp = self.request('https://wigle.net/gps/gps/main/confirmquery/', payload=payload, cookiejar=cookiejar)
+                if 'too many queries' in resp.text:
+                    self.alert('You\'re account has reached its daily limit of API queries.')
+                    return
+                header = re.findall('<th class="searchhead">(.*?)</th>', resp.text)
+                pattern = '<tr class="search".*?href="(.*?)">Get Map</a></td>\s<td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>'
+                nodes.extend(re.findall(pattern, resp.text.replace('&nbsp;', ''), re.DOTALL))
+                if not 'Next100 >>' in resp.text:
+                    break
+                break # remove this break to paginate
+                payload['pagestart'] = page * 100
+                page +=1
+            if nodes:
+                tdata = []
+                for node in nodes:
+                    tdata.append([node[1], node[2], node[4], node[9], node[11], node[12], node[13], node[16]])
+                self.table(tdata, header=header)
+                self.output('%d access points found.' % (len(nodes)-1))
+            else:
+                self.output('No access points found.')
