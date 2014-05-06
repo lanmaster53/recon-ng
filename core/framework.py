@@ -349,6 +349,17 @@ class Framework(cmd.Cmd):
         )
         return self.insert('locations', data, (data.keys()))
 
+    def add_vulnerabilities(self, host, reference, example, publish_date, category):
+        '''Adds a vulnerability to the database and returns the affected row count.'''
+        data = dict(
+            host = self.to_unicode(host),
+            reference = self.to_unicode(reference),
+            example = self.to_unicode(example),
+            publish_date = self.to_unicode(publish_date),
+            category = self.to_unicode(category)
+        )
+        return self.insert('vulnerabilities', data, (data.keys()))
+
     def add_hosts(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
         '''Adds a host to the database and returns the affected row count.'''
         data = dict(
