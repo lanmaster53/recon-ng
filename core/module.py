@@ -381,6 +381,9 @@ class Module(framework.Framework):
             print('Description:')
             print('%s%s' % (self.spacer, textwrap.fill(self.info['Description'], 100, subsequent_indent=self.spacer)))
             print('')
+        # options
+        print('Options:', end='')
+        self.show_options()
         # sources
         if hasattr(self, 'default_source'):
             print('Source Options:')
@@ -389,9 +392,6 @@ class Module(framework.Framework):
             print('%s%spath to a file containing a list of inputs' % (self.spacer, '<path>'.ljust(15)))
             print('%s%sdatabase query returning one column of inputs' % (self.spacer, 'query <sql>'.ljust(15)))
             print('')
-        # options
-        print('Options:', end='')
-        self.show_options()
         # comments
         if 'Comments' in self.info and self.info['Comments']:
             print('Comments:')
