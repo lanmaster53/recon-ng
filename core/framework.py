@@ -1,5 +1,6 @@
 from __future__ import print_function
 import cmd
+import inspect
 import json
 import os
 import random
@@ -230,7 +231,7 @@ class Framework(cmd.Cmd):
             print('%s%s' % (self.spacer, line.title()))
             print('%s%s' % (self.spacer, self.ruler*len(line)))
 
-    def table(self, data, header=[], title='', store=False):
+    def table(self, data, header=[], title=''):
         '''Accepts a list of rows and outputs a table.'''
         tdata = list(data)
         if header:
@@ -276,7 +277,7 @@ class Framework(cmd.Cmd):
             # bottom of ascii table
             print(separator)
             print('')
-        if store:
+        if self.global_options['store_tables'] and 'module_run' in [x[3] for x in inspect.stack()]:
             # store the table
             table = title if title else self.modulename.split('/')[-1]
             self.add_table(table, data, header)

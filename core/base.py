@@ -76,11 +76,12 @@ class Recon(framework.Framework):
             os.makedirs(self.home)
 
     def init_global_options(self):
-        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
-        self.register_option('proxy', None, 'no', 'proxy server (address:port)')
-        self.register_option('timeout', 10, 'yes', 'socket timeout (seconds)')
-        self.register_option('verbose', True,  'yes', 'enable verbose output')
         self.register_option('debug', False,  'yes', 'enable debugging output')
+        self.register_option('proxy', None, 'no', 'proxy server (address:port)')
+        self.register_option('store_tables', False, 'yes', 'store module generated tables')
+        self.register_option('timeout', 10, 'yes', 'socket timeout (seconds)')
+        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
+        self.register_option('verbose', True,  'yes', 'enable verbose output')
 
     def load_modules(self, reload=False):
         self.loaded_category = {}
