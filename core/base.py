@@ -10,6 +10,7 @@ import json
 import os
 import random
 import re
+import shutil
 import sys
 import traceback
 import __builtin__
@@ -129,26 +130,6 @@ class Recon(framework.Framework):
         print(random.choice(eggs))
         return 
 
-    def init_workspace(self, workspace):
-        workspace = '%s/workspaces/%s' % (self.home, workspace)
-        new = False
-        try:
-            os.makedirs(workspace)
-            new = True
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                self.error(e.__str__())
-                return False
-        # set workspace attributes
-        self.workspace = framework.Framework.workspace = workspace
-        self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
-        # configure new database or conduct migrations
-        self.create_db() if new else self.migrate_db()
-        # load workspace configuration
-        self.init_global_options()
-        self.load_config()
-        return True
-
     def create_db(self):
         self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT, description TEXT)')
@@ -165,7 +146,7 @@ class Recon(framework.Framework):
         self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
         self.query('PRAGMA user_version = 2')
 
-    def migrate_db(self):
+    def migrate(self):
         db_version = self.query('PRAGMA user_version')[0][0]
         if db_version == 0:
             # add mname column to contacts table
@@ -198,6 +179,58 @@ class Recon(framework.Framework):
             self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
             self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
             self.query('PRAGMA user_version = 2')
+        # migrate keys
+        key_path = '%s/keys.dat' % (self.home)
+        if os.path.exists(key_path):
+            try:
+                key_data = json.loads(open(key_path, 'rb').read())
+                for key in key_data:
+                    self.add_key(key, key_data[key])
+                os.remove(key_path)
+            except:
+                self.error('Corrupt key file. Manual migration required.')
+
+    #==================================================
+    # WORKSPACE METHODS
+    #==================================================
+
+    def init_workspace(self, workspace):
+        workspace = '%s/workspaces/%s' % (self.home, workspace)
+        new = False
+        try:
+            os.makedirs(workspace)
+            new = True
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                self.error(e.__str__())
+                return False
+        # set workspace attributes
+        self.workspace = framework.Framework.workspace = workspace
+        self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
+        # configure new database or conduct migrations
+        self.create_db() if new else self.migrate()
+        # load workspace configuration
+        self.init_global_options()
+        self.load_config()
+        return True
+
+    def delete_workspace(self, workspace):
+        path = '%s/workspaces/%s' % (self.home, workspace)
+        try:
+            shutil.rmtree(path)
+        except OSError:
+            return False
+        if workspace == self.workspace.split('/')[-1]:
+            self.init_workspace('default')
+        return True
+
+    def get_workspaces(self):
+        dirnames = []
+        path = '%s/workspaces' % (self.home)
+        for name in os.listdir(path):
+            if os.path.isdir('%s/%s' % (path, name)):
+                dirnames.append(name)
+        return dirnames
 
     #==================================================
     # SHOW METHODS
@@ -226,13 +259,27 @@ class Recon(framework.Framework):
         '''Reloads all modules'''
         self.load_modules(True)
 
-    def do_workspace(self, params):
+    def do_workspaces(self, params):
         '''Sets the workspace'''
         if not params:
-            self.help_workspace()
+            self.help_workspaces()
             return
-        if not self.init_workspace(params):
-            self.error('Unable to create \'%s\' workspace.' % (value))
+        params = params.split()
+        arg = params.pop(0).lower()
+        if arg == 'list':
+            self.table([[x] for x in self.get_workspaces()], header=['Workspaces'])
+        elif arg in ['add', 'select']:
+            if len(params) == 1:
+                if not self.init_workspace(params[0]):
+                    self.output('Unable to initialize \'%s\' workspace.' % (params[0]))
+            else: print('Usage: workspace [add|select] <name>')
+        elif arg == 'delete':
+            if len(params) == 1:
+                if not self.delete_workspace(params[0]):
+                    self.output('Unable to delete \'%s\' workspace.' % (params[0]))
+            else: print('Usage: workspace delete <name>')
+        else:
+            self.help_workspaces()
 
     def do_load(self, params):
         '''Loads specified module'''
@@ -276,19 +323,25 @@ class Recon(framework.Framework):
     # HELP METHODS
     #==================================================
 
-    def help_workspace(self):
-        print(getattr(self, 'do_workspace').__doc__)
+    def help_workspaces(self):
+        print(getattr(self, 'do_workspaces').__doc__)
         print('')
-        print('Usage: workspace <string>')
+        print('Usage: workspaces [list|add|delete|select]')
         print('')
 
     #==================================================
     # COMPLETE METHODS
     #==================================================
 
-    def complete_workspace(self, text, *ignored):
-        path = '%s/workspaces' % (self.home)
-        return [name for name in os.listdir(path) if name.startswith(text) and os.path.isdir('%s/%s' % (path, name))]
+    def complete_workspaces(self, text, line, *ignored):
+        args = line.split()
+        options = ['list', 'add', 'delete', 'select']
+        if 1 < len(args) < 4:
+            if args[1].lower() in options[2:]:
+                return [x for x in self.get_workspaces() if x.startswith(text)]
+            if args[1].lower() in options[:2]:
+                return []
+        return [x for x in options if x.startswith(text)]
 
 #=================================================
 # SUPPORT CLASSES

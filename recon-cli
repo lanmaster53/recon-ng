@@ -13,7 +13,7 @@ def recon_cli(args):
     if args.check:
         if not x.version_check(): return
     # set the given workspace
-    if args.workspace: x.do_workspace(args.workspace)
+    if args.workspace: x.init_workspace(args.workspace)
     # set given global options
     for option in args.goptions:
         param = ' '.join(option.split('='))

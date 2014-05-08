@@ -658,14 +658,6 @@ class Framework(cmd.Cmd):
             print('%s%s' % (self.spacer*2, module))
         print('')
 
-    def show_workspaces(self):
-        dirnames = []
-        path = '%s/workspaces' % (self.home)
-        for name in os.listdir(path):
-            if os.path.isdir('%s/%s' % (path, name)):
-                dirnames.append([name])
-        self.table(dirnames, header=['Workspaces'])
-
     def show_dashboard(self):
         rows = self.query('SELECT * FROM dashboard ORDER BY 1')
         if rows:
@@ -758,14 +750,12 @@ class Framework(cmd.Cmd):
         elif arg in ['add', 'update']:
             if len(params) == 2:
                 self.add_key(params[0], params[1])
-            else:
-                print('Usage: keys [add|update] <name> <value>')
+            else: print('Usage: keys [add|update] <name> <value>')
         elif arg == 'delete':
             if len(params) == 1:
                 if self.delete_key(params[0]):
                     self.output('Key \'%s\' deleted.' % (params[0]))
-            else:
-                print('Usage: keys delete <name>')
+            else: print('Usage: keys delete <name>')
         else:
             self.help_keys()
 
@@ -1069,7 +1059,7 @@ class Framework(cmd.Cmd):
     def complete_keys(self, text, line, *ignored):
         args = line.split()
         options = ['list', 'add', 'delete', 'update']
-        if len(args) > 1:
+        if 1 < len(args) < 4:
             if args[1].lower() in options[2:]:
                 return [x[0] for x in self.query_keys('SELECT name FROM keys') if x[0].startswith(text)]
             if args[1].lower() in options[:2]:

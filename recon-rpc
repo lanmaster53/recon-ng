@@ -65,7 +65,7 @@ class ReconState:
             return self.sessions[sid]["module"].query('SELECT * FROM %s ORDER BY 1' % (param))
 
     def workspace(self, param, sid):
-        self.sessions[sid]["recon"].do_workspace(param)
+        self.sessions[sid]["recon"].init_workspace(param)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", type=str, action="store", default='jsonrpc', help="Set RPC server type", dest="server_type", metavar="[jsonrpc|xmlrpc]")
