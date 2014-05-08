@@ -23,7 +23,6 @@ class Module(module.Module):
         username = self.options['username']
         password = self.options['password']
         key = self.get_key('jigsaw_api')
-
         url = 'https://www.jigsaw.com/rest/contacts/%s.json' % (self.options['contact'])
         payload = {'token': key, 'username': username, 'password': password, 'purchaseFlag': 'true'}
         resp = self.request(url, payload=payload, redirect=False)
@@ -31,11 +30,11 @@ class Module(module.Module):
         else:
             self.error('Invalid JSON response.\n%s' % (resp.text))
             return
-
         # handle output
         contacts = jsonobj['contacts']
+        header = ['Item', 'Info']
         for contact in contacts:
             tdata = []
             for key in contact:
                 tdata.append((key.title(), contact[key]))
-            self.table(tdata)
+            self.table(tdata, header=header, title='Jigsaw %s' % (contact['contactId']))

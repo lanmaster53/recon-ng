@@ -3,7 +3,6 @@ import module
 import re
 from hashlib import sha1
 from hmac import new as hmac
-import socket
 
 class Module(module.Module):
 
@@ -20,36 +19,25 @@ class Module(module.Module):
 
     def module_run(self):
         username = self.options['username']
-
-        # retrive list of sites
+        # retrieve list of sites
+        self.verbose('Retrieving site data...')
         url = 'http://namechk.com/Content/sites.min.js'
         resp = self.request(url)
-        
         # extract sites info from the js file
         pattern = 'n:"(.+?)",r:\d+,i:(\d+)'
         sites = re.findall(pattern, resp.text)
-
-        # output table of sites info
-        if self.global_options['verbose']:
-            tdata = []
-            for site in sites:
-                tdata.append([site[1], site[0]])
-            self.table(tdata, header=['Code', 'Name'])
-
-        # retrive statuses
+        # validate memberships
+        self.verbose('Validating site memberships...')
         key = "1Sx8srDg1u57Ei2wqX65ymPGXu0f7uAig13u"
         url = 'http://namechk.com/check'
-
         # this header is required
         headers = {'X-Requested-With': 'XMLHttpRequest'}
-
         status_dict = {
                        '1': 'Available',
                        '2': 'User Exists!',
                        '3': 'Unknown',
                        '4': 'Indefinite'
                        }
-
         for site in sites:
             i = site[1]
             name = site[0]

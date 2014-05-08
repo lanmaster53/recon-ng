@@ -17,7 +17,6 @@ class Module(module.Module):
     def module_run(self, domains):
         cnt = 0
         new = 0
-        self.output('Gathering XSS data...')
         for domain in domains:
             self.heading(domain, level=0)
             url = 'http://xssed.com/search?key=%s' % (domain)

@@ -19,7 +19,6 @@ class Module(module.Module):
         url = 'http://punkspider.hyperiongray.com/service/search/domain/'
         cnt = 0
         new = 0
-        self.output('Gathering vulnerability scan data...')
         for domain in domains:
             self.heading(domain, level=0)
             payload = {'searchKey': 'url', 'searchValue': '"%s"' % (domain), 'filterType': 'OR'}

@@ -30,4 +30,4 @@ class Module(module.Module):
             tdata.append((result['geometry']['location_type'], result['formatted_address']))
         # output the table
         if tdata:
-            self.table(tdata, header=['Type', 'Address'])
+            self.table(tdata, header=['Type', 'Address'], store=False)

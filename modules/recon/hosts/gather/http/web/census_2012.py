@@ -6,7 +6,6 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL ORDER BY netblock')
-        self.register_option('store_table', False, 'no', 'store the results in a database table')
         self.info = {
                      'Name': 'Internet Census 2012 Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -15,25 +14,28 @@ class Module(module.Module):
                                   'http://exfiltrated.com/querystart.php'
                                   ]
                      }
-   
+
     def module_run(self, netblocks):
         url = 'http://exfiltrated.com/query.php'
-        tdata = []
-        self.output('Gathering port scan data...')
+        cnt = 0
+        new = 0
         for netblock in netblocks:
+            self.heading(netblock, level=0)
             addresses = self.cidr_to_list(netblock)
             first = addresses[0]
             last = addresses[-1]
             self.verbose('%s (%s - %s)' % (netblock, first, last))
             payload = {'startIP': first, 'endIP': last, 'includeHostnames': 'Yes', 'rawDownload': 'Yes'}
             resp = self.request(url, payload=payload)
-            for host in resp.text.strip().split('\r\n')[1:]:
-                address = host.split('\t')[1]
-                port = host.split('\t')[2]
-                hostname = host.split('\t')[0]
-                tdata.append([hostname, address, port])
-        if not tdata:
-            self.output('No scan data available.')
-            return
-        header=['hostname', 'address', 'port']
-        self.table(tdata, header=header, title='Census 2012', store=self.options['store_table'])
+            hosts = resp.text.strip().split('\r\n')[1:]
+            for host in hosts:
+                elements = host.split('\t')
+                address = elements[1]
+                port = elements[2]
+                hostname = elements[0]
+                self.output('%s (%s) - %s' % (address, hostname, port))
+                new += self.add_ports(ip_address=address, host=hostname, port=port)
+                cnt += 1
+            if not hosts:
+                self.output('No scan data available.')
+        self.summarize(new, cnt)
