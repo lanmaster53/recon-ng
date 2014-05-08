@@ -231,7 +231,7 @@ class Framework(cmd.Cmd):
             print('%s%s' % (self.spacer, line.title()))
             print('%s%s' % (self.spacer, self.ruler*len(line)))
 
-    def table(self, data, header=[], title=''):
+    def table(self, data, header=[], title='', store=True):
         '''Accepts a list of rows and outputs a table.'''
         tdata = list(data)
         if header:
@@ -277,7 +277,8 @@ class Framework(cmd.Cmd):
             # bottom of ascii table
             print(separator)
             print('')
-        if self.global_options['store_tables'] and 'module_run' in [x[3] for x in inspect.stack()]:
+        # (not disabled by the module dev, enabled by the user, in the module context)
+        if all((store, self.global_options['store_tables'], 'module_run' in [x[3] for x in inspect.stack()])):
             # store the table
             table = title if title else self.modulename.split('/')[-1]
             self.add_table(table, data, header)
@@ -360,6 +361,16 @@ class Framework(cmd.Cmd):
             category = self.to_unicode(category)
         )
         return self.insert('vulnerabilities', data, (data.keys()))
+
+    def add_ports(self, ip_address, port, host=None, protocol=None):
+        '''Adds a port to the database and returns the affected row count.'''
+        data = dict(
+            ip_address = self.to_unicode(ip_address),
+            port = self.to_unicode(port),
+            host = self.to_unicode(host),
+            protocol = self.to_unicode(protocol)
+        )
+        return self.insert('ports', data, ('ip_address', 'port', 'host'))
 
     def add_hosts(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
         '''Adds a host to the database and returns the affected row count.'''
