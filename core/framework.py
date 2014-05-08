@@ -1,4 +1,5 @@
 from __future__ import print_function
+from contextlib import closing
 import cmd
 import inspect
 import json
@@ -219,6 +220,11 @@ class Framework(cmd.Cmd):
         if self.global_options['verbose']:
             self.output(line)
 
+    def debug(self, line):
+        '''Formats and presents output if in debug mode (very verbose).'''
+        if self.global_options['debug']:
+            self.output(line)
+
     def heading(self, line, level=1):
         '''Formats and presents styled header text'''
         line = self.to_unicode(line)
@@ -294,25 +300,24 @@ class Framework(cmd.Cmd):
         '''Queries the database and returns the results as a list.'''
         if not path:
             path = '%s/data.db' % (self.workspace)
-        if self.global_options['debug']:
-            self.output('Database => %s' % (path))
-            self.output(query)
+        self.debug('DATABASE => %s' % (path))
+        self.debug('QUERY => %s' % (query))
         with sqlite3.connect(path) as conn:
-            cur = conn.cursor()
-            if values:
-                if self.global_options['debug']: self.output(repr(values))
-                cur.execute(query, values)
-            else:
-                cur.execute(query)
-            # a rowcount of -1 typically refers to a select statement
-            if cur.rowcount == -1:
-                rows = cur.fetchall()
-                results = rows
-            # a rowcount of 1 == success and 0 == failure
-            else:
-                conn.commit()
-                results = cur.rowcount
-            return results
+            with closing(conn.cursor()) as cur:
+                if values:
+                    self.debug('VALUES => %s' % (repr(values)))
+                    cur.execute(query, values)
+                else:
+                    cur.execute(query)
+                # a rowcount of -1 typically refers to a select statement
+                if cur.rowcount == -1:
+                    rows = cur.fetchall()
+                    results = rows
+                # a rowcount of 1 == success and 0 == failure
+                else:
+                    conn.commit()
+                    results = cur.rowcount
+                return results
 
     def get_columns(self, table):
         return [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
@@ -769,25 +774,24 @@ class Framework(cmd.Cmd):
         if not params:
             self.help_query()
             return
-        conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        cur = conn.cursor()
-        if self.global_options['debug']: self.output(params)
-        try: cur.execute(params)
-        except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-            return
-        if cur.rowcount == -1 and cur.description:
-            tdata = cur.fetchall()
-            if not tdata:
-                self.output('No data returned.')
-            else:
-                header = tuple([x[0] for x in cur.description])
-                self.table(tdata, header=header)
-                self.output('%d rows returned' % (len(tdata)))
-        else:
-            conn.commit()
-            self.output('%d rows affected.' % (cur.rowcount))
-        conn.close()
+        with sqlite3.connect('%s/data.db' % (self.workspace)) as conn:
+            with closing(conn.cursor()) as cur:
+                self.debug('QUERY => %s' % (params))
+                try: cur.execute(params)
+                except sqlite3.OperationalError as e:
+                    self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+                    return
+                if cur.rowcount == -1 and cur.description:
+                    tdata = cur.fetchall()
+                    if not tdata:
+                        self.output('No data returned.')
+                    else:
+                        header = tuple([x[0] for x in cur.description])
+                        self.table(tdata, header=header)
+                        self.output('%d rows returned' % (len(tdata)))
+                else:
+                    conn.commit()
+                    self.output('%d rows affected.' % (cur.rowcount))
 
     def do_show(self, params):
         '''Shows various framework items'''
