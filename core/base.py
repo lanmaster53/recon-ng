@@ -45,7 +45,6 @@ class Recon(framework.Framework):
         self.init_home()
         self.init_global_options()
         self.load_modules()
-        self.load_keys()
         if self.mode == Mode.CONSOLE: self.show_banner()
         self.init_workspace('default')
 
@@ -113,15 +112,6 @@ class Recon(framework.Framework):
                             print('-'*60)
                             self.error('Unable to load module: %s' % (mod_name))
 
-    def load_keys(self):
-        key_path = '%s/keys.dat' % (self.home)
-        if os.path.exists(key_path):
-            try:
-                key_data = json.loads(open(key_path, 'rb').read())
-                for key in key_data: self.keys[key] = key_data[key]
-            except:
-                self.error('Corrupt key file.')
-
     def menu_egg(self, params):
         eggs = [
                 'Really? A menu option? Try again.',
@@ -172,6 +162,7 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
+        self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
         self.query('PRAGMA user_version = 2')
 
     def migrate_db(self):
@@ -205,6 +196,7 @@ class Recon(framework.Framework):
             self.query('CREATE TABLE IF NOT EXISTS vulnerabilities (host TEXT, reference TEXT, example TEXT, publish_date TEXT, category TEXT)')
             self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT)')
             self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
+            self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
             self.query('PRAGMA user_version = 2')
 
     #==================================================

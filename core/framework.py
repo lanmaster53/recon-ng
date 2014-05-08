@@ -290,26 +290,29 @@ class Framework(cmd.Cmd):
     # DATABASE METHODS
     #==================================================
 
-    def query(self, query, values=()):
+    def query(self, query, values=(), path=''):
         '''Queries the database and returns the results as a list.'''
-        if self.global_options['debug']: self.output(query)
-        conn = sqlite3.connect('%s/data.db' % (self.workspace))
-        cur = conn.cursor()
-        if values:
-            if self.global_options['debug']: self.output(repr(values))
-            cur.execute(query, values)
-        else:
-            cur.execute(query)
-        # a rowcount of -1 typically refers to a select statement
-        if cur.rowcount == -1:
-            rows = cur.fetchall()
-            results = rows
-        # a rowcount of 1 == success and 0 == failure
-        else:
-            conn.commit()
-            results = cur.rowcount
-        conn.close()
-        return results
+        if not path:
+            path = '%s/data.db' % (self.workspace)
+        if self.global_options['debug']:
+            self.output('Database => %s' % (path))
+            self.output(query)
+        with sqlite3.connect(path) as conn:
+            cur = conn.cursor()
+            if values:
+                if self.global_options['debug']: self.output(repr(values))
+                cur.execute(query, values)
+            else:
+                cur.execute(query)
+            # a rowcount of -1 typically refers to a select statement
+            if cur.rowcount == -1:
+                rows = cur.fetchall()
+                results = rows
+            # a rowcount of 1 == success and 0 == failure
+            else:
+                conn.commit()
+                results = cur.rowcount
+            return results
 
     def get_columns(self, table):
         return [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
@@ -557,37 +560,32 @@ class Framework(cmd.Cmd):
     # API KEY METHODS
     #==================================================
 
+    def query_keys(self, query, values=()):
+        path = '%s/keys.db' % (self.home)
+        return self.query(query, values, path)
+
     def list_keys(self):
+        keys = self.query_keys('SELECT * FROM keys')
         tdata = []
-        for key in sorted(self.keys):
-            tdata.append([key, self.keys[key]])
+        for key in sorted(keys):
+            tdata.append([key[0], key[1]])
         if tdata:
             self.table(tdata, header=['Name', 'Value'])
-        else: self.output('No API keys stored.')
-
-    def save_keys(self):
-        key_path = '%s/keys.dat' % (self.home)
-        key_file = open(key_path, 'wb')
-        json.dump(self.keys, key_file)
-        key_file.close()
 
     def get_key(self, name):
-        try:
-            return self.keys[name]
-        except KeyError:
+        rows = self.query_keys('SELECT value FROM keys WHERE name=?', (name,))
+        if not rows:
             raise FrameworkException('API key \'%s\' not found. Add API keys with the \'keys add\' command.' % (name))
+        return rows[0][0]
 
     def add_key(self, name, value):
-        self.keys[name] = value
-        self.save_keys()
+        try:
+            return self.query_keys('INSERT INTO keys VALUES (?,?)', (name, value))
+        except sqlite3.IntegrityError:
+            return self.query_keys('UPDATE keys SET value=? WHERE name=?', (value, name))
 
     def delete_key(self, name):
-        try:
-            del self.keys[name]
-        except KeyError:
-            raise FrameworkException('API key \'%s\' not found.' % (name))
-        else:
-            self.save_keys()
+        return self.query_keys('DELETE FROM keys WHERE name=?', (name,))
 
     #==================================================
     # REQUEST METHODS
@@ -755,17 +753,14 @@ class Framework(cmd.Cmd):
         elif arg in ['add', 'update']:
             if len(params) == 2:
                 self.add_key(params[0], params[1])
-                self.output('Key \'%s\' added.' % (params[0]))
-            else: print('Usage: keys [add|update] <name> <value>')
+            else:
+                print('Usage: keys [add|update] <name> <value>')
         elif arg == 'delete':
             if len(params) == 1:
-                try:
-                    self.delete_key(params[0])
-                except FrameworkException as e:
-                    self.error(e.__str__())
-                else:
+                if self.delete_key(params[0]):
                     self.output('Key \'%s\' deleted.' % (params[0]))
-            else: print('Usage: keys delete <name>')
+            else:
+                print('Usage: keys delete <name>')
         else:
             self.help_keys()
 
@@ -1072,9 +1067,9 @@ class Framework(cmd.Cmd):
         options = ['list', 'add', 'delete', 'update']
         if len(args) > 1:
             if args[1].lower() in options[2:]:
-                return [x for x in self.keys.keys() if x.startswith(text)]
+                return [x[0] for x in self.query_keys('SELECT name FROM keys') if x[0].startswith(text)]
             if args[1].lower() in options[:2]:
-                return
+                return []
         return [x for x in options if x.startswith(text)]
 
     def complete_load(self, text, *ignored):
