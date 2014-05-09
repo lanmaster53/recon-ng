@@ -10,13 +10,16 @@ class Module(module.Module):
         self.info = {
                      'Name': 'Bing API IP Neighbor Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages the Bing API and "ip:" advanced search operator to enumerate other virtual hosts sharing the same IP address. Updates the \'hosts\' table with the results.'
+                     'Description': 'Leverages the Bing API and "ip:" advanced search operator to enumerate other virtual hosts sharing the same IP address. Updates the \'hosts\' table with the results.',
+                     'Comments': [
+                                  'This module only stores hosts whose domain matches an entry in the domains table.'
+                                  ]
                      }
 
     def module_run(self, addresses):
         # build a regex that matches any of the stored domains
         domains = [x[0] for x in self.query('SELECT DISTINCT domain from domains WHERE domain IS NOT NULL')]
-        regex = '(?:%s)' % ('|'.join(['\.' + x.replace('.', r'\.') for x in domains]))
+        regex = '(?:%s)' % ('|'.join([re.escape('.' + x) for x in domains]))
         new = 0
         hosts = []
         for address in addresses:

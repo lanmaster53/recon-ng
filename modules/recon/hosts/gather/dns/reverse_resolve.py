@@ -18,9 +18,6 @@ class Module(module.Module):
                      }
 
     def module_run(self, netblocks):
-        # build a regex that matches any of the stored domains
-        domains = [x[0] for x in self.query('SELECT DISTINCT domain from domains WHERE domain IS NOT NULL')]
-        regex = '(?:%s)' % ('|'.join(['\.' + x.replace('.', r'\.') for x in domains]))
         max_attempts = self.options['attempts']
         resolver = dns.resolver.get_default_resolver()
         resolver.nameservers = [self.options['nameserver']]
@@ -48,8 +45,7 @@ class Module(module.Module):
                     else:
                         for host in hosts:
                             host = str(host)[:-1] # slice the trailing dot
-                            if re.search(regex, host):
-                                new += self.add_hosts(host, address)
+                            new += self.add_hosts(host, address)
                             cnt += 1
                             self.alert('%s => %s' % (address, host))
                     # break out of the loop

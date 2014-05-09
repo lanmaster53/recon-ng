@@ -11,6 +11,7 @@ class Module(module.Module):
                      'Author': 'Micah Hoffman (@WebBreacher)',
                      'Description': 'Checks My-IP-Neighbors.com for virtual hosts on the same server. Updates the \'hosts\' table with the results.',
                      'Comments': [
+                                  'This module only stores hosts whose domain matches an entry in the domains table.',
                                   'Knowing what other hosts are hosted on a provider\'s server can sometimes yield interesting results and help identify additional targets for assessment.'
                                   ]
                      }
@@ -18,7 +19,7 @@ class Module(module.Module):
     def module_run(self, hosts):
         # build a regex that matches any of the stored domains
         domains = [x[0] for x in self.query('SELECT DISTINCT domain from domains WHERE domain IS NOT NULL')]
-        regex = '(?:%s)' % ('|'.join(['\.' + x.replace('.', r'\.') for x in domains]))
+        regex = '(?:%s)' % ('|'.join([re.escape('.' + x) for x in domains]))
         cnt = 0
         new = 0
         for host in hosts:

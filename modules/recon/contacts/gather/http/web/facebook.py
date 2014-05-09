@@ -8,8 +8,6 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
-        self.register_option('username', None, 'yes', 'Facebook account username')
-        self.register_option('password', None, 'yes', 'Facebook account password')
         self.info = {
                      'Name': 'Facebook Contact Enumerator',
                      'Author': 'Quentin Kaiser (@qkaiser) and Tim Tomes (@LaNMaSteR53)',
@@ -20,7 +18,9 @@ class Module(module.Module):
         self.br = self.browser()
         self.cnt = 0
         self.new = 0
-        if self.login(self.options['username'],self.options['password']):
+        username = self.get_key('facebook_username')
+        password = self.get_key('facebook_password')
+        if self.login(username, password):
             for company in companies:
                 self.heading(company, level=0)
                 company_id = self.get_company_id(company)

@@ -22,10 +22,13 @@ class Module(module.Module):
             query = 'hostname:%s' % (domain)
             results = self.search_shodan_api(query, limit)
             for host in results:
+                address = host['ip_str']
+                port = host['port']
                 if not 'hostnames' in host.keys():
-                    continue
+                    host['hostnames'] = [None]
                 for hostname in host['hostnames']:
+                    self.output('%s (%s) - %s' % (address, hostname, port))
+                    self.add_ports(ip_address=address, port=port, host=hostname)
+                    new += self.add_hosts(host=hostname, ip_address=address)
                     cnt += 1
-                    self.output(hostname)
-                    new += self.add_hosts(hostname)
         self.summarize(new, cnt)

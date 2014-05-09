@@ -14,9 +14,6 @@ class Module(module.Module):
                      }
 
     def module_run(self, netblocks):
-        # build a regex that matches any of the stored domains
-        domains = [x[0] for x in self.query('SELECT DISTINCT domain from domains WHERE domain IS NOT NULL')]
-        regex = '(?:%s)' % ('|'.join(['\.' + x.replace('.', r'\.') for x in domains]))
         limit = self.options['limit']
         cnt = 0
         new = 0
@@ -25,11 +22,13 @@ class Module(module.Module):
             query = 'net:%s' % (netblock)
             results = self.search_shodan_api(query, limit)
             for host in results:
+                address = host['ip_str']
+                port = host['port']
                 if not 'hostnames' in host.keys():
-                    continue
+                    host['hostnames'] = [None]
                 for hostname in host['hostnames']:
+                    self.output('%s (%s) - %s' % (address, hostname, port))
+                    self.add_ports(ip_address=address, port=port, host=hostname)
+                    new += self.add_hosts(host=hostname, ip_address=address)
                     cnt += 1
-                    self.output(hostname)
-                    if re.search(regex, hostname):
-                        new += self.add_hosts(hostname)
         self.summarize(new, cnt)

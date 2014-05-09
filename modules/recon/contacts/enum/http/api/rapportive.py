@@ -7,11 +7,13 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
-        self.register_option('regex', None, 'no', 'regex to search the company name and determine a match')
         self.info = {
                      'Name': 'Rapportive Contact Enumerator',
                      'Author': 'Quentin Kaiser (@qkaiser, contact[at]quentinkaiser.be) and Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Harvests contact information from the Rapportive.com API using email addresses as input. Updates the \'contacts\' table with the results.',
+                     'Comments': [
+                                  'This module only stores contacts whose company matches an entry in the companies table.'
+                                  ]
                      }
 
     def get_rapportive_session_token(self):
@@ -33,6 +35,10 @@ class Module(module.Module):
         # normally handled as a FrameworkException, but needed here due to how the session token is retrieved
         if session_token is None: return
         headers = {'X-Session-Token' : session_token}
+        # build a regex that matches any of the stored companies
+        companies = [x[0] for x in self.query('SELECT DISTINCT company from companies WHERE company IS NOT NULL')]
+        regex = '(?:%s)' % ('|'.join([re.escape(x) for x in companies]))
+        import pdb; pdb.set_trace()
         cnt = 0
         new = 0
         email = emails.pop(0)
@@ -58,7 +64,7 @@ class Module(module.Module):
                     for occupation in contact['occupations']:
                         job_title = occupation['job_title']
                         company = occupation['company']
-                        if not self.options['regex'] or re.search(self.options['regex'], company, re.IGNORECASE):
+                        if re.search(regex, company, re.IGNORECASE):
                             method = getattr(self, 'alert')
                             new += self.add_contacts(first_name, last_name, job_title, email=email, region=region)
                         else:

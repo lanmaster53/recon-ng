@@ -6,8 +6,6 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('username', None, 'yes', 'jigsaw account username')
-        self.register_option('password', None, 'yes', 'jigsaw account password')
         self.register_option('contact', None, 'yes', 'jigsaw contact id')
         self.info = {
                      'Name': 'Jigsaw - Single Contact Retriever',
@@ -20,8 +18,8 @@ class Module(module.Module):
                      }
 
     def module_run(self):
-        username = self.options['username']
-        password = self.options['password']
+        username = self.get_key('jigsaw_username')
+        password = self.get_key('jigsaw_password')
         key = self.get_key('jigsaw_api')
         url = 'https://www.jigsaw.com/rest/contacts/%s.json' % (self.options['contact'])
         payload = {'token': key, 'username': username, 'password': password, 'purchaseFlag': 'true'}
