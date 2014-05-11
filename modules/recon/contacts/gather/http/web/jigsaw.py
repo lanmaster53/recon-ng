@@ -13,7 +13,7 @@ class Module(module.Module):
                      'Description': 'Harvests contacts from Data.com. Updates the \'contacts\' table with the results.',
                      'Comments': [
                                   'Discovery does not always succeed due to alphabetical inconsistencies in the Data.com data sets. Use the following link to drill down to the target company and set the \'COMPANY_URL\' option.',
-                                  'Link: http://www.data.com/connect/index.jsp'
+                                  'Link: https://connect.data.com/'
                                   ]
                      }
 

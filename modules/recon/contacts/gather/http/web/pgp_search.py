@@ -15,6 +15,8 @@ class Module(module.Module):
 
     def module_run(self, domains):
         url = 'http://pgp.mit.edu/pks/lookup'
+        cnt = 0
+        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             payload= {'search' : domain}
@@ -26,8 +28,6 @@ class Module(module.Module):
             if not results:
                 self.output('No results found.')
                 continue
-            cnt = 0
-            new = 0
             for contact in results:
                 name = contact[0].strip()
                 fname, mname, lname = self.parse_name(name)

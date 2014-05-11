@@ -35,6 +35,4 @@ class Module(module.Module):
             data.append(str(jsonobj['longitude']))
             data.append(host)
             self.output('%s - %s,%s - %s, %s' % (data[4], data[2], data[3], data[0], data[1]))
-            # only store results if input came from the database
-            if self.options['source'] == 'default':
-                self.query('UPDATE hosts SET region=?, country=?, latitude=?, longitude=? WHERE ip_address=?', tuple(data))
+            self.query('UPDATE hosts SET region=?, country=?, latitude=?, longitude=? WHERE ip_address=?', tuple(data))
