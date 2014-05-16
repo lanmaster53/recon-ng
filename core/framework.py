@@ -10,6 +10,7 @@ import string
 import subprocess
 import sys
 import time
+import codecs
 # prep python path for supporting modules
 sys.path.append('./libs/')
 import dragons
@@ -695,7 +696,7 @@ class Framework(cmd.Cmd):
                     if not self.is_writeable(filename):
                         self.output('Cannot spool output to \'%s\'.' % (filename))
                     else:
-                        Framework.spool = open(filename, 'ab')
+                        Framework.spool = codecs.open(filename, 'ab', encoding='utf-8')
                         self.output('Spooling output to \'%s\'.' % (Framework.spool.name))
                 else: self.help_spool()
             else: self.output('Spooling is already started.')
