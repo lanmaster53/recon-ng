@@ -1,6 +1,5 @@
 import module
 # unique to module
-import csv
 
 class Module(module.Module):
 

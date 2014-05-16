@@ -50,9 +50,9 @@ class Module(module.Module):
     def write_markup(self, template, filename, content):
         temp_content = open(template).read()
         page = temp_content % (self.options['latitude'], self.options['longitude'], self.options['radius'], content)
-        file = codecs.open(filename, 'w', 'utf-8')
-        file.write(page)
-        file.close()
+        fp = codecs.open(filename, 'w', 'utf-8')
+        fp.write(page)
+        fp.close()
 
     def module_run(self):
         sources = self.query('SELECT COUNT(source), source FROM pushpin GROUP BY source')
