@@ -1,9 +1,9 @@
 import module
 # unique to module
-import re
-import webbrowser
-import time
 import codecs
+import re
+import time
+import webbrowser
 
 class Module(module.Module):
 
@@ -50,7 +50,7 @@ class Module(module.Module):
     def write_markup(self, template, filename, content):
         temp_content = open(template).read()
         page = temp_content % (self.options['latitude'], self.options['longitude'], self.options['radius'], content)
-        fp = codecs.open(filename, 'w', 'utf-8')
+        fp = codecs.open(filename, 'wb', 'utf-8')
         fp.write(page)
         fp.close()
 

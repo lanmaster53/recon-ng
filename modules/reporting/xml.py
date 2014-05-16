@@ -1,5 +1,6 @@
 import module
 # unique to module
+import codecs
 from dicttoxml import dicttoxml
 from xml.dom.minidom import parseString
 
@@ -19,7 +20,7 @@ class Module(module.Module):
     def module_run(self):
         # validate that the file can be created
         filename = self.options['filename']
-        outfile = open(filename, 'w')
+        outfile = codecs.open(filename, 'wb', encoding='utf-8')
 
         # build a list of table names
         tables = [x.strip() for x in self.options['tables'].split(',')]

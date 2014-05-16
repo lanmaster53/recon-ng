@@ -17,6 +17,7 @@ class Module(module.Module):
     def module_run(self):
         # validate that the file can be created
         filename = self.options['filename']
+        # codecs module not used because the csv module converts to ascii
         outfile = open(filename, 'w')
 
         # build a list of table names

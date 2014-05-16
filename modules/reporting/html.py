@@ -1,5 +1,6 @@
 import module
 # unique to module
+import codecs
 import datetime
 
 class Module(module.Module):
@@ -36,7 +37,7 @@ class Module(module.Module):
     def module_run(self):
         # validate that file can be created
         filename = self.options['filename']
-        outfile = open(filename, 'w')
+        outfile = codecs.open(filename, 'wb', encoding='utf-8')
         table_content = ''
 
         # html template
@@ -89,6 +90,6 @@ class Module(module.Module):
         creator = self.options['creator']
         created = datetime.datetime.now().strftime('%a, %b %d %Y %H:%M:%S')
         markup = template % (title, table_content, creator, created)
-        outfile.write(markup.encode('utf-8'))
+        outfile.write(markup)
         outfile.close()
         self.output('Report generated at \'%s\'.' % (filename))

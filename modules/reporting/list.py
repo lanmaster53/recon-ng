@@ -1,5 +1,6 @@
 import module
 # unique to module
+import codecs
 
 class Module(module.Module):
 
@@ -19,7 +20,7 @@ class Module(module.Module):
     def module_run(self):
         # validate that file can be created
         filename = self.options['filename']
-        outfile = open(filename, 'w')
+        outfile = codecs.open(filename, 'wb', encoding='utf-8')
         # handle the source of information for the report
         column = self.options['column']
         table = self.options['table']
@@ -30,7 +31,7 @@ class Module(module.Module):
         rows = self.query(query)
         for row in [x[0] for x in rows]:
             row = row if row else ''
-            outfile.write(('%s\n' % (row)).encode('utf-8'))
+            outfile.write('%s\n' % (row))
             print(row)
         outfile.close()
         self.output('%d items added to \'%s\'.' % (len(rows), filename))

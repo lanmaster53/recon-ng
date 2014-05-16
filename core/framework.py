@@ -1,6 +1,7 @@
 from __future__ import print_function
 from contextlib import closing
 import cmd
+import codecs
 import inspect
 import json
 import os
@@ -126,7 +127,7 @@ class Framework(cmd.Cmd):
         if Framework.script:
             print('%s' % (line))
         if Framework.record:
-            recorder = open(Framework.record, 'ab')
+            recorder = codecs.open(Framework.record, 'ab', encoding='utf-8')
             recorder.write(('%s\n' % (line)).encode('utf-8'))
             recorder.flush()
             recorder.close()
@@ -892,7 +893,7 @@ class Framework(cmd.Cmd):
                     if not self.is_writeable(filename):
                         self.output('Cannot spool output to \'%s\'.' % (filename))
                     else:
-                        Framework.spool = open(filename, 'ab')
+                        Framework.spool = codecs.open(filename, 'ab', encoding='utf-8')
                         self.output('Spooling output to \'%s\'.' % (Framework.spool.name))
                 else: self.help_spool()
             else: self.output('Spooling is already started.')
