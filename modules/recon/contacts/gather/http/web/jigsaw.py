@@ -82,12 +82,12 @@ class Module(module.Module):
             if choice is '':
                 return companies[0][0]
             # make sure the choice is valid
-            elif int(choice) not in choices:
+            elif choice not in [str(x) for x in choices]:
                 self.output('Invalid choice.')
                 return
             # return the chosen company id
             else:
-                return companies[int(choice)]['id']
+                return companies[int(choice)][0]
 
     def get_contacts(self, url):
         self.output('Fetching Contacts...')
