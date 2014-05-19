@@ -55,7 +55,7 @@ class Recon(framework.Framework):
 
     def version_check(self):
         try:
-            pattern = "'([\d\.]*)'"
+            pattern = "'(\d+\.\d+\.\d+[^']*)'"
             remote = re.search(pattern, self.request('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').raw).group(1)
             local = re.search(pattern, open('VERSION').read()).group(1)
             if remote != local:
