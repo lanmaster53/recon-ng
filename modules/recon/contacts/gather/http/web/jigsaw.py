@@ -29,7 +29,7 @@ class Module(module.Module):
 
     def get_company_url(self, host):
         self.output('Fetching Company URL...')
-        char = company[0].lower()
+        char = self.options['company'][0].lower()
         char = char if char.isalpha() else '_'
         resource = '/directory/company/%s' % (char)
         while True:
