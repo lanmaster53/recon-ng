@@ -33,8 +33,11 @@ class Module(module.Module):
             self.summarize(self.new, self.cnt)
 
     def get_company_url(self, host, company):
-        resource = '/directory/company/%s' % (company[0].lower())
+        char = company[0].lower()
+        char = char if char.isalpha() else '_'
+        resource = '/directory/company/%s' % (char)
         while True:
+            match = False
             # widdle down through the alphabetical list of companies
             url = host + resource
             self.verbose('Query: %s' % (url))
@@ -52,11 +55,12 @@ class Module(module.Module):
                 order = [first, middle, last]
                 ordered = sorted(order)
                 if order == ordered:
+                    match = True
                     resource = tag[0]
                     self.output('Alphabetical range identified: %s' % (tag[1]))
                     break
             # resource should equal tag[0] if range was found, otherwise return nothing
-            if resource != tag[0]:
+            if not match:
                 self.output('Company not found in the provided alphabetical ranges.')
                 return
 
