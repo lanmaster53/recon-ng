@@ -34,12 +34,12 @@ class Module(module.Module):
         for domain in domains:
             self.heading(domain, level=0)
             try:
-                answers = resolver.query('%s.%s' % (self.random_str(15), domain))
+                answers = resolver.query('*.%s' % (domain))
                 self.output('Wildcard DNS entry found for \'%s\'. Cannot brute force hostnames.' % (domain))
-                return
+                continue
             except (dns.resolver.NoNameservers, dns.resolver.Timeout):
                 self.error('Invalid nameserver.')
-                return
+                continue
             except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                 self.verbose('No Wildcard DNS entry found.')
             for word in words:

@@ -38,7 +38,6 @@ class Module(module.Module):
         # build a regex that matches any of the stored companies
         companies = [x[0] for x in self.query('SELECT DISTINCT company from companies WHERE company IS NOT NULL')]
         regex = '(?:%s)' % ('|'.join([re.escape(x) for x in companies]))
-        import pdb; pdb.set_trace()
         cnt = 0
         new = 0
         email = emails.pop(0)

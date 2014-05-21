@@ -260,7 +260,7 @@ class Recon(framework.Framework):
         self.load_modules(True)
 
     def do_workspaces(self, params):
-        '''Sets the workspace'''
+        '''Manages workspaces'''
         if not params:
             self.help_workspaces()
             return

@@ -22,6 +22,8 @@ class Module(module.Module):
             company_id = self.get_company_id(company)
             if company_id:
                 self.get_contacts(company_id)
+            else:
+                time.sleep(.25)
         self.summarize(self.new, self.tot)
 
     def get_company_id(self, company_name):
