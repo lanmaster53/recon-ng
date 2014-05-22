@@ -32,13 +32,13 @@ class Module(module.Module):
             resp = self.request(url, payload=payload, method='POST', redirect=False)
             content = resp.text
             if '<h3>Nope,' in content:
-                status = 'safe'
+                status = 'Safe'
                 self.verbose('%s => %s.' % (account, status))
             elif '<h3>Yes.</h3>' in content:
-                status = 'pwned'
-                qty  = re.search('<li>We have found this account (\d+?) times since', content).group(1)
+                status = 'Pwned'
+                qty  = re.search('<li>We have found this account ([\w\s]*\d+) times since', content).group(1)
                 last = re.search('ago, on (.+?).</li>', content).group(1)
-                self.alert('%s => %s! Seen %s times as recent as %s.' % (account, status, qty, last))
+                self.alert('%s => %s! Seen %s times, as recent as %s.' % (account, status, qty, last))
                 pwned += self.add_cred(account)
             elif '<h4>Error!</h4>' in content:
                 self.error('Too many requests have been made.')
