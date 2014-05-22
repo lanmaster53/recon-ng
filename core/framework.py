@@ -12,8 +12,7 @@ import sqlite3
 import string
 import subprocess
 import sys
-# prep python path for supporting modules
-sys.path.append('./libs/')
+# framework libs
 import dragons
 import mechanize
 
@@ -93,6 +92,9 @@ class Framework(cmd.Cmd):
     global_options = Options()
     keys = {}
     loaded_modules = {}
+    app_path = ''
+    data_path = ''
+    core_path = ''
     workspace = ''
     home = ''
     record = None

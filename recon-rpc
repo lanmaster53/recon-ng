@@ -6,9 +6,9 @@ import uuid
 import argparse
 import sys
 # prep python path for base module
-sys.path.append('./core/')
+sys.path.append(sys.path[0]+'/core/')
+sys.path.append(sys.path[0]+'/libs/')
 import base
-sys.path.append('./libs/')
 
 def recon_rpc(args):
     if args.server_type.lower() == 'xmlrpc':

@@ -3,7 +3,8 @@
 import argparse
 import sys
 # prep python path for base module
-sys.path.append('./core/')
+sys.path.append(sys.path[0]+'/core/')
+sys.path.append(sys.path[0]+'/libs/')
 import base
 from framework import Colors
 

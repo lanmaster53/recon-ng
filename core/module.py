@@ -12,10 +12,9 @@ import sys
 import textwrap
 import time
 import traceback
-import framework
-# prep python path for supporting modules
-sys.path.append('./libs/')
+# framework libs
 import aes
+import framework
 
 #=================================================
 # MODULE CLASS

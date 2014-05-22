@@ -57,9 +57,9 @@ class Module(module.Module):
     def module_run(self):
         sources = self.query('SELECT COUNT(source), source FROM pushpin GROUP BY source')
         media_content, map_content = self.build_content(sources)
-        self.write_markup('./data/template_media.html', self.options['media_filename'], media_content)
+        self.write_markup(self.data_path+'template_media.html', self.options['media_filename'], media_content)
         self.output('Media data written to \'%s\'' % (self.options['media_filename']))
-        self.write_markup('./data/template_map.html', self.options['map_filename'], map_content)
+        self.write_markup(self.data_path+'template_map.html', self.options['map_filename'], map_content)
         self.output('Mapping data written to \'%s\'' % (self.options['map_filename']))
 
         w = webbrowser.get()

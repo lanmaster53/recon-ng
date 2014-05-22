@@ -2,7 +2,6 @@ from __future__ import print_function
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
-execfile('VERSION')
 
 import errno
 import imp
@@ -14,7 +13,11 @@ import shutil
 import sys
 import traceback
 import __builtin__
+# framework libs
 import framework
+
+# set the __version__ variable based on the VERSION file
+execfile(sys.path[0]+'/VERSION')
 
 # spooling system
 def spool_print(*args, **kwargs):
@@ -42,6 +45,10 @@ class Recon(framework.Framework):
         self.prompt_template = '%s[%s] > '
         self.base_prompt = self.prompt_template % ('', self.name)
         framework.Framework.__init__(self, (self.base_prompt, 'base'))
+        # establish dynamic paths for framework elements
+        self.app_path = framework.Framework.app_path = sys.path[0]+'/'
+        self.data_path = framework.Framework.data_path = self.app_path+'data/'
+        self.core_path = framework.Framework.core_path = self.app_path+'core/'
         self.options = self.global_options
         self.init_home()
         self.init_global_options()
@@ -87,7 +94,7 @@ class Recon(framework.Framework):
         self.loaded_category = {}
         self.loaded_modules = framework.Framework.loaded_modules
         if reload: self.output('Reloading...')
-        for path in ('./modules/', '%s/modules/' % self.home):
+        for path in ['%s/modules/' % x for x in (self.app_path, self.home)]:
             for dirpath, dirnames, filenames in os.walk(path):
                 # remove hidden files and directories
                 filenames = [f for f in filenames if not f[0] == '.']
@@ -237,7 +244,7 @@ class Recon(framework.Framework):
     #==================================================
 
     def show_banner(self):
-        banner = open('./core/banner').read()
+        banner = open(self.core_path+'banner').read()
         banner_len = len(max(banner.split('\n'), key=len))
         print(banner)
         print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (framework.Colors.O, self.name, __version__, __author__, framework.Colors.N), banner_len+8)) # +8 compensates for the color bytes
