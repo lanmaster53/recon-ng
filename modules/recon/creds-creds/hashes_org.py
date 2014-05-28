@@ -1,7 +1,8 @@
 import module
 # unique to module
-import xml.etree.ElementTree
 import StringIO
+import time
+import xml.etree.ElementTree
 
 class Module(module.Module):
 
@@ -17,29 +18,39 @@ class Module(module.Module):
                      }
 
     def module_run(self, hashes):
-        # lookup each hash
         url = 'https://hashes.org/api.php'
-        hash_groups = map(None, *(iter(hashes),) * 20)
-        for group in hash_groups:
-            payload = {'do': 'check'}
-            group = [x for x in group if x is not None]
-            for i in range(0, len(group)):
-                payload['hash'+str(i+1)] = group[i]
+        first = True
+        for hashstr in hashes:
+            # rate limit requests
+            if first:
+                first = False
+            else:
+                # 20 hashes per minute
+                time.sleep(3)
+            # build the payload
+            payload = {'do': 'check', 'hash1': hashstr}
             resp = self.request(url, payload=payload)
             tree = resp.xml
-            if tree is None:
-                tree = xml.etree.ElementTree.parse(StringIO.StringIO('<root>\n%s</root>\n' % (resp.raw)))
-            if tree.find('request') is None:
-                self.error(tree.find('error').text)
-                return
-            requests = tree.findall('request')
-            for request in requests:
-                hashstr = request.find('hash').text
-                if request.find('found').text == 'true':
-                    plaintext = request.find('plain').text
-                    if hashstr != plaintext:
-                        hashtype = request.find('type').text
-                        self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
-                        self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
+            # check for and report error conditions
+            # None condition check required as tree elements with no children return False
+            if tree.find('error') is not None:
+                error = tree.find('error').text
+                # continue processing valid hashes
+                if 'invalid' in error:
+                    self.verbose('Unsupported type for hash: %s' % (hashstr))
+                    continue
+                # any other error results in termination
                 else:
-                    self.verbose('Value not found for hash: %s' % (hashstr))
+                    self.error(error)
+                    return
+            # process the response
+            request = tree
+            hashstr = request.find('hash').text
+            if request.find('found').text == 'true':
+                plaintext = request.find('plain').text
+                if hashstr != plaintext:
+                    hashtype = request.find('type').text
+                    self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
+                    self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
+            else:
+                self.verbose('Value not found for hash: %s' % (hashstr))
