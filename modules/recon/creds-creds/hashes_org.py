@@ -19,38 +19,47 @@ class Module(module.Module):
 
     def module_run(self, hashes):
         url = 'https://hashes.org/api.php'
+        hash_groups = map(None, *(iter(hashes),) * 20)
         first = True
-        for hashstr in hashes:
+        for group in hash_groups:
             # rate limit requests
             if first:
                 first = False
             else:
-                # 20 hashes per minute
+                # 20 requests per minute
                 time.sleep(3)
+            # rate limit error has "data" tags
+            # rate limit error does not have a "hash" element
+            # rate limit error response for bulk requests consist of one request element
             # build the payload
-            payload = {'do': 'check', 'hash1': hashstr}
+            payload = {'do': 'check'}
+            group = [x for x in group if x is not None]
+            for i in range(0, len(group)):
+                payload['hash'+str(i+1)] = group[i]
             resp = self.request(url, payload=payload)
             tree = resp.xml
-            # check for and report error conditions
-            # None condition check required as tree elements with no children return False
-            if tree.find('error') is not None:
-                error = tree.find('error').text
-                # continue processing valid hashes
-                if 'invalid' in error:
-                    self.verbose('Unsupported type for hash: %s' % (hashstr))
-                    continue
-                # any other error results in termination
+            requests = tree.findall('request')
+            for request in requests:
+                # check for and report error conditions
+                # conduct check within loop to support bulk request errors
+                # None condition check required as tree elements with no children return False
+                if request.find('error') is not None:
+                    error = request.find('error').text
+                    # continue processing valid hashes
+                    if 'invalid' in error:
+                        self.verbose('Unsupported type for hash: %s' % (request.find('hash').text))
+                        continue
+                    # any other error results in termination
+                    else:
+                        self.error(error)
+                        return
+                # analyze valid response
+                hashstr = request.find('hash').text
+                if request.find('found').text == 'true':
+                    plaintext = request.find('plain').text
+                    if hashstr != plaintext:
+                        hashtype = request.find('type').text
+                        self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
+                        self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
                 else:
-                    self.error(error)
-                    return
-            # process the response
-            request = tree
-            hashstr = request.find('hash').text
-            if request.find('found').text == 'true':
-                plaintext = request.find('plain').text
-                if hashstr != plaintext:
-                    hashtype = request.find('type').text
-                    self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
-                    self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
-            else:
-                self.verbose('Value not found for hash: %s' % (hashstr))
+                    self.verbose('Value not found for hash: %s' % (hashstr))
