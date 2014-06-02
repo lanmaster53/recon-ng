@@ -108,7 +108,7 @@ class Recon(framework.Framework):
                         mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
                         mod_loadname = mod_dispname.replace('/', '_')
                         mod_loadpath = os.path.join(dirpath, filename)
-                        mod_file = open(mod_loadpath, 'rb')
+                        mod_file = open(mod_loadpath)
                         try:
                             imp.load_source(mod_loadname, mod_loadpath, mod_file)
                             __import__(mod_loadname)
@@ -151,6 +151,8 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
         self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
+        for name in ['bing_api', 'builtwith_api', 'facebook_api', 'facebook_password', 'facebook_secret', 'facebook_username', 'flickr_api', 'google_api', 'google_cse', 'ipinfodb_api', 'jigsaw_api', 'jigsaw_password', 'jigsaw_username', 'linkedin_api', 'linkedin_secret', 'linkedin_token', 'pwnedlist_api', 'pwnedlist_iv', 'pwnedlist_secret', 'rapportive_token', 'shodan_api', 'sonar_api', 'twitter_api', 'twitter_secret', 'twitter_token', 'virustotal_api']:
+            self.query_keys('INSERT INTO keys (name) VALUES (?)', (name,))
         self.query('PRAGMA user_version = 2')
 
     def migrate(self):
@@ -185,6 +187,9 @@ class Recon(framework.Framework):
             self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT)')
             self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
             self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
+            # populate key names
+            for name in ['bing_api', 'builtwith_api', 'facebook_api', 'facebook_password', 'facebook_secret', 'facebook_username', 'flickr_api', 'google_api', 'google_cse', 'ipinfodb_api', 'jigsaw_api', 'jigsaw_password', 'jigsaw_username', 'linkedin_api', 'linkedin_secret', 'linkedin_token', 'pwnedlist_api', 'pwnedlist_iv', 'pwnedlist_secret', 'rapportive_token', 'shodan_api', 'sonar_api', 'twitter_api', 'twitter_secret', 'twitter_token', 'virustotal_api']:
+                self.query_keys('INSERT INTO keys (name) VALUES (?)', (name,))
             self.query('PRAGMA user_version = 2')
         # migrate keys
         key_path = '%s/keys.dat' % (self.home)
@@ -230,14 +235,6 @@ class Recon(framework.Framework):
         if workspace == self.workspace.split('/')[-1]:
             self.init_workspace('default')
         return True
-
-    def get_workspaces(self):
-        dirnames = []
-        path = '%s/workspaces' % (self.home)
-        for name in os.listdir(path):
-            if os.path.isdir('%s/%s' % (path, name)):
-                dirnames.append(name)
-        return dirnames
 
     #==================================================
     # SHOW METHODS

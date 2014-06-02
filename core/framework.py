@@ -190,7 +190,7 @@ class Framework(cmd.Cmd):
 
     def is_writeable(self, filename):
         try:
-            fp = open(filename, 'ab')
+            fp = open(filename, 'a')
             fp.close()
             return True
         except IOError:
@@ -198,6 +198,14 @@ class Framework(cmd.Cmd):
 
     def random_str(self, length):
         return ''.join(random.choice(string.lowercase) for i in range(length))
+
+    def get_workspaces(self):
+        dirnames = []
+        path = '%s/workspaces' % (self.home)
+        for name in os.listdir(path):
+            if os.path.isdir('%s/%s' % (path, name)):
+                dirnames.append(name)
+        return dirnames
 
     #==================================================
     # OUTPUT METHODS
@@ -519,7 +527,7 @@ class Framework(cmd.Cmd):
         # don't bother loading if a config file doesn't exist
         if os.path.exists(config_path):
             # retrieve saved config data
-            config_file = open(config_path, 'rb')
+            config_file = open(config_path)
             try:
                 config_data = json.loads(config_file.read())
             except ValueError:
@@ -539,9 +547,9 @@ class Framework(cmd.Cmd):
     def save_config(self, name):
         config_path = '%s/config.dat' % (self.workspace)
         # create a config file if one doesn't exist
-        open(config_path, 'ab').close()
+        open(config_path, 'a').close()
         # retrieve saved config data
-        config_file = open(config_path, 'rb')
+        config_file = open(config_path)
         try:
             config_data = json.loads(config_file.read())
         except ValueError:
@@ -560,7 +568,7 @@ class Framework(cmd.Cmd):
         if not config_data[self.modulename]:
             del config_data[self.modulename]
         # write the new config data to the config file
-        config_file = open(config_path, 'wb')
+        config_file = open(config_path, 'w')
         json.dump(config_data, config_file, indent=4)
         config_file.close()
 
@@ -581,19 +589,16 @@ class Framework(cmd.Cmd):
             self.table(tdata, header=['Name', 'Value'])
 
     def get_key(self, name):
-        rows = self.query_keys('SELECT value FROM keys WHERE name=?', (name,))
+        rows = self.query_keys('SELECT value FROM keys WHERE name=? AND value NOT NULL', (name,))
         if not rows:
             raise FrameworkException('API key \'%s\' not found. Add API keys with the \'keys add\' command.' % (name))
         return rows[0][0]
 
     def add_key(self, name, value):
-        try:
-            return self.query_keys('INSERT INTO keys VALUES (?,?)', (name, value))
-        except sqlite3.IntegrityError:
-            return self.query_keys('UPDATE keys SET value=? WHERE name=?', (value, name))
+        return self.query_keys('UPDATE keys SET value=? WHERE name=?', (value, name))
 
     def delete_key(self, name):
-        return self.query_keys('DELETE FROM keys WHERE name=?', (name,))
+        return self.query_keys('UPDATE keys SET value=NULL WHERE name=?', (name,))
 
     #==================================================
     # REQUEST METHODS
@@ -709,6 +714,12 @@ class Framework(cmd.Cmd):
             print('')
             print('%sNo options available for this module.' % (self.spacer))
             print('')
+
+    def show_workspaces(self):
+        self.table([[x] for x in self.get_workspaces()], header=['Workspaces'])
+
+    def show_keys(self):
+        self.list_keys()
 
     #==================================================
     # COMMAND METHODS
