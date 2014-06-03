@@ -24,7 +24,7 @@ class Module(module.Module):
         
         # stores the values read from the CSV file
         self.__values = []
-        # keeps track of the CSV header names vs option names
+        # keeps track of which module options correspond to which CSV column index
         self.__csv_indices = {}
         # account for the fact that module options are stored and preloaded from a config file
         self.__init_options()
