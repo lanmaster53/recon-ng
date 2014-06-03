@@ -50,8 +50,8 @@ class Recon(framework.Framework):
         self.data_path = framework.Framework.data_path = self.app_path+'data/'
         self.core_path = framework.Framework.core_path = self.app_path+'core/'
         self.options = self.global_options
-        self.init_home()
         self.init_global_options()
+        self.init_home()
         self.load_modules()
         if self.mode == Mode.CONSOLE: self.show_banner()
         self.init_workspace('default')
@@ -77,11 +77,6 @@ class Recon(framework.Framework):
         except:
             return True
 
-    def init_home(self):
-        self.home = framework.Framework.home = '%s/.recon-ng' % os.path.expanduser('~')
-        if not os.path.exists(self.home):
-            os.makedirs(self.home)
-
     def init_global_options(self):
         self.register_option('debug', False,  'yes', 'enable debugging output')
         self.register_option('proxy', None, 'no', 'proxy server (address:port)')
@@ -89,6 +84,29 @@ class Recon(framework.Framework):
         self.register_option('timeout', 10, 'yes', 'socket timeout (seconds)')
         self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
         self.register_option('verbose', True,  'yes', 'enable verbose output')
+
+    def init_home(self):
+        self.home = framework.Framework.home = '%s/.recon-ng' % os.path.expanduser('~')
+        # initialize home folder
+        if not os.path.exists(self.home):
+            os.makedirs(self.home)
+        # initialize keys database
+        if not os.path.exists('%s/keys.db' % (self.home)):
+            # create the database and table
+            self.query_keys('CREATE TABLE keys (name TEXT PRIMARY KEY, value TEXT)')
+            # populate key names
+            for name in ['bing_api', 'builtwith_api', 'facebook_api', 'facebook_password', 'facebook_secret', 'facebook_username', 'flickr_api', 'google_api', 'google_cse', 'ipinfodb_api', 'jigsaw_api', 'jigsaw_password', 'jigsaw_username', 'linkedin_api', 'linkedin_secret', 'linkedin_token', 'pwnedlist_api', 'pwnedlist_iv', 'pwnedlist_secret', 'rapportive_token', 'shodan_api', 'sonar_api', 'twitter_api', 'twitter_secret', 'twitter_token', 'virustotal_api']:
+                self.query_keys('INSERT INTO keys (name) VALUES (?)', (name,))
+        # migrate keys
+        key_path = '%s/keys.dat' % (self.home)
+        if os.path.exists(key_path):
+            try:
+                key_data = json.loads(open(key_path, 'rb').read())
+                for key in key_data:
+                    self.add_key(key, key_data[key])
+                os.remove(key_path)
+            except:
+                self.error('Corrupt key file. Manual migration required.')
 
     def load_modules(self, reload=False):
         self.loaded_category = {}
@@ -137,6 +155,40 @@ class Recon(framework.Framework):
         print(random.choice(eggs))
         return 
 
+    #==================================================
+    # WORKSPACE METHODS
+    #==================================================
+
+    def init_workspace(self, workspace):
+        workspace = '%s/workspaces/%s' % (self.home, workspace)
+        new = False
+        try:
+            os.makedirs(workspace)
+            new = True
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                self.error(e.__str__())
+                return False
+        # set workspace attributes
+        self.workspace = framework.Framework.workspace = workspace
+        self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
+        # configure new database or conduct migrations
+        self.create_db() if new else self.migrate_db()
+        # load workspace configuration
+        self.init_global_options()
+        self.load_config()
+        return True
+
+    def delete_workspace(self, workspace):
+        path = '%s/workspaces/%s' % (self.home, workspace)
+        try:
+            shutil.rmtree(path)
+        except OSError:
+            return False
+        if workspace == self.workspace.split('/')[-1]:
+            self.init_workspace('default')
+        return True
+
     def create_db(self):
         self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT, description TEXT)')
@@ -150,12 +202,9 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
-        for name in ['bing_api', 'builtwith_api', 'facebook_api', 'facebook_password', 'facebook_secret', 'facebook_username', 'flickr_api', 'google_api', 'google_cse', 'ipinfodb_api', 'jigsaw_api', 'jigsaw_password', 'jigsaw_username', 'linkedin_api', 'linkedin_secret', 'linkedin_token', 'pwnedlist_api', 'pwnedlist_iv', 'pwnedlist_secret', 'rapportive_token', 'shodan_api', 'sonar_api', 'twitter_api', 'twitter_secret', 'twitter_token', 'virustotal_api']:
-            self.query_keys('INSERT INTO keys (name) VALUES (?)', (name,))
         self.query('PRAGMA user_version = 2')
 
-    def migrate(self):
+    def migrate_db(self):
         db_version = self.query('PRAGMA user_version')[0][0]
         if db_version == 0:
             # add mname column to contacts table
@@ -186,55 +235,7 @@ class Recon(framework.Framework):
             self.query('CREATE TABLE IF NOT EXISTS vulnerabilities (host TEXT, reference TEXT, example TEXT, publish_date TEXT, category TEXT)')
             self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT)')
             self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
-            self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
-            # populate key names
-            for name in ['bing_api', 'builtwith_api', 'facebook_api', 'facebook_password', 'facebook_secret', 'facebook_username', 'flickr_api', 'google_api', 'google_cse', 'ipinfodb_api', 'jigsaw_api', 'jigsaw_password', 'jigsaw_username', 'linkedin_api', 'linkedin_secret', 'linkedin_token', 'pwnedlist_api', 'pwnedlist_iv', 'pwnedlist_secret', 'rapportive_token', 'shodan_api', 'sonar_api', 'twitter_api', 'twitter_secret', 'twitter_token', 'virustotal_api']:
-                self.query_keys('INSERT INTO keys (name) VALUES (?)', (name,))
             self.query('PRAGMA user_version = 2')
-        # migrate keys
-        key_path = '%s/keys.dat' % (self.home)
-        if os.path.exists(key_path):
-            try:
-                key_data = json.loads(open(key_path, 'rb').read())
-                for key in key_data:
-                    self.add_key(key, key_data[key])
-                os.remove(key_path)
-            except:
-                self.error('Corrupt key file. Manual migration required.')
-
-    #==================================================
-    # WORKSPACE METHODS
-    #==================================================
-
-    def init_workspace(self, workspace):
-        workspace = '%s/workspaces/%s' % (self.home, workspace)
-        new = False
-        try:
-            os.makedirs(workspace)
-            new = True
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                self.error(e.__str__())
-                return False
-        # set workspace attributes
-        self.workspace = framework.Framework.workspace = workspace
-        self.prompt = self.prompt_template % (self.base_prompt[:-3], self.workspace.split('/')[-1])
-        # configure new database or conduct migrations
-        self.create_db() if new else self.migrate()
-        # load workspace configuration
-        self.init_global_options()
-        self.load_config()
-        return True
-
-    def delete_workspace(self, workspace):
-        path = '%s/workspaces/%s' % (self.home, workspace)
-        try:
-            shutil.rmtree(path)
-        except OSError:
-            return False
-        if workspace == self.workspace.split('/')[-1]:
-            self.init_workspace('default')
-        return True
 
     #==================================================
     # SHOW METHODS
