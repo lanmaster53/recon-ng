@@ -23,7 +23,7 @@ class Module(module.Module):
         import socket
         linkedin_key = self.get_key('linkedin_api')
         linkedin_secret = self.get_key('linkedin_secret')
-        port = 50007
+        port = 31337
         redirect_uri = 'http://127.0.0.1:%d' % (port)
         url = 'https://www.linkedin.com/uas/oauth2/authorization'
         payload = {'response_type': 'code', 'client_id': linkedin_key, 'scope': 'r_basicprofile r_network', 'state': 'thisisaverylongstringusedforstate', 'redirect_uri': redirect_uri}
