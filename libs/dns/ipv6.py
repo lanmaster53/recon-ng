@@ -161,3 +161,8 @@ def inet_aton(text):
         return text.decode('hex_codec')
     except TypeError:
         raise dns.exception.SyntaxError
+
+_mapped_prefix = '\x00' * 10 + '\xff\xff'
+
+def is_mapped(address):
+    return address.startswith(_mapped_prefix)

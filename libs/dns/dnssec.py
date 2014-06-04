@@ -405,9 +405,11 @@ try:
     import Crypto.Util.number
     validate = _validate
     validate_rrsig = _validate_rrsig
+    _have_pycrypto = True
 except ImportError:
     validate = _need_pycrypto
     validate_rrsig = _need_pycrypto
+    _have_pycrypto = False
 
 try:
     import ecdsa

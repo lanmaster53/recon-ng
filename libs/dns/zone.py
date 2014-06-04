@@ -813,7 +813,7 @@ class _MasterReader(object):
 
         try:
             while 1:
-                token = self.tok.get(True, True).unescape()
+                token = self.tok.get(True, True)
                 if token.is_eof():
                     if not self.current_file is None:
                         self.current_file.close()

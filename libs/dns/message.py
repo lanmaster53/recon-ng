@@ -665,6 +665,10 @@ class _WireReader(object):
                 secret = self.message.keyring.get(absolute_name)
                 if secret is None:
                     raise UnknownTSIGKey("key '%s' unknown" % name)
+                self.message.keyname = absolute_name
+                (self.message.keyalgorithm, self.message.mac) = \
+                    dns.tsig.get_algorithm_and_mac(self.wire, self.current,
+                                                   rdlen)
                 self.message.tsig_ctx = \
                                       dns.tsig.validate(self.wire,
                                           absolute_name,
@@ -1071,7 +1075,8 @@ def make_query(qname, rdtype, rdclass = dns.rdataclass.IN, use_edns=None,
     m.want_dnssec(want_dnssec)
     return m
 
-def make_response(query, recursion_available=False, our_payload=8192):
+def make_response(query, recursion_available=False, our_payload=8192,
+                  fudge=300):
     """Make a message which is a response for the specified query.
     The message returned is really a response skeleton; it has all
     of the infrastructure required of a response, but none of the
@@ -1088,6 +1093,8 @@ def make_response(query, recursion_available=False, our_payload=8192):
     @param our_payload: payload size to advertise in EDNS responses; default
     is 8192.
     @type our_payload: int
+    @param fudge: TSIG time fudge; default is 300 seconds.
+    @type fudge: int
     @rtype: dns.message.Message object"""
 
     if query.flags & dns.flags.QR:
@@ -1100,8 +1107,8 @@ def make_response(query, recursion_available=False, our_payload=8192):
     response.question = list(query.question)
     if query.edns >= 0:
         response.use_edns(0, 0, our_payload, query.payload)
-    if not query.keyname is None:
-        response.keyname = query.keyname
-        response.keyring = query.keyring
+    if query.had_tsig:
+        response.use_tsig(query.keyring, query.keyname, fudge, None, 0, '',
+                          query.keyalgorithm)
         response.request_mac = query.mac
     return response
