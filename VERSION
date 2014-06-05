@@ -1,7 +1,7 @@
-__version__ = '4.0.1'
+__version__ = '4.0.2'
 
 # ex. x.y.z
-# x - Incremented when a change requires user interaction to migrate.
-# y - Incremented when a new feature is added.
-# z - Incremented when a change is made to recon-*.py or core/*.
+# x - Incremented for changes requiring user interaction to migrate. (major revision)
+# y - Incremented for the addition of new features. (minor revision)
+# z - Incremented for minor code changes and bug fixes. (hotfix)
 # Subordinate items reset to 0 when superior items increment.
