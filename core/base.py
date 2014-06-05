@@ -205,8 +205,8 @@ class Recon(framework.Framework):
         self.query('PRAGMA user_version = 2')
 
     def migrate_db(self):
-        db_version = self.query('PRAGMA user_version')[0][0]
-        if db_version == 0:
+        db_version = lambda self: self.query('PRAGMA user_version')[0][0]
+        if db_version(self) == 0:
             # add mname column to contacts table
             tmp = self.random_str(20)
             self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
@@ -214,7 +214,7 @@ class Recon(framework.Framework):
             self.query('INSERT INTO contacts (fname, lname, email, title, region, country) SELECT fname, lname, email, title, region, country FROM %s' % (tmp))
             self.query('DROP TABLE %s' % (tmp))
             self.query('PRAGMA user_version = 1')
-        if db_version == 1:
+        if db_version(self) == 1:
             # rename name columns
             tmp = self.random_str(20)
             self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
