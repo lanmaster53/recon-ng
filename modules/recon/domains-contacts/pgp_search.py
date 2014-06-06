@@ -21,9 +21,16 @@ class Module(module.Module):
             self.heading(domain, level=0)
             payload= {'search' : domain}
             resp = self.request(url, payload=payload)
+            # split the response into the relevant lines
+            lines = [x.strip() for x in re.split('[\n<>]', resp.text) if domain in x]
             results = []
-            results.extend(re.findall('([^>]*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;<' % (domain), resp.text))
-            results.extend(re.findall('[\s]{10,}(\w.*?)(?:\s\(.+?\))?\s&lt;(.*?@%s)&gt;' % (domain), resp.text))
+            for line in lines:
+                # remove parenthesized items
+                line = re.sub('\s*\(.*\)\s*', '', line)
+                # parse out name and email address
+                match = re.search('^(.*)&lt;(.*)&gt;$', line)
+                # clean up and append the parsed elements
+                results.append(tuple([x.strip() for x in match.group(1, 2)]))
             results = list(set(results))
             if not results:
                 self.output('No results found.')

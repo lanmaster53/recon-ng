@@ -129,7 +129,7 @@ class Module(framework.Framework):
         # clean up any remaining garbage characters
         names = [re.sub(r"[,']", '', x) for x in names]
         # set values and return names
-        fname = names[0]
+        fname = names[0] if len(names) >= 1 else None
         mname = names[1] if len(names) >= 3 else None
         lname = names[-1] if len(names) >= 2 else None
         return fname, mname, lname
