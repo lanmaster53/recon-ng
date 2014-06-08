@@ -7,7 +7,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.register_option('suffixes', self.data_path+'suffixes.txt', 'yes', 'path to public suffix wordlist')
+        self.register_option('suffixes', self.data_path+'/suffixes.txt', 'yes', 'path to public suffix wordlist')
         self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
         self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
         self.register_option('attempts', 3, 'yes', 'number of retry attempts per host')

@@ -7,7 +7,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL AND password IS NULL AND type IS \'Adobe\'')
-        self.register_option('adobe_db', self.data_path+'adobe_top_100.json', 'yes', 'JSON file containing the Adobe hashes and passwords')
+        self.register_option('adobe_db', self.data_path+'/adobe_top_100.json', 'yes', 'JSON file containing the Adobe hashes and passwords')
         self.info = {
                      'Name': 'Adobe Hash Lookup',
                      'Author': 'Ethan Robish (@EthanRobish)',

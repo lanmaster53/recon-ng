@@ -356,7 +356,9 @@ class Module(framework.Framework):
     #==================================================
 
     def show_source(self):
-        filename = 'modules/%s.py' % (self.modulename)
+        for path in ['%s/modules/%s.py' % (x, self.modulename) for x in (self.app_path, self.home)]:
+            if os.path.exists(path):
+                filename = path
         with open(filename) as f:
             content = f.readlines()
             nums = [str(x) for x in range(1, len(content)+1)]

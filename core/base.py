@@ -46,9 +46,9 @@ class Recon(framework.Framework):
         self.base_prompt = self.prompt_template % ('', self.name)
         framework.Framework.__init__(self, (self.base_prompt, 'base'))
         # establish dynamic paths for framework elements
-        self.app_path = framework.Framework.app_path = sys.path[0]+'/'
-        self.data_path = framework.Framework.data_path = self.app_path+'data/'
-        self.core_path = framework.Framework.core_path = self.app_path+'core/'
+        self.app_path = framework.Framework.app_path = sys.path[0]
+        self.data_path = framework.Framework.data_path = self.app_path+'/data'
+        self.core_path = framework.Framework.core_path = self.app_path+'/core'
         self.options = self.global_options
         self.init_global_options()
         self.init_home()
@@ -242,7 +242,7 @@ class Recon(framework.Framework):
     #==================================================
 
     def show_banner(self):
-        banner = open(self.core_path+'banner').read()
+        banner = open(self.core_path+'/banner').read()
         banner_len = len(max(banner.split('\n'), key=len))
         print(banner)
         print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (framework.Colors.O, self.name, __version__, __author__, framework.Colors.N), banner_len+8)) # +8 compensates for the color bytes
