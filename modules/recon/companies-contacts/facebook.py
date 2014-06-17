@@ -94,7 +94,7 @@ class Module(module.Module):
             query = bigpipe.group(1)
             title = bigpipe.group(2)
             while True:
-                cursor = re.search(r'\[\{"cursor":"([^"]*)","ads_at_end":[^\}]*\}\]', content)
+                cursor = re.search(r'\[\{"cursor":"([^"]*)"\}\]', content)
                 if all((cursor, 'End of results' not in content, 'partial matches' not in content)):
                     data = '{"view":"list","encoded_query":"%s","encoded_title":"%s","experience_type":"grammar","cursor":"%s","ads_at_end":true}' % (query, title, cursor.group(1))
                     url = 'https://www.facebook.com/ajax/pagelet/generic.php/BrowseScrollingSetPagelet?data=%s&__a=1' % (urllib.quote(data))
