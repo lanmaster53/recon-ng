@@ -60,7 +60,7 @@ class Module(module.Module):
         # First we just use the username entered by the recon-ng user
         url = 'https://bitbucket.org/%s' % (username)
         resp = self.request(url)
-        bbName = re.search('<h1 title="Username:.+">(.+)</h1>', resp.text)
+        bbName = re.search('<title>\s+(.+) &mdash', resp.text)
         if not bbName:
             # Before we give up on the user not being on Bitbucket, let's search
             urlSearch = 'https://bitbucket.org/repo/all?name=%s' % (username)
