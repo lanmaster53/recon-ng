@@ -345,7 +345,7 @@ class Framework(cmd.Cmd):
         data = dict(
             domain = self.to_unicode(domain)
         )
-        return self.insert('domains', data, (data.keys()))
+        return self.insert('domains', data, data.keys())
 
     def add_companies(self, company, description=None):
         '''Adds a company to the database and returns the affected row count.'''
@@ -360,15 +360,16 @@ class Framework(cmd.Cmd):
         data = dict(
             netblock = self.to_unicode(netblock)
         )
-        return self.insert('netblocks', data, (data.keys()))
+        return self.insert('netblocks', data, data.keys())
 
-    def add_locations(self, latitude, longitude):
+    def add_locations(self, latitude=None, longitude=None, street_address=None):
         '''Adds a location to the database and returns the affected row count.'''
         data = dict(
             latitude = self.to_unicode(latitude),
-            longitude = self.to_unicode(longitude)
+            longitude = self.to_unicode(longitude),
+            street_address = self.to_unicode(street_address)
         )
-        return self.insert('locations', data, (data.keys()))
+        return self.insert('locations', data, data.keys())
 
     def add_vulnerabilities(self, host, reference, example, publish_date, category):
         '''Adds a vulnerability to the database and returns the affected row count.'''
@@ -379,7 +380,7 @@ class Framework(cmd.Cmd):
             publish_date = self.to_unicode(publish_date),
             category = self.to_unicode(category)
         )
-        return self.insert('vulnerabilities', data, (data.keys()))
+        return self.insert('vulnerabilities', data, data.keys())
 
     def add_ports(self, ip_address, port, host=None, protocol=None):
         '''Adds a port to the database and returns the affected row count.'''
