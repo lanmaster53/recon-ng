@@ -100,28 +100,32 @@ class Module(module.Module):
 
     def sourceforge(self, username):
         self.verbose('Checking SourceForge...')
-        url = 'http://sourceforge.net/users/%s' % (username)
+        url = 'http://sourceforge.net/u/%s/profile/' % (username)
         resp = self.request(url)
-        sfName = re.search('<label>Public Name:</label> (.+) </li>', resp.text)
+        sfName = re.search('<title>(.+) / Profile', resp.text)
+        print sfName
         if sfName:
             self.alert('Sourceforge username found - (%s)' % url)
             # extract data
-            sfJoin = re.search('<label>Joined:</label> (\d\d\d\d-\d\d-\d\d) ', resp.text)
-            sfMyOpenID = re.search('(?s)<label>My OpenID:</label>.+?<a href="(.+?)"', resp.text)
-            sfRepositories = re.findall('<li class="item"><a href="/projects/.+>(.+)</a>', resp.text)
+            sfJoin = re.search('<dt>Joined:</dt><dd>\s*(\d\d\d\d-\d\d-\d\d) ', resp.text)
+            sfLocation = re.search('<dt>Location:</dt><dd>\s*(\w.*)', resp.text)
+            sfGender = re.search('<dt>Gender:</dt><dd>\s*(\w.*)', resp.text)
+            sfProjects = re.findall('<a href="/p/.+/">(.+)</a>', resp.text)
             # establish non-match values
             sfName = sfName.group(1)
             sfJoin = sfJoin.group(1) if sfJoin else None
-            sfMyOpenID = sfMyOpenID.group(1) if sfMyOpenID else None
+            sfLocation = sfLocation.group(1) if sfLocation else None
+            sfGender = sfGender.group(1) if sfGender else None
             # build and display a table of the results
             tdata = []
             tdata.append(['Resource', 'Sourceforge'])
             tdata.append(['Name', sfName])
             tdata.append(['Profile URL', url])
             tdata.append(['Joined', sfJoin])
-            tdata.append(['OpenID', sfMyOpenID])
-            for sfRepos in sfRepositories:
-                tdata.append(['Repository', sfRepos])
+            tdata.append(['Location', sfLocation])
+            tdata.append(['Gender', sfGender])
+            for sfProj in sfProjects:
+                tdata.append(['Projects', sfProj])
             self.table(tdata, title='Sourceforge', store=False)
             # add the pertinent information to the database
             if len(sfName.split()) == 2:
