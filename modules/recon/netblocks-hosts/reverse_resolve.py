@@ -2,15 +2,11 @@ import module
 # unique to module
 import dns.resolver
 import dns.reversename
-import re
 
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL ORDER BY netblock')
-        self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
-        self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
-        self.register_option('attempts', 3, 'yes', 'number of retry attempts per host')
+        module.Module.__init__(self, params, query='SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL')
         self.info = {
                      'Name': 'Reverse Resolver',
                      'Author': 'John Babio (@3vi1john)',
@@ -18,10 +14,8 @@ class Module(module.Module):
                      }
 
     def module_run(self, netblocks):
-        max_attempts = self.options['attempts']
-        resolver = dns.resolver.get_default_resolver()
-        resolver.nameservers = [self.options['nameserver']]
-        resolver.lifetime = self.options['timeout']
+        max_attempts = 3
+        resolver = self.get_resolver()
         cnt = 0
         new = 0
         for netblock in netblocks:

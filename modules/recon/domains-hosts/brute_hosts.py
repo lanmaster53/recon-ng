@@ -2,17 +2,12 @@ import module
 # unique to module
 import dns.resolver
 import os.path
-import random
-import re
 
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
+        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL')
         self.register_option('wordlist', self.data_path+'/hostnames.txt', 'yes', 'path to hostname wordlist')
-        self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
-        self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
-        self.register_option('attempts', 3, 'yes', 'number of retry attempts per host')
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -20,15 +15,13 @@ class Module(module.Module):
                      }
 
     def module_run(self, domains):
-        max_attempts = self.options['attempts']
+        max_attempts = 3
         wordlist = self.options['wordlist']
         if not os.path.exists(wordlist):
             self.error('Wordlist file (\'%s\') not found.' % (wordlist))
             return
         words = open(wordlist).read().split()
-        resolver = dns.resolver.get_default_resolver()
-        resolver.nameservers = [self.options['nameserver']]
-        resolver.lifetime = self.options['timeout']
+        resolver = self.get_resolver()
         cnt = 0
         new = 0
         for domain in domains:

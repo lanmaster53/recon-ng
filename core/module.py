@@ -1,5 +1,6 @@
 from __future__ import print_function
 import cookielib
+import dns.resolver
 import hashlib
 import hmac
 import HTMLParser
@@ -133,6 +134,12 @@ class Module(framework.Framework):
         mname = names[1] if len(names) >= 3 else None
         lname = names[-1] if len(names) >= 2 else None
         return fname, mname, lname
+
+    def get_resolver(self):
+        resolver = dns.resolver.get_default_resolver()
+        resolver.nameservers = [self.global_options['nameserver']]
+        resolver.lifetime = 3
+        return resolver
 
     #==================================================
     # OUTPUT METHODS

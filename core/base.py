@@ -79,6 +79,7 @@ class Recon(framework.Framework):
 
     def init_global_options(self):
         self.register_option('debug', False,  'yes', 'enable debugging output')
+        self.register_option('nameserver', '8.8.8.8', 'yes', 'nameserver for DNS interrogation')
         self.register_option('proxy', None, 'no', 'proxy server (address:port)')
         self.register_option('store_tables', True, 'yes', 'store module generated tables')
         self.register_option('timeout', 10, 'yes', 'socket timeout (seconds)')
