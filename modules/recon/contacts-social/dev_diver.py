@@ -103,14 +103,13 @@ class Module(module.Module):
         url = 'http://sourceforge.net/u/%s/profile/' % (username)
         resp = self.request(url)
         sfName = re.search('<title>(.+) / Profile', resp.text)
-        print sfName
         if sfName:
             self.alert('Sourceforge username found - (%s)' % url)
             # extract data
             sfJoin = re.search('<dt>Joined:</dt><dd>\s*(\d\d\d\d-\d\d-\d\d) ', resp.text)
             sfLocation = re.search('<dt>Location:</dt><dd>\s*(\w.*)', resp.text)
             sfGender = re.search('<dt>Gender:</dt><dd>\s*(\w.*)', resp.text)
-            sfProjects = re.findall('<a href="/p/.+/">(.+)</a>', resp.text)
+            sfProjects = re.findall('class="project-info">\s*<a href="/p/.+/">(.+)</a>', resp.text)
             # establish non-match values
             sfName = sfName.group(1)
             sfJoin = sfJoin.group(1) if sfJoin else None
@@ -172,29 +171,6 @@ class Module(module.Module):
         else:
             self.output('CodePlex username not found.')
 
-    def freecode(self, username):
-        self.verbose('Checking Freecode...')
-        url = 'http://freecode.com/users/%s' % (username)
-        resp = self.request(url)
-        fcCreated = re.search('(?s)<dt>Created</dt>.+?<dd>(\d\d.+:\d\d)</dd>', resp.text)
-        if fcCreated:
-            self.alert('Freecode username found - (%s)' % url)
-            # extract data
-            fcRepositories = re.findall('<a href="/projects/[^"]*" title="[^"]*">([^<]*)</a>', resp.text)
-            # establish non-match values
-            fcCreated = fcCreated.group(1) if fcCreated else None
-            # build and display a table of the results
-            tdata = []
-            tdata.append(['Resource', 'Freecode'])
-            tdata.append(['Profile URL', url])
-            tdata.append(['Created', time.strftime('%Y-%m-%d', time.strptime(fcCreated, '%d %b %Y %H:%M'))])
-            for fcProjName in fcRepositories:
-                tdata.append(['Project', fcProjName])
-            self.table(tdata, title='Freecode', store=False)
-            # add the pertinent information to the database
-        else:
-            self.output('Freecode username not found.')
-
     def gitorious(self, username):
         self.verbose('Checking Gitorious...')
         url = 'https://gitorious.org/~%s' % (username)
@@ -242,5 +218,4 @@ class Module(module.Module):
         self.bitbucket(username)
         self.sourceforge(username)
         self.codeplex(username)
-        self.freecode(username)
         self.gitorious(username)
