@@ -147,10 +147,10 @@ class Module(module.Module):
             cpLast = re.search('Last Visit<span class="user_float">([A-Z].+[0-9])</span>', resp.text)
             cpCoordinator = re.search('(?s)<p class="OverflowHidden">(.*?)</p>', resp.text)
             # establish non-match values
-            cpName = cpName.group(1)
-            cpJoin = cpJoin.group(1) if cpJoin else None
-            cpLast = cpLast.group(1) if cpLast else None
-            cpCoordinator = cpCoordinator.group(1) if cpCoordinator else None
+            cpName = cpName.group(1) if cpName else None
+            cpJoin = cpJoin.group(1) if cpJoin else 'January 1, 1900'
+            cpLast = cpLast.group(1) if cpLast else 'January 1, 1900'
+            cpCoordinator = cpCoordinator.group(1) if cpCoordinator else ''
             # build and display a table of the results
             tdata = []
             tdata.append(['Resource', 'CodePlex'])
@@ -160,7 +160,7 @@ class Module(module.Module):
             tdata.append(['Date Last', time.strftime('%Y-%m-%d', time.strptime(cpLast, '%B %d, %Y'))])
             cpCoordProject = re.findall('<a href="(http://.+)/" title=".+">(.+)<br /></a>', cpCoordinator)
             for cpReposUrl, cpRepos in cpCoordProject:
-                tdata.append(['Project', '%s (%s)' % (cpRepos, cpReposUrl)])
+            	tdata.append(['Project', '%s (%s)' % (cpRepos, cpReposUrl)])
             self.table(tdata, title='CodePlex', store=False)
             # add the pertinent information to the database
             if len(cpName.split()) == 2:
