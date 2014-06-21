@@ -9,7 +9,7 @@ class Module(module.Module):
         module.Module.__init__(self, params, query='SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
         self.info = {
                      'Name': 'Reverse Resolver',
-                     'Author': 'John Babio (@3vi1john)',
+                     'Author': 'John Babio (@3vi1john), @vulp1n3, and Tim Tomes (@LaNMaSteR53)',
                      'Description': 'Conducts a reverse lookup for each IP address to resolve the hostname. Updates the \'hosts\' table with the results.'
                      }
 
