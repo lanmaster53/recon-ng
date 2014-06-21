@@ -60,7 +60,7 @@ class Module(module.Module):
         # First we just use the username entered by the recon-ng user
         url = 'https://bitbucket.org/%s' % (username)
         resp = self.request(url)
-        bbName = re.search('<h1 title="Username:.+">(.+)</h1>', resp.text)
+        bbName = re.search('<title>\s+(.+) &mdash', resp.text)
         if not bbName:
             # Before we give up on the user not being on Bitbucket, let's search
             urlSearch = 'https://bitbucket.org/repo/all?name=%s' % (username)
@@ -100,28 +100,31 @@ class Module(module.Module):
 
     def sourceforge(self, username):
         self.verbose('Checking SourceForge...')
-        url = 'http://sourceforge.net/users/%s' % (username)
+        url = 'http://sourceforge.net/u/%s/profile/' % (username)
         resp = self.request(url)
-        sfName = re.search('<label>Public Name:</label> (.+) </li>', resp.text)
+        sfName = re.search('<title>(.+) / Profile', resp.text)
         if sfName:
             self.alert('Sourceforge username found - (%s)' % url)
             # extract data
-            sfJoin = re.search('<label>Joined:</label> (\d\d\d\d-\d\d-\d\d) ', resp.text)
-            sfMyOpenID = re.search('(?s)<label>My OpenID:</label>.+?<a href="(.+?)"', resp.text)
-            sfRepositories = re.findall('<li class="item"><a href="/projects/.+>(.+)</a>', resp.text)
+            sfJoin = re.search('<dt>Joined:</dt><dd>\s*(\d\d\d\d-\d\d-\d\d) ', resp.text)
+            sfLocation = re.search('<dt>Location:</dt><dd>\s*(\w.*)', resp.text)
+            sfGender = re.search('<dt>Gender:</dt><dd>\s*(\w.*)', resp.text)
+            sfProjects = re.findall('class="project-info">\s*<a href="/p/.+/">(.+)</a>', resp.text)
             # establish non-match values
             sfName = sfName.group(1)
             sfJoin = sfJoin.group(1) if sfJoin else None
-            sfMyOpenID = sfMyOpenID.group(1) if sfMyOpenID else None
+            sfLocation = sfLocation.group(1) if sfLocation else None
+            sfGender = sfGender.group(1) if sfGender else None
             # build and display a table of the results
             tdata = []
             tdata.append(['Resource', 'Sourceforge'])
             tdata.append(['Name', sfName])
             tdata.append(['Profile URL', url])
             tdata.append(['Joined', sfJoin])
-            tdata.append(['OpenID', sfMyOpenID])
-            for sfRepos in sfRepositories:
-                tdata.append(['Repository', sfRepos])
+            tdata.append(['Location', sfLocation])
+            tdata.append(['Gender', sfGender])
+            for sfProj in sfProjects:
+                tdata.append(['Projects', sfProj])
             self.table(tdata, title='Sourceforge', store=False)
             # add the pertinent information to the database
             if len(sfName.split()) == 2:
@@ -144,10 +147,10 @@ class Module(module.Module):
             cpLast = re.search('Last Visit<span class="user_float">([A-Z].+[0-9])</span>', resp.text)
             cpCoordinator = re.search('(?s)<p class="OverflowHidden">(.*?)</p>', resp.text)
             # establish non-match values
-            cpName = cpName.group(1)
-            cpJoin = cpJoin.group(1) if cpJoin else None
-            cpLast = cpLast.group(1) if cpLast else None
-            cpCoordinator = cpCoordinator.group(1) if cpCoordinator else None
+            cpName = cpName.group(1) if cpName else None
+            cpJoin = cpJoin.group(1) if cpJoin else 'January 1, 1900'
+            cpLast = cpLast.group(1) if cpLast else 'January 1, 1900'
+            cpCoordinator = cpCoordinator.group(1) if cpCoordinator else ''
             # build and display a table of the results
             tdata = []
             tdata.append(['Resource', 'CodePlex'])
@@ -157,7 +160,7 @@ class Module(module.Module):
             tdata.append(['Date Last', time.strftime('%Y-%m-%d', time.strptime(cpLast, '%B %d, %Y'))])
             cpCoordProject = re.findall('<a href="(http://.+)/" title=".+">(.+)<br /></a>', cpCoordinator)
             for cpReposUrl, cpRepos in cpCoordProject:
-                tdata.append(['Project', '%s (%s)' % (cpRepos, cpReposUrl)])
+            	tdata.append(['Project', '%s (%s)' % (cpRepos, cpReposUrl)])
             self.table(tdata, title='CodePlex', store=False)
             # add the pertinent information to the database
             if len(cpName.split()) == 2:
@@ -167,29 +170,6 @@ class Module(module.Module):
                 pass#self.add_contacts(None, cpName, 'CodePlex account')
         else:
             self.output('CodePlex username not found.')
-
-    def freecode(self, username):
-        self.verbose('Checking Freecode...')
-        url = 'http://freecode.com/users/%s' % (username)
-        resp = self.request(url)
-        fcCreated = re.search('(?s)<dt>Created</dt>.+?<dd>(\d\d.+:\d\d)</dd>', resp.text)
-        if fcCreated:
-            self.alert('Freecode username found - (%s)' % url)
-            # extract data
-            fcRepositories = re.findall('<a href="/projects/[^"]*" title="[^"]*">([^<]*)</a>', resp.text)
-            # establish non-match values
-            fcCreated = fcCreated.group(1) if fcCreated else None
-            # build and display a table of the results
-            tdata = []
-            tdata.append(['Resource', 'Freecode'])
-            tdata.append(['Profile URL', url])
-            tdata.append(['Created', time.strftime('%Y-%m-%d', time.strptime(fcCreated, '%d %b %Y %H:%M'))])
-            for fcProjName in fcRepositories:
-                tdata.append(['Project', fcProjName])
-            self.table(tdata, title='Freecode', store=False)
-            # add the pertinent information to the database
-        else:
-            self.output('Freecode username not found.')
 
     def gitorious(self, username):
         self.verbose('Checking Gitorious...')
@@ -238,5 +218,4 @@ class Module(module.Module):
         self.bitbucket(username)
         self.sourceforge(username)
         self.codeplex(username)
-        self.freecode(username)
         self.gitorious(username)
