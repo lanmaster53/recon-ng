@@ -46,7 +46,6 @@ class Module(module.Module):
                     screen_name = photo['author'][0]['name']['$t']
                     profile_name = photo['author'][0]['name']['$t']
                     profile_url = photo['author'][0]['uri']['$t']
-                    #media_url = photo['media$group']['media$content'][0]['url']
                     media_url = photo['content']['src']
                     thumb_url = '/s72/'.join(media_url.rsplit('/', 1))
                     message = photo['title']['$t']
@@ -58,7 +57,8 @@ class Module(module.Module):
                 processed += len(jsonobj['feed']['entry'])
                 self.verbose('%s photos processed.' % (processed))
                 qty = jsonobj['feed']['openSearch$itemsPerPage']['$t']
-                next = qty + jsonobj['feed']['openSearch$startIndex']['$t']
+                start = jsonobj['feed']['openSearch$startIndex']['$t']
+                next = qty + start
                 if next > 1000: break
                 payload['start-index'] = next
         self.summarize(new, count)

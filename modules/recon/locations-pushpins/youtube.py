@@ -24,15 +24,17 @@ class Module(module.Module):
         count = 0
         new = 0
         for point in points:
+            self.heading(point, level=0)
             payload = {'alt': 'json', 'location': '%s!' % (point), 'location-radius': '%dkm' % (rad)}
-            page = 1
             processed = 0
             while True:
                 resp = self.request(url, payload=payload)
                 jsonobj = resp.json
-                if jsonobj['feed']['openSearch$totalResults']['$t'] == 0:
+                if not jsonobj:
+                    self.error(resp.text)
                     break
                 if not count: self.output('Collecting data for an unknown number of videos...')
+                if not 'entry' in jsonobj['feed']: break
                 for video in jsonobj['feed']['entry']:
                     if not video['georss$where']:
                         continue
@@ -53,9 +55,6 @@ class Module(module.Module):
                 qty = jsonobj['feed']['openSearch$itemsPerPage']['$t']
                 start = jsonobj['feed']['openSearch$startIndex']['$t']
                 next = qty + start
-                total = jsonobj['feed']['openSearch$totalResults']['$t']
-                if next > total:
-                    break
-                page += 1
+                if next > 500: break
                 payload['start-index'] = next
         self.summarize(new, count)
