@@ -11,13 +11,13 @@ class Module(module.Module):
         module.Module.__init__(self, params)
         self.register_option('map_filename', '%s/pushpin_map.html' % (self.workspace), 'yes', 'path and filename for pushpin map report')
         self.register_option('media_filename', '%s/pushpin_media.html' % (self.workspace), 'yes', 'path and filename for pushpin media report')
-        self.register_option('latitude', self.global_options['latitude'], 'yes', 'latitude of the epicenter')
-        self.register_option('longitude', self.global_options['longitude'], 'yes', 'longitude of the epicenter')
-        self.register_option('radius', self.global_options['radius'], 'yes', 'radius from the epicenter in kilometers')
+        self.register_option('latitude', None, 'yes', 'latitude of the epicenter')
+        self.register_option('longitude', None, 'yes', 'longitude of the epicenter')
+        self.register_option('radius', None, 'yes', 'radius from the epicenter in kilometers')
         self.info = {
                      'Name': 'PushPin Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Creates a media and map HTML report for all of the PushPin data stored in the database.',
+                     'Description': 'Creates HTML media and map reports for all of the PushPins stored in the database.',
                      }
 
     def remove_nl(self, x, repl=''):
@@ -37,7 +37,7 @@ class Module(module.Module):
             count = source[0]
             source = source[1]
             media_content += '<div class="media_column %s">\n<div class="media_header"><div class="media_summary">%s</div>%s</div>\n' % (source.lower(), count, source.capitalize())
-            items = self.query('SELECT * FROM pushpin WHERE source=?', (source,))
+            items = self.query('SELECT * FROM pushpins WHERE source=?', (source,))
             items.sort(key=lambda x: x[9], reverse=True)
             for item in items:
                 item = [self.to_unicode_str(x) if x != None else u'' for x in item]
@@ -55,7 +55,7 @@ class Module(module.Module):
         fp.close()
 
     def module_run(self):
-        sources = self.query('SELECT COUNT(source), source FROM pushpin GROUP BY source')
+        sources = self.query('SELECT COUNT(source), source FROM pushpins GROUP BY source')
         media_content, map_content = self.build_content(sources)
         self.write_markup(self.data_path+'/template_media.html', self.options['media_filename'], media_content)
         self.output('Media data written to \'%s\'' % (self.options['media_filename']))

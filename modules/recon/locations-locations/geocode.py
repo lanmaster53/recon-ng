@@ -1,39 +1,31 @@
 import module
-# unique to module
 
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('address', None, 'yes', 'address to geocode')
-        self.register_option('store', True , 'yes', 'store the obtained coordinates to latitude, longitude')
+        module.Module.__init__(self, params, query='SELECT DISTINCT street_address FROM locations WHERE street_address IS NOT NULL')
         self.info = {
                      'Name': 'Address Geocoder',
                      'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-                     'Description': 'Call the Google Maps API to obtain coordinates from an address.',
+                     'Description': 'Queries the Google Maps API to obtain coordinates for an address. Updates the \'locations\' table with the results.'
                      }
 
-    def module_run(self):
-        address = self.options['address']
-        store = self.options['store']
-        self.verbose("Geocoding '%s'..." % (address))
-        payload = {'address' : address, 'sensor' : 'false'}
-        url = 'https://maps.googleapis.com/maps/api/geocode/json'
-        resp = self.request(url, payload=payload)
-        # kill the module if nothing is returned
-        if len(resp.json['results']) == 0:
-            self.output('Unable to geocode \'%s\'.' % (address))
-            return
-        # loop through and output the results
-        for result in resp.json['results']:
-            lat = result['geometry']['location']['lat']
-            lon = result['geometry']['location']['lng']
-            self.alert("Latitude: %s, Longitude: %s" % (lat, lon))
-        # store if True and only 1 set of coordinates is returned
-        if store:
-            if len(resp.json['results']) == 1:
-                self.global_options['latitude'] = lat
-                self.global_options['longitude'] = lon
-                self.verbose('Global options, latitude and longitude, set.')
-            elif len(resp.json['results']) > 1:
-                self.output('More than 1 result returned. Global options not set.')
+    def module_run(self, addresses):
+        for address in addresses:
+            self.verbose("Geocoding '%s'..." % (address))
+            payload = {'address' : address, 'sensor' : 'false'}
+            url = 'https://maps.googleapis.com/maps/api/geocode/json'
+            resp = self.request(url, payload=payload)
+            # kill the module if nothing is returned
+            if len(resp.json['results']) == 0:
+                self.output('Unable to geocode \'%s\'.' % (address))
+                return
+            # loop through the results
+            for result in resp.json['results']:
+                lat = result['geometry']['location']['lat']
+                lon = result['geometry']['location']['lng']
+                # store the result
+                self.add_locations(lat, lon, address)
+                # output the result
+                self.alert("Latitude: %s, Longitude: %s" % (lat, lon))
+            self.query('DELETE FROM locations WHERE street_address=? AND latitude IS NULL AND longitude IS NULL', (address,))

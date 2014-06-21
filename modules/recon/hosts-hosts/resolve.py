@@ -5,8 +5,7 @@ import dns.resolver
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL AND ip_address IS NULL ORDER BY host')
-        self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
+        module.Module.__init__(self, params, query='SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL AND ip_address IS NULL')
         self.info = {
                      'Name': 'Hostname Resolver',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -17,9 +16,7 @@ class Module(module.Module):
                      }
 
     def module_run(self, hosts):
-        q = dns.resolver.get_default_resolver()
-        q.nameservers = [self.options['nameserver']]
-        q.lifetime = 3
+        q = self.get_resolver()
         for host in hosts:
             found = False
             try:
@@ -29,9 +26,6 @@ class Module(module.Module):
                     found = True
                     self.output('%s => %s' % (host, answer.address))
                 if found: self.query('DELETE FROM hosts WHERE host=? and ip_address IS NULL', (host,))
-            except dns.exception.SyntaxError:
-                self.error('Nameserver must be in IP form.')
-                return
             except dns.resolver.NXDOMAIN:
                 message = 'Unknown'
             except dns.resolver.NoAnswer:

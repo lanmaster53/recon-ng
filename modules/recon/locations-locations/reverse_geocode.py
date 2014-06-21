@@ -4,30 +4,33 @@ import module
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('latitude', self.global_options['latitude'], 'yes', self.global_options.description['latitude'])
-        self.register_option('longitude', self.global_options['longitude'], 'yes', self.global_options.description['longitude'])
+        module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
         self.info = {
                      'Name': 'Reverse Geocoder',
                      'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-                     'Description': 'Call the Google Maps API to obtain an address from coordinates.',
+                     'Description': 'Queries the Google Maps API to obtain an address from coordinates.',
                      }
 
-    def module_run(self):
-        lat = self.options['latitude']
-        lon = self.options['longitude']
-        self.verbose("Reverse geocoding (%f, %f)..." % (lat, lon))
-        payload = {'latlng' : '%f,%f' % (lat,lon), 'sensor' : 'false'}
-        url = 'https://maps.googleapis.com/maps/api/geocode/json'
-        resp = self.request(url, payload=payload)
-        # kill the module if nothing is returned
-        if len(resp.json['results']) == 0:
-            self.output('Unable to resolve an address for (%f, %f).' % (lat, lon))
-            return
-        # loop through and add results to a table
-        tdata = []
-        for result in resp.json['results']:
-            tdata.append((result['geometry']['location_type'], result['formatted_address']))
-        # output the table
-        if tdata:
-            self.table(tdata, header=['Type', 'Address'], store=False)
+    def module_run(self, points):
+        for point in points:
+            self.verbose("Reverse geocoding (%s)..." % (point))
+            payload = {'latlng' : point, 'sensor' : 'false'}
+            url = 'https://maps.googleapis.com/maps/api/geocode/json'
+            resp = self.request(url, payload=payload)
+            # kill the module if nothing is returned
+            if len(resp.json['results']) == 0:
+                self.output('Unable to resolve an address for (%s).' % (point))
+                return
+            # loop through the results
+            found = False
+            for result in resp.json['results']:
+                if result['geometry']['location_type'] == 'ROOFTOP':
+                    found = True
+                    lat = point.split(',')[0]
+                    lon = point.split(',')[1]
+                    address = result['formatted_address']
+                    # store the result
+                    self.add_locations(lat, lon, address)
+                    # output the result
+                    self.alert(address)
+            if found: self.query('DELETE FROM locations WHERE latitude=? AND longitude=? AND street_address IS NULL', (lat, lon))

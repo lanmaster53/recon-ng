@@ -6,11 +6,8 @@ import os.path
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
+        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL')
         self.register_option('suffixes', self.data_path+'/suffixes.txt', 'yes', 'path to public suffix wordlist')
-        self.register_option('nameserver', '8.8.8.8', 'yes', 'ip address of a valid nameserver')
-        self.register_option('timeout', 2, 'yes', 'maximum lifetime of dns queries')
-        self.register_option('attempts', 3, 'yes', 'number of retry attempts per host')
         self.info = {
                      'Name': 'DNS Public Suffix Brute Forcer',
                      'Author': 'Marcus Watson (@BranMacMuffin)',
@@ -23,10 +20,8 @@ class Module(module.Module):
 
     def module_run(self, domains):
         suffix_wordlist = self.options['suffixes']
-        max_attempts = self.options['attempts']
-        resolver = dns.resolver.get_default_resolver()
-        resolver.nameservers = [self.options['nameserver']]
-        resolver.lifetime = self.options['timeout']
+        max_attempts = 3
+        resolver = self.get_resolver()
         cnt = 0
         new = 0
         if os.path.exists(suffix_wordlist):

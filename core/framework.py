@@ -345,7 +345,7 @@ class Framework(cmd.Cmd):
         data = dict(
             domain = self.to_unicode(domain)
         )
-        return self.insert('domains', data, (data.keys()))
+        return self.insert('domains', data, data.keys())
 
     def add_companies(self, company, description=None):
         '''Adds a company to the database and returns the affected row count.'''
@@ -353,22 +353,23 @@ class Framework(cmd.Cmd):
             company = self.to_unicode(company),
             description = self.to_unicode(description)
         )
-        return self.insert('companies', data, ('company'))
+        return self.insert('companies', data, ('company',))
 
     def add_netblocks(self, netblock):
         '''Adds a netblock to the database and returns the affected row count.'''
         data = dict(
             netblock = self.to_unicode(netblock)
         )
-        return self.insert('netblocks', data, (data.keys()))
+        return self.insert('netblocks', data, data.keys())
 
-    def add_locations(self, latitude, longitude):
+    def add_locations(self, latitude=None, longitude=None, street_address=None):
         '''Adds a location to the database and returns the affected row count.'''
         data = dict(
             latitude = self.to_unicode(latitude),
-            longitude = self.to_unicode(longitude)
+            longitude = self.to_unicode(longitude),
+            street_address = self.to_unicode(street_address)
         )
-        return self.insert('locations', data, (data.keys()))
+        return self.insert('locations', data, data.keys())
 
     def add_vulnerabilities(self, host, reference, example, publish_date, category):
         '''Adds a vulnerability to the database and returns the affected row count.'''
@@ -379,7 +380,7 @@ class Framework(cmd.Cmd):
             publish_date = self.to_unicode(publish_date),
             category = self.to_unicode(category)
         )
-        return self.insert('vulnerabilities', data, (data.keys()))
+        return self.insert('vulnerabilities', data, data.keys())
 
     def add_ports(self, ip_address, port, host=None, protocol=None):
         '''Adds a port to the database and returns the affected row count.'''
@@ -820,8 +821,7 @@ class Framework(cmd.Cmd):
     def do_add(self, params):
         '''Adds items to the database'''
         # get table names for which data can be added
-        tables = self.get_tables()
-        if params in tables:
+        if params in self.get_tables():
             columns = self.get_columns(params)
             item = {}
             # prompt user for data
@@ -831,6 +831,8 @@ class Framework(cmd.Cmd):
                 except KeyboardInterrupt:
                     print('')
                     return
+                if Framework.script:
+                    print('%s' % (item[column[0]]))
             # add the item to the database
             func = getattr(self, 'add_' + params)
             func(**item)
@@ -840,13 +842,14 @@ class Framework(cmd.Cmd):
     def do_del(self, params):
         '''Deletes items from the database'''
         # get table names for which data can be deleted
-        tables = self.get_tables()
-        if params in tables:
+        if params in self.get_tables():
             try:
                 rowid = raw_input('rowid (INT): ')
             except KeyboardInterrupt:
                 print('')
                 return
+            if Framework.script:
+                print('%s' % (rowid))
             # delete the item from the database
             self.query('DELETE FROM %s WHERE ROWID IS ?' % (params), (rowid,))
         else:
