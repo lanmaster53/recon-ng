@@ -8,13 +8,22 @@ sys.path.append(sys.path[0]+'/libs/')
 import base
 from framework import Colors
 
+def output(string):
+    print('%s[*]%s %s' % (Colors.B, Colors.N, string))
+
 def recon_cli(args):
     x = base.Recon(mode=base.Mode.CLI)
     # check for and run version check
     if args.check:
         if not x.version_check(): return
-    # set the given workspace
-    if args.workspace: x.init_workspace(args.workspace)
+    # set given workspace
+    if args.workspace:
+        x.init_workspace(args.workspace)
+        print('WORKSPACE => %s' % (args.workspace))
+    # run given global commands
+    for command in args.global_commands:
+        print('GLOBAL COMMAND => %s' % (command))
+        x.onecmd(command)
     # set given global options
     for option in args.goptions:
         param = ' '.join(option.split('='))
@@ -29,12 +38,17 @@ def recon_cli(args):
         return
     # exit if module not specified
     if not args.module:
-        print('%s[!] Module required.%s' % (Colors.R, Colors.N))
+        output('No module provided.')
         return
     # load the module
     y = x.do_load(args.module)
     # exit if module not successfully loaded
     if not y: return
+    print('MODULE => %s' % (args.module))
+    # run given module commands
+    for command in args.module_commands:
+        print('MODULE COMMAND => %s' % (command))
+        y.onecmd(command)
     # set given module options
     for option in args.options:
         param = ' '.join(option.split('='))
@@ -43,18 +57,22 @@ def recon_cli(args):
     if args.show:
         y.do_show('options')
         return
-    # run the module
-    y.do_run(None)
+    if args.run:
+        # run the module
+        y.do_run(None)
 
 description = '%%(prog)s - %s %s' % (base.__author__, base.__email__)
 parser = argparse.ArgumentParser(description=description, version=base.__version__)
 parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
+parser.add_argument('-C', help='runs a command at the global context', metavar='command', dest='global_commands' ,default=[], action='append')
+parser.add_argument('-c', help='runs a command at the module context', metavar='command', dest='module_commands' ,default=[], action='append')
 parser.add_argument('-G', help='show available global options', dest='gshow', default=False, action='store_true')
 parser.add_argument('-g', help='set a global option (can be used more than once)', metavar='name=value', dest='goptions', default=[], action='append')
 parser.add_argument('-M', help='show modules', dest='show_modules', default=False, action='store_true')
 parser.add_argument('-m', help='specify the module', metavar='module', dest='module', action='store')
 parser.add_argument('-O', help='show available module options', dest='show', default=False, action='store_true')
 parser.add_argument('-o', help='set a module option (can be used more than once)', metavar='name=value', dest='options', default=[], action='append')
+parser.add_argument('-x', help='run the module', dest='run', default=False, action='store_true')
 parser.add_argument('--no-check', help='disable version check', dest='check', default=True, action='store_false')
 args = parser.parse_args()
 recon_cli(args)
