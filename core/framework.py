@@ -819,39 +819,79 @@ class Framework(cmd.Cmd):
             self.help_show()
 
     def do_add(self, params):
-        '''Adds items to the database'''
-        # get table names for which data can be added
-        if params in self.get_tables():
-            columns = self.get_columns(params)
-            item = {}
-            # prompt user for data
-            for column in columns:
-                try:
-                    item[column[0]] = raw_input('%s (%s): ' % column)
-                except KeyboardInterrupt:
-                    print('')
+        '''Adds records to the database'''
+        table = ''
+        # search params for table names
+        for table_name in self.get_tables():
+            if params.startswith(table_name):
+                params = params[len(table_name)+1:]
+                table = table_name
+                break
+        if table:
+            # validate add_* method for table
+            if not hasattr(self, 'add_' + table):
+                self.error('Cannot add records to dynamicly created tables.')
+                return
+            columns = self.get_columns(table)
+            record = {}
+            # build record from parameters
+            if params:
+                # parse params into values by delim
+                values = params.split('~')
+                # validate parsed value input
+                if len(columns) == len(values):
+                    # assign each value to a column
+                    for i in range(0,len(columns)):
+                        record[columns[i][0]] = values[i]
+                else:
+                    self.error('Columns and values length mismatch.')
                     return
-                if Framework.script:
-                    print('%s' % (item[column[0]]))
-            # add the item to the database
-            func = getattr(self, 'add_' + params)
-            func(**item)
+            # built record from interactive input
+            else:
+                for column in columns:
+                    try:
+                        # prompt user for data
+                        record[column[0]] = raw_input('%s (%s): ' % column)
+                    except KeyboardInterrupt:
+                        print('')
+                        return
+                    finally:
+                        # ensure proper output for resource scripts
+                        if Framework.script:
+                            print('%s' % (record[column[0]]))
+            # add record to the database
+            func = getattr(self, 'add_' + table)
+            func(**record)
         else:
             self.help_add()
 
     def do_del(self, params):
-        '''Deletes items from the database'''
-        # get table names for which data can be deleted
-        if params in self.get_tables():
-            try:
-                rowid = raw_input('rowid (INT): ')
-            except KeyboardInterrupt:
-                print('')
-                return
-            if Framework.script:
-                print('%s' % (rowid))
-            # delete the item from the database
-            self.query('DELETE FROM %s WHERE ROWID IS ?' % (params), (rowid,))
+        '''Deletes records from the database'''
+        table = ''
+        # search params for table names
+        for table_name in self.get_tables():
+            if params.startswith(table_name):
+                params = params[len(table_name)+1:]
+                table = table_name
+                break
+        if table:
+            # get rowid from parameters
+            if params:
+                rowid = params
+            # get rowid from interactive input
+            else:
+                try:
+                    # prompt user for data
+                    rowid = raw_input('rowid (INT): ')
+                except KeyboardInterrupt:
+                    print('')
+                    return
+                finally:
+                    # ensure proper output for resource scripts
+                    if Framework.script:
+                        print('%s' % (rowid))
+            # delete the record from the database
+            self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
         else:
             self.help_del()
 
@@ -1015,7 +1055,7 @@ class Framework(cmd.Cmd):
         print('')
         print('Usage: query <sql>')
         print('')
-        print('SQL Examples:')
+        print('SQL examples:')
         print('%s%s' % (self.spacer, 'SELECT columns|* FROM table_name'))
         print('%s%s' % (self.spacer, 'SELECT columns|* FROM table_name WHERE some_column=some_value'))
         print('%s%s' % (self.spacer, 'DELETE FROM table_name WHERE some_column=some_value'))
@@ -1056,17 +1096,18 @@ class Framework(cmd.Cmd):
         print('')
 
     def help_add(self):
-        options = sorted(self.get_tables())
         print(getattr(self, 'do_add').__doc__)
         print('')
-        print('Usage: add [%s]' % ('|'.join(options)))
+        print('Usage: add <table> [values]')
+        print('')
+        print('optional arguments:')
+        print('%svalues => \'~\' delimited string representing column values' % (self.spacer))
         print('')
 
     def help_del(self):
-        options = sorted(self.get_tables())
         print(getattr(self, 'do_del').__doc__)
         print('')
-        print('Usage: del [%s]' % ('|'.join(options)))
+        print('Usage: del <table> [rowid]')
         print('')
 
     #==================================================
