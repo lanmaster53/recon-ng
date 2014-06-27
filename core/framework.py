@@ -1118,9 +1118,9 @@ class Framework(cmd.Cmd):
         args = line.split()
         options = ['list', 'add', 'delete', 'update']
         if 1 < len(args) < 4:
-            if args[1].lower() in options[2:]:
+            if args[1].lower() in options[1:]:
                 return [x[0] for x in self.query_keys('SELECT name FROM keys') if x[0].startswith(text)]
-            if args[1].lower() in options[:2]:
+            if args[1].lower() in options[:1]:
                 return []
         return [x for x in options if x.startswith(text)]
 

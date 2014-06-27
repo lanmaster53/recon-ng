@@ -1,6 +1,6 @@
-#!/usr/bin/env python -B
+#!/usr/bin/python2.7 -B
 
-__author__ = "Anthony Miller-Rhodes (@_s1lentjudge)"
+__author__ = "Anthony Miller-Rhodes (@amillerrhodes)"
 
 import uuid
 import argparse
@@ -44,6 +44,11 @@ class ReconState:
         self.sessions[sid]["module"] = self.sessions[sid]["recon"]
         return sid
 
+    def _fetch_results(self, sid):
+        results = self.sessions[sid]["module"].rpc_cache[:]
+        self.sessions[sid]["module"].rpc_cache = []
+        return results
+
     def use(self, param, sid):
         mod = self.sessions[sid]["recon"].do_use(param)
         self.sessions[sid]["module"] = mod
@@ -54,15 +59,23 @@ class ReconState:
     def set(self, var, param, sid):
         self.sessions[sid]["module"].do_set(var + " " + param)
 
+    def unset(self, var, sid):
+        self.sessions[sid]["module"].do_unset(var)
+
     def run(self, sid):
         self.sessions[sid]["module"].do_run(None)
-        results = self.sessions[sid]["module"].rpc_cache[:]
-        self.sessions[sid]["module"].rpc_cache = []
-        return results
+        return self._fetch_results(sid)
+
+    def add(self, table, param, sid):
+        self.sessions[sid]["module"].do_add(table + " " + param)
+        return self._fetch_results(sid)
+
+    def delete(self, table, param, sid):
+        self.sessions[sid]["module"].do_del(table + " " + param)
 
     def show(self, param, sid):
         if param in self.sessions[sid]["module"].get_tables():
-            return self.sessions[sid]["module"].query('SELECT * FROM %s ORDER BY 1' % (param))
+            return self.sessions[sid]["module"].query('SELECT ROWID, * FROM %s ORDER BY 1' % (param))
 
     def workspace(self, param, sid):
         self.sessions[sid]["recon"].init_workspace(param)

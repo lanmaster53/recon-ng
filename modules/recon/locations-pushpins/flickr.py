@@ -20,7 +20,7 @@ class Module(module.Module):
     def module_run(self, points):
         api_key = self.get_key('flickr_api')
         rad = self.options['radius']
-        url = 'http://api.flickr.com/services/rest/'
+        url = 'https://api.flickr.com/services/rest/'
         count = 0
         new = 0
         for point in points:
@@ -45,7 +45,8 @@ class Module(module.Module):
                     screen_name = photo['owner']
                     profile_name = photo['ownername']
                     profile_url = 'http://flickr.com/photos/%s' % screen_name
-                    media_url = photo['url_m']
+                    try: media_url = photo['url_m']
+                    except KeyError: media_url = photo['url_t'].replace('_t.', '.')
                     thumb_url = photo['url_t']
                     message = photo['title']
                     try: time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')

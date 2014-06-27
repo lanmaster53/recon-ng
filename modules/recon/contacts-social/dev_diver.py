@@ -1,5 +1,6 @@
 import module
 # unique to module
+import json
 import re
 import time
 import urllib
@@ -18,85 +19,72 @@ class Module(module.Module):
     # Add a method for each repository
     def github(self, username):
         self.verbose('Checking Github...')
-        url = 'https://github.com/%s' % (username)
+        url = 'https://api.github.com/users/%s' % (username)
         resp = self.request(url)
-        gitUser = re.search('<span class="vcard-username" itemprop="additionalName">(.+?)</span>', resp.text)
-        if gitUser:
+        data = resp.json
+        if data.has_key('login'):
             self.alert('Github username found - (%s)' % url)
-            # extract data
-            gitName = re.search('<span class="vcard-fullname" itemprop="name">(.+?)</span>', resp.text)
-            gitDesc = re.search('<meta name="description" content="(.+)" />', resp.text)
-            gitJoin = re.search('<span class="join-date">(.+?)</span>', resp.text)
-            gitLoc = re.search('<span class="octicon octicon-location"></span>(.+?)</li>', resp.text)
-            gitPersonalUrl = re.search('<span class="octicon octicon-link"></span><a href="(.+?)" class="url"', resp.text)
-            # establish non-match values
-            gitName = gitName.group(1) if gitName else None
-            gitDesc = gitDesc.group(1) if gitDesc else None
-            gitJoin = gitJoin.group(1) if gitJoin else None
-            gitLoc = gitLoc.group(1) if gitLoc else None
-            gitPersonalUrl = gitPersonalUrl.group(1) if gitPersonalUrl else None
+            # extract data from the optional fields
+            gitName    = data['name'] if data.has_key('name') else None
+            gitCompany = data['company'] if data.has_key('company') else None
+            gitBlog    = data['blog'] if data.has_key('blog') else None
+            gitLoc     = data['location'] if data.has_key('location') else None
+            gitEmail   = data['email'] if data.has_key('email') else None
+            gitBio     = data['bio'] if data.has_key('bio') else None
+            gitJoin    = data['created_at'].split('T')
+            gitUpdate  = data['updated_at'].split('T')
             # build and display a table of the results
             tdata = []
             tdata.append(['Resource', 'Github'])
-            tdata.append(['Name', gitName])
-            tdata.append(['Profile URL', url])
-            tdata.append(['Description', gitDesc])
-            tdata.append(['Joined', time.strftime('%Y-%m-%d', time.strptime(gitJoin, '%b %d, %Y'))])
+            tdata.append(['User Name', data['login']])
+            tdata.append(['Real Name', gitName]) if gitName else None
+            tdata.append(['Profile URL', data['html_url']])
+            tdata.append(['Avatar URL', data['avatar_url']])
             tdata.append(['Location', gitLoc])
-            tdata.append(['Personal URL', gitPersonalUrl])
+            tdata.append(['Company', gitCompany])
+            tdata.append(['Blog URL', gitBlog])
+            tdata.append(['Email', gitEmail])
+            tdata.append(['Bio', gitBio])
+            tdata.append(['Followers', data['followers']])
+            tdata.append(['ID', data['id']])
+            tdata.append(['Joined', gitJoin[0]])
+            tdata.append(['Updated', gitUpdate[0]])
             self.table(tdata, title='Github', store=False)
             # add the pertinent information to the database
-            if gitName and len(gitName.split()) == 2:
-                fname, lname = gitName.split()
-                pass#self.add_contacts(fname, lname, 'Github account')
-            else:
-                pass#self.add_contacts(None, gitName, 'Github account')
+            if not gitName: gitName = username
+            fname, mname, lname = self.parse_name(gitName)
+            self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title='Github account')
         else:
             self.output('Github username not found.')
 
     def bitbucket(self, username):
         self.verbose('Checking Bitbucket...')
-        # Bitbucket usernames are case sensitive, or at least will do a redirect if not using correct case
-        # First we just use the username entered by the recon-ng user
-        url = 'https://bitbucket.org/%s' % (username)
+        url = 'https://bitbucket.org/api/2.0/users/%s' % (username)
         resp = self.request(url)
-        bbName = re.search('<title>\s+(.+) &mdash', resp.text)
-        if not bbName:
-            # Before we give up on the user not being on Bitbucket, let's search
-            urlSearch = 'https://bitbucket.org/repo/all?name=%s' % (username)
-            respSearch = self.request(url)
-            bbUserName = re.search('<a class="repo-link" href="/(.+)/', respSearch.text)
-            if bbUserName:
-                url = 'https://bitbucket.org/%s' % bbUserName
-                resp = self.request(url)
-                # At least one repository found. Capture username case
-                bbName = re.search('<h1 title="Username:.+">(.+)</h1>', resp.text)
-        # If there is a user there, get info about their account
-        if bbName:
+        data = resp.json
+        if data.has_key('username'):
             self.alert('Bitbucket username found - (%s)' % url)
-            # extract data
-            bbJoin = re.search('Member since <time datetime="(.+)T', resp.text)
-            bbRepositories = re.findall('repo-link".+">(.+)</a></h1>', resp.text)
-            # establish non-match values
-            bbName = bbName.group(1)
-            bbJoin = bbJoin.group(1) if bbJoin else None
+            # extract data from the optional fields
+            bbName = data['display_name']
+            bbJoin = data['created_on'].split('T')
             # build and display a table of the results
             tdata = []
             tdata.append(['Resource', 'Bitbucket'])
-            tdata.append(['Name', bbName])
-            tdata.append(['Profile URL', url])
-            tdata.append(['Joined', bbJoin])
-            for bbRepos in bbRepositories:
-                tdata.append(['Repository', bbRepos])
+            tdata.append(['User Name', data['username']])
+            tdata.append(['Display Name', bbName])
+            tdata.append(['Location', data['location']])
+            tdata.append(['Joined', bbJoin[0]])
+            tdata.append(['Personal URL', data['website']])
+            tdata.append(['Bitbucket URL', data['links']['html']['href']])
+            #tdata.append(['Avatar URL', data['user']['avatar']]) # This works but is SOOOO long it messes up the table
             self.table(tdata, title='Bitbucket', store=False)
             # add the pertinent information to the database
-            if len(bbName.split()) == 2:
-                fname, lname = bbName.split()
-                pass#self.add_contacts(fname, lname, 'Bitbucket account')
-            else:
-                pass#self.add_contacts(None, bbName, 'Bitbucket account')
+            if not bbName: bbName = username
+            fname, mname, lname = self.parse_name(bbName)
+            self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title='Bitbucket account')
         else:
             self.output('Bitbucket username not found.')
+
 
     def sourceforge(self, username):
         self.verbose('Checking SourceForge...')
@@ -127,11 +115,9 @@ class Module(module.Module):
                 tdata.append(['Projects', sfProj])
             self.table(tdata, title='Sourceforge', store=False)
             # add the pertinent information to the database
-            if len(sfName.split()) == 2:
-                fname, lname = sfName.split()
-                pass#self.add_contacts(fname, lname, 'Sourceforge account')
-            else:
-                pass#self.add_contacts(None, sfName, 'Sourceforge account')
+            if not sfName: sfName = username
+            fname, mname, lname = self.parse_name(sfName)
+            self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title='Sourceforge account')
         else:
             self.output('Sourceforge username not found.')
 
@@ -160,14 +146,12 @@ class Module(module.Module):
             tdata.append(['Date Last', time.strftime('%Y-%m-%d', time.strptime(cpLast, '%B %d, %Y'))])
             cpCoordProject = re.findall('<a href="(http://.+)/" title=".+">(.+)<br /></a>', cpCoordinator)
             for cpReposUrl, cpRepos in cpCoordProject:
-            	tdata.append(['Project', '%s (%s)' % (cpRepos, cpReposUrl)])
+                tdata.append(['Project', '%s (%s)' % (cpRepos, cpReposUrl)])
             self.table(tdata, title='CodePlex', store=False)
             # add the pertinent information to the database
-            if len(cpName.split()) == 2:
-                fname, lname = cpName.split()
-                pass#self.add_contacts(fname, lname, 'CodePlex account')
-            else:
-                pass#self.add_contacts(None, cpName, 'CodePlex account')
+            if not cpName: cpName = username
+            fname, mname, lname = self.parse_name(cpName)
+            self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title='CodePlex account')
         else:
             self.output('CodePlex username not found.')
 
@@ -202,17 +186,14 @@ class Module(module.Module):
                 tdata.append(['Project', '%s (https://gitorious.org/%s)' % (gitoProjName, gitoProjUrl)])
             self.table(tdata, title='Gitorious', store=False)
             # add the pertinent information to the database
-            if gitoName and len(gitoName.split()) == 2:
-                fname, lname = gitoName.split()
-                pass#self.add_contacts(fname, lname, 'Gitorious account', gitoEmail)
-            else:
-                pass#self.add_contacts(None, gitoName, 'Gitorious account', gitoEmail)
+            if not gitoName: gitoName = username
+            fname, mname, lname = self.parse_name(gitoName)
+            self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title='Gitorious account', email=gitoEmail)
         else:
             self.output('Gitorious username not found.')
 
     def module_run(self):
         username = self.options['username']
-
         # Check each repository
         self.github(username)
         self.bitbucket(username)

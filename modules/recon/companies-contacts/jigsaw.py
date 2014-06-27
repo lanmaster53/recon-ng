@@ -7,30 +7,28 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
-        self.register_option('company_url', None, 'no', 'direct url to the company page (skip discovery)')
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Description': 'Harvests contacts from Data.com. Updates the \'contacts\' table with the results.',
                      'Comments': [
-                                  'Discovery does not always succeed due to alphabetical inconsistencies in the Data.com data sets. Use the following link to drill down to the target company and set the \'COMPANY_URL\' option.',
-                                  'Link: https://connect.data.com/'
+                                  'Discovery does not always succeed due to alphabetical inconsistencies in the Data.com data sets. Use \'https://connect.data.com/\' to drill down to the target company and set the \'SOURCE\' option as the URL.'
                                   ]
                      }
 
     def module_run(self, companies):
-        if self.options['company_url']:
-            self.get_contacts(self.options['company_url'])
-        else:
-            host = 'https://connect.data.com'
-            self.cnt = 0
-            self.new = 0
-            for company in companies:
+        self.cnt = 0
+        self.new = 0
+        host = 'https://connect.data.com'
+        for company in companies:
+            if 'connect.data.com' in company.lower():
+                self.get_contacts(company)
+            else:
                 self.heading(company, level=0)
                 resource = self.get_company_url(host, company)
                 if resource:
                     self.output('Gathering contacts...')
                     self.get_contacts(host + resource)
-            self.summarize(self.new, self.cnt)
+        self.summarize(self.new, self.cnt)
 
     def get_company_url(self, host, company):
         char = company[0].lower()
