@@ -9,7 +9,7 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params)
         self.register_option('filename', '%s/results.xml' % (self.workspace), 'yes', 'path and filename for report output')
-        self.register_option('tables', 'hosts, contacts, creds', 'yes', 'comma delineated list of tables')
+        self.register_option('tables', 'hosts, contacts, credentials', 'yes', 'comma delineated list of tables')
         self.info = {
                      'Name': 'XML Report Generator',
                      'Author': 'Eric Humphries (@e2fsck) and Tim Tomes (@LaNMaSteR53)',

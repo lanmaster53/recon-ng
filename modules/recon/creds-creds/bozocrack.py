@@ -7,11 +7,11 @@ import time
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
+        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL and password IS NULL')
         self.info = {
                      'Name': 'PyBozoCrack Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Searches Google for the value of a hash and tests for a match by hashing every word in the resulting page using all hashing algorithms supported by the \'hashlib\' library. Updates the \'creds\' table with the positive results.',
+                     'Description': 'Searches Google for the value of a hash and tests for a match by hashing every word in the resulting page using all hashing algorithms supported by the \'hashlib\' library. Updates the \'credentials\' table with the positive results.',
                      'Comments': [
                                   'Inspired by the PyBozoCrack script: https://github.com/ikkebr/PyBozoCrack'
                                   ]
@@ -33,7 +33,7 @@ class Module(module.Module):
             plaintext, hashtype = crack(hashstr, wordlist)
             if plaintext:
                 self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
-                self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
+                self.query('UPDATE credentials SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
             else:
                 self.verbose('Value not found for hash: %s' % (hashstr))
             # sleep to avoid lock-out

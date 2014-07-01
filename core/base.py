@@ -133,6 +133,11 @@ class Recon(framework.Framework):
                             __import__(mod_loadname)
                             self.loaded_category[mod_category].append(mod_loadname)
                             self.loaded_modules[mod_dispname] = mod_loadname
+                        # disable modules with missing dependencies
+                        except ImportError as e:
+                            # only show message in CONSOLE mode
+                            if self.mode == 0:
+                                self.alert('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_name, e.message[16:]))
                         except:
                             print('-'*60)
                             traceback.print_exc()
@@ -199,7 +204,7 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS creds (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS credentials (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
@@ -223,11 +228,7 @@ class Recon(framework.Framework):
             self.query('INSERT INTO contacts (first_name, middle_name, last_name, email, title, region, country) SELECT fname, mname, lname, email, title, region, country FROM %s' % (tmp))
             self.query('DROP TABLE %s' % (tmp))
             # rename pushpin table
-            tmp = self.random_str(20)
-            self.query('ALTER TABLE pushpin RENAME TO %s' % (tmp))
-            self.query('CREATE TABLE pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
-            self.query('INSERT INTO pushpins (source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time) SELECT source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time FROM %s' % (tmp))
-            self.query('DROP TABLE %s' % (tmp))
+            self.query('ALTER TABLE pushpin RENAME TO pushpins')
             # add new tables
             self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT)')
             self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT, description TEXT)')
@@ -240,6 +241,10 @@ class Recon(framework.Framework):
         if db_version(self) == 2:
             self.query('ALTER TABLE locations ADD COLUMN street_address TEXT')
             self.query('PRAGMA user_version = 3')
+        if db_version(self) == 3:
+            # rename creds table
+            self.query('ALTER TABLE creds RENAME TO credentials')
+            self.query('PRAGMA user_version = 4')
 
     #==================================================
     # SHOW METHODS

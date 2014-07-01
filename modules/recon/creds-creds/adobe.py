@@ -6,12 +6,12 @@ import json
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL AND password IS NULL AND type IS \'Adobe\'')
+        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL AND type IS \'Adobe\'')
         self.register_option('adobe_db', self.data_path+'/adobe_top_100.json', 'yes', 'JSON file containing the Adobe hashes and passwords')
         self.info = {
                      'Name': 'Adobe Hash Lookup',
                      'Author': 'Ethan Robish (@EthanRobish)',
-                     'Description': 'Identifies Adobe hashes in the \'creds\' table by cross referencing the leak ID, moves the Adobe hashes to the hash column, changes the hash type to \'Adobe\', and uses a local Adobe hash database to perform a reverse hash lookup. Updates the \'creds\' table with the positive results.',
+                     'Description': 'Identifies Adobe hashes in the \'credentials\' table by cross referencing the leak ID, moves the Adobe hashes to the hash column, changes the hash type to \'Adobe\', and uses a local Adobe hash database to perform a reverse hash lookup. Updates the \'credentials\' table with the positive results.',
                      'Comments': [
                                   'Hash types supported: Adobe\'s base64 format',
                                   'Hash database from: http://stricture-group.com/files/adobe-top100.txt'
@@ -24,7 +24,7 @@ class Module(module.Module):
         # move Adobe leaked hashes from the passwords column to the hashes column and set the hashtype to Adobe
         if self.options['source'] == 'default':
             self.verbose('Checking for Adobe hashes and updating the database accordingly...')
-            self.query('UPDATE creds SET hash=password, password=NULL, type=? WHERE hash IS NULL AND leak IS ?', (hashtype, adobe_leak_id,))
+            self.query('UPDATE credentials SET hash=password, password=NULL, type=? WHERE hash IS NULL AND leak IS ?', (hashtype, adobe_leak_id,))
         return hashtype
 
     def module_run(self, hashes, hashtype):
@@ -36,6 +36,6 @@ class Module(module.Module):
                 plaintext = adobe_db[hashstr]
                 self.alert('%s => %s' % (hashstr, plaintext))
                 # must reset the hashtype in order to compensate for all sources of input
-                self.query('UPDATE creds SET password=?, type=? WHERE hash=?', (plaintext, hashtype, hashstr))
+                self.query('UPDATE credentials SET password=?, type=? WHERE hash=?', (plaintext, hashtype, hashstr))
             else:
                 self.verbose('Value not found for hash: %s' % (hashstr))

@@ -10,7 +10,7 @@ class Module(module.Module):
         self.info = {
                      'Name': 'PwnedList Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'creds\' table.'
+                     'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'credentials\' table.'
                      }
 
     def module_run(self, accounts):
@@ -32,7 +32,7 @@ class Module(module.Module):
                 qty  = re.search('<li>We have found this account ([\w\s]*\d+) times since', content).group(1)
                 last = re.search('ago, on (.+?).</li>', content).group(1)
                 self.alert('%s => %s! Seen %s times, as recent as %s.' % (account, status, qty, last))
-                pwned += self.add_creds(account)
+                pwned += self.add_credentials(account)
             elif '<h4>Error!</h4>' in content:
                 self.error('Too many requests have been made.')
                 break

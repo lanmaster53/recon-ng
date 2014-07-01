@@ -28,7 +28,7 @@ class Module(module.Module):
         row_content = ''
         for row in rows:
             values = [self.to_unicode_str(x) if x != None else u'' for x in row]
-            if table == 'creds' and values[1] and self.options['sanitize']:
+            if table == 'credentials' and values[1] and self.options['sanitize']:
                 values[1] = '<omitted>'
             row_content += '<tr><td>%s</td></tr>\n' % ('</td><td>'.join([self.html_escape(x) for x in values]))
         table_content += '<div class="container">\n%s\n%s\n<table name="table" id="%s">\n%s\n%s</table>\n</div><br />\n' % (table_show, table_hide, table, row_headers, row_content)
@@ -50,17 +50,20 @@ class Module(module.Module):
         row_headers = '<tr><th>table</th><th>count</th></tr>'
         row_content = ''
         for table in tables:
-            count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
+            query = 'SELECT COUNT(*) FROM "%s"' % (table)
+            if table == 'leaks':
+                query = 'SELECT COUNT(DISTINCT leak) FROM credentials WHERE leak IS NOT NULL'
+            count = self.query(query)[0][0]
             row_content += '<tr><td>%s</td><td class="centered">%s</td></tr>\n' % (table, count)
         table_content += '<div class="container">\n%s\n%s\n<table id="summary">\n%s\n%s</table>\n</div><br />\n' % (table_show, table_hide, row_headers, row_content)
 
         # main content tables
-        tables = ['domains', 'companies', 'netblocks', 'locations', 'hosts', 'contacts', 'creds']
+        tables = ['domains', 'companies', 'netblocks', 'locations', 'hosts', 'contacts', 'credentials']
         for table in tables:
             table_content += self.build_table(table)
 
-        # table of leaks associated with creds
-        leaks = self.query('SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
+        # table of leaks associated with credentials
+        leaks = self.query('SELECT DISTINCT leak FROM credentials WHERE leak IS NOT NULL')
         if leaks:
             if self.query('SELECT COUNT(*) FROM leaks')[0][0]:
                 columns = [x[1] for x in self.query('PRAGMA table_info(leaks)')]

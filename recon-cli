@@ -1,7 +1,9 @@
-#!/usr/bin/python2.7 -B
+#!/usr/bin/env python
 
 import argparse
 import sys
+# prevent creation of compiled bytecode files
+sys.dont_write_bytecode = True
 # prep python path for base module
 sys.path.append(sys.path[0]+'/core/')
 sys.path.append(sys.path[0]+'/libs/')
@@ -65,7 +67,7 @@ description = '%%(prog)s - %s %s' % (base.__author__, base.__email__)
 parser = argparse.ArgumentParser(description=description, version=base.__version__)
 parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
 parser.add_argument('-C', help='runs a command at the global context', metavar='command', dest='global_commands' ,default=[], action='append')
-parser.add_argument('-c', help='runs a command at the module context', metavar='command', dest='module_commands' ,default=[], action='append')
+parser.add_argument('-c', help='runs a command at the module context (pre-run)', metavar='command', dest='module_commands' ,default=[], action='append')
 parser.add_argument('-G', help='show available global options', dest='gshow', default=False, action='store_true')
 parser.add_argument('-g', help='set a global option (can be used more than once)', metavar='name=value', dest='goptions', default=[], action='append')
 parser.add_argument('-M', help='show modules', dest='show_modules', default=False, action='store_true')

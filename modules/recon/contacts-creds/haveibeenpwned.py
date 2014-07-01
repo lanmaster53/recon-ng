@@ -8,7 +8,7 @@ class Module(module.Module):
         self.info = {
                      'Name': 'HaveIBeenPwned Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) & Tyler Halfpop (@tylerhalfpop)',
-                     'Description': 'Leverages HaveIBeenPwned.com to determine if email addresses are associated with leaked credentials'
+                     'Description': 'Leverages HaveIBeenPwned.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'credentials\' table.'
                      }
 
     def module_run(self, accounts):
@@ -27,6 +27,6 @@ class Module(module.Module):
                 continue
             else:
                 self.alert('%s => Found! Seen in the %s data dump.' % (account, resp.json[0]))
-                pwned += self.add_creds(account)
+                pwned += self.add_credentials(account)
             cnt += 1
         self.summarize(pwned, cnt)

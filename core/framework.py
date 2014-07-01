@@ -188,6 +188,22 @@ class Framework(cmd.Cmd):
                 obj = unicode(obj, encoding)
         return obj
 
+    def is_hash(self, hashstr):
+        hashdict = [
+            {'pattern': '[a-fA-F0-9]', 'len': 32, 'type': 'MD5'},
+            {'pattern': '[a-fA-F0-9]', 'len': 16, 'type': 'MySQL'},
+            {'pattern': '^\*[a-fA-F0-9]', 'len': 41, 'type': 'MySQL5'},
+            {'pattern': '[a-fA-F0-9]', 'len': 40, 'type': 'SHA1'},
+            {'pattern': '[a-fA-F0-9]', 'len': 56, 'type': 'SHA224'},
+            {'pattern': '[a-fA-F0-9]', 'len': 64, 'type': 'SHA256'},
+            {'pattern': '[a-fA-F0-9]', 'len': 96, 'type': 'SHA384'},
+            {'pattern': '[a-fA-F0-9]', 'len': 128, 'type': 'SHA512'}
+        ]
+        for hashitem in hashdict:
+            if len(hashstr) == hashitem['len'] and re.match(hashitem['pattern'], hashstr):
+                return hashitem['type']
+        return False
+
     def is_writeable(self, filename):
         try:
             fp = open(filename, 'a')
@@ -400,7 +416,7 @@ class Framework(cmd.Cmd):
             region = self.to_unicode(region),
             country = self.to_unicode(country),
             latitude = self.to_unicode(latitude),
-            longitude = self.to_unicode(longitude),
+            longitude = self.to_unicode(longitude)
         )
         return self.insert('hosts', data, ('host', 'ip_address'))
 
@@ -413,19 +429,26 @@ class Framework(cmd.Cmd):
             title = self.to_unicode(title),
             email = self.to_unicode(email),
             region = self.to_unicode(region),
-            country = self.to_unicode(country),
+            country = self.to_unicode(country)
         )
         return self.insert('contacts', data, ('first_name', 'middle_name', 'last_name', 'title', 'email'))
 
-    def add_creds(self, username, password=None, hashtype=None, leak=None):
+    def add_credentials(self, username, password=None, _hash=None, _type=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''
-        data = {}
-        data['username'] = self.to_unicode(username)
-        if password and not self.is_hash(password): data['password'] = self.to_unicode(password)
-        if password and self.is_hash(password): data['hash'] = self.to_unicode(password)
-        if hashtype: data['type'] = self.to_unicode(hashtype)
-        if leak: data['leak'] = self.to_unicode(leak)
-        return self.insert('creds', data, data.keys())
+        data = dict (
+            username = self.to_unicode(username),
+            password = self.to_unicode(password),
+            hash = self.to_unicode(_hash),
+            type = self.to_unicode(_type),
+            leak = self.to_unicode(leak)
+        )
+        if password and not _hash:
+            hash_type = self.is_hash(password)
+            if hash_type:
+                data['hash'] = self.to_unicode(password)
+                data['type'] = self.to_unicode(hash_type)
+                data['password'] = None
+        return self.insert('credentials', data, data.keys())
 
     def add_leaks(self, leak_id, description, source_refs, leak_type, title, import_date, leak_date, attackers, num_entries, score, num_domains_affected, attack_method, target_industries, password_hash, targets, media_refs):
         '''Adds a leak to the database and returns the affected row count.'''
@@ -461,7 +484,7 @@ class Framework(cmd.Cmd):
             message = self.to_unicode(message),
             latitude = self.to_unicode(latitude),
             longitude = self.to_unicode(longitude),
-            time = self.to_unicode(time),
+            time = self.to_unicode(time)
         )
         return self.insert('pushpins', data, data.keys())
 
@@ -833,7 +856,7 @@ class Framework(cmd.Cmd):
                 self.error('Cannot add records to dynamicly created tables.')
                 return
             columns = self.get_columns(table)
-            record = {}
+            record = []
             # build record from parameters
             if params:
                 # parse params into values by delim
@@ -841,27 +864,28 @@ class Framework(cmd.Cmd):
                 # validate parsed value input
                 if len(columns) == len(values):
                     # assign each value to a column
-                    for i in range(0,len(columns)):
-                        record[columns[i][0]] = values[i]
+                    for value in values:
+                        record.append(value)
                 else:
                     self.error('Columns and values length mismatch.')
                     return
-            # built record from interactive input
+            # build record from interactive input
             else:
                 for column in columns:
                     try:
                         # prompt user for data
-                        record[column[0]] = raw_input('%s (%s): ' % column)
+                        value = raw_input('%s (%s): ' % column)
+                        record.append(value)
                     except KeyboardInterrupt:
                         print('')
                         return
                     finally:
                         # ensure proper output for resource scripts
                         if Framework.script:
-                            print('%s' % (record[column[0]]))
+                            print('%s' % (value))
             # add record to the database
             func = getattr(self, 'add_' + table)
-            func(**record)
+            func(*record)
         else:
             self.help_add()
 

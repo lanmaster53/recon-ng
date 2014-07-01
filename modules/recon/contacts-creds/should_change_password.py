@@ -8,7 +8,7 @@ class Module(module.Module):
         self.info = {
                      'Name': 'Should I Change My Password Breach Check',
                      'Author': 'Dan Woodruff (@dewoodruff)',
-                     'Description': 'Leverages ShouldIChangeMyPassword.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'creds\' table.'
+                     'Description': 'Leverages ShouldIChangeMyPassword.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'credentials\' table.'
                      }
 
     def module_run(self, emails):
@@ -27,7 +27,7 @@ class Module(module.Module):
             if numFound > 0:
                 last = jsonobj['last']
                 self.alert('%s => Found! Seen %s times as recent as %s.' % (emailstr, numFound, last))
-                emailsFound += self.add_creds(emailstr)
+                emailsFound += self.add_credentials(emailstr)
                 total += 1
             else:
                 self.verbose('%s => safe.' % (emailstr))

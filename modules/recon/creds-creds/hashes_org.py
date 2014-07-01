@@ -7,11 +7,11 @@ import xml.etree.ElementTree
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM creds WHERE hash IS NOT NULL and password IS NULL')
+        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL and password IS NULL')
         self.info = {
                      'Name': 'Hashes.org Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and Mike Lisi (@MikeCodesThings)',
-                     'Description': 'Uses the Hashes.org API to perform a reverse hash lookup. Updates the \'creds\' table with the positive results.',
+                     'Description': 'Uses the Hashes.org API to perform a reverse hash lookup. Updates the \'credentials\' table with the positive results.',
                      'Comments': [
                                   'Hash types supported: MD5, MD4, NTLM, LM, DOUBLEMD5, TRIPLEMD5, MD5SHA1, SHA1, MYSQL5, SHA1MD5, DOUBLESHA1, RIPEMD160'
                                   ]
@@ -60,6 +60,6 @@ class Module(module.Module):
                     if hashstr != plaintext:
                         hashtype = request.find('type').text
                         self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
-                        self.query('UPDATE creds SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
+                        self.query('UPDATE credentials SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
                 else:
                     self.verbose('Value not found for hash: %s' % (hashstr))

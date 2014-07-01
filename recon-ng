@@ -1,7 +1,9 @@
-#!/usr/bin/python2.7 -B
+#!/usr/bin/env python
 
 import argparse
 import sys
+# prevent creation of compiled bytecode files
+sys.dont_write_bytecode = True
 # prep python path for base module
 sys.path.append(sys.path[0]+'/core/')
 sys.path.append(sys.path[0]+'/libs/')

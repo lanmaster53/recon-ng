@@ -49,29 +49,13 @@ class Module(framework.Framework):
 
     def html_escape(self, s):
         escapes = {
-            "&": "&amp;",
-            '"': "&quot;",
-            "'": "&apos;",
-            ">": "&gt;",
-            "<": "&lt;",
+            '&': '&amp;',
+            '"': '&quot;',
+            "'": '&apos;',
+            '>': '&gt;',
+            '<': '&lt;',
             }
-        return "".join(escapes.get(c,c) for c in s)
-
-    def is_hash(self, hashstr):
-        hashdict = [
-            {"pattern": "[a-fA-F0-9]", "len": 16},
-            {"pattern": "[a-fA-F0-9]", "len": 32},
-            {"pattern": "[a-fA-F0-9]", "len": 40},
-            {"pattern": "^\*[a-fA-F0-9]", "len": 41},
-            {"pattern": "[a-fA-F0-9]", "len": 56},
-            {"pattern": "[a-fA-F0-9]", "len": 64},
-            {"pattern": "[a-fA-F0-9]", "len": 96},
-            {"pattern": "[a-fA-F0-9]", "len": 128}
-        ]
-        for hashitem in hashdict:
-            if len(hashstr) == hashitem["len"] and re.match(hashitem["pattern"], hashstr):
-                return True
-        return False
+        return ''.join(escapes.get(c,c) for c in s)
 
     def aes_decrypt(self, ciphertext, key, iv):
         decoded = ciphertext.decode('base64')
@@ -101,9 +85,9 @@ class Module(framework.Framework):
         for i in range(brange):
             broad[3 - i/8] = broad[3 - i/8] + (1 << (i % 8))
         # print information, mapping integer lists to strings for easy printing
-        #mask = ".".join(map(str, mask))
-        net = ".".join(map(str, net))
-        broad = ".".join(map(str, broad))
+        #mask = '.'.join(map(str, mask))
+        net = '.'.join(map(str, net))
+        broad = '.'.join(map(str, broad))
         ips = []
         f = struct.unpack('!I',socket.inet_pton(socket.AF_INET,net))[0]
         l = struct.unpack('!I',socket.inet_pton(socket.AF_INET,broad))[0]

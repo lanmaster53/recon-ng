@@ -8,7 +8,7 @@ class Module(module.Module):
         self.info = {
                      'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API to fetch all credentials for a domain. Updates the \'creds\' table with the results.',
+                     'Description': 'Queries the PwnedList API to fetch all credentials for a domain. Updates the \'credentials\' table with the results.',
                      'Comments': [
                                   'API Query Cost: 10,000 queries per request plus 1 query for each account returned.'
                                   ]
@@ -41,13 +41,13 @@ class Module(module.Module):
                 if len(jsonobj['accounts']) == 0:
                     self.output('No results returned for \'%s\'.' % (domain))
                     break
-                # extract creds
+                # extract credentials
                 for cred in jsonobj['accounts']:
                     username = cred['plain']
                     password = self.aes_decrypt(cred['password'], decrypt_key, iv) if cred['password'] else cred['password']
                     leak = cred['leak_id']
                     cnt += 1
-                    new += self.add_creds(username, password, None, leak)
+                    new += self.add_credentials(username, password, None, leak)
                     # clean up the password for output
                     if not password: password = ''
                     self.output('%s:%s' % (username, password))

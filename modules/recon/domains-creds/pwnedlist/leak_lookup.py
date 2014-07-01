@@ -4,7 +4,7 @@ import module
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT leak FROM creds WHERE leak IS NOT NULL')
+        module.Module.__init__(self, params, query='SELECT DISTINCT leak FROM credentials WHERE leak IS NOT NULL')
         self.info = {
                      'Name': 'PwnedList - Leak Details Fetcher',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
