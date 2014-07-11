@@ -242,8 +242,10 @@ class Recon(framework.Framework):
             self.query('ALTER TABLE locations ADD COLUMN street_address TEXT')
             self.query('PRAGMA user_version = 3')
         if db_version(self) == 3:
-            # rename creds table
-            self.query('ALTER TABLE creds RENAME TO credentials')
+            # account for db_version bug
+            if 'creds' in self.get_tables():
+                # rename creds table
+                self.query('ALTER TABLE creds RENAME TO credentials')
             self.query('PRAGMA user_version = 4')
 
     #==================================================
