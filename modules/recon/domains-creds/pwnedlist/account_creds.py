@@ -45,6 +45,6 @@ class Module(module.Module):
                 leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))
                 cnt += 1
-                new += self.add_credentials(username, password, None, leak)
+                new += self.add_credentials(username=username, password=password, leak=leak)
                 self.query('DELETE FROM credentials WHERE username = \'%s\' and password IS NULL and hash IS NULL' % (username))
             self.summarize(new, cnt)

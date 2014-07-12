@@ -13,6 +13,7 @@ import sys
 import textwrap
 import time
 import traceback
+import urlparse
 # framework libs
 import aes
 import framework
@@ -239,6 +240,26 @@ class Module(framework.Framework):
         hm = hmac.new(secret.encode('utf-8'), msg, hashlib.sha1)
         payload['hmac'] = hm.hexdigest()
         return payload
+
+    def search_twitter_api(self, payload):
+        headers = {'Authorization': 'Bearer %s' % (self.get_twitter_oauth_token())}
+        url = 'https://api.twitter.com/1.1/search/tweets.json'
+        # count causes inconsistent results when applied
+        #payload['count'] = 50 # api stops paginating at count=90
+        results = []
+        while True:
+            resp = self.request(url, payload=payload, headers=headers)
+            jsonobj = resp.json
+            for item in ['error', 'errors']:
+                if item in jsonobj:
+                    raise framework.FrameworkException(jsonobj[item])
+            results += jsonobj['statuses']
+            if 'next_results' in jsonobj['search_metadata']:
+                max_id = urlparse.parse_qs(jsonobj['search_metadata']['next_results'][1:])['max_id'][0]
+                payload['max_id'] = max_id
+                continue
+            break
+        return results
 
     def search_shodan_api(self, query, limit=0):
         api_key = self.get_key('shodan_api')

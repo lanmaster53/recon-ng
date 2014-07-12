@@ -32,7 +32,7 @@ class Module(module.Module):
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (domain, resp.text))
                 continue
             # check for positive response
-            if not 'domain' in jsonobj:
+            if not jsonobj['num_entries']:
                 self.verbose('Domain \'%s\' has no publicly compromised accounts.' % (domain))
                 continue
             # handle output

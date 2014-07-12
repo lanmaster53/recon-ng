@@ -47,7 +47,7 @@ class Module(module.Module):
                     password = self.aes_decrypt(cred['password'], decrypt_key, iv) if cred['password'] else cred['password']
                     leak = cred['leak_id']
                     cnt += 1
-                    new += self.add_credentials(username, password, None, leak)
+                    new += self.add_credentials(username=username, password=password, leak=leak)
                     # clean up the password for output
                     if not password: password = ''
                     self.output('%s:%s' % (username, password))
