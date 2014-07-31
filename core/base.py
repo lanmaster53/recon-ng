@@ -333,6 +333,7 @@ class Recon(framework.Framework):
         try: y.cmdloop()
         except KeyboardInterrupt:
             print('')
+        if y.exit == 1: return True
     do_use = do_load
 
     #==================================================

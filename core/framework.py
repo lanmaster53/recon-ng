@@ -110,6 +110,7 @@ class Framework(cmd.Cmd):
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.rpc_cache = []
+        self.exit = 0
 
     #==================================================
     # CMD OVERRIDE METHODS
@@ -750,12 +751,13 @@ class Framework(cmd.Cmd):
     #==================================================
 
     def do_exit(self, params):
-        '''Exits current prompt level'''
+        '''Exits the framework'''
+        self.exit = 1
         return True
 
     # alias for exit
     def do_back(self, params):
-        '''Exits current prompt level'''
+        '''Exits the current context'''
         return True
 
     def do_set(self, params):
@@ -856,7 +858,9 @@ class Framework(cmd.Cmd):
                 self.error('Cannot add records to dynamicly created tables.')
                 return
             columns = self.get_columns(table)
-            record = []
+            # sanitize column names to avoid conflicts with builtins in add_* method
+            sanitize_column = lambda x: '_'+x if x in ['hash', 'type'] else x
+            record = {}
             # build record from parameters
             if params:
                 # parse params into values by delim
@@ -864,8 +868,8 @@ class Framework(cmd.Cmd):
                 # validate parsed value input
                 if len(columns) == len(values):
                     # assign each value to a column
-                    for value in values:
-                        record.append(value)
+                    for i in range(0,len(columns)):
+                        record[sanitize_column(columns[i][0])] = values[i]
                 else:
                     self.error('Columns and values length mismatch.')
                     return
@@ -875,7 +879,7 @@ class Framework(cmd.Cmd):
                     try:
                         # prompt user for data
                         value = raw_input('%s (%s): ' % column)
-                        record.append(value)
+                        record[sanitize_column(column[0])] = value
                     except KeyboardInterrupt:
                         print('')
                         return
@@ -885,7 +889,7 @@ class Framework(cmd.Cmd):
                             print('%s' % (value))
             # add record to the database
             func = getattr(self, 'add_' + table)
-            func(*record)
+            func(**record)
         else:
             self.help_add()
 
