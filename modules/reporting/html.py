@@ -41,7 +41,7 @@ class Module(module.Module):
         table_content = ''
 
         # html template
-        template = open('data/template_html.html').read()
+        template = open(self.data_path+'/template_html.html').read()
 
         # custom summary results table
         table_show = '<a id="show-summary" href="javascript:showhide(\'summary\');"><p>[+] Summary</p></a>'

@@ -55,10 +55,34 @@ class Recon(framework.Framework):
         self.load_modules()
         if self.mode == Mode.CONSOLE: self.show_banner()
         self.init_workspace('default')
+        self.send_analytics(self.modulename)
 
     #==================================================
     # SUPPORT METHODS
     #==================================================
+
+    def send_analytics(self, cd):
+        try:
+            cid_path = '%s/.cid' % (self.home)
+            if not os.path.exists(cid_path):
+                # create the cid and file
+                import uuid
+                with open(cid_path, 'w') as fp:
+                    fp.write(str(uuid.uuid4()))
+            with open(cid_path) as fp:
+                cid = fp.read().strip()
+            data = {
+                    'v': 1,
+                    'tid': 'UA-52269615-2',
+                    'cid': cid,
+                    't': 'screenview',
+                    'an': 'Recon-ng',
+                    'av': __version__,
+                    'cd': cd
+                    }
+            self.request('http://www.google-analytics.com/collect', payload=data)
+        except:
+            pass
 
     def version_check(self):
         try:
@@ -328,6 +352,7 @@ class Recon(framework.Framework):
                 print('%s%s' % ('-'*60, framework.Colors.N))
             self.error('ModuleError: %s' % (traceback.format_exc().splitlines()[-1]))
             return
+        self.send_analytics(modulename)
         # return the loaded module if in command line mode
         if self.mode == Mode.CLI: return y
         try: y.cmdloop()

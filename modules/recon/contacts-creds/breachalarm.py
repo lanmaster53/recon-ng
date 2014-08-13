@@ -6,16 +6,16 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
         self.info = {
-                     'Name': 'Should I Change My Password Breach Check',
+                     'Name': 'BreachAlarm Lookup',
                      'Author': 'Dan Woodruff (@dewoodruff)',
-                     'Description': 'Leverages ShouldIChangeMyPassword.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'credentials\' table.'
+                     'Description': 'Leverages breachalarm.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'credentials\' table.'
                      }
 
     def module_run(self, emails):
         total = 0
         emailsFound = 0
         # lookup each hash
-        url = 'https://shouldichangemypassword.com/check-single'
+        url = 'https://breachalarm.com/account-check'
         for emailstr in emails:
             # build the request
             payload = {'email': emailstr}
