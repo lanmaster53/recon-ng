@@ -4,7 +4,7 @@ import module
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL and password IS NULL')
+        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL')
         self.info = {
                      'Name': 'leakdb Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

@@ -7,7 +7,7 @@ import time
 class Module(module.Module):
 
     def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL and password IS NULL')
+        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL')
         self.info = {
                      'Name': 'PyBozoCrack Hash Lookup',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
@@ -43,6 +43,6 @@ def crack(hashstr, wordlist):
     for word in wordlist:
         for hashtype in hashlib.algorithms:
             func = getattr(hashlib, hashtype)
-            if func(word).hexdigest() == hashstr:
+            if func(word).hexdigest().lower() == hashstr.lower():
                 return word, hashtype
     return None, None

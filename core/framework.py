@@ -224,6 +224,21 @@ class Framework(cmd.Cmd):
                 dirnames.append(name)
         return dirnames
 
+    def parse_rowids(self, rowids):
+        xploded = []
+        rowids = [x.strip() for x in rowids.split(',')]
+        for rowid in rowids:
+            try:
+                if '-' in rowid:
+                    start = int(rowid.split('-')[0].strip())
+                    end = int(rowid.split('-')[-1].strip())
+                    xploded += range(start, end+1)
+                else:
+                    xploded.append(int(rowid))
+            except ValueError:
+                continue
+        return sorted(list(set(xploded)))
+
     #==================================================
     # OUTPUT METHODS
     #==================================================
@@ -905,21 +920,23 @@ class Framework(cmd.Cmd):
         if table:
             # get rowid from parameters
             if params:
-                rowid = params
+                rowids = self.parse_rowids(params)
             # get rowid from interactive input
             else:
                 try:
                     # prompt user for data
-                    rowid = raw_input('rowid (INT): ')
+                    params = raw_input('rowid(s) (INT): ')
+                    rowids = self.parse_rowids(params)
                 except KeyboardInterrupt:
                     print('')
                     return
                 finally:
                     # ensure proper output for resource scripts
                     if Framework.script:
-                        print('%s' % (rowid))
-            # delete the record from the database
-            self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
+                        print('%s' % (params))
+            # delete record(s) from the database
+            for rowid in rowids:
+                self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
         else:
             self.help_del()
 
@@ -1135,7 +1152,10 @@ class Framework(cmd.Cmd):
     def help_del(self):
         print(getattr(self, 'do_del').__doc__)
         print('')
-        print('Usage: del <table> [rowid]')
+        print('Usage: del <table> [rowid(s)]')
+        print('')
+        print('optional arguments:')
+        print('%srowid(s) => \',\' delimited values or \'-\' delimited ranges representing rowids' % (self.spacer))
         print('')
 
     #==================================================

@@ -7,35 +7,62 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL AND type IS \'Adobe\'')
-        self.register_option('adobe_db', self.data_path+'/adobe_top_100.json', 'yes', 'JSON file containing the Adobe hashes and passwords')
+        self.register_option('block_db', self.data_path+'/adobe_blocks.json', 'yes', 'JSON file containing known Adobe cipher blocks and plaintext')
         self.info = {
-                     'Name': 'Adobe Hash Lookup',
-                     'Author': 'Ethan Robish (@EthanRobish)',
-                     'Description': 'Identifies Adobe hashes in the \'credentials\' table by cross referencing the leak ID, moves the Adobe hashes to the hash column, changes the hash type to \'Adobe\', and uses a local Adobe hash database to perform a reverse hash lookup. Updates the \'credentials\' table with the positive results.',
+                     'Name': 'Adobe Hash Cracker',
+                     'Author': 'Ethan Robish (@EthanRobish) and Tim Tomes (@LaNMaSteR53)',
+                     'Description': 'Decrypts hashes leaked from the 2013 Adobe breach. First, the module cross references the leak ID to identify Adobe hashes in the \'password\' column of the \'creds\' table, moves the Adobe hashes to the \'hash\' column, and changes the \'type\' to \'Adobe\'. Second, the module attempts to crack the hashes by comparing the ciphertext\'s decoded cipher blocks to a local block lookup table (BLOCK_DB) of known cipher block values. Finally, the module updates the \'creds\' table with the results based on the level of success.',
                      'Comments': [
                                   'Hash types supported: Adobe\'s base64 format',
-                                  'Hash database from: http://stricture-group.com/files/adobe-top100.txt'
+                                  'Hash database from: http://stricture-group.com/files/adobe-top100.txt',
+                                  'A completely padded password indicates that the exact length is known.'
                                   ]
                      }
                      
     def module_pre(self):
         adobe_leak_id = '26830509422781c65919cba69f45d889'
-        hashtype = 'Adobe'
         # move Adobe leaked hashes from the passwords column to the hashes column and set the hashtype to Adobe
         if self.options['source'] == 'default':
             self.verbose('Checking for Adobe hashes and updating the database accordingly...')
-            self.query('UPDATE credentials SET hash=password, password=NULL, type=? WHERE hash IS NULL AND leak IS ?', (hashtype, adobe_leak_id,))
-        return hashtype
+            self.query('UPDATE credentials SET hash=password, password=NULL, type=? WHERE hash IS NULL AND leak IS ?', ('Adobe', adobe_leak_id))
 
-    def module_run(self, hashes, hashtype):
-        with open(self.options['adobe_db']) as db_file:
-            adobe_db = json.load(db_file)
-        # lookup each hash
+    def module_run(self, hashes):
+        # create block lookup table
+        with open(self.options['block_db']) as db_file:
+            block_db = json.load(db_file)
+        # decrypt the hashes
         for hashstr in hashes:
-            if hashstr in adobe_db:
-                plaintext = adobe_db[hashstr]
+            # attempt to decrypt the hash using the block lookup table
+            # decode the hash into a string of hex, ciphertext
+            hexstr = ''.join([hex(ord(c))[2:].zfill(2) for c in hashstr.decode('base64')])
+            # break up the ciphertext into 8 byte blocks
+            blocks = [hexstr[i:i+16] for i in range(0, len(hexstr), 16)]
+            plaintext = ''
+            partial = False
+            padded = False
+            # reverse known cipher blocks
+            for block in blocks:
+                # check the block lookup table
+                if block in block_db:
+                    plaintext += block_db[block]
+                    # flag as a partial crack
+                    partial = True
+                # pad the plaintext for unknown blocks
+                else:
+                    plaintext += '*'*8
+                    # flag as padded plaintext
+                    padded = True
+            # output the result based on the level of success
+            # partial crack
+            if partial and padded:
+                self.output('%s => %s' % (hashstr, plaintext))
+            # full crack
+            elif partial and not padded:
                 self.alert('%s => %s' % (hashstr, plaintext))
-                # must reset the hashtype in order to compensate for all sources of input
-                self.query('UPDATE credentials SET password=?, type=? WHERE hash=?', (plaintext, hashtype, hashstr))
+            # failed crack
             else:
                 self.verbose('Value not found for hash: %s' % (hashstr))
+                continue
+            # add the cracked/partially cracked hash to the database
+            # must reset the hashtype in order to compensate for all sources of input
+            self.query('UPDATE credentials SET password=?, type=? WHERE hash=?', (plaintext, 'Adobe', hashstr))
