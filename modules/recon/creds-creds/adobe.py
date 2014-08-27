@@ -20,11 +20,12 @@ class Module(module.Module):
                      }
                      
     def module_pre(self):
-        adobe_leak_id = '26830509422781c65919cba69f45d889'
+        adobe_leak_ids = ['26830509422781c65919cba69f45d889', 'bfc06ec52282cafa657d46b424f7e5fa']
         # move Adobe leaked hashes from the passwords column to the hashes column and set the hashtype to Adobe
         if self.options['source'] == 'default':
             self.verbose('Checking for Adobe hashes and updating the database accordingly...')
-            self.query('UPDATE credentials SET hash=password, password=NULL, type=? WHERE hash IS NULL AND leak IS ?', ('Adobe', adobe_leak_id))
+            for adobe_leak_id in adobe_leak_ids:
+                self.query('UPDATE credentials SET hash=password, password=NULL, type=? WHERE hash IS NULL AND leak IS ?', ('Adobe', adobe_leak_id))
 
     def module_run(self, hashes):
         # create block lookup table

@@ -367,6 +367,16 @@ class Module(framework.Framework):
     # SHOW METHODS
     #==================================================
 
+    def show_inputs(self):
+        if hasattr(self, 'default_source'):
+            try:
+                inputs = self.get_source(self.options['source'], self.default_source)
+                self.table([inputs], header=['Module Inputs'])
+            except Exception as e:
+                self.output(e.__str__())
+        else:
+            self.output('Source option not available for this module.')
+
     def show_source(self):
         for path in ['%s/modules/%s.py' % (x, self.modulename) for x in (self.app_path, self.home)]:
             if os.path.exists(path):

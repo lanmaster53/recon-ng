@@ -51,6 +51,7 @@ class Module(module.Module):
                 self.delete_key('rapportive_token')
                 session_token = self.get_rapportive_session_token()
                 headers = {'X-Session-Token' : session_token}
+                continue
             elif resp.status_code == 200:
                 contact = resp.json['contact']
                 last_name = contact['last_name']

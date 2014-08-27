@@ -1,7 +1,7 @@
-__version__ = '4.1.11'
+__version__ = '4.1.12'
 
 # ex. x.y.z
-# x - Incremented for changes requiring user interaction to migrate. (major revision)
+# x - Incremented for changes requiring migration. (major revision)
 # y - Incremented for the addition of new features. (minor revision)
 # z - Incremented for minor code changes and bug fixes. (hotfix)
 # Subordinate items reset to 0 when superior items increment.
