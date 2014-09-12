@@ -7,7 +7,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
-        self.register_option('keywords', None, 'no', 'additional keywords to identify company')
+        self.register_option('keywords', None, False, 'additional keywords to identify company')
         self.info = {
                      'Name': 'Jigsaw Contact Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

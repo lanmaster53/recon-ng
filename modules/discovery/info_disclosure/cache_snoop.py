@@ -9,8 +9,8 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params)
         # could look up the nameserver for each domain and loop
-        self.register_option('nameserver', self.global_options['nameserver'], 'yes', 'ip address of target\'s nameserver')
-        self.register_option('domains', self.data_path+'/av_domains.lst', 'yes', 'file containing the list of domains to snoop for')
+        self.register_option('nameserver', self.global_options['nameserver'], True, 'ip address of target\'s nameserver')
+        self.register_option('domains', self.data_path+'/av_domains.lst', True, 'file containing the list of domains to snoop for')
         self.info = {
                      'Name': 'DNS Cache Snooper',
                      'Author': 'thrapt (thrapt@gmail.com)',

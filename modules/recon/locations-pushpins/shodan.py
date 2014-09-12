@@ -6,8 +6,8 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.register_option('radius', 1, 'yes', 'radius in kilometers')
-        self.register_option('limit', 1, 'yes', 'limit number of api requests per input source (0 = unlimited)')
+        self.register_option('radius', 1, True, 'radius in kilometers')
+        self.register_option('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)')
         self.info = {
                      'Name': 'Shodan Geolocation Search',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

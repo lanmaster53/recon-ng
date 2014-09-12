@@ -6,11 +6,11 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('domain', None, 'no', 'target email domain')
-        self.register_option('pattern', '<fn>.<ln>', 'yes', 'pattern applied to mangle first and last name')
-        self.register_option('substitute', '-', 'yes', 'character to substitute for invalid email address characters')
-        self.register_option('max-length', 30, 'yes', 'maximum length of email address prefix or username')
-        self.register_option('overwrite', False, 'yes', 'overwrite existing email addresses')
+        self.register_option('domain', None, False, 'target email domain')
+        self.register_option('pattern', '<fn>.<ln>', True, 'pattern applied to mangle first and last name')
+        self.register_option('substitute', '-', True, 'character to substitute for invalid email address characters')
+        self.register_option('max-length', 30, True, 'maximum length of email address prefix or username')
+        self.register_option('overwrite', False, True, 'overwrite existing email addresses')
         self.info = {
                      'Name': 'Contact Name Mangler',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

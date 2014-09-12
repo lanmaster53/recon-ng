@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import re
 import sys
 # prevent creation of compiled bytecode files
 sys.dont_write_bytecode = True
@@ -22,7 +23,7 @@ def recon_ui(args):
             readline.parse_and_bind('bind ^I rl_complete')
         else:
             readline.parse_and_bind('tab: complete')
-        readline.set_completer_delims(readline.get_completer_delims().replace('/', ''))
+        readline.set_completer_delims(re.sub('[/-]', '', readline.get_completer_delims()))
         # for possible future use to format command completion output
         #readline.set_completion_display_matches_hook(display_hook)
     x = base.Recon(base.Mode.CONSOLE)

@@ -6,7 +6,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('contact', None, 'yes', 'jigsaw contact id')
+        self.register_option('contact', None, True, 'jigsaw contact id')
         self.info = {
                      'Name': 'Jigsaw - Single Contact Retriever',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

@@ -8,21 +8,21 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        self.register_option('download', True, 'yes', 'download discovered files')
-        self.register_option('protocol', 'http', 'yes', 'request protocol')
-        self.register_option('port', 80, 'yes', 'request port')
+        self.register_option('download', True, True, 'download discovered files')
+        self.register_option('protocol', 'http', True, 'request protocol')
+        self.register_option('port', 80, True, 'request port')
         self.info = {
-                     'Name': 'Interesting File Finder',
-                     'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), Jay Turla (@shipcod3), and Mark Jeffery',
-                     'Description': 'Checks hosts for interesting files in predictable locations.',
-                     'Comments': [
-                                  'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status, jmx-console/, admin-console/, web-console/',
-                                  'Google Dorks:',
-                                  '%sinurl:robots.txt ext:txt' % (self.spacer),
-                                  '%sinurl:elmah.axd ext:axd intitle:"Error log for"' % (self.spacer),
-                                  '%sinurl:server-status "Apache Status"' % (self.spacer),
-                                  ]
-                     }
+            'Name': 'Interesting File Finder',
+            'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), Jay Turla (@shipcod3), and Mark Jeffery',
+            'Description': 'Checks hosts for interesting files in predictable locations.',
+            'Comments': [
+                'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status, jmx-console/, admin-console/, web-console/',
+                'Google Dorks:',
+                '%sinurl:robots.txt ext:txt' % (self.spacer),
+                '%sinurl:elmah.axd ext:axd intitle:"Error log for"' % (self.spacer),
+                '%sinurl:server-status "Apache Status"' % (self.spacer),
+                ],
+            }
 
     def uncompress(self, data_gz):
         inbuffer = StringIO(data_gz)
@@ -43,18 +43,18 @@ class Module(module.Module):
         warnings.simplefilter("ignore")
         # (filename, string to search for to prevent false positive)
         filetypes = [
-                     ('robots.txt', 'user-agent:'),
-                     ('sitemap.xml', '<?xml'),
-                     ('sitemap.xml.gz', '<?xml'),
-                     ('crossdomain.xml', '<?xml'),
-                     ('phpinfo.php', 'phpinfo()'),
-                     ('test.php', 'phpinfo()'),
-                     ('elmah.axd', 'Error Log for'),
-                     ('server-status', '>Apache Status<'),
-                     ('jmx-console/', 'JBoss'), #JBoss 5.1.0.GA
-                     ('admin-console/', 'index.seam'), #JBoss 5.1.0.GA
-                     ('web-console/', 'Administration'), #JBoss 5.1.0.GA
-                     ]
+            ('robots.txt', 'user-agent:'),
+            ('sitemap.xml', '<?xml'),
+            ('sitemap.xml.gz', '<?xml'),
+            ('crossdomain.xml', '<?xml'),
+            ('phpinfo.php', 'phpinfo()'),
+            ('test.php', 'phpinfo()'),
+            ('elmah.axd', 'Error Log for'),
+            ('server-status', '>Apache Status<'),
+            ('jmx-console/', 'JBoss'), #JBoss 5.1.0.GA
+            ('admin-console/', 'index.seam'), #JBoss 5.1.0.GA
+            ('web-console/', 'Administration'), #JBoss 5.1.0.GA
+            ]
         cnt = 0
         for host in hosts:
             for (filename, verify) in filetypes:
@@ -75,7 +75,7 @@ class Module(module.Module):
                         # urls that end with '/' are not necessary to download
                         if download and not filename.endswith("/"):
                             filepath = '%s/%s_%s_%s' % (self.workspace, protocol, host, filename)
-                            dl = open(filepath, 'wb')
+                            dl = open(filepath, 'w')
                             dl.write(resp.text.encode(resp.encoding) if resp.encoding else resp.text)
                             dl.close()
                         cnt += 1

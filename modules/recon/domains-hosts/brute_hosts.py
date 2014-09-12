@@ -7,7 +7,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL')
-        self.register_option('wordlist', self.data_path+'/hostnames.txt', 'yes', 'path to hostname wordlist')
+        self.register_option('wordlist', self.data_path+'/hostnames.txt', True, 'path to hostname wordlist')
         self.info = {
                      'Name': 'DNS Hostname Brute Forcer',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

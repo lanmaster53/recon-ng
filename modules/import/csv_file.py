@@ -7,11 +7,11 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('filename', None, 'yes', 'path and filename for csv input')
-        self.register_option('column_separator', ',', 'yes', 'character that separates each column value')
-        self.register_option('quote_character', '', 'no', 'character that surrounds each column value')
-        self.register_option('has_header', True, 'yes', 'whether or not the first row in the csv file should be interpreted as column names')
-        self.register_option('table', None, 'yes', 'table to import the csv values')
+        self.register_option('filename', None, True, 'path and filename for csv input')
+        self.register_option('column_separator', ',', True, 'character that separates each column value')
+        self.register_option('quote_character', '', False, 'character that surrounds each column value')
+        self.register_option('has_header', True, True, 'whether or not the first row in the csv file should be interpreted as column names')
+        self.register_option('table', None, True, 'table to import the csv values')
         self.info = {
                      'Name': 'Advanced CSV File Importer',
                      'Author': 'Ethan Robish (@EthanRobish)',
@@ -168,4 +168,4 @@ class Module(module.Module):
 
             # save the mapping of option name to column index
             self.__csv_indices[option_name] = i
-            self.register_option(option_name, None, 'no', 'database column name where this csv column will be imported')
+            self.register_option(option_name, None, False, 'database column name where this csv column will be imported')

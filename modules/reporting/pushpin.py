@@ -9,11 +9,11 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('map_filename', '%s/pushpin_map.html' % (self.workspace), 'yes', 'path and filename for pushpin map report')
-        self.register_option('media_filename', '%s/pushpin_media.html' % (self.workspace), 'yes', 'path and filename for pushpin media report')
-        self.register_option('latitude', None, 'yes', 'latitude of the epicenter')
-        self.register_option('longitude', None, 'yes', 'longitude of the epicenter')
-        self.register_option('radius', None, 'yes', 'radius from the epicenter in kilometers')
+        self.register_option('map_filename', '%s/pushpin_map.html' % (self.workspace), True, 'path and filename for pushpin map report')
+        self.register_option('media_filename', '%s/pushpin_media.html' % (self.workspace), True, 'path and filename for pushpin media report')
+        self.register_option('latitude', None, True, 'latitude of the epicenter')
+        self.register_option('longitude', None, True, 'longitude of the epicenter')
+        self.register_option('radius', None, True, 'radius from the epicenter in kilometers')
         self.info = {
                      'Name': 'PushPin Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

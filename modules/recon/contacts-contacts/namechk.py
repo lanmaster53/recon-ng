@@ -8,7 +8,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('username', None, 'yes', 'username to validate')
+        self.register_option('username', None, True, 'username to validate')
         self.info = {
                      'Name': 'NameChk.com Username Validator',
                      'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',

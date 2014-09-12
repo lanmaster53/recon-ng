@@ -7,10 +7,10 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('filename', '%s/results.html' % (self.workspace), 'yes', 'path and filename for report output')
-        self.register_option('sanitize', True, 'yes', 'mask sensitive data in the report')
-        self.register_option('customer', None, 'yes', 'customer name for the report header')
-        self.register_option('creator', None, 'yes', 'creator name for the report footer')
+        self.register_option('filename', '%s/results.html' % (self.workspace), True, 'path and filename for report output')
+        self.register_option('sanitize', True, True, 'mask sensitive data in the report')
+        self.register_option('customer', None, True, 'customer name for the report header')
+        self.register_option('creator', None, True, 'creator name for the report footer')
         self.info = {
                      'Name': 'HTML Report Generator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

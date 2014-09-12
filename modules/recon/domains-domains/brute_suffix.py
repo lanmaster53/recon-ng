@@ -7,7 +7,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL')
-        self.register_option('suffixes', self.data_path+'/suffixes.txt', 'yes', 'path to public suffix wordlist')
+        self.register_option('suffixes', self.data_path+'/suffixes.txt', True, 'path to public suffix wordlist')
         self.info = {
                      'Name': 'DNS Public Suffix Brute Forcer',
                      'Author': 'Marcus Watson (@BranMacMuffin)',

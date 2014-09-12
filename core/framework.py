@@ -464,6 +464,9 @@ class Framework(cmd.Cmd):
                 data['hash'] = self.to_unicode(password)
                 data['type'] = self.to_unicode(hash_type)
                 data['password'] = None
+        # add email usernames to contacts
+        if username is not None and '@' in username:
+            self.add_contacts(first_name=None, last_name=None, title=None, email=username)
         return self.insert('credentials', data, data.keys())
 
     def add_leaks(self, leak_id, description, source_refs, leak_type, title, import_date, leak_date, attackers, num_entries, score, num_domains_affected, attack_method, target_industries, password_hash, targets, media_refs):
@@ -549,8 +552,8 @@ class Framework(cmd.Cmd):
     # OPTIONS METHODS
     #==================================================
 
-    def register_option(self, name, value, reqd, desc):
-        self.options.init_option(name=name.lower(), value=value, required=reqd, description=desc)
+    def register_option(self, name, value, required, description):
+        self.options.init_option(name=name.lower(), value=value, required=required, description=description)
         # needs to be optimized rather than ran on every register
         self.load_config()
 
@@ -558,8 +561,8 @@ class Framework(cmd.Cmd):
         for option in self.options:
             # if value type is bool or int, then we know the options is set
             if not type(self.options[option]) in [bool, int]:
-                if self.options.required[option].lower() == 'yes' and not self.options[option]:
-                    raise FrameworkException('Value required for the \'%s\' option.' % (option))
+                if self.options.required[option] is True and not self.options[option]:
+                    raise FrameworkException('Value required for the \'%s\' option.' % (option.upper()))
         return
 
     def load_config(self):
@@ -742,13 +745,13 @@ class Framework(cmd.Cmd):
             val_len = len(max([self.to_unicode_str(options[x]) for x in options], key=len))
             if val_len < 13: val_len = 13
             print('')
-            print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Req', 'Description'))
-            print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*3, self.ruler*11))
+            print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Required', 'Description'))
+            print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*8, self.ruler*11))
             for key in sorted(options):
                 value = options[key] if options[key] != None else ''
-                reqd = options.required[key]
+                reqd = 'no' if options.required[key] is False else 'yes'
                 desc = options.description[key]
-                print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), reqd.ljust(3), desc))
+                print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), self.to_unicode_str(reqd).ljust(8), desc))
             print('')
         else:
             print('')

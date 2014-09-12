@@ -6,7 +6,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL ORDER BY netblock')
-        self.register_option('limit', 1, 'yes', 'limit number of api requests per input source (0 = unlimited)')
+        self.register_option('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)')
         self.info = {
                      'Name': 'Shodan Network Enumerator',
                      'Author': 'Mike Siegel and Tim Tomes (@LaNMaSteR53)',

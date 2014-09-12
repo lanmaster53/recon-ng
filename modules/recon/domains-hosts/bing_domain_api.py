@@ -7,7 +7,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.register_option('limit', 0, 'yes', 'limit total number of api requests (0 = unlimited)')
+        self.register_option('limit', 0, True, 'limit total number of api requests (0 = unlimited)')
         self.info = {
                      'Name': 'Bing API Hostname Enumerator',
                      'Author': 'Marcus Watson (@BranMacMuffin)',

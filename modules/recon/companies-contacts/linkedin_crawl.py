@@ -9,8 +9,8 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('url', None, 'yes', 'public LinkedIn profile URL (seed)')
-        self.register_option('company', None, 'no', 'override the company name harvested from the seed \'URL\'')
+        self.register_option('url', None, True, 'public LinkedIn profile URL (seed)')
+        self.register_option('company', None, False, 'override the company name harvested from the seed \'URL\'')
         self.info = {
                      'Name': 'Linkedin Contact Crawler',
                      'Author':'Mike Larch',

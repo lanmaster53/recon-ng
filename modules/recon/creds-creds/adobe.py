@@ -7,7 +7,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL AND type IS \'Adobe\'')
-        self.register_option('block_db', self.data_path+'/adobe_blocks.json', 'yes', 'JSON file containing known Adobe cipher blocks and plaintext')
+        self.register_option('block_db', self.data_path+'/adobe_blocks.json', True, 'JSON file containing known Adobe cipher blocks and plaintext')
         self.info = {
                      'Name': 'Adobe Hash Cracker',
                      'Author': 'Ethan Robish (@EthanRobish) and Tim Tomes (@LaNMaSteR53)',

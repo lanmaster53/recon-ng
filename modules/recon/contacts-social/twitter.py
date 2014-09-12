@@ -6,8 +6,8 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('handle', '@lanmaster53', 'yes', 'target twitter handle')
-        self.register_option('until', None, 'no', 'date-time group in the form YYYY-MM-DD')
+        self.register_option('handle', '@lanmaster53', True, 'target twitter handle')
+        self.register_option('until', None, False, 'date-time group in the form YYYY-MM-DD')
         self.info = {
                      'Name': 'Twitter Handles',
                      'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',

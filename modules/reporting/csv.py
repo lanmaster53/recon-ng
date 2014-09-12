@@ -6,8 +6,8 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('filename', '%s/results.csv' % (self.workspace), 'yes', 'path and filename for output')
-        self.register_option('table', 'hosts', 'yes', 'source table of data to export')
+        self.register_option('filename', '%s/results.csv' % (self.workspace), True, 'path and filename for output')
+        self.register_option('table', 'hosts', True, 'source table of data to export')
         self.info = {
                      'Name': 'CSV File Creator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

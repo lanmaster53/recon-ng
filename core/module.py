@@ -30,7 +30,7 @@ class Module(framework.Framework):
         # register a data source option if a default query is specified in the module
         if query is not None:
             self.default_source = query
-            self.register_option('source', 'default', 'yes', 'source of input (see \'show info\' for details)')
+            self.register_option('source', 'default', True, 'source of input (see \'show info\' for details)')
 
     #==================================================
     # SUPPORT METHODS
@@ -370,8 +370,9 @@ class Module(framework.Framework):
     def show_inputs(self):
         if hasattr(self, 'default_source'):
             try:
+                self.validate_options()
                 inputs = self.get_source(self.options['source'], self.default_source)
-                self.table([inputs], header=['Module Inputs'])
+                self.table([[x] for x in inputs], header=['Module Inputs'])
             except Exception as e:
                 self.output(e.__str__())
         else:

@@ -7,7 +7,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.register_option('radius', 1, 'yes', 'radius in kilometers')
+        self.register_option('radius', 1, True, 'radius in kilometers')
         self.info = {
                      'Name': 'Picasa Geolocation Search',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

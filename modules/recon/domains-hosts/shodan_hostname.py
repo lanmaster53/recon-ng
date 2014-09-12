@@ -6,7 +6,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.register_option('limit', 1, 'yes', 'limit number of api requests per input source (0 = unlimited)')
+        self.register_option('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)')
         self.info = {
                      'Name': 'Shodan Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',

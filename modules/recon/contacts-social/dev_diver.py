@@ -9,7 +9,7 @@ class Module(module.Module):
 
     def __init__(self, params):
         module.Module.__init__(self, params)
-        self.register_option('username', 'lanmaster53', 'yes', 'username to validate')
+        self.register_option('username', 'lanmaster53', True, 'username to validate')
         self.info = {
                      'Name': 'Dev Diver Repository Activity Examiner',
                      'Author': 'Micah Hoffman (@WebBreacher)',

@@ -102,13 +102,13 @@ class Recon(framework.Framework):
             return True
 
     def init_global_options(self):
-        self.register_option('debug', False,  'yes', 'enable debugging output')
-        self.register_option('nameserver', '8.8.8.8', 'yes', 'nameserver for DNS interrogation')
-        self.register_option('proxy', None, 'no', 'proxy server (address:port)')
-        self.register_option('store_tables', True, 'yes', 'store module generated tables')
-        self.register_option('timeout', 10, 'yes', 'socket timeout (seconds)')
-        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), 'yes', 'user-agent string')
-        self.register_option('verbose', True,  'yes', 'enable verbose output')
+        self.register_option('debug', False, True, 'enable debugging output')
+        self.register_option('nameserver', '8.8.8.8', True, 'nameserver for DNS interrogation')
+        self.register_option('proxy', None, False, 'proxy server (address:port)')
+        self.register_option('store_tables', True, True, 'store module generated tables')
+        self.register_option('timeout', 10, True, 'socket timeout (seconds)')
+        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), True, 'user-agent string')
+        self.register_option('verbose', True, True, 'enable verbose output')
 
     def init_home(self):
         self.home = framework.Framework.home = '%s/.recon-ng' % os.path.expanduser('~')
