@@ -49,8 +49,8 @@ class Module(module.Module):
                     except KeyError: media_url = photo['url_t'].replace('_t.', '.')
                     thumb_url = photo['url_t']
                     message = photo['title']
-                    try: time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
-                    except ValueError: time = datetime(1970, 1, 1).strftime('%Y-%m-%d %H:%M:%S')
+                    try: time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S')
+                    except ValueError: time = datetime(1970, 1, 1)
                     new += self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                     count += 1
                 processed += len(jsonobj['photos']['photo'])

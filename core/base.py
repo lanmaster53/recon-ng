@@ -220,19 +220,19 @@ class Recon(framework.Framework):
         return True
 
     def create_db(self):
-        self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT, description TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS netblocks (netblock TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS locations (latitude TEXT, longitude TEXT, street_address TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS vulnerabilities (host TEXT, reference TEXT, example TEXT, publish_date TEXT, category TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS credentials (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS domains (domain TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS companies (company TEXT, description TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS netblocks (netblock TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS locations (latitude TEXT, longitude TEXT, street_address TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS vulnerabilities (host TEXT, reference TEXT, example TEXT, publish_date TEXT, category TEXT, status TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS credentials (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.query('PRAGMA user_version = 4')
+        self.query('PRAGMA user_version = 5')
 
     def migrate_db(self):
         db_version = lambda self: self.query('PRAGMA user_version')[0][0]
@@ -263,6 +263,7 @@ class Recon(framework.Framework):
             self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT)')
             self.query('PRAGMA user_version = 2')
         if db_version(self) == 2:
+            # add street_address column to locations table
             self.query('ALTER TABLE locations ADD COLUMN street_address TEXT')
             self.query('PRAGMA user_version = 3')
         if db_version(self) == 3:
@@ -271,6 +272,13 @@ class Recon(framework.Framework):
                 # rename creds table
                 self.query('ALTER TABLE creds RENAME TO credentials')
             self.query('PRAGMA user_version = 4')
+        if db_version(self) == 4:
+            # add status column to vulnerabilities table
+            self.query('ALTER TABLE vulnerabilities ADD COLUMN status TEXT')
+            # add module column to all tables
+            for table in self.get_tables():
+                self.query('ALTER TABLE %s ADD COLUMN module TEXT' % (table))
+            self.query('PRAGMA user_version = 5')
 
     #==================================================
     # SHOW METHODS

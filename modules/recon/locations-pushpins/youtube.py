@@ -47,7 +47,7 @@ class Module(module.Module):
                     message = video['title']['$t']
                     latitude = video['georss$where']['gml$Point']['gml$pos']['$t'].split()[0]
                     longitude = video['georss$where']['gml$Point']['gml$pos']['$t'].split()[1]
-                    time = datetime.strptime(video['published']['$t'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y-%m-%d %H:%M:%S')
+                    time = datetime.strptime(video['published']['$t'], '%Y-%m-%dT%H:%M:%S.%fZ')
                     new += self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                     count += 1
                 processed += len(jsonobj['feed']['entry'])

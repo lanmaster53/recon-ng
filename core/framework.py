@@ -106,6 +106,7 @@ class Framework(cmd.Cmd):
         self.modulename = params[1]
         self.ruler = '-'
         self.spacer = '  '
+        self.time_format = '%Y-%m-%d %H:%M:%S'
         self.nohelp = '%s[!] No help on %%s%s' % (Colors.R, Colors.N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
@@ -403,14 +404,15 @@ class Framework(cmd.Cmd):
         )
         return self.insert('locations', data, data.keys())
 
-    def add_vulnerabilities(self, host, reference, example, publish_date, category):
+    def add_vulnerabilities(self, host, reference, example, publish_date, category, status=None):
         '''Adds a vulnerability to the database and returns the affected row count.'''
         data = dict(
             host = self.to_unicode(host),
             reference = self.to_unicode(reference),
             example = self.to_unicode(example),
-            publish_date = self.to_unicode(publish_date),
-            category = self.to_unicode(category)
+            publish_date = self.to_unicode(publish_date.strftime(self.time_format)),
+            category = self.to_unicode(category.upper()),
+            status = self.to_unicode(status.lower())
         )
         return self.insert('vulnerabilities', data, data.keys())
 
@@ -503,7 +505,7 @@ class Framework(cmd.Cmd):
             message = self.to_unicode(message),
             latitude = self.to_unicode(latitude),
             longitude = self.to_unicode(longitude),
-            time = self.to_unicode(time)
+            time = self.to_unicode(time.strftime(self.time_format))
         )
         return self.insert('pushpins', data, data.keys())
 
@@ -512,12 +514,14 @@ class Framework(cmd.Cmd):
         table - the table to insert the data into
         data - the information to insert into the database table in the form of a dictionary
                where the keys are the column names and the values are the column values
-        unique_columns - a list of column names that should be used to determine if the.
+        unique_columns - a list of column names that should be used to determine if the
                          information being inserted is unique'''
-
+        # set module to the calling module
+        data['module'] = self.modulename.split('/')[-1]
         # sanitize the inputs to remove NoneTypes, blank strings, and zeros
         columns = [x for x in data.keys() if data[x]]
-        unique_columns = [x for x in unique_columns if x in columns]
+        # make sure that module is not seen as a unique column
+        unique_columns = [x for x in unique_columns if x in columns and x != 'module']
         # exit if there is nothing left to insert
         if not columns: return 0
 
@@ -621,13 +625,17 @@ class Framework(cmd.Cmd):
 
     def query_keys(self, query, values=()):
         path = '%s/keys.db' % (self.home)
-        return self.query(query, values, path)
+        result = self.query(query, values, path)
+        # filter out tokens when not called from the get_key method
+        if type(result) is list and 'get_key' not in [x[3] for x in inspect.stack()]:
+            result = [x for x in result if not x[0].endswith('_token')]
+        return result
 
     def list_keys(self):
         keys = self.query_keys('SELECT * FROM keys')
         tdata = []
         for key in sorted(keys):
-            tdata.append([key[0], key[1]])
+            tdata.append(key)
         if tdata:
             self.table(tdata, header=['Name', 'Value'])
 
@@ -805,15 +813,16 @@ class Framework(cmd.Cmd):
         arg = params.pop(0).lower()
         if arg == 'list':
             self.list_keys()
-        elif arg in ['add', 'update']:
+        elif arg == 'add':
             if len(params) == 2:
-                self.add_key(params[0], params[1])
-            else: print('Usage: keys [add|update] <name> <value>')
+                if self.add_key(params[0], params[1]):
+                    self.output('Key \'%s\' added.' % (params[0]))
+            else: print('\nUsage: keys add <name> <value>\n')
         elif arg == 'delete':
             if len(params) == 1:
                 if self.delete_key(params[0]):
                     self.output('Key \'%s\' deleted.' % (params[0]))
-            else: print('Usage: keys delete <name>')
+            else: print('\nUsage: keys delete <name>\n')
         else:
             self.help_keys()
 
@@ -875,7 +884,7 @@ class Framework(cmd.Cmd):
             if not hasattr(self, 'add_' + table):
                 self.error('Cannot add records to dynamicly created tables.')
                 return
-            columns = self.get_columns(table)
+            columns = [x for x in self.get_columns(table) if x[0] != 'module']
             # sanitize column names to avoid conflicts with builtins in add_* method
             sanitize_column = lambda x: '_'+x if x in ['hash', 'type'] else x
             record = {}
@@ -1070,7 +1079,7 @@ class Framework(cmd.Cmd):
     def help_keys(self):
         print(getattr(self, 'do_keys').__doc__)
         print('')
-        print('Usage: keys [list|add|delete|update]')
+        print('Usage: keys [list|add|delete]')
         print('')
 
     def help_load(self):
@@ -1167,7 +1176,7 @@ class Framework(cmd.Cmd):
 
     def complete_keys(self, text, line, *ignored):
         args = line.split()
-        options = ['list', 'add', 'delete', 'update']
+        options = ['list', 'add', 'delete']
         if 1 < len(args) < 4:
             if args[1].lower() in options[1:]:
                 return [x[0] for x in self.query_keys('SELECT name FROM keys') if x[0].startswith(text)]

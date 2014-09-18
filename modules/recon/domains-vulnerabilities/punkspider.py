@@ -1,7 +1,6 @@
 import module
 # unique to module
-import urllib
-import json
+from datetime import datetime
 import re
 
 class Module(module.Module):
@@ -28,27 +27,25 @@ class Module(module.Module):
             while True:
                 payload['pageNumber'] = page
                 resp = self.request(url, method='POST', payload=payload, content='json')
-                jsonobj = resp.json
-                results = jsonobj['output']['domainSummaryDTOs']
+                results = resp.json['output']['domainSummaryDTOs']
                 if not results: break
                 for result in results:
                     #if any([result[x] for x in vuln_types]):
-                    hostname = re.search('//(.+?)/', result['id']).group(1)
-                    vuln_path = '.'.join(hostname.split('.')[::-1])
-                    vuln_url = 'http://punkspider.hyperiongray.com/service/search/detail/%s' % (vuln_path)
-                    resp = self.request(vuln_url)
-                    jsonobj = resp.json
-                    vulns = jsonobj['data']
+                    data = {}
+                    data['host'] = re.search('//(.+?)/', result['id']).group(1)
+                    data['reference'] = 'http://punkspider.hyperiongray.com/service/search/detail/%s' % ('.'.join(data['host'].split('.')[::-1]))
+                    resp = self.request(data['reference'])
+                    vulns = resp.json['data']
                     for vuln in vulns:
                         vulnerable = True
-                        category = vuln['bugType'].upper()
-                        self.output('Host: %s' % (hostname))
-                        self.output('Attack: %s' % (vuln['vulnerabilityUrl']))
-                        self.output('Parameter: %s' % (vuln['parameter']))
-                        self.output('Published: %s' % (result['timestamp']))
-                        self.output('Category: %s' % (category))
+                        data['publish_date'] = datetime.strptime(result['timestamp'], '%a %b %d %H:%M:%S %Z %Y')
+                        data['category'] = vuln['bugType'].upper()
+                        data['status'] = 'unknown'
+                        data['example'] = vuln['vulnerabilityUrl']
+                        for key in sorted(data.keys()):
+                            self.output('%s: %s' % (key.title(), data[key]))
                         print(self.ruler*50)
-                        new += self.add_vulnerabilities(hostname, 'http://punkspider.hyperiongray.com/', vuln['vulnerabilityUrl'], result['timestamp'], category)
+                        new += self.add_vulnerabilities(**data)
                         cnt += 1
                 page += 1
             if not vulnerable:

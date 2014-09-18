@@ -37,6 +37,6 @@ class Module(module.Module):
                 message = 'Hostname: %s | City: %s, %s | OS: %s' % (hostname, host['location']['city'], host['location']['country_name'], os)
                 latitude = host['location']['latitude']
                 longitude = host['location']['longitude']
-                time = datetime.strptime(host['timestamp'], '%Y-%m-%dT%H:%M:%S.%f').strftime('%Y-%m-%d %H:%M:%S')
+                time = datetime.strptime(host['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
                 new += self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
         self.summarize(new, len(results))
