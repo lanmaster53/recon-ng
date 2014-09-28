@@ -23,11 +23,11 @@ class Module(module.Module):
         # search for mentions tweeted by the given handle
         self.output('Searching for users mentioned by the given handle...')
         tdata = self.search_handle_tweets()
-        if tdata: self.table(tdata, header=header, store=False)
+        if tdata: self.table(tdata, header=header)
         # search for tweets mentioning the given handle
         self.output('Searching for users who mentioned the given handle...')
         tdata = self.search_handle_mentions()
-        if tdata: self.table(tdata, header=header, store=False)
+        if tdata: self.table(tdata, header=header)
 
     def handle_options(self):
         '''Method built to do quick and dirty parsing of options supplied by the user.

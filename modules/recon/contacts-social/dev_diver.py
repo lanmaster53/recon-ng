@@ -49,7 +49,7 @@ class Module(module.Module):
             tdata.append(['ID', data['id']])
             tdata.append(['Joined', gitJoin[0]])
             tdata.append(['Updated', gitUpdate[0]])
-            self.table(tdata, title='Github', store=False)
+            self.table(tdata, title='Github')
             # add the pertinent information to the database
             if not gitName: gitName = username
             fname, mname, lname = self.parse_name(gitName)
@@ -77,7 +77,7 @@ class Module(module.Module):
             tdata.append(['Personal URL', data['website']])
             tdata.append(['Bitbucket URL', data['links']['html']['href']])
             #tdata.append(['Avatar URL', data['user']['avatar']]) # This works but is SOOOO long it messes up the table
-            self.table(tdata, title='Bitbucket', store=False)
+            self.table(tdata, title='Bitbucket')
             # add the pertinent information to the database
             if not bbName: bbName = username
             fname, mname, lname = self.parse_name(bbName)
@@ -113,7 +113,7 @@ class Module(module.Module):
             tdata.append(['Gender', sfGender])
             for sfProj in sfProjects:
                 tdata.append(['Projects', sfProj])
-            self.table(tdata, title='Sourceforge', store=False)
+            self.table(tdata, title='Sourceforge')
             # add the pertinent information to the database
             if not sfName: sfName = username
             fname, mname, lname = self.parse_name(sfName)
@@ -147,7 +147,7 @@ class Module(module.Module):
             cpCoordProject = re.findall('<a href="(http://.+)/" title=".+">(.+)<br /></a>', cpCoordinator)
             for cpReposUrl, cpRepos in cpCoordProject:
                 tdata.append(['Project', '%s (%s)' % (cpRepos, cpReposUrl)])
-            self.table(tdata, title='CodePlex', store=False)
+            self.table(tdata, title='CodePlex')
             # add the pertinent information to the database
             if not cpName: cpName = username
             fname, mname, lname = self.parse_name(cpName)
@@ -184,7 +184,7 @@ class Module(module.Module):
             tdata.append(['Personal URL', gitoPersonalUrl])
             for gitoProjUrl, gitoProjName in gitoProjects:
                 tdata.append(['Project', '%s (https://gitorious.org/%s)' % (gitoProjName, gitoProjUrl)])
-            self.table(tdata, title='Gitorious', store=False)
+            self.table(tdata, title='Gitorious')
             # add the pertinent information to the database
             if not gitoName: gitoName = username
             fname, mname, lname = self.parse_name(gitoName)

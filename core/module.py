@@ -139,50 +139,6 @@ class Module(framework.Framework):
         method('%d total (%d new) items found.' % (total, new))
 
     #==================================================
-    # DATABASE METHODS
-    #==================================================
-
-    def add_table(self, table, data, header=[]):
-        '''Adds a table to the database and populates it with data.
-        table - the name of the table to create.
-        header - whether or not the first row of tdata consists of headers.
-        data - the information to insert into the database table.'''
-
-        tdata = list(data)
-        if header:
-            tdata.insert(0, header)
-        table = self.to_unicode_str(table).lower()
-        tables = self.get_tables()
-        if table in tables:
-            raise framework.FrameworkException('Table \'%s\' already exists or is a reserved table name.' % (table))
-        # create database table
-        if header:
-            rdata = tdata.pop(0)
-            columns = [self.to_unicode_str(x).lower() for x in rdata]
-        else:
-            columns = ['column_%s' % (i) for i in range(0,len(tdata[0]))]
-        metadata = ', '.join(['\'%s\' TEXT' % (x) for x in columns])
-        self.query('CREATE TABLE IF NOT EXISTS \'%s\' (%s)' % (table, metadata))
-        # insert rows into database table
-        for rdata in tdata:
-            data = {}
-            for i in range(0, len(columns)):
-                data[columns[i]] = self.to_unicode(rdata[i])
-            self.insert(table, data)
-        self.verbose('\'%s\' table created.' % (table))
-
-    def add_column(self, table, column):
-        '''Adds a column to a database table.'''
-        column = self.to_unicode_str(column).lower()
-        columns = [x[0] for x in self.get_columns(table)]
-        if not columns:
-            raise framework.FrameworkException('Table \'%s\' does not exist.' % (table))
-        if column in columns:
-            raise framework.FrameworkException('Column \'%s\' already exists in table \'%s\'.' % (column, table))
-        self.query('ALTER TABLE "%s" ADD COLUMN \'%s\' TEXT' % (table, column))
-        self.verbose('\'%s\' column created in the \'%s\' table.' % (column, table))
-
-    #==================================================
     # OPTIONS METHODS
     #==================================================
 

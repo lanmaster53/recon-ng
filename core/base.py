@@ -274,10 +274,12 @@ class Recon(framework.Framework):
             self.query('PRAGMA user_version = 4')
         if db_version(self) == 4:
             # add status column to vulnerabilities table
-            self.query('ALTER TABLE vulnerabilities ADD COLUMN status TEXT')
+            if 'status' not in [x[0] for x in self.get_columns('vulnerabilities')]:
+                self.query('ALTER TABLE vulnerabilities ADD COLUMN status TEXT')
             # add module column to all tables
-            for table in self.get_tables():
-                self.query('ALTER TABLE %s ADD COLUMN module TEXT' % (table))
+            for table in ['domains', 'companies', 'netblocks', 'locations', 'vulnerabilities', 'ports', 'hosts', 'contacts', 'credentials', 'leaks', 'pushpins']:
+                if 'module' not in [x[0] for x in self.get_columns(table)]:
+                    self.query('ALTER TABLE %s ADD COLUMN module TEXT' % (table))
             self.query('PRAGMA user_version = 5')
 
     #==================================================
