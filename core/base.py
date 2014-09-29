@@ -133,10 +133,10 @@ class Recon(framework.Framework):
             except:
                 self.error('Corrupt key file. Manual migration required.')
 
-    def load_modules(self, reload=False):
+    def load_modules(self):
         self.loaded_category = {}
         self.loaded_modules = framework.Framework.loaded_modules
-        if reload: self.output('Reloading...')
+        # crawl the module directory and build the module tree
         for path in ['%s/modules/' % x for x in (self.app_path, self.home)]:
             for dirpath, dirnames, filenames in os.walk(path):
                 # remove hidden files and directories
@@ -144,29 +144,13 @@ class Recon(framework.Framework):
                 dirnames[:] = [d for d in dirnames if not d[0] == '.']
                 if len(filenames) > 0:
                     mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
-                    if not mod_category in self.loaded_category: self.loaded_category[mod_category] = []
+                    if not mod_category in self.loaded_category: self.loaded_category[mod_category] = 0
                     for filename in [f for f in filenames if f.endswith('.py')]:
-                        # this (as opposed to sys.path.append) allows for module reloading
+                        self.loaded_category[mod_category] += 1
                         mod_name = filename.split('.')[0]
                         mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
-                        mod_loadname = mod_dispname.replace('/', '_')
                         mod_loadpath = os.path.join(dirpath, filename)
-                        mod_file = open(mod_loadpath)
-                        try:
-                            imp.load_source(mod_loadname, mod_loadpath, mod_file)
-                            __import__(mod_loadname)
-                            self.loaded_category[mod_category].append(mod_loadname)
-                            self.loaded_modules[mod_dispname] = mod_loadname
-                        # disable modules with missing dependencies
-                        except ImportError as e:
-                            # only show message in CONSOLE mode
-                            if self.mode == 0:
-                                self.alert('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_name, e.message[16:]))
-                        except:
-                            print('-'*60)
-                            traceback.print_exc()
-                            print('-'*60)
-                            self.error('Unable to load module: %s' % (mod_name))
+                        self.loaded_modules[mod_dispname] = mod_loadpath
 
     def menu_egg(self, params):
         eggs = [
@@ -292,7 +276,7 @@ class Recon(framework.Framework):
         print(banner)
         print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (framework.Colors.O, self.name, __version__, __author__, framework.Colors.N), banner_len+8)) # +8 compensates for the color bytes
         print('')
-        counts = [(len(self.loaded_category[x]), x) for x in self.loaded_category]
+        counts = [(self.loaded_category[x], x) for x in self.loaded_category]
         count_len = len(max([str(x[0]) for x in counts], key=len))
         for count in sorted(counts, reverse=True):
             cnt = '[%d]' % (count[0])
@@ -304,10 +288,6 @@ class Recon(framework.Framework):
     #==================================================
     # COMMAND METHODS
     #==================================================
-
-    def do_reload(self, params):
-        '''Reloads all modules'''
-        self.load_modules(True)
 
     def do_workspaces(self, params):
         '''Manages workspaces'''
@@ -350,21 +330,34 @@ class Recon(framework.Framework):
                 self.output('Multiple modules match \'%s\'.' % params)
                 self.show_modules(modules)
             return
-        modulename = modules[0]
-        loadedname = self.loaded_modules[modulename]
-        prompt = self.prompt_template % (self.prompt[:-3], modulename.split('/')[-1])
-        # notify the user if runtime errors exist in the module
-        try: y = sys.modules[loadedname].Module((prompt, modulename))
-        except Exception:
+        mod_name = modules[0]
+        mod_loadname = 'recon_exec'
+        mod_loadpath = self.loaded_modules[mod_name]
+        mod_file = open(mod_loadpath)
+        try:
+            # import the module into memory
+            imp.load_source(mod_loadname, mod_loadpath, mod_file)
+            __import__(mod_loadname)
+            prompt = self.prompt_template % (self.prompt[:-3], mod_name.split('/')[-1])
+            # create a Module object from the imported module
+            y = sys.modules[mod_loadname].Module((prompt, mod_name))
+        # notify the user of missing dependencies
+        except ImportError as e:
+            self.error('Missing dependency: \'%s\'' % (e.message[16:]))
+            return
+        # notify the user of any other loading or runtime errors
+        except:
             if self.options['debug']:
                 print('%s%s' % (framework.Colors.R, '-'*60))
                 traceback.print_exc()
                 print('%s%s' % ('-'*60, framework.Colors.N))
             self.error('ModuleError: %s' % (traceback.format_exc().splitlines()[-1]))
             return
-        self.send_analytics(modulename)
+        # send analytics information
+        self.send_analytics(mod_name)
         # return the loaded module if in command line mode
         if self.mode == Mode.CLI: return y
+        # begin a command loop
         try: y.cmdloop()
         except KeyboardInterrupt:
             print('')

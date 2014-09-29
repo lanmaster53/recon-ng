@@ -52,7 +52,7 @@ class Module(module.Module):
                 middle = company.lower()
                 order = [first, middle, last]
                 ordered = sorted(order)
-                if order == ordered:
+                if middle in first or order == ordered:
                     match = True
                     resource = tag[0]
                     self.output('Alphabetical range identified: %s' % (tag[1]))

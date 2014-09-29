@@ -137,7 +137,8 @@ class Module(module.Module):
             # get each line from the file and separate it into columns based on sep
             for row in csvreader:
                 # append all lines as-is case-wise
-                values.append([value.strip() for value in row])
+                # unicode(str, errors='ignore') causes all invalid characters to be stripped out
+                values.append([unicode(value.strip(), errors='ignore') for value in row])
                 # ensure the number of columns in each row is the same as the previous row
                 if len(values) > 1:
                     assert len(values[-1]) == len(values[-2])

@@ -9,10 +9,10 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
         self.info = {
-                     'Name': 'Facebook Contact Enumerator',
-                     'Author': 'Quentin Kaiser (@qkaiser) and Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from Facebook.com. Updates the \'contacts\' table with the results.',
-                     }
+            'Name': 'Facebook Contact Enumerator',
+            'Author': 'Quentin Kaiser (@qkaiser) and Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Harvests contacts from Facebook.com. Updates the \'contacts\' table with the results.',
+        }
 
     def module_run(self, companies):
         self.br = self.browser()
@@ -87,20 +87,20 @@ class Module(module.Module):
         # get first results from the page itself
         resp = self.br.open('/search/%s/employees/present' % (urllib.pathname2url(company)))
         content = resp.read()
-        self.extract_entities(content)
+        self.extract_entities(content.decode('utf-8'))
         # find bigpipe information
-        bigpipe = re.search(r'\{"view":"[^"]*","encoded_query":"([^"]*)","encoded_title":"([^"]*)","ref":"[^"]*","logger_source":"[^"]*","typeahead_sid":"[^"]*","tl_log":[^,]*,"impression_id":"[^"]*","filter_ids":\{[^\}]*\},"experience_type":"[^"]*","exclude_ids":[^\}]*\}', content)
+        bigpipe = re.search(r'\{"view":"[^"]*","encoded_query":"{\\"bqf\\":\\"([^\\]*)\\",\\"vertical\\":[^}]*}","encoded_title":"([^"]*)","ref":"[^"]*","logger_source":"[^"]*","typeahead_sid":"[^"]*","tl_log":[^,]*,"impression_id":"[^"]*","filter_ids":\{[^\}]*\},"experience_type":"[^"]*","exclude_ids":[^\}]*\}', content)
         if bigpipe:
             query = bigpipe.group(1)
             title = bigpipe.group(2)
             while True:
-                cursor = re.search(r'\[\{"cursor":"([^"]*)"\}\]', content)
+                cursor = re.search(r'\[\{"cursor":"([^"]*)","page_number":[^}]*\}\]', content)
                 if all((cursor, 'End of results' not in content, 'partial matches' not in content)):
                     data = '{"view":"list","encoded_query":"%s","encoded_title":"%s","experience_type":"grammar","cursor":"%s","ads_at_end":true}' % (query, title, cursor.group(1))
                     url = 'https://www.facebook.com/ajax/pagelet/generic.php/BrowseScrollingSetPagelet?data=%s&__a=1' % (urllib.quote(data))
                     resp = self.br.open(url)
                     content = resp.read()
-                    payload = json.loads(content[9:])['payload']
+                    payload = json.loads(content[9:], encoding='utf-8')['payload']
                     self.extract_entities(payload)
                 else:
                     break

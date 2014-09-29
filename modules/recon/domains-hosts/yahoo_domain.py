@@ -12,17 +12,17 @@ class Module(module.Module):
         self.info = {
                      'Name': 'Yahoo Hostname Enumerator',
                      'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests hosts from Yahoo.com by using the \'site\' search operator. Updates the \'hosts\' table with the results.'
+                     'Description': 'Harvests hosts from Yahoo.com by using the \'domain\' search operator. Updates the \'hosts\' table with the results.'
                      }
 
     def module_run(self, domains):
-        base_url = 'http://search.yahoo.com/search'
+        base_url = 'https://search.yahoo.com/search'
         cnt = 0
         new = 0
         for domain in domains:
             self.heading(domain, level=0)
-            base_query = 'site:' + domain
-            pattern = 'url>(?:<b>)*(?:\w*://)*(\S+?)\.(?:<b>)*%s[^<]*</b>' % (domain)
+            base_query = 'domain:' + domain
+            pattern = '"yschttl spt" href="(?:\w*://)*(\S+?)\.%s[^"]*"' % (domain)
             subs = []
             # control variables
             new = True
@@ -35,7 +35,7 @@ class Module(module.Module):
                 query = ''
                 # build query based on results of previous results
                 for sub in subs:
-                    query += ' -site:%s.%s' % (sub, domain)
+                    query += ' -domain:%s.%s' % (sub, domain)
                 full_query = base_query + query
                 url = '%s?n=%d&b=%d&p=%s' % (base_url, nr, (page*nr), urllib.quote_plus(full_query))
                 # yahoo does not appear to have a max url length

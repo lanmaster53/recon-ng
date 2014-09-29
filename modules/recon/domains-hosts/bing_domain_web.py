@@ -17,13 +17,13 @@ class Module(module.Module):
                      }
 
     def module_run(self, domains):
-        base_url = 'http://www.bing.com/search'
+        base_url = 'https://www.bing.com/search'
         cnt = 0
         new = 0
         for domain in domains:
             self.heading(domain, level=0)
             base_query = 'domain:' + domain
-            pattern = '"sb_tlst"><h3><a href="(?:\w*://)*(\S+?)\.%s[^"]*"' % (domain)
+            pattern = '"b_algo"><h2><a href="(?:\w*://)*(\S+?)\.%s[^"]*"' % (domain)
             subs = []
             # control variables
             new = True

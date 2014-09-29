@@ -16,7 +16,7 @@ class Module(module.Module):
                      }
 
     def module_run(self, domains):
-        base_url = 'http://www.google.com/search'
+        base_url = 'https://www.google.com/search'
         cnt = 0
         new = 0
         for domain in domains:

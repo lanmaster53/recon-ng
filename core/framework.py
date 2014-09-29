@@ -13,7 +13,7 @@ import string
 import subprocess
 import sys
 # framework libs
-import dragons
+import requests
 import mechanize
 
 #=================================================
@@ -508,8 +508,8 @@ class Framework(cmd.Cmd):
                where the keys are the column names and the values are the column values
         unique_columns - a list of column names that should be used to determine if the
                          information being inserted is unique'''
-        # set module to the calling module
-        data['module'] = self.modulename.split('/')[-1]
+        # set module to the calling module unless the do_add command was used
+        data['module'] = 'user_defined' if 'do_add' in [x[3] for x in inspect.stack()] else self.modulename.split('/')[-1]
         # sanitize the inputs to remove NoneTypes, blank strings, and zeros
         columns = [x for x in data.keys() if data[x]]
         # make sure that module is not seen as a unique column
@@ -647,9 +647,9 @@ class Framework(cmd.Cmd):
     # REQUEST METHODS
     #==================================================
 
-    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, content='', redirect=True):
-        request = dragons.Request()
-        request.user_agent = self.global_options['user-agent']
+    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, content='', redirect=True, agent=None):
+        request = requests.Request()
+        request.user_agent = agent or self.global_options['user-agent']
         request.debug = self.global_options['debug']
         request.proxy = self.global_options['proxy']
         request.timeout = timeout or self.global_options['timeout']
