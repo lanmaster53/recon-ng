@@ -8,8 +8,8 @@ import sys
 # prevent creation of compiled bytecode files
 sys.dont_write_bytecode = True
 # prep python path for base module
-sys.path.append(sys.path[0]+'/core/')
-sys.path.append(sys.path[0]+'/libs/')
+sys.path.insert(1, sys.path[0]+'/core/')
+sys.path.insert(1, sys.path[0]+'/libs/')
 import base
 
 def recon_rpc(args):
