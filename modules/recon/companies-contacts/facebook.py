@@ -43,7 +43,8 @@ class Module(module.Module):
             self.output('Authentication failed.')
             return False
         if 'checkpoint' in headers:
-            self.output('Checkpoint security is enabled. Disable and try again.')
+            resp = self.br.follow_link(nr=1)
+            self.output('Checkpoint security active. Log in via browser and try again.')
             return False
         return True
 

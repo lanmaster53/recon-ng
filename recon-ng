@@ -30,6 +30,9 @@ def recon_ui(args):
     # check for and run version check
     if args.check:
         if not x.version_check(): return
+    # check for and enable analytics
+    if args.analytics:
+        x.analytics = True
     # check for and load workspace
     if args.workspace: x.init_workspace(args.workspace)
     # check for and run script session
@@ -42,5 +45,6 @@ parser = argparse.ArgumentParser(description=description, version=base.__version
 parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
 parser.add_argument('-r', help='load commands from a resource file', metavar='filename', dest='script_file', action='store')
 parser.add_argument('--no-check', help='disable version check', dest='check', default=True, action='store_false')
+parser.add_argument('--no-analytics', help='disable analytics reporting', dest='analytics', default=True, action='store_false')
 args = parser.parse_args()
 recon_ui(args)

@@ -55,7 +55,7 @@ class Recon(framework.Framework):
         self.load_modules()
         if self.mode == Mode.CONSOLE: self.show_banner()
         self.init_workspace('default')
-        self.send_analytics(self.modulename)
+        self.analytics = False
 
     #==================================================
     # SUPPORT METHODS
@@ -354,7 +354,8 @@ class Recon(framework.Framework):
             self.error('ModuleError: %s' % (traceback.format_exc().splitlines()[-1]))
             return
         # send analytics information
-        self.send_analytics(mod_name)
+        if (self.home not in mod_loadpath) and self.analytics:
+            self.send_analytics(mod_name)
         # return the loaded module if in command line mode
         if self.mode == Mode.CLI: return y
         # begin a command loop
