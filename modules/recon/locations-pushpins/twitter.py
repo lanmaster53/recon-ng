@@ -9,10 +9,10 @@ class Module(module.Module):
         module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
         self.register_option('radius', 1, True, 'radius in kilometers')
         self.info = {
-                     'Name': 'Twitter Geolocation Search',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Searches Twitter for media in the specified proximity to a location.',
-                     }
+            'Name': 'Twitter Geolocation Search',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Searches Twitter for media in the specified proximity to a location.',
+        }
 
     def module_run(self, points):
         rad = self.options['radius']

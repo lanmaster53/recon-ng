@@ -501,6 +501,17 @@ class Framework(cmd.Cmd):
         )
         return self.insert('pushpins', data, data.keys())
 
+    def add_profiles(self, username, resource=None, url=None, category=None, notes=None):
+        '''Adds a profile to the database and returns the affected row count.'''
+        data = dict(
+            username = self.to_unicode(username),
+            resource = self.to_unicode(resource),
+            url = self.to_unicode(url),
+            category = self.to_unicode(category),
+            notes = self.to_unicode(notes)
+        )
+        return self.insert('profiles', data, ('username', 'url'))
+
     def insert(self, table, data, unique_columns=[]):
         '''Inserts items into database and returns the affected row count.
         table - the table to insert the data into

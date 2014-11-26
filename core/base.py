@@ -33,6 +33,38 @@ __builtin__._print = print
 # override the builtin print function with the new print function
 __builtin__.print = spool_print
 
+KEY_RESOURCES = [
+    'bing_api',
+    'builtwith_api',
+    'facebook_api',
+    'facebook_password',
+    'facebook_secret',
+    'facebook_username',
+    'flickr_api',
+    'google_api',
+    'google_cse',
+    'instagram_api',
+    'instagram_secret',
+    'instagram_token',
+    'ipinfodb_api',
+    'jigsaw_api',
+    'jigsaw_password',
+    'jigsaw_username',
+    'linkedin_api',
+    'linkedin_secret',
+    'linkedin_token',
+    'pwnedlist_api',
+    'pwnedlist_iv',
+    'pwnedlist_secret',
+    'rapportive_token',
+    'shodan_api',
+    'sonar_api',
+    'twitter_api',
+    'twitter_secret',
+    'twitter_token',
+    'virustotal_api'
+]
+
 #=================================================
 # BASE CLASS
 #=================================================
@@ -116,13 +148,11 @@ class Recon(framework.Framework):
         if not os.path.exists(self.home):
             os.makedirs(self.home)
         # initialize keys database
-        if not os.path.exists('%s/keys.db' % (self.home)):
-            # create the database and table
-            self.query_keys('CREATE TABLE keys (name TEXT PRIMARY KEY, value TEXT)')
-            # populate key names
-            for name in ['bing_api', 'builtwith_api', 'facebook_api', 'facebook_password', 'facebook_secret', 'facebook_username', 'flickr_api', 'google_api', 'google_cse', 'ipinfodb_api', 'jigsaw_api', 'jigsaw_password', 'jigsaw_username', 'linkedin_api', 'linkedin_secret', 'linkedin_token', 'pwnedlist_api', 'pwnedlist_iv', 'pwnedlist_secret', 'rapportive_token', 'shodan_api', 'sonar_api', 'twitter_api', 'twitter_secret', 'twitter_token', 'virustotal_api']:
-                self.query_keys('INSERT INTO keys (name) VALUES (?)', (name,))
-        # migrate keys
+        self.query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
+        # populate key names
+        for name in KEY_RESOURCES:
+            self.query_keys('INSERT OR IGNORE INTO keys (name) VALUES (?)', (name,))
+        # migrate keys from old .dat file
         key_path = '%s/keys.dat' % (self.home)
         if os.path.exists(key_path):
             try:
@@ -215,8 +245,9 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS credentials (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS profiles (username TEXT, resource TEXT, url TEXT, category TEXT, notes TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.query('PRAGMA user_version = 5')
+        self.query('PRAGMA user_version = 6')
 
     def migrate_db(self):
         db_version = lambda self: self.query('PRAGMA user_version')[0][0]
@@ -265,6 +296,10 @@ class Recon(framework.Framework):
                 if 'module' not in [x[0] for x in self.get_columns(table)]:
                     self.query('ALTER TABLE %s ADD COLUMN module TEXT' % (table))
             self.query('PRAGMA user_version = 5')
+        if db_version(self) == 5:
+            # add profile table
+            self.query('CREATE TABLE IF NOT EXISTS profiles (username TEXT, resource TEXT, url TEXT, category TEXT, notes TEXT, module TEXT)')
+            self.query('PRAGMA user_version = 6')
 
     #==================================================
     # SHOW METHODS

@@ -26,6 +26,7 @@ class Module(module.Module):
     def build_content(self, sources):
         icons = {
                  'flickr': 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                 'instagram': 'http://maps.google.com/mapfiles/ms/icons/pink-dot.png',
                  'picasa': 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png',
                  'shodan': 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
                  'twitter': 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
