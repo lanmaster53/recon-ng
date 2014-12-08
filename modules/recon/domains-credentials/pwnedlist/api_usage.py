@@ -6,10 +6,10 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params)
         self.info = {
-                     'Name': 'PwnedList - API Usage Statistics Fetcher',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for account usage statistics.',
-                     }
+            'Name': 'PwnedList - API Usage Statistics Fetcher',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Queries the PwnedList API for account usage statistics.',
+        }
 
     def module_run(self):
         key = self.get_key('pwnedlist_api')

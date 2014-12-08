@@ -7,13 +7,13 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT username FROM credentials WHERE username IS NOT NULL and password IS NULL ORDER BY username')
         self.info = {
-                     'Name': 'PwnedList - Account Credentials Fetcher',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for credentials associated with the given usernames. Updates the \'credentials\' table with the results.',
-                     'Comments': [
-                                  'API Query Cost: 1 query per request.'
-                                  ]
-                     }
+            'Name': 'PwnedList - Account Credentials Fetcher',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Queries the PwnedList API for credentials associated with the given usernames. Updates the \'credentials\' table with the results.',
+            'Comments': [
+                'API Query Cost: 1 query per request.'
+            ]
+        }
 
     def module_run(self, accounts):
         key = self.get_key('pwnedlist_api')
@@ -37,14 +37,10 @@ class Module(module.Module):
         if len(jsonobj['results']) == 0:
             self.output('No results returned.')
         else:
-            cnt = 0
-            new = 0
             for cred in jsonobj['results']:
                 username = cred['plain']
                 password = self.aes_decrypt(cred['password'], decrypt_key, iv)
                 leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))
-                cnt += 1
-                new += self.add_credentials(username=username, password=password, leak=leak)
+                self.add_credentials(username=username, password=password, leak=leak)
                 self.query('DELETE FROM credentials WHERE username = \'%s\' and password IS NULL and hash IS NULL' % (username))
-            self.summarize(new, cnt)

@@ -10,15 +10,13 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.info = {
-                     'Name': 'Baidu Hostname Enumerator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests hosts from Baidu.com by using the \'site\' search operator. Updates the \'hosts\' table with the results.'
-                     }
+            'Name': 'Baidu Hostname Enumerator',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Harvests hosts from Baidu.com by using the \'site\' search operator. Updates the \'hosts\' table with the results.'
+        }
 
     def module_run(self, domains):
         base_url = 'http://www.baidu.com/s'
-        cnt = 0
-        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             base_query = 'site:' + domain
@@ -58,7 +56,7 @@ class Module(module.Module):
                         new = True
                         host = '%s.%s' % (site, domain)
                         self.output('%s' % (host))
-                        new += self.add_hosts(host)
+                        self.add_hosts(host)
                 if not new:
                     # exit if all subdomains have been found
                     if not u'>\u4e0b\u4e00\u9875&gt;<' in content:
@@ -70,5 +68,3 @@ class Module(module.Module):
                 # sleep script to avoid lock-out
                 self.verbose('Sleeping to avoid lockout...')
                 time.sleep(random.randint(5,15))
-            cnt += len(subs)
-        self.summarize(new, cnt)

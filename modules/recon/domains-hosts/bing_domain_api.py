@@ -9,22 +9,20 @@ class Module(module.Module):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.register_option('limit', 0, True, 'limit total number of api requests (0 = unlimited)')
         self.info = {
-                     'Name': 'Bing API Hostname Enumerator',
-                     'Author': 'Marcus Watson (@BranMacMuffin)',
-                     'Description': 'Leverages the Bing API and "domain:" advanced search operator to harvest hosts. Updates the \'hosts\' table with the results.'
-                     }
+            'Name': 'Bing API Hostname Enumerator',
+            'Author': 'Marcus Watson (@BranMacMuffin)',
+            'Description': 'Leverages the Bing API and "domain:" advanced search operator to harvest hosts. Updates the \'hosts\' table with the results.'
+        }
 
     def module_run(self, domains):
         limit = self.options['limit']
         requests = 0
-        cnt = 0
-        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             hosts = []
             results = []
             pages = 1
-            base_query = '\'domain:%s' % (domain)
+            base_query = 'domain:%s' % (domain)
             while not limit or requests < limit:
                 query = base_query
                 # build query string based on api limitations
@@ -34,7 +32,6 @@ class Module(module.Module):
                         query += omit_domain
                     else:
                         break
-                query += '\''
                 # make api requests
                 if limit and requests + pages > limit:
                     pages = limit - requests
@@ -42,18 +39,16 @@ class Module(module.Module):
                 results = self.search_bing_api(query, pages)
                 requests += pages
                 # iterate through results and add new hosts
-                new = False
+                flag = False
                 for result in results:
                     host = urlparse(result['Url']).netloc
-                    if not host in hosts and host != domain:
+                    if host.endswith('.'+domain) and host not in hosts:
                         hosts.append(host)
                         self.output(host)
-                        new += self.add_hosts(host)
-                        new = True
-                if not new and last_len == len(results):
+                        self.add_hosts(host)
+                        flag = True
+                if not flag and last_len == len(results):
                     break
-                elif not new and last_len != len(results):
+                elif not flag and last_len != len(results):
                     pages += 1
                     self.verbose('No new hosts found for the current query. Increasing depth to \'%d\' pages.' % (pages))
-            cnt += len(hosts)
-        self.summarize(new, cnt)

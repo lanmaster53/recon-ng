@@ -6,13 +6,13 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.info = {
-                     'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for a domain to determine if any associated credentials have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
-                     'Comments': [
-                                  'API Query Cost: 1 query per request.'
-                                  ]
-                     }
+            'Name': 'PwnedList - Pwned Domain Statistics Fetcher',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Queries the PwnedList API for a domain to determine if any associated credentials have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
+            'Comments': [
+                'API Query Cost: 1 query per request.'
+            ]
+        }
 
     def module_run(self, domains):
         key = self.get_key('pwnedlist_api')

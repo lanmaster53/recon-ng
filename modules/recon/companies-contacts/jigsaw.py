@@ -8,16 +8,14 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
         self.info = {
-                     'Name': 'Jigsaw Contact Enumerator',
-                     'Description': 'Harvests contacts from Data.com. Updates the \'contacts\' table with the results.',
-                     'Comments': [
-                                  'Discovery does not always succeed due to alphabetical inconsistencies in the Data.com data sets. Use \'https://connect.data.com/\' to drill down to the target company and set the \'SOURCE\' option as the URL.'
-                                  ]
-                     }
+            'Name': 'Jigsaw Contact Enumerator',
+            'Description': 'Harvests contacts from Data.com. Updates the \'contacts\' table with the results.',
+            'Comments': [
+                'Discovery does not always succeed due to alphabetical inconsistencies in the Data.com data sets. Use \'https://connect.data.com/\' to drill down to the target company and set the \'SOURCE\' option as the URL.'
+            ]
+        }
 
     def module_run(self, companies):
-        self.cnt = 0
-        self.new = 0
         host = 'https://connect.data.com'
         for company in companies:
             if 'connect.data.com' in company.lower():
@@ -28,7 +26,6 @@ class Module(module.Module):
                 if resource:
                     self.output('Gathering contacts...')
                     self.get_contacts(host + resource)
-        self.summarize(self.new, self.cnt)
 
     def get_company_url(self, host, company):
         char = company[0].lower()
@@ -119,6 +116,5 @@ class Module(module.Module):
                     if item: region.append(item)
                 region = ', '.join(region)
                 self.output('%s - %s (%s)' % (name, title, region))
-                self.cnt += 1
-                self.new += self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region)
+                self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region)
             payload['page'] += 1

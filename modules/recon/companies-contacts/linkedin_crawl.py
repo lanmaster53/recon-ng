@@ -12,10 +12,13 @@ class Module(module.Module):
         self.register_option('url', None, True, 'public LinkedIn profile URL (seed)')
         self.register_option('company', None, False, 'override the company name harvested from the seed \'URL\'')
         self.info = {
-                     'Name': 'Linkedin Contact Crawler',
-                     'Author':'Mike Larch',
-                     'Description': 'Harvests contacts from linkedin.com by spidering through "Viewers of this profile also viewed" links, adding them to the \'contacts\' table of the database. URL must be for a public linkedin page. The User of that page must currently be working at the targeted company.'
-                     }
+            'Name': 'Linkedin Contact Crawler',
+            'Author':'Mike Larch',
+            'Description': 'Harvests contacts from linkedin.com by spidering through "Viewers of this profile also viewed" links, adding them to the \'contacts\' table of the database. URL must be for a public linkedin page. The User of that page must currently be working at the targeted company.',
+            'Comments': [
+                'Seed URL Google Dork: site:linkedin.com inurl:pub -inurl:dir "at <company>" "Current"'
+            ]
+        }
 
     def module_run(self):
         company = self.get_company()
@@ -38,8 +41,6 @@ class Module(module.Module):
         accepted = []
         rejected = []
         i = len(temp_urls)
-        new = 0
-        cnt = 0
         while i > 0:
             temp_url = temp_urls.pop(0)
             time.sleep(1)
@@ -72,13 +73,11 @@ class Module(module.Module):
                 temp_urls += [x for x in parsed_urls if x not in temp_urls+accepted+rejected]
                 # output the results
                 self.alert('%s %s - %s (%s)' % (fname, lname, title, region))
-                cnt += 1
-                new += self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region)
+                self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region)
             else:
                 rejected.append(temp_url)
             i = len(temp_urls)
             self.verbose('%d URLs remaining.' % (i))
-        self.summarize(new, cnt)
         return
 
 def parse_title(tree):
@@ -87,7 +86,7 @@ def parse_title(tree):
     except IndexError:
         try: title = tree.xpath('//p[@class="headline-title title"]/text()')[0].strip()
         except IndexError:
-            try: title = tree.xpath('//p[@class="title "]/text()')[0].strip().split(" at ",1)[0]
+            try: title = tree.xpath('//p[@class="title"]/text()')[0].strip().split(" at ",1)[0]
             except IndexError:
                 pass
     return title

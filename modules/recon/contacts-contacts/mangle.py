@@ -12,15 +12,15 @@ class Module(module.Module):
         self.register_option('max-length', 30, True, 'maximum length of email address prefix or username')
         self.register_option('overwrite', False, True, 'overwrite existing email addresses')
         self.info = {
-                     'Name': 'Contact Name Mangler',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact. Updates the \'contacts\' table with the results.',
-                     'Comments': [
-                                  'Pattern options: <fi>,<fn>,<mi>,<mn>,<li>,<ln>',
-                                  'Example:         <fi>.<ln> => j.doe@domain.com',
-                                  'Note: Omit the \'domain\' option to create usernames'
-                                  ]
-                     }
+            'Name': 'Contact Name Mangler',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact. Updates the \'contacts\' table with the results.',
+            'Comments': [
+                'Pattern options: <fi>,<fn>,<mi>,<mn>,<li>,<ln>',
+                'Example:         <fi>.<ln> => j.doe@domain.com',
+                'Note: Omit the \'domain\' option to create usernames'
+            ]
+        }
 
     def module_run(self):
         contacts = self.query('SELECT rowid, first_name, middle_name, last_name FROM contacts ORDER BY first_name' if self.options['overwrite'] else 'SELECT rowid, first_name, middle_name, last_name FROM contacts WHERE email IS NULL ORDER BY first_name')

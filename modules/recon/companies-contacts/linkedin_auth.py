@@ -7,10 +7,10 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
         self.info = {
-                     'Name': 'LinkedIn Authenticated Contact Enumerator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from the LinkedIn.com API using an authenticated connections network. Updates the \'contacts\' table with the results.'
-                     }
+            'Name': 'LinkedIn Authenticated Contact Enumerator',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Harvests contacts from the LinkedIn.com API using an authenticated connections network. Updates the \'contacts\' table with the results.'
+        }
 
     def get_linkedin_access_token(self):
         return self.get_explicit_oauth_token(
@@ -25,7 +25,6 @@ class Module(module.Module):
         if access_token is None: return
         count = 25
         url = 'https://api.linkedin.com/v1/people-search:(people:(id,first-name,last-name,headline,location:(name,country:(code))))'
-        cnt, tot = 0, 0
         for company in companies:
             self.heading(company, level=0)
             payload = {'format': 'json', 'company-name': company, 'current-company': 'true', 'count': count, 'oauth2_access_token': access_token}
@@ -55,12 +54,10 @@ class Module(module.Module):
                         region = re.sub('(?:Greater\s|\sArea)', '', self.html_unescape(contact['location']['name']).title())
                         country = self.html_unescape(contact['location']['country']['code']).upper()
                         self.output('%s %s - %s (%s - %s)' % (fname, lname, title, region, country))
-                        tot += 1
-                        cnt += self.add_contacts(first_name=fname, last_name=lname, title=title, region=region, country=country)
+                        self.add_contacts(first_name=fname, last_name=lname, title=title, region=region, country=country)
                 if not '_start' in jsonobj['people']:
                     break
                 if jsonobj['people']['_start'] + jsonobj['people']['_count'] == jsonobj['people']['_total']:
                     break
                 payload['start'] = page * jsonobj['people']['_count']
                 page += 1
-        self.summarize(cnt, tot)

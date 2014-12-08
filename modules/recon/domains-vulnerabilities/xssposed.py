@@ -11,11 +11,9 @@ class Module(module.Module):
             'Name': 'XSSposed Domain Lookup',
             'Author': 'Tim Tomes (@LaNMaSteR53)',
             'Description': 'Checks XSSposed.com for XSS records associated with a domain.'
-            }
+        }
    
     def module_run(self, domains):
-        cnt = 0
-        new = 0
         url = 'https://www.xssposed.org/api/1/search/?domain=%s'
         for domain in domains:
             self.heading(domain, level=0)
@@ -33,8 +31,6 @@ class Module(module.Module):
                 for key in sorted(data.keys()):
                     self.output('%s: %s' % (key.title(), data[key]))
                 print(self.ruler*50)
-                new += self.add_vulnerabilities(**data)
-                cnt += 1
+                self.add_vulnerabilities(**data)
             if not vulns:
                 self.output('No vulnerabilites found.')
-        self.summarize(new, cnt)

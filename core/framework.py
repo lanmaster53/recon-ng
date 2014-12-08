@@ -86,24 +86,25 @@ class Options(dict):
 
 class Framework(cmd.Cmd):
     # mode flags
-    script = 0
-    load = 0
+    _script = 0
+    _load = 0
     # framework variables
-    global_options = Options()
-    keys = {}
-    loaded_modules = {}
+    _global_options = Options()
+    #keys = {}
+    _loaded_modules = {}
     app_path = ''
     data_path = ''
     core_path = ''
     workspace = ''
-    home = ''
-    record = None
-    spool = None
+    _home = ''
+    _record = None
+    _spool = None
+    _summary_counts = {}
 
     def __init__(self, params):
         cmd.Cmd.__init__(self)
         self.prompt = (params[0])
-        self.modulename = params[1]
+        self._modulename = params[1]
         self.ruler = '-'
         self.spacer = '  '
         self.time_format = '%Y-%m-%d %H:%M:%S'
@@ -111,7 +112,7 @@ class Framework(cmd.Cmd):
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self.rpc_cache = []
-        self.exit = 0
+        self._exit = 0
 
     #==================================================
     # CMD OVERRIDE METHODS
@@ -126,18 +127,18 @@ class Framework(cmd.Cmd):
         return 0
 
     def precmd(self, line):
-        if Framework.load:
+        if Framework._load:
             print('\r', end='')
-        if Framework.script:
+        if Framework._script:
             print('%s' % (line))
-        if Framework.record:
-            recorder = codecs.open(Framework.record, 'ab', encoding='utf-8')
+        if Framework._record:
+            recorder = codecs.open(Framework._record, 'ab', encoding='utf-8')
             recorder.write(('%s\n' % (line)).encode('utf-8'))
             recorder.flush()
             recorder.close()
-        if Framework.spool:
-            Framework.spool.write('%s%s\n' % (self.prompt, line))
-            Framework.spool.flush()
+        if Framework._spool:
+            Framework._spool.write('%s%s\n' % (self.prompt, line))
+            Framework._spool.flush()
         return line
 
     def onecmd(self, line):
@@ -147,8 +148,8 @@ class Framework(cmd.Cmd):
         if line == 'EOF':
             # reset stdin for raw_input
             sys.stdin = sys.__stdin__
-            Framework.script = 0
-            Framework.load = 0
+            Framework._script = 0
+            Framework._load = 0
             return 0
         if cmd is None:
             return self.default(line)
@@ -199,7 +200,8 @@ class Framework(cmd.Cmd):
             {'pattern': '[a-fA-F0-9]', 'len': 56, 'type': 'SHA224'},
             {'pattern': '[a-fA-F0-9]', 'len': 64, 'type': 'SHA256'},
             {'pattern': '[a-fA-F0-9]', 'len': 96, 'type': 'SHA384'},
-            {'pattern': '[a-fA-F0-9]', 'len': 128, 'type': 'SHA512'}
+            {'pattern': '[a-fA-F0-9]', 'len': 128, 'type': 'SHA512'},
+            {'pattern': '^\$[PH]{1}\$', 'len': 34, 'type': 'phpass'},
         ]
         for hashitem in hashdict:
             if len(hashstr) == hashitem['len'] and re.match(hashitem['pattern'], hashstr):
@@ -214,18 +216,10 @@ class Framework(cmd.Cmd):
         except IOError:
             return False
 
-    def random_str(self, length):
+    def get_random_str(self, length):
         return ''.join(random.choice(string.lowercase) for i in range(length))
 
-    def get_workspaces(self):
-        dirnames = []
-        path = '%s/workspaces' % (self.home)
-        for name in os.listdir(path):
-            if os.path.isdir('%s/%s' % (path, name)):
-                dirnames.append(name)
-        return dirnames
-
-    def parse_rowids(self, rowids):
+    def _parse_rowids(self, rowids):
         xploded = []
         rowids = [x.strip() for x in rowids.split(',')]
         for rowid in rowids:
@@ -261,12 +255,12 @@ class Framework(cmd.Cmd):
 
     def verbose(self, line):
         '''Formats and presents output if in verbose mode.'''
-        if self.global_options['verbose']:
+        if self._global_options['verbose']:
             self.output(line)
 
     def debug(self, line):
         '''Formats and presents output if in debug mode (very verbose).'''
-        if self.global_options['debug']:
+        if self._global_options['debug']:
             self.output(line)
 
     def heading(self, line, level=1):
@@ -335,7 +329,7 @@ class Framework(cmd.Cmd):
     def query(self, query, values=(), path=''):
         '''Queries the database and returns the results as a list.'''
         if not path:
-            path = '%s/data.db' % (self.workspace)
+            path = os.path.join(self.workspace, 'data.db')
         self.debug('DATABASE => %s' % (path))
         self.debug('QUERY => %s' % (query))
         with sqlite3.connect(path) as conn:
@@ -365,14 +359,14 @@ class Framework(cmd.Cmd):
     # ADD METHODS
     #==================================================
 
-    def add_domains(self, domain):
+    def add_domains(self, domain=None):
         '''Adds a domain to the database and returns the affected row count.'''
         data = dict(
             domain = self.to_unicode(domain)
         )
         return self.insert('domains', data, data.keys())
 
-    def add_companies(self, company, description=None):
+    def add_companies(self, company=None, description=None):
         '''Adds a company to the database and returns the affected row count.'''
         data = dict(
             company = self.to_unicode(company),
@@ -380,7 +374,7 @@ class Framework(cmd.Cmd):
         )
         return self.insert('companies', data, ('company',))
 
-    def add_netblocks(self, netblock):
+    def add_netblocks(self, netblock=None):
         '''Adds a netblock to the database and returns the affected row count.'''
         data = dict(
             netblock = self.to_unicode(netblock)
@@ -396,7 +390,7 @@ class Framework(cmd.Cmd):
         )
         return self.insert('locations', data, data.keys())
 
-    def add_vulnerabilities(self, host, reference, example, publish_date, category, status=None):
+    def add_vulnerabilities(self, host=None, reference=None, example=None, publish_date=None, category=None, status=None):
         '''Adds a vulnerability to the database and returns the affected row count.'''
         data = dict(
             host = self.to_unicode(host),
@@ -408,7 +402,7 @@ class Framework(cmd.Cmd):
         )
         return self.insert('vulnerabilities', data, data.keys())
 
-    def add_ports(self, ip_address, port, host=None, protocol=None):
+    def add_ports(self, ip_address=None, host=None, port=None, protocol=None):
         '''Adds a port to the database and returns the affected row count.'''
         data = dict(
             ip_address = self.to_unicode(ip_address),
@@ -418,7 +412,7 @@ class Framework(cmd.Cmd):
         )
         return self.insert('ports', data, ('ip_address', 'port', 'host'))
 
-    def add_hosts(self, host, ip_address=None, region=None, country=None, latitude=None, longitude=None):
+    def add_hosts(self, host=None, ip_address=None, region=None, country=None, latitude=None, longitude=None):
         '''Adds a host to the database and returns the affected row count.'''
         data = dict(
             host = self.to_unicode(host),
@@ -430,7 +424,7 @@ class Framework(cmd.Cmd):
         )
         return self.insert('hosts', data, ('host', 'ip_address'))
 
-    def add_contacts(self, first_name, last_name, title, middle_name=None, email=None, region=None, country=None):
+    def add_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
             first_name = self.to_unicode(first_name),
@@ -443,7 +437,7 @@ class Framework(cmd.Cmd):
         )
         return self.insert('contacts', data, ('first_name', 'middle_name', 'last_name', 'title', 'email'))
 
-    def add_credentials(self, username, password=None, _hash=None, _type=None, leak=None):
+    def add_credentials(self, username=None, password=None, _hash=None, _type=None, leak=None):
         '''Adds a credential to the database and returns the affected row count.'''
         data = dict (
             username = self.to_unicode(username),
@@ -463,7 +457,7 @@ class Framework(cmd.Cmd):
             self.add_contacts(first_name=None, last_name=None, title=None, email=username)
         return self.insert('credentials', data, data.keys())
 
-    def add_leaks(self, leak_id, description, source_refs, leak_type, title, import_date, leak_date, attackers, num_entries, score, num_domains_affected, attack_method, target_industries, password_hash, targets, media_refs):
+    def add_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, targets=None, media_refs=None):
         '''Adds a leak to the database and returns the affected row count.'''
         data = dict(
             leak_id = self.to_unicode(leak_id),
@@ -485,7 +479,7 @@ class Framework(cmd.Cmd):
         )
         return self.insert('leaks', data, data.keys())
 
-    def add_pushpins(self, source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time):
+    def add_pushpins(self, source=None, screen_name=None, profile_name=None, profile_url=None, media_url=None, thumb_url=None, message=None, latitude=None, longitude=None, time=None):
         '''Adds a pushpin to the database and returns the affected row count.'''
         data = dict(
             source = self.to_unicode(source),
@@ -501,7 +495,7 @@ class Framework(cmd.Cmd):
         )
         return self.insert('pushpins', data, data.keys())
 
-    def add_profiles(self, username, resource=None, url=None, category=None, notes=None):
+    def add_profiles(self, username=None, resource=None, url=None, category=None, notes=None):
         '''Adds a profile to the database and returns the affected row count.'''
         data = dict(
             username = self.to_unicode(username),
@@ -520,7 +514,7 @@ class Framework(cmd.Cmd):
         unique_columns - a list of column names that should be used to determine if the
                          information being inserted is unique'''
         # set module to the calling module unless the do_add command was used
-        data['module'] = 'user_defined' if 'do_add' in [x[3] for x in inspect.stack()] else self.modulename.split('/')[-1]
+        data['module'] = 'user_defined' if 'do_add' in [x[3] for x in inspect.stack()] else self._modulename.split('/')[-1]
         # sanitize the inputs to remove NoneTypes, blank strings, and zeros
         columns = [x for x in data.keys() if data[x]]
         # make sure that module is not seen as a unique column
@@ -547,6 +541,12 @@ class Framework(cmd.Cmd):
 
         rowcount = self.query(query, values)
 
+        # increment summary tracker
+        if table not in self._summary_counts:
+            self._summary_counts[table] = [0,0]
+        self._summary_counts[table][0] += rowcount
+        self._summary_counts[table][1] += 1
+
         # build RPC response
         for key in data.keys():
             if not data[key]:
@@ -562,9 +562,9 @@ class Framework(cmd.Cmd):
     def register_option(self, name, value, required, description):
         self.options.init_option(name=name.lower(), value=value, required=required, description=description)
         # needs to be optimized rather than ran on every register
-        self.load_config()
+        self._load_config()
 
-    def validate_options(self):
+    def _validate_options(self):
         for option in self.options:
             # if value type is bool or int, then we know the options is set
             if not type(self.options[option]) in [bool, int]:
@@ -572,30 +572,28 @@ class Framework(cmd.Cmd):
                     raise FrameworkException('Value required for the \'%s\' option.' % (option.upper()))
         return
 
-    def load_config(self):
-        config_path = '%s/config.dat' % (self.workspace)
+    def _load_config(self):
+        config_path = os.path.join(self.workspace, 'config.dat')
         # don't bother loading if a config file doesn't exist
         if os.path.exists(config_path):
             # retrieve saved config data
-            config_file = open(config_path)
-            try:
-                config_data = json.loads(config_file.read())
-            except ValueError:
-                # file is corrupt, nothing to load, exit gracefully
-                pass
-            else:
-                # set option values
-                for key in self.options:
-                    try:
-                        self.options[key] = config_data[self.modulename][key]
-                    except KeyError:
-                        # invalid key, contnue to load valid keys
-                        continue
-            finally:
-                config_file.close()
+            with open(config_path) as config_file:
+                try:
+                    config_data = json.loads(config_file.read())
+                except ValueError:
+                    # file is corrupt, nothing to load, exit gracefully
+                    pass
+                else:
+                    # set option values
+                    for key in self.options:
+                        try:
+                            self.options[key] = config_data[self._modulename][key]
+                        except KeyError:
+                            # invalid key, contnue to load valid keys
+                            continue
 
-    def save_config(self, name):
-        config_path = '%s/config.dat' % (self.workspace)
+    def _save_config(self, name):
+        config_path = os.path.join(self.workspace, 'config.dat')
         # create a config file if one doesn't exist
         open(config_path, 'a').close()
         # retrieve saved config data
@@ -607,16 +605,16 @@ class Framework(cmd.Cmd):
             config_data = {}
         config_file.close()
         # create a container for the current module
-        if self.modulename not in config_data:
-            config_data[self.modulename] = {}
+        if self._modulename not in config_data:
+            config_data[self._modulename] = {}
         # set the new option value in the config
-        config_data[self.modulename][name] = self.options[name]
+        config_data[self._modulename][name] = self.options[name]
         # remove the option if it has been unset
-        if config_data[self.modulename][name] is None:
-            del config_data[self.modulename][name]
+        if config_data[self._modulename][name] is None:
+            del config_data[self._modulename][name]
         # remove the module container if it is empty
-        if not config_data[self.modulename]:
-            del config_data[self.modulename]
+        if not config_data[self._modulename]:
+            del config_data[self._modulename]
         # write the new config data to the config file
         config_file = open(config_path, 'w')
         json.dump(config_data, config_file, indent=4)
@@ -626,33 +624,33 @@ class Framework(cmd.Cmd):
     # API KEY METHODS
     #==================================================
 
-    def query_keys(self, query, values=()):
-        path = '%s/keys.db' % (self.home)
+    def get_key(self, name):
+        rows = self._query_keys('SELECT value FROM keys WHERE name=? AND value NOT NULL', (name,))
+        if not rows:
+            raise FrameworkException('API key \'%s\' not found. Add API keys with the \'keys add\' command.' % (name))
+        return rows[0][0]
+
+    def add_key(self, name, value):
+        return self._query_keys('UPDATE keys SET value=? WHERE name=?', (value, name))
+
+    def delete_key(self, name):
+        return self._query_keys('UPDATE keys SET value=NULL WHERE name=?', (name,))
+
+    def _query_keys(self, query, values=()):
+        path = os.path.join(self._home, 'keys.db')
         result = self.query(query, values, path)
         # filter out tokens when not called from the get_key method
         if type(result) is list and 'get_key' not in [x[3] for x in inspect.stack()]:
             result = [x for x in result if not x[0].endswith('_token')]
         return result
 
-    def list_keys(self):
-        keys = self.query_keys('SELECT * FROM keys')
+    def _list_keys(self):
+        keys = self._query_keys('SELECT * FROM keys')
         tdata = []
         for key in sorted(keys):
             tdata.append(key)
         if tdata:
             self.table(tdata, header=['Name', 'Value'])
-
-    def get_key(self, name):
-        rows = self.query_keys('SELECT value FROM keys WHERE name=? AND value NOT NULL', (name,))
-        if not rows:
-            raise FrameworkException('API key \'%s\' not found. Add API keys with the \'keys add\' command.' % (name))
-        return rows[0][0]
-
-    def add_key(self, name, value):
-        return self.query_keys('UPDATE keys SET value=? WHERE name=?', (value, name))
-
-    def delete_key(self, name):
-        return self.query_keys('UPDATE keys SET value=NULL WHERE name=?', (name,))
 
     #==================================================
     # REQUEST METHODS
@@ -660,10 +658,10 @@ class Framework(cmd.Cmd):
 
     def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, content='', redirect=True, agent=None):
         request = requests.Request()
-        request.user_agent = agent or self.global_options['user-agent']
-        request.debug = self.global_options['debug']
-        request.proxy = self.global_options['proxy']
-        request.timeout = timeout or self.global_options['timeout']
+        request.user_agent = agent or self._global_options['user-agent']
+        request.debug = self._global_options['debug']
+        request.proxy = self._global_options['proxy']
+        request.timeout = timeout or self._global_options['timeout']
         request.redirect = redirect
         return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth, content=content)
 
@@ -671,42 +669,36 @@ class Framework(cmd.Cmd):
         '''Returns a mechanize.Browser object configured with the framework's global options.'''
         br = mechanize.Browser()
         # set the user-agent header
-        br.addheaders = [('User-agent', self.global_options['user-agent'])]
+        br.addheaders = [('User-agent', self._global_options['user-agent'])]
         # set debug options
-        if self.global_options['debug']:
+        if self._global_options['debug']:
             br.set_debug_http(True)
             br.set_debug_redirects(True)
             br.set_debug_responses(True)
         # set proxy
-        if self.global_options['proxy']:
-            br.set_proxies({'http': self.global_options['proxy'], 'https': self.global_options['proxy']})
+        if self._global_options['proxy']:
+            br.set_proxies({'http': self._global_options['proxy'], 'https': self._global_options['proxy']})
         # additional settings
         br.set_handle_robots(False)
         # set timeout
-        socket.setdefaulttimeout(self.global_options['timeout'])
+        socket.setdefaulttimeout(self._global_options['timeout'])
         return br
 
     #==================================================
     # SHOW METHODS
     #==================================================
 
-    def get_show_names(self):
-        # Any method beginning with "show_" will be parsed
-        # and added as a subcommand for the show command.
-        prefix = 'show_'
-        return [x[len(prefix):] for x in self.get_names() if x.startswith(prefix)]
-
     def show_modules(self, param):
         # process parameter according to type
         if type(param) is list:
             modules = param
         elif param:
-            modules = [x for x in Framework.loaded_modules if x.startswith(param)]
+            modules = [x for x in Framework._loaded_modules if x.startswith(param)]
             if not modules:
                 self.error('Invalid module category.')
                 return
         else:
-            modules = Framework.loaded_modules
+            modules = Framework._loaded_modules
         # display the modules
         key_len = len(max(modules, key=len)) + len(self.spacer)
         last_category = ''
@@ -736,7 +728,7 @@ class Framework(cmd.Cmd):
                 tdata.append([table.title(), count])
             self.table(tdata, header=['Category', 'Quantity'], title='Results Summary')
         else:
-            print('\n%sThis workspace has no record of activity.\n' % (self.spacer))
+            self.output('This workspace has no record of activity.')
 
     def show_schema(self):
         '''Displays the database schema'''
@@ -769,11 +761,11 @@ class Framework(cmd.Cmd):
             print('%sNo options available for this module.' % (self.spacer))
             print('')
 
-    def show_workspaces(self):
-        self.table([[x] for x in self.get_workspaces()], header=['Workspaces'])
-
-    def show_keys(self):
-        self.list_keys()
+    def _get_show_names(self):
+        # Any method beginning with "show_" will be parsed
+        # and added as a subcommand for the show command.
+        prefix = 'show_'
+        return [x[len(prefix):] for x in self.get_names() if x.startswith(prefix)]
 
     #==================================================
     # COMMAND METHODS
@@ -781,7 +773,7 @@ class Framework(cmd.Cmd):
 
     def do_exit(self, params):
         '''Exits the framework'''
-        self.exit = 1
+        self._exit = 1
         return True
 
     # alias for exit
@@ -800,7 +792,7 @@ class Framework(cmd.Cmd):
             value = ' '.join(options[1:])
             self.options[name] = value
             print('%s => %s' % (name.upper(), value))
-            self.save_config(name)
+            self._save_config(name)
         else: self.error('Invalid option.')
 
     def do_unset(self, params):
@@ -815,7 +807,7 @@ class Framework(cmd.Cmd):
         params = params.split()
         arg = params.pop(0).lower()
         if arg == 'list':
-            self.list_keys()
+            self._list_keys()
         elif arg == 'add':
             if len(params) == 2:
                 if self.add_key(params[0], params[1]):
@@ -834,7 +826,7 @@ class Framework(cmd.Cmd):
         if not params:
             self.help_query()
             return
-        with sqlite3.connect('%s/data.db' % (self.workspace)) as conn:
+        with sqlite3.connect(os.path.join(self.workspace, 'data.db')) as conn:
             with closing(conn.cursor()) as cur:
                 self.debug('QUERY => %s' % (params))
                 try: cur.execute(params)
@@ -862,14 +854,14 @@ class Framework(cmd.Cmd):
         params = params.lower().split()
         arg = params[0]
         params = ' '.join(params[1:])
-        if arg in self.get_show_names():
+        if arg in self._get_show_names():
             func = getattr(self, 'show_' + arg)
             if arg == 'modules':
                 func(params)
             else:
                 func()
         elif _params in self.get_tables():
-            self.do_query('SELECT ROWID, * FROM "%s" ORDER BY 2' % (_params))
+            self.do_query('SELECT ROWID, * FROM "%s"' % (_params))
         else:
             self.help_show()
 
@@ -915,7 +907,7 @@ class Framework(cmd.Cmd):
                         return
                     finally:
                         # ensure proper output for resource scripts
-                        if Framework.script:
+                        if Framework._script:
                             print('%s' % (value))
             # add record to the database
             func = getattr(self, 'add_' + table)
@@ -935,19 +927,19 @@ class Framework(cmd.Cmd):
         if table:
             # get rowid from parameters
             if params:
-                rowids = self.parse_rowids(params)
+                rowids = self._parse_rowids(params)
             # get rowid from interactive input
             else:
                 try:
                     # prompt user for data
                     params = raw_input('rowid(s) (INT): ')
-                    rowids = self.parse_rowids(params)
+                    rowids = self._parse_rowids(params)
                 except KeyboardInterrupt:
                     print('')
                     return
                 finally:
                     # ensure proper output for resource scripts
-                    if Framework.script:
+                    if Framework._script:
                         print('%s' % (params))
             # delete record(s) from the database
             for rowid in rowids:
@@ -962,7 +954,7 @@ class Framework(cmd.Cmd):
             return
         text = params.split()[0]
         self.output('Searching for \'%s\'...' % (text))
-        modules = [x for x in Framework.loaded_modules if text in x]
+        modules = [x for x in Framework._loaded_modules if text in x]
         if not modules:
             self.error('No modules found containing \'%s\'.' % (text))
         else:
@@ -975,23 +967,23 @@ class Framework(cmd.Cmd):
             return
         arg = params.lower()
         if arg.split()[0] == 'start':
-            if not Framework.record:
+            if not Framework._record:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
-                    if not self.is_writeable(filename):
+                    if not self._is_writeable(filename):
                         self.output('Cannot record commands to \'%s\'.' % (filename))
                     else:
-                        Framework.record = filename
-                        self.output('Recording commands to \'%s\'.' % (Framework.record))
+                        Framework._record = filename
+                        self.output('Recording commands to \'%s\'.' % (Framework._record))
                 else: self.help_record()
             else: self.output('Recording is already started.')
         elif arg == 'stop':
-            if Framework.record:
-                self.output('Recording stopped. Commands saved to \'%s\'.' % (Framework.record))
-                Framework.record = None
+            if Framework._record:
+                self.output('Recording stopped. Commands saved to \'%s\'.' % (Framework._record))
+                Framework._record = None
             else: self.output('Recording is already stopped.')
         elif arg == 'status':
-            status = 'started' if Framework.record else 'stopped'
+            status = 'started' if Framework._record else 'stopped'
             self.output('Command recording is %s.' % (status))
         else:
             self.help_record()
@@ -1003,23 +995,23 @@ class Framework(cmd.Cmd):
             return
         arg = params.lower()
         if arg.split()[0] == 'start':
-            if not Framework.spool:
+            if not Framework._spool:
                 if len(arg.split()) > 1:
                     filename = ' '.join(arg.split()[1:])
-                    if not self.is_writeable(filename):
+                    if not self._is_writeable(filename):
                         self.output('Cannot spool output to \'%s\'.' % (filename))
                     else:
-                        Framework.spool = codecs.open(filename, 'ab', encoding='utf-8')
-                        self.output('Spooling output to \'%s\'.' % (Framework.spool.name))
+                        Framework._spool = codecs.open(filename, 'ab', encoding='utf-8')
+                        self.output('Spooling output to \'%s\'.' % (Framework._spool.name))
                 else: self.help_spool()
             else: self.output('Spooling is already started.')
         elif arg == 'stop':
-            if Framework.spool:
-                self.output('Spooling stopped. Output saved to \'%s\'.' % (Framework.spool.name))
-                Framework.spool = None
+            if Framework._spool:
+                self.output('Spooling stopped. Output saved to \'%s\'.' % (Framework._spool.name))
+                Framework._spool = None
             else: self.output('Spooling is already stopped.')
         elif arg == 'status':
-            status = 'started' if Framework.spool else 'stopped'
+            status = 'started' if Framework._spool else 'stopped'
             self.output('Output spooling is %s.' % (status))
         else:
             self.help_spool()
@@ -1040,7 +1032,7 @@ class Framework(cmd.Cmd):
             return
         if os.path.exists(params):
             sys.stdin = open(params)
-            Framework.script = 1
+            Framework._script = 1
         else:
             self.error('Script file \'%s\' not found.' % (params))
 
@@ -1050,7 +1042,7 @@ class Framework(cmd.Cmd):
             self.help_load()
             return
         # finds any modules that contain params
-        modules = [params] if params in Framework.loaded_modules else [x for x in Framework.loaded_modules if params in x]
+        modules = [params] if params in Framework._loaded_modules else [x for x in Framework._loaded_modules if params in x]
         # notify the user if none or multiple modules are found
         if len(modules) != 1:
             if not modules:
@@ -1061,11 +1053,11 @@ class Framework(cmd.Cmd):
             return
         import StringIO
         # compensation for stdin being used for scripting and loading
-        if Framework.script:
+        if Framework._script:
             end_string = sys.stdin.read()
         else:
             end_string = 'EOF'
-            Framework.load = 1
+            Framework._load = 1
         sys.stdin = StringIO.StringIO('load %s\n%s' % (modules[0], end_string))
         return True
     do_use = do_load
@@ -1149,7 +1141,7 @@ class Framework(cmd.Cmd):
         print('')
 
     def help_show(self):
-        options = sorted(self.get_show_names() + self.get_tables())
+        options = sorted(self._get_show_names() + self.get_tables())
         print(getattr(self, 'do_show').__doc__)
         print('')
         print('Usage: show [%s]' % ('|'.join(options)))
@@ -1182,13 +1174,13 @@ class Framework(cmd.Cmd):
         options = ['list', 'add', 'delete']
         if 1 < len(args) < 4:
             if args[1].lower() in options[1:]:
-                return [x[0] for x in self.query_keys('SELECT name FROM keys') if x[0].startswith(text)]
+                return [x[0] for x in self._query_keys('SELECT name FROM keys') if x[0].startswith(text)]
             if args[1].lower() in options[:1]:
                 return []
         return [x for x in options if x.startswith(text)]
 
     def complete_load(self, text, *ignored):
-        return [x for x in Framework.loaded_modules if x.startswith(text)]
+        return [x for x in Framework._loaded_modules if x.startswith(text)]
     complete_use = complete_load
 
     def complete_record(self, text, *ignored):
@@ -1202,9 +1194,9 @@ class Framework(cmd.Cmd):
     def complete_show(self, text, line, *ignored):
         args = line.split()
         if len(args) > 1 and args[1].lower() == 'modules':
-            if len(args) > 2: return [x for x in Framework.loaded_modules if x.startswith(args[2])]
-            else: return [x for x in Framework.loaded_modules]
-        options = sorted(self.get_show_names() + self.get_tables())
+            if len(args) > 2: return [x for x in Framework._loaded_modules if x.startswith(args[2])]
+            else: return [x for x in Framework._loaded_modules]
+        options = sorted(self._get_show_names() + self.get_tables())
         return [x for x in options if x.startswith(text)]
 
     def complete_add(self, text, *ignored):

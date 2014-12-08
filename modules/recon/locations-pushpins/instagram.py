@@ -30,8 +30,6 @@ class Module(module.Module):
         access_token = self.get_instagram_access_token()
         rad = str(int(self.options['radius']) * 1000)
         url = 'https://api.instagram.com/v1/media/search'
-        count = 0
-        new = 0
         for point in points:
             self.heading(point, level=0)
             lat = point.split(',')[0]
@@ -51,7 +49,7 @@ class Module(module.Module):
                         continue
                     self.error(jsonobj['meta']['error_message'])
                     break
-                if not count: self.output('Collecting data for an unknown number of photos...')
+                if not processed: self.output('Collecting data for an unknown number of photos...')
                 for item in jsonobj['data']:
                     latitude = item['location']['latitude']
                     longitude = item['location']['longitude']
@@ -66,12 +64,10 @@ class Module(module.Module):
                     except: message = ''
                     try: time = datetime.fromtimestamp(float(item['created_time']))
                     except ValueError: time = datetime(1970, 1, 1)
-                    new += self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
-                    count += 1
+                    self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                 processed += len(jsonobj['data'])
                 self.verbose('%s photos processed.' % (processed))
                 if len(jsonobj['data']) < 20:
                     print len(jsonobj['data'])
                     break
                 payload['max_timestamp'] = jsonobj['data'][19]['created_time']
-        self.summarize(new, count)

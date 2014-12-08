@@ -5,10 +5,10 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT street_address FROM locations WHERE street_address IS NOT NULL')
         self.info = {
-                     'Name': 'Address Geocoder',
-                     'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-                     'Description': 'Queries the Google Maps API to obtain coordinates for an address. Updates the \'locations\' table with the results.'
-                     }
+            'Name': 'Address Geocoder',
+            'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
+            'Description': 'Queries the Google Maps API to obtain coordinates for an address. Updates the \'locations\' table with the results.'
+        }
 
     def module_run(self, addresses):
         for address in addresses:

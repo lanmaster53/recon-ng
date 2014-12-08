@@ -29,7 +29,7 @@ class Module(framework.Framework):
         self.options = framework.Options()
         # register a data source option if a default query is specified in the module
         if query is not None:
-            self.default_source = query
+            self._default_source = query
             self.register_option('source', 'default', True, 'source of input (see \'show info\' for details)')
 
     #==================================================
@@ -122,27 +122,33 @@ class Module(framework.Framework):
 
     def get_resolver(self):
         resolver = dns.resolver.get_default_resolver()
-        resolver.nameservers = [self.global_options['nameserver']]
+        resolver.nameservers = [self._global_options['nameserver']]
         resolver.lifetime = 3
         return resolver
 
-    #==================================================
-    # OUTPUT METHODS
-    #==================================================
-
-    def summarize(self, new, total):
-        self.heading('Summary', level=0)
-        if new > 0:
-            method = getattr(self, 'alert')
-        else:
-            method = getattr(self, 'output')
-        method('%d total (%d new) items found.' % (total, new))
+    def hosts_to_domains(self, hosts, exclusions=[]):
+        domains = []
+        for host in hosts:
+            elements = host.split('.')
+            # recursively walk through the elements
+            # extracting all possible (sub)domains
+            while len(elements) >= 2:
+                # account for domains stored as hosts
+                if len(elements) == 2:
+                    domain = '.'.join(elements)
+                else:
+                    # drop the host element
+                    domain = '.'.join(elements[1:])
+                if domain not in domains + exclusions:
+                    domains.append(domain)
+                del elements[0]
+        return domains
 
     #==================================================
     # OPTIONS METHODS
     #==================================================
 
-    def get_source(self, params, query=None):
+    def _get_source(self, params, query=None):
         prefix = params.split()[0].lower()
         if prefix in ['query', 'default']:
             query = ' '.join(params.split()[1:]) if prefix == 'query' else query
@@ -182,7 +188,7 @@ class Module(framework.Framework):
         client_secret = self.get_key(resource+'_secret')
         port = 31337
         redirect_uri = 'http://localhost:%d' % (port)
-        payload = {'response_type': 'code', 'client_id': client_id, 'scope': scope, 'state': self.random_str(40), 'redirect_uri': redirect_uri}
+        payload = {'response_type': 'code', 'client_id': client_id, 'scope': scope, 'state': self._get_random_str(40), 'redirect_uri': redirect_uri}
         authorize_url = '%s?%s' % (authorize_url, urllib.urlencode(payload))
         w = webbrowser.get()
         w.open(authorize_url)
@@ -282,8 +288,8 @@ class Module(framework.Framework):
 
     def search_bing_api(self, query, limit=0):
         api_key = self.get_key('bing_api')
-        url = 'https://api.datamarket.azure.com/Data.ashx/Bing/Search/v1/Web'
-        payload = {'Query': query, '$format': 'json'}
+        url = 'https://api.datamarket.azure.com/Bing/Search/Web'
+        payload = {'Query': "'%s'" % (query), '$format': 'json'}
         results = []
         cnt = 1
         self.verbose('Searching Bing API for: %s' % (query))
@@ -360,10 +366,10 @@ class Module(framework.Framework):
     #==================================================
 
     def show_inputs(self):
-        if hasattr(self, 'default_source'):
+        if hasattr(self, '_default_source'):
             try:
-                self.validate_options()
-                inputs = self.get_source(self.options['source'], self.default_source)
+                self._validate_options()
+                inputs = self._get_source(self.options['source'], self._default_source)
                 self.table([[x] for x in inputs], header=['Module Inputs'])
             except Exception as e:
                 self.output(e.__str__())
@@ -371,7 +377,7 @@ class Module(framework.Framework):
             self.output('Source option not available for this module.')
 
     def show_source(self):
-        for path in ['%s/modules/%s.py' % (x, self.modulename) for x in (self.app_path, self.home)]:
+        for path in [os.path.join(x, 'modules', self._modulename) +'.py' for x in (self.app_path, self._home)]:
             if os.path.exists(path):
                 filename = path
         with open(filename) as f:
@@ -382,13 +388,13 @@ class Module(framework.Framework):
                 print('%s|%s' % (num.rjust(num_len), content[int(num)-1]), end='')
 
     def show_info(self):
-        self.info['Path'] = 'modules/%s.py' % (self.modulename)
+        self.info['Path'] = os.path.join('modules', self._modulename) + '.py'
         print('')
         # meta info
         for item in ['Name', 'Path', 'Author', 'Version']:
             if item in self.info:
                 print('%s: %s' % (item.rjust(10), self.info[item]))
-        #dirs = self.modulename.split('/')
+        #dirs = self._modulename.split('/')
         #if dirs[0] == 'recon':
         #    print('%s: %s => %s' % ('Transform'.rjust(10), dirs[1].upper(), dirs[2].upper()))
         print('')
@@ -401,9 +407,9 @@ class Module(framework.Framework):
         print('Options:', end='')
         self.show_options()
         # sources
-        if hasattr(self, 'default_source'):
+        if hasattr(self, '_default_source'):
             print('Source Options:')
-            print('%s%s%s' % (self.spacer, 'default'.ljust(15), self.default_source))
+            print('%s%s%s' % (self.spacer, 'default'.ljust(15), self._default_source))
             print('%s%sstring representing a single input' % (self.spacer, '<string>'.ljust(15)))
             print('%s%spath to a file containing a list of inputs' % (self.spacer, '<path>'.ljust(15)))
             print('%s%sdatabase query returning one column of inputs' % (self.spacer, 'query <sql>'.ljust(15)))
@@ -416,7 +422,7 @@ class Module(framework.Framework):
             print('')
 
     def show_globals(self):
-        self.show_options(self.global_options)
+        self.show_options(self._global_options)
 
     #==================================================
     # COMMAND METHODS
@@ -425,13 +431,14 @@ class Module(framework.Framework):
     def do_run(self, params):
         '''Runs the module'''
         try:
-            self.validate_options()
+            self._summary_counts = {}
+            self._validate_options()
             pre = self.module_pre()
             params = [pre] if pre is not None else []
             # provide input if a default query is specified in the module
-            if hasattr(self, 'default_source'):
-                #objs = [x[0] for x in self.query(self.default_source)]
-                objs = self.get_source(self.options['source'], self.default_source)
+            if hasattr(self, '_default_source'):
+                #objs = [x[0] for x in self.query(self._default_source)]
+                objs = self._get_source(self.options['source'], self._default_source)
                 params.insert(0, objs)
             self.module_run(*params)
             self.module_post()
@@ -440,13 +447,26 @@ class Module(framework.Framework):
         except socket.timeout as e:
             self.error('Request timeout. Consider adjusting the global \'TIMEOUT\' option.')
         except Exception as e:
-            if self.global_options['debug']:
+            if self._global_options['debug']:
                 print('%s%s' % (framework.Colors.R, '-'*60))
                 traceback.print_exc()
                 print('%s%s' % ('-'*60, framework.Colors.N))
             self.error(e.__str__())
         finally:
-            self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self.modulename})
+            # print module summary
+            if self._summary_counts:
+                self.heading('Summary', level=0)
+                for table in self._summary_counts:
+                    new = self._summary_counts[table][0]
+                    cnt = self._summary_counts[table][1]
+                    if new > 0:
+                        method = getattr(self, 'alert')
+                    else:
+                        method = getattr(self, 'output')
+                    method('%d total (%d new) %s found.' % (cnt, new, table))
+                self._summary_counts = {}
+            # update the dashboard
+            self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self._modulename})
 
     def module_pre(self):
         pass

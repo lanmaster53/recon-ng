@@ -9,17 +9,17 @@ class Module(module.Module):
         self.register_option('radius', 1, True, 'radius in kilometers')
         self.register_option('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)')
         self.info = {
-                     'Name': 'Shodan Geolocation Search',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Searches Shodan for media in the specified proximity to a location.',
-                     'Comments': [
-                                  'Shodan \'geo\' searches can take a long time to complete. If receiving connection timeout errors, increase the global SOCKET_TIMEOUT option.']
-                     }
+            'Name': 'Shodan Geolocation Search',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Searches Shodan for media in the specified proximity to a location.',
+            'Comments': [
+                'Shodan \'geo\' searches can take a long time to complete. If receiving connection timeout errors, increase the global SOCKET_TIMEOUT option.'
+            ]
+        }
 
     def module_run(self, points):
         limit = self.options['limit']
         rad = self.options['radius']
-        new = 0
         for point in points:
             self.heading(point, level=0)
             query = 'geo:%s,%d' % (point, rad)
@@ -38,5 +38,4 @@ class Module(module.Module):
                 latitude = host['location']['latitude']
                 longitude = host['location']['longitude']
                 time = datetime.strptime(host['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
-                new += self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
-        self.summarize(new, len(results))
+                self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)

@@ -12,10 +12,10 @@ class Module(module.Module):
         self.register_option('nulls', False, True, 'include nulls in the dataset')
         self.register_option('filename', '%s/list.txt' % (self.workspace), True, 'path and filename for output')
         self.info = {
-                     'Name': 'List Creator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Creates a file containing a list of records from the database.'
-                     }
+            'Name': 'List Creator',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Creates a file containing a list of records from the database.'
+        }
 
     def module_run(self):
         filename = self.options['filename']

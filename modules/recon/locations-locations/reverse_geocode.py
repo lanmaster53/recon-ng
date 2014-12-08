@@ -6,10 +6,10 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
         self.info = {
-                     'Name': 'Reverse Geocoder',
-                     'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-                     'Description': 'Queries the Google Maps API to obtain an address from coordinates.',
-                     }
+            'Name': 'Reverse Geocoder',
+            'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
+            'Description': 'Queries the Google Maps API to obtain an address from coordinates.',
+        }
 
     def module_run(self, points):
         for point in points:

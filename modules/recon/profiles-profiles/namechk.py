@@ -33,6 +33,7 @@ class Module(module.Module):
         headers = {'X-Requested-With': 'XMLHttpRequest'}
         for username in usernames:
             self.heading(username, level=0)
+            flag = False
             # validate memberships
             for site in sites:
                 i = site[1]
@@ -55,12 +56,13 @@ class Module(module.Module):
                         # update profiles table
                         profile_url = site[3].replace('{0}', '%s') % username
                         self.add_profiles(username=username, resource=name, url=profile_url, category='social')
-                        self.query('DELETE FROM profiles WHERE username = \'%s\' and url IS NULL' % (username))
                         self.alert('%s: %s' % (name, STATUSES[x]))
+                        flag = True
                     else:
                         self.verbose('%s: %s' % (name, STATUSES[x]))
                 else:
                     self.error('%s: %s' % (name, 'Unknown error.'))
+            if flag: self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (username,))
 
 STATUSES = {
     '1': 'Available',

@@ -9,22 +9,19 @@ class Module(module.Module):
         module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
         self.register_option('keywords', None, False, 'additional keywords to identify company')
         self.info = {
-                     'Name': 'Jigsaw Contact Enumerator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Harvests contacts from the Jigsaw.com API. Updates the \'contacts\' table with the results.'
-                     }
+            'Name': 'Jigsaw Contact Enumerator',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Harvests contacts from the Jigsaw.com API. Updates the \'contacts\' table with the results.'
+        }
 
     def module_run(self, companies):
         self.api_key = self.get_key('jigsaw_api')
-        self.tot = 0
-        self.new = 0
         for company in companies:
             company_id = self.get_company_id(company)
             if company_id:
                 self.get_contacts(company_id)
             else:
                 time.sleep(.25)
-        self.summarize(self.new, self.tot)
 
     def get_company_id(self, company_name):
         self.heading(company_name, level=0)
@@ -94,8 +91,7 @@ class Module(module.Module):
                 region = ', '.join(region)
                 country = self.html_unescape(contact['country']).title()
                 self.output('[%s] %s - %s (%s - %s)' % (contact_id, name, title, region, country))
-                self.new += self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region, country=country)
-                self.tot += 1
+                self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region, country=country)
             cnt += size
             if cnt > jsonobj['totalHits']: break
             # jigsaw rate limits requests per second to the api

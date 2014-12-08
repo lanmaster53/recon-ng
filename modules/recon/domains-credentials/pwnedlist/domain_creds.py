@@ -6,13 +6,13 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.info = {
-                     'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API to fetch all credentials for a domain. Updates the \'credentials\' table with the results.',
-                     'Comments': [
-                                  'API Query Cost: 10,000 queries per request plus 1 query for each account returned.'
-                                  ]
-                     }
+            'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Queries the PwnedList API to fetch all credentials for a domain. Updates the \'credentials\' table with the results.',
+            'Comments': [
+                'API Query Cost: 10,000 queries per request plus 1 query for each account returned.'
+            ]
+        }
 
     def module_run(self, domains):
         key = self.get_key('pwnedlist_api')
@@ -23,9 +23,6 @@ class Module(module.Module):
         # setup API call
         method = 'domains.query'
         url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-
-        cnt = 0
-        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             payload = {'domain_identifier': domain, 'daysAgo': 0}
@@ -46,8 +43,7 @@ class Module(module.Module):
                     username = cred['plain']
                     password = self.aes_decrypt(cred['password'], decrypt_key, iv) if cred['password'] else cred['password']
                     leak = cred['leak_id']
-                    cnt += 1
-                    new += self.add_credentials(username=username, password=password, leak=leak)
+                    self.add_credentials(username=username, password=password, leak=leak)
                     # clean up the password for output
                     if not password: password = ''
                     self.output('%s:%s' % (username, password))
@@ -56,4 +52,3 @@ class Module(module.Module):
                     payload['token'] = jsonobj['token']
                     continue
                 break
-        self.summarize(new, cnt)

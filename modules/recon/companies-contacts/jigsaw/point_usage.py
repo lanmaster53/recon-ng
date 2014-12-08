@@ -6,10 +6,10 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params)
         self.info = {
-                     'Name': 'Jigsaw - Point Usage Statistics Fetcher',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the Jigsaw API for the point usage statistics of the given account.',
-                     }
+            'Name': 'Jigsaw - Point Usage Statistics Fetcher',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Queries the Jigsaw API for the point usage statistics of the given account.',
+        }
 
     def module_run(self):
         username = self.get_key('jigsaw_username')

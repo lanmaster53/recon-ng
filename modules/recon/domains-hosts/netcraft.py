@@ -12,10 +12,10 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.info = {
-                     'Name': 'Netcraft Hostname Enumerator',
-                     'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Harvests hosts from Netcraft.com. Updates the \'hosts\' table with the results.'
-                     }
+            'Name': 'Netcraft Hostname Enumerator',
+            'Author': 'thrapt (thrapt@gmail.com)',
+            'Description': 'Harvests hosts from Netcraft.com. Updates the \'hosts\' table with the results.'
+        }
 
     def module_run(self, domains):
         url = 'http://searchdns.netcraft.com/'
@@ -31,8 +31,6 @@ class Module(module.Module):
                 response = hashlib.sha1(urllib.unquote(challenge)).hexdigest()
                 cookiejar.set_cookie(self.make_cookie('netcraft_js_verification_response', '%s' % response, '.netcraft.com'))
                 break
-        cnt = 0
-        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             payload['host'] = domain
@@ -51,7 +49,7 @@ class Module(module.Module):
                     if site not in subs:
                         subs.append(site)
                         self.output('%s' % (site))
-                        new += self.add_hosts(site)
+                        self.add_hosts(site)
                 # verifies if there's more pages to look while grabbing the correct 
                 # values for our payload...
                 link = re.findall(r'(\blast\=\b|\bfrom\=\b)(.*?)&', content)
@@ -64,5 +62,3 @@ class Module(module.Module):
                     # sleep script to avoid lock-out
                     self.verbose('Sleeping to Avoid Lock-out...')
                     time.sleep(random.randint(5,15))
-            cnt += len(subs)
-        self.summarize(new, cnt)

@@ -6,13 +6,13 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params)
         self.info = {
-                     'Name': 'PwnedList - Leak Details Fetcher',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Queries the PwnedList API for information associated with all known leaks. Updates the \'leaks\' table with the results.',
-                     'Comments': [
-                                  'API Query Cost: 1 query per request.'
-                                  ]
-                     }
+            'Name': 'PwnedList - Leak Details Fetcher',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Queries the PwnedList API for information associated with all known leaks. Updates the \'leaks\' table with the results.',
+            'Comments': [
+                'API Query Cost: 1 query per request.'
+            ]
+        }
 
     def module_run(self):
         key = self.get_key('pwnedlist_api')

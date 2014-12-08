@@ -13,14 +13,14 @@ class Module(module.Module):
         self.register_option('has_header', True, True, 'whether or not the first row in the csv file should be interpreted as column names')
         self.register_option('table', None, True, 'table to import the csv values')
         self.info = {
-                     'Name': 'Advanced CSV File Importer',
-                     'Author': 'Ethan Robish (@EthanRobish)',
-                     'Description': 'Imports values from a CSV file into a database table.',
-                     'Comments': [
-                                  'Only a few options are available until a valid filename is set. Then, the file is analyzed and more options become available for configuring where each CSV entry is imported.',
-                                  'This module is very powerful and can seriously pollute a database. Backing up the database before importing is encouraged.',
-                                  ]
-                     }
+            'Name': 'Advanced CSV File Importer',
+            'Author': 'Ethan Robish (@EthanRobish)',
+            'Description': 'Imports values from a CSV file into a database table.',
+            'Comments': [
+                'Only a few options are available until a valid filename is set. Then, the file is analyzed and more options become available for configuring where each CSV entry is imported.',
+                'This module is very powerful and can seriously pollute a database. Backing up the database before importing is encouraged.',
+            ]
+        }
         
         # stores the values read from the CSV file
         self.__values = []

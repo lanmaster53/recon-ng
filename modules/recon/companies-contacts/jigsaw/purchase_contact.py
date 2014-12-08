@@ -8,14 +8,14 @@ class Module(module.Module):
         module.Module.__init__(self, params)
         self.register_option('contact', None, True, 'jigsaw contact id')
         self.info = {
-                     'Name': 'Jigsaw - Single Contact Retriever',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Retrieves a single complete contact from the Jigsaw.com API using points from the given account.',
-                     'Comments': [
-                                  'Account Point Cost: 5 points per request.',
-                                  'This module is typically used to validate email address naming conventions and gather alternative social engineering information.'
-                                  ]
-                     }
+            'Name': 'Jigsaw - Single Contact Retriever',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Retrieves a single complete contact from the Jigsaw.com API using points from the given account.',
+            'Comments': [
+                'Account Point Cost: 5 points per request.',
+                'This module is typically used to validate email address naming conventions and gather alternative social engineering information.'
+            ]
+        }
 
     def module_run(self):
         username = self.get_key('jigsaw_username')

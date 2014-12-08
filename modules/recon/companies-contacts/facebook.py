@@ -16,8 +16,6 @@ class Module(module.Module):
 
     def module_run(self, companies):
         self.br = self.browser()
-        self.cnt = 0
-        self.new = 0
         username = self.get_key('facebook_username')
         password = self.get_key('facebook_password')
         if self.login(username, password):
@@ -26,7 +24,6 @@ class Module(module.Module):
                 company_id = self.get_company_id(company)
                 if company_id:
                     self.get_contacts(str(company_id))
-            self.summarize(self.new, self.cnt)
 
     def login(self, username, password):
         self.verbose('Authenticating to Facebook...')
@@ -115,5 +112,4 @@ class Module(module.Module):
             fname, mname, lname = self.parse_name(name)
             title = self.html_unescape(title or 'Employee')
             self.output('%s - %s' % (name, title))
-            self.cnt += 1
-            self.new += self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title)
+            self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title)

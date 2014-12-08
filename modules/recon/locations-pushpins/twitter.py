@@ -17,8 +17,6 @@ class Module(module.Module):
     def module_run(self, points):
         rad = self.options['radius']
         url = 'https://api.twitter.com/1.1/search/tweets.json'
-        count = 0
-        new = 0
         for point in points:
             self.heading(point, level=0)
             self.output('Collecting data for an unknown number of tweets...')
@@ -37,7 +35,5 @@ class Module(module.Module):
                 latitude = tweet['geo']['coordinates'][0]
                 longitude = tweet['geo']['coordinates'][1]
                 time = datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
-                new += self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
-                count += 1
+                self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
             self.verbose('%s tweets processed.' % (len(results)))
-        self.summarize(new, count)

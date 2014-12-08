@@ -8,16 +8,14 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL')
         self.info = {
-                     'Name': 'Reverse Resolver',
-                     'Author': 'John Babio (@3vi1john)',
-                     'Description': 'Conducts a reverse lookup for each of a netblock\'s IP addresses to resolve the hostname. Updates the \'hosts\' table with the results.'
-                     }
+            'Name': 'Reverse Resolver',
+            'Author': 'John Babio (@3vi1john)',
+            'Description': 'Conducts a reverse lookup for each of a netblock\'s IP addresses to resolve the hostname. Updates the \'hosts\' table with the results.'
+        }
 
     def module_run(self, netblocks):
         max_attempts = 3
         resolver = self.get_resolver()
-        cnt = 0
-        new = 0
         for netblock in netblocks:
             self.heading(netblock, level=0)
             addresses = self.cidr_to_list(netblock)
@@ -34,14 +32,11 @@ class Module(module.Module):
                         attempt += 1
                         continue
                     except (dns.resolver.NoNameservers):
-                        self.error('Invalid nameserver.')
-                        return
+                        self.verbose('%s => Invalid nameserver.' % (address))
                     else:
                         for host in hosts:
                             host = str(host)[:-1] # slice the trailing dot
-                            new += self.add_hosts(host, address)
-                            cnt += 1
+                            self.add_hosts(host, address)
                             self.alert('%s => %s' % (address, host))
                     # break out of the loop
                     attempt = max_attempts
-        self.summarize(new, cnt)

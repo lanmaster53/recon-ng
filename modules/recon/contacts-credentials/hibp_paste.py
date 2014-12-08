@@ -13,8 +13,8 @@ class Module(module.Module):
             'Description': 'Leverages the haveibeenpwned.com API to determine if email addresses have been published to various paste sites. Adds compromised email addresses to the \'credentials\' table.',
             'Comments': [
                 'Paste sites supported: Pastebin, Pastie, or Slexy',
-                ],
-            }
+            ]
+        }
 
     def module_run(self, accounts):
         sites = {
@@ -23,8 +23,6 @@ class Module(module.Module):
             'Slexy': 'http://slexy.org/raw/%s',
             }
         # retrieve status
-        cnt = 0
-        pwned = 0
         base_url = 'https://haveibeenpwned.com/api/v2/%s/%s'
         endpoint = 'pasteaccount'
         for account in accounts:
@@ -49,6 +47,4 @@ class Module(module.Module):
                             self.verbose('Paste stored at \'%s\'.' % (filepath))
                         else:
                             self.output('Paste could not be downloaded (%s).' % (fileurl))
-                pwned += self.add_credentials(account)
-            cnt += 1
-        self.summarize(pwned, cnt)
+                self.add_credentials(account)

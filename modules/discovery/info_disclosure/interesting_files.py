@@ -20,9 +20,9 @@ class Module(module.Module):
                 'Google Dorks:',
                 '%sinurl:robots.txt ext:txt' % (self.spacer),
                 '%sinurl:elmah.axd ext:axd intitle:"Error log for"' % (self.spacer),
-                '%sinurl:server-status "Apache Status"' % (self.spacer),
-                ],
-            }
+                '%sinurl:server-status "Apache Status"' % (self.spacer)
+            ]
+        }
 
     def uncompress(self, data_gz):
         inbuffer = StringIO(data_gz)

@@ -8,17 +8,15 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.info = {
-                     'Name': 'SSL SAN Lookup',
-                     'Author': 'Zach Grace (@ztgrace) zgrace@403labs.com',
-                     'Description': 'Uses the ssltools.com site to obtain the Subject Alternative Names for a domain. Updates the \'hosts\' table with the results.',
-                     'Comments': [
-                                  'For an alternative version see https://github.com/403labs/recon-ng_modules.'
-                                  ]
-                     }
+            'Name': 'SSL SAN Lookup',
+            'Author': 'Zach Grace (@ztgrace) zgrace@403labs.com',
+            'Description': 'Uses the ssltools.com site to obtain the Subject Alternative Names for a domain. Updates the \'hosts\' table with the results.',
+            'Comments': [
+                'For an alternative version see https://github.com/403labs/recon-ng_modules.'
+            ]
+        }
 
     def module_run(self, domains):
-        cnt = 0
-        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             url = 'http://www.ssltools.com/certificate_lookup/%s' % domain
@@ -31,6 +29,4 @@ class Module(module.Module):
             hosts = [x.strip() for x in names.split(',') if '*' not in x]
             for host in hosts:
                 self.output(host)
-                new += self.add_hosts(host)
-                cnt += 1
-        self.summarize(new, cnt)
+                self.add_hosts(host)

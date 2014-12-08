@@ -12,10 +12,10 @@ class Module(module.Module):
         self.register_option('customer', None, True, 'customer name for the report header')
         self.register_option('creator', None, True, 'creator name for the report footer')
         self.info = {
-                     'Name': 'HTML Report Generator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Creates a HTML report.',
-                     }
+            'Name': 'HTML Report Generator',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Creates a HTML report.',
+        }
 
     def build_table(self, table):
         table_content = ''

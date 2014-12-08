@@ -8,16 +8,14 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.info = {
-                     'Name': 'PunkSPIDER Vulnerabilty Finder',
-                     'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
-                     'Description': 'Leverages PunkSPIDER to search for previosuly discovered vulnerabltiies on hosts within a domain.'
-                     }
+            'Name': 'PunkSPIDER Vulnerabilty Finder',
+            'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
+            'Description': 'Leverages PunkSPIDER to search for previosuly discovered vulnerabltiies on hosts within a domain.'
+        }
    
     def module_run(self, domains):
         vuln_types = ['bsqli', 'sqli', 'xss', 'trav', 'mxi', 'osci', 'xpathi']
         url = 'http://punkspider.hyperiongray.com/service/search/domain/'
-        cnt = 0
-        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             payload = {'searchKey': 'url', 'searchValue': '"%s"' % (domain), 'filterType': 'OR'}
@@ -45,9 +43,7 @@ class Module(module.Module):
                         for key in sorted(data.keys()):
                             self.output('%s: %s' % (key.title(), data[key]))
                         print(self.ruler*50)
-                        new += self.add_vulnerabilities(**data)
-                        cnt += 1
+                        self.add_vulnerabilities(**data)
                 page += 1
             if not vulnerable:
                 self.output('No vulnerabilites found.')
-        self.summarize(new, cnt)

@@ -10,12 +10,10 @@ class Module(module.Module):
             'Name': 'Have I been pwned? Breach Search',
             'Author': 'Tim Tomes (@LaNMaSteR53) & Tyler Halfpop (@tylerhalfpop)',
             'Description': 'Leverages the haveibeenpwned.com API to determine if email addresses are associated with breached credentials. Adds compromised email addresses to the \'credentials\' table.',
-            }
+        }
 
     def module_run(self, accounts):
         # retrieve status
-        cnt = 0
-        pwned = 0
         base_url = 'https://haveibeenpwned.com/api/v2/%s/%s'
         endpoint = 'breachedaccount'
         for account in accounts:
@@ -29,6 +27,4 @@ class Module(module.Module):
             else:
                 for breach in resp.json:
                     self.alert('%s => Breach found! Seen in the %s breach that occurred on %s.' % (account, breach['Title'], breach['BreachDate']))
-                pwned += self.add_credentials(account)
-            cnt += 1
-        self.summarize(pwned, cnt)
+                self.add_credentials(account)

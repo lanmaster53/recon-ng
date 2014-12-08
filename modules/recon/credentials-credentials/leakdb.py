@@ -6,13 +6,13 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL AND type IS NOT \'Adobe\'')
         self.info = {
-                     'Name': 'leakdb Hash Lookup',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Uses the leakdb hash database to perform a reverse hash lookup. Updates the \'credentials\' table with the positive results.',
-                     'Comments': [
-                                  'Hash types supported: MD4, MD5, MD5x2, MYSQL 3, MYSQL 4, MYSQL 5, RIPEMD160, NTLM, GOST, SHA1, SHA1x2, SHA224, SHA256, SHA384, SHA512, WHIRLPOOL'
-                                  ]
-                     }
+            'Name': 'leakdb Hash Lookup',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Uses the leakdb hash database to perform a reverse hash lookup. Updates the \'credentials\' table with the positive results.',
+            'Comments': [
+                'Hash types supported: MD4, MD5, MD5x2, MYSQL 3, MYSQL 4, MYSQL 5, RIPEMD160, NTLM, GOST, SHA1, SHA1x2, SHA224, SHA256, SHA384, SHA512, WHIRLPOOL'
+            ]
+        }
 
     def module_run(self, hashes):
         # lookup each hash

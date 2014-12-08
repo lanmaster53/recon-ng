@@ -7,14 +7,12 @@ class Module(module.Module):
     def __init__(self, params):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
         self.info = {
-                     'Name': 'Google CSE Hostname Enumerator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Leverages the Google Custom Search Engine API to harvest hosts using the \'site\' search operator. Updates the \'hosts\' table with the results.'
-                     }
+            'Name': 'Google CSE Hostname Enumerator',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Leverages the Google Custom Search Engine API to harvest hosts using the \'site\' search operator. Updates the \'hosts\' table with the results.'
+        }
 
     def module_run(self, domains):
-        cnt = 0
-        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             base_query = 'site:' + domain
@@ -33,6 +31,4 @@ class Module(module.Module):
                         hosts.append(host)
                         self.output(host)
                         # add each host to the database
-                        new += self.add_hosts(host)
-            cnt += len(hosts)
-        self.summarize(new, cnt)
+                        self.add_hosts(host)

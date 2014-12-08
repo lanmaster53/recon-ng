@@ -15,8 +15,6 @@ class Module(module.Module):
             }
    
     def module_run(self, domains):
-        cnt = 0
-        new = 0
         url = 'http://xssed.com/search?key=%s'
         url_vuln = 'http://xssed.com/mirror/%s/'
         for domain in domains:
@@ -39,10 +37,8 @@ class Module(module.Module):
                 for key in sorted(data.keys()):
                     self.output('%s: %s' % (key.title(), data[key]))
                 print(self.ruler*50)
-                new += self.add_vulnerabilities(**data)
-                cnt += 1
+                self.add_vulnerabilities(**data)
                 # results in 503 errors if not throttled
                 time.sleep(1)
             if not vulns:
                 self.output('No vulnerabilites found.')
-        self.summarize(new, cnt)

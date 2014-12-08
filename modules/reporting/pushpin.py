@@ -15,10 +15,10 @@ class Module(module.Module):
         self.register_option('longitude', None, True, 'longitude of the epicenter')
         self.register_option('radius', None, True, 'radius from the epicenter in kilometers')
         self.info = {
-                     'Name': 'PushPin Report Generator',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Creates HTML media and map reports for all of the PushPins stored in the database.',
-                     }
+            'Name': 'PushPin Report Generator',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Creates HTML media and map reports for all of the PushPins stored in the database.',
+        }
 
     def remove_nl(self, x, repl=''):
         return re.sub('[\r\n]+', repl, self.html_escape(x))

@@ -9,20 +9,18 @@ class Module(module.Module):
         module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
         self.register_option('radius', 1, True, 'radius in kilometers')
         self.info = {
-                     'Name': 'Flickr Geolocation Search',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Searches Flickr for media in the specified proximity to a location.',
-                     'Comments': [
-                                  'Radius must be greater than zero and less than 32 kilometers.'
-                                  ]
-                     }
+            'Name': 'Flickr Geolocation Search',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Searches Flickr for media in the specified proximity to a location.',
+            'Comments': [
+                'Radius must be greater than zero and less than 32 kilometers.'
+            ]
+        }
 
     def module_run(self, points):
         api_key = self.get_key('flickr_api')
         rad = self.options['radius']
         url = 'https://api.flickr.com/services/rest/'
-        count = 0
-        new = 0
         for point in points:
             self.heading(point, level=0)
             lat = point.split(',')[0]
@@ -36,7 +34,7 @@ class Module(module.Module):
                 if jsonobj['stat'] == 'fail':
                     self.error(jsonobj['message'])
                     break
-                if not count: self.output('Collecting data for ~%s total photos...' % (jsonobj['photos']['total']))
+                if not processed: self.output('Collecting data for ~%s total photos...' % (jsonobj['photos']['total']))
                 for photo in jsonobj['photos']['photo']:
                     latitude = photo['latitude']
                     longitude = photo['longitude']
@@ -51,11 +49,9 @@ class Module(module.Module):
                     message = photo['title']
                     try: time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S')
                     except ValueError: time = datetime(1970, 1, 1)
-                    new += self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
-                    count += 1
+                    self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                 processed += len(jsonobj['photos']['photo'])
                 self.verbose('%s photos processed.' % (processed))
                 if jsonobj['photos']['page'] >= jsonobj['photos']['pages']:
                     break
                 payload['page'] = jsonobj['photos']['page'] + 1
-        self.summarize(new, count)

@@ -9,16 +9,14 @@ class Module(module.Module):
         module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
         self.register_option('radius', 1, True, 'radius in kilometers')
         self.info = {
-                     'Name': 'Picasa Geolocation Search',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Searches Picasa for media in the specified proximity to a location.',
-                     }
+            'Name': 'Picasa Geolocation Search',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Searches Picasa for media in the specified proximity to a location.',
+        }
  
     def module_run(self, points):
         rad = self.options['radius']
         url = 'http://picasaweb.google.com/data/feed/api/all'
-        count = 0
-        new = 0
         kilometers_per_degree_latitude = 111.12
         for point in points:
             self.heading(point, level=0)
@@ -37,7 +35,7 @@ class Module(module.Module):
                 if not jsonobj:
                     self.error(resp.text)
                     break
-                if not count: self.output('Collecting data for an unknown number of photos...')
+                if not processed: self.output('Collecting data for an unknown number of photos...')
                 if not 'entry' in jsonobj['feed']: break
                 for photo in jsonobj['feed']['entry']:
                     if not 'georss$where' in photo:
@@ -52,8 +50,7 @@ class Module(module.Module):
                     latitude = photo['georss$where']['gml$Point']['gml$pos']['$t'].split()[0]
                     longitude = photo['georss$where']['gml$Point']['gml$pos']['$t'].split()[1]
                     time = datetime.strptime(photo['published']['$t'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                    new += self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
-                    count += 1
+                    self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                 processed += len(jsonobj['feed']['entry'])
                 self.verbose('%s photos processed.' % (processed))
                 qty = jsonobj['feed']['openSearch$itemsPerPage']['$t']
@@ -61,4 +58,3 @@ class Module(module.Module):
                 next = qty + start
                 if next > 1000: break
                 payload['start-index'] = next
-        self.summarize(new, count)

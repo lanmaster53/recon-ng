@@ -11,10 +11,10 @@ class Module(module.Module):
         module.Module.__init__(self, params)
         self.register_option('username', 'lanmaster53', True, 'username to validate')
         self.info = {
-                     'Name': 'Dev Diver Repository Activity Examiner',
-                     'Author': 'Micah Hoffman (@WebBreacher)',
-                     'Description': 'Searches public code repositories for information about a given username.',
-                     }
+            'Name': 'Dev Diver Repository Activity Examiner',
+            'Author': 'Micah Hoffman (@WebBreacher)',
+            'Description': 'Searches public code repositories for information about a given username.',
+        }
 
     # Add a method for each repository
     def github(self, username):

@@ -11,11 +11,11 @@ class Module(module.Module):
         self.register_option('filename', '%s/results.xml' % (self.workspace), True, 'path and filename for report output')
         self.register_option('tables', 'hosts, contacts, credentials', True, 'comma delineated list of tables')
         self.info = {
-                     'Name': 'XML Report Generator',
-                     'Author': 'Eric Humphries (@e2fsck) and Tim Tomes (@LaNMaSteR53)',
-                     'Version': 'v0.0.2',
-                     'Description': 'Creates a XML report.',
-                     }
+            'Name': 'XML Report Generator',
+            'Author': 'Eric Humphries (@e2fsck) and Tim Tomes (@LaNMaSteR53)',
+            'Version': 'v0.0.2',
+            'Description': 'Creates a XML report.',
+        }
 
     def module_run(self):
         # validate that the file can be created

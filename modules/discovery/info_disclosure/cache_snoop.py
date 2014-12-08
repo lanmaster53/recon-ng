@@ -12,14 +12,14 @@ class Module(module.Module):
         self.register_option('nameserver', self.global_options['nameserver'], True, 'ip address of target\'s nameserver')
         self.register_option('domains', self.data_path+'/av_domains.lst', True, 'file containing the list of domains to snoop for')
         self.info = {
-                     'Name': 'DNS Cache Snooper',
-                     'Author': 'thrapt (thrapt@gmail.com)',
-                     'Description': 'Uses the DNS cache snooping technique to check for visited domains',
-                     'Comments': [
-                                  'Nameserver must be in IP form.',
-                                  'http://304geeks.blogspot.com/2013/01/dns-scraping-for-corporate-av-detection.html'
-                                  ]
-                     }
+            'Name': 'DNS Cache Snooper',
+            'Author': 'thrapt (thrapt@gmail.com)',
+            'Description': 'Uses the DNS cache snooping technique to check for visited domains',
+            'Comments': [
+                'Nameserver must be in IP form.',
+                'http://304geeks.blogspot.com/2013/01/dns-scraping-for-corporate-av-detection.html'
+            ]
+        }
 
     def module_run(self):
         nameserver = self.options['nameserver']

@@ -9,10 +9,10 @@ class Module(module.Module):
         module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL')
         self.register_option('wordlist', self.data_path+'/hostnames.txt', True, 'path to hostname wordlist')
         self.info = {
-                     'Name': 'DNS Hostname Brute Forcer',
-                     'Author': 'Tim Tomes (@LaNMaSteR53)',
-                     'Description': 'Brute forces host names using DNS. Updates the \'hosts\' table with the results.',
-                     }
+            'Name': 'DNS Hostname Brute Forcer',
+            'Author': 'Tim Tomes (@LaNMaSteR53)',
+            'Description': 'Brute forces host names using DNS. Updates the \'hosts\' table with the results.',
+        }
 
     def module_run(self, domains):
         max_attempts = 3
@@ -22,8 +22,6 @@ class Module(module.Module):
             return
         words = open(wordlist).read().split()
         resolver = self.get_resolver()
-        cnt = 0
-        new = 0
         for domain in domains:
             self.heading(domain, level=0)
             try:
@@ -54,14 +52,11 @@ class Module(module.Module):
                                 if rdata.rdtype in (1, 5):
                                     if rdata.rdtype == 1:
                                         self.alert('%s => (A) %s - Host found!' % (host, host))
-                                        cnt += 1
                                     if rdata.rdtype == 5:
                                         cname = rdata.target.to_text()[:-1]
                                         self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
-                                        new += self.add_hosts(cname)
-                                        cnt += 1
+                                        self.add_hosts(cname)
                                     # add the host in case a CNAME exists without an A record
-                                    new += self.add_hosts(host)
+                                    self.add_hosts(host)
                     # break out of the loop
                     attempt = max_attempts
-        self.summarize(new, cnt)

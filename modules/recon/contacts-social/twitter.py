@@ -9,13 +9,13 @@ class Module(module.Module):
         self.register_option('handle', '@lanmaster53', True, 'target twitter handle')
         self.register_option('until', None, False, 'date-time group in the form YYYY-MM-DD')
         self.info = {
-                     'Name': 'Twitter Handles',
-                     'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
-                     'Description': 'Searches Twitter for users that mentioned, or were mentioned by, the given handle.',
-                     'Comments': [
-                                  'Twitter limits searchable tweet history to ~3 days.'
-                                  ]
-                     }
+            'Name': 'Twitter Handles',
+            'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
+            'Description': 'Searches Twitter for users that mentioned, or were mentioned by, the given handle.',
+            'Comments': [
+                'Twitter limits searchable tweet history to ~3 days.'
+            ]
+        }
 
     def module_run(self):
         self.handle_options()
