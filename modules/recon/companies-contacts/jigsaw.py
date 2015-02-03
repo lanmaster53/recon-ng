@@ -1,7 +1,9 @@
 import module
 # unique to module
+from cookielib import CookieJar
 import re
 import urllib
+import math
 
 class Module(module.Module):
 
@@ -94,9 +96,32 @@ class Module(module.Module):
 
     def get_contacts(self, url):
         payload = {'page': 1}
+        first = True
+        cookiejar = CookieJar()
         while True:
-            self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
-            resp = self.request(url, payload=payload)
+            if first:
+                first = False
+                # request to fetch challenge
+                resp = self.request(url, payload=payload, cookiejar=cookiejar)
+                if 'Challenge=' in resp.text:
+                    challengeid, challenge, answer = solve_challenge(resp.text)
+                else:
+                    self.verbose('No challenge found.')
+                    continue
+                headers = {
+                    'X-AA-Challenge-ID': challengeid,
+                    'X-AA-Challenge-Result': answer,
+                    'X-AA-Challenge': challenge,
+                    'Content-Type': 'text/plain',
+                    'Referer': url+"?"+urllib.urlencode(payload),
+                    'Accept-Encoding': 'gzip, deflate',
+                    'Connection': 'keep-alive',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0'
+                }
+                # request to answer challenge and fetch bot mitigation cookie
+                resp = self.request(url+"?"+urllib.urlencode(payload), method='POST', headers=headers, payload={}, cookiejar=cookiejar)
+            # request to extract contacts using bot mitigation cookie
+            resp = self.request(url, payload=payload, cookiejar=cookiejar)
             if 'Sorry. No contacts found for' in resp.text: break
             #if not re.search('\?page='): break
             values = re.findall('<td class="ellipsis">[^>]*>([^<]*)</span>', resp.text, re.DOTALL)
@@ -118,3 +143,29 @@ class Module(module.Module):
                 self.output('%s - %s (%s)' % (name, title, region))
                 self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region)
             payload['page'] += 1
+
+def solve_challenge(text):
+    # parse challenge data
+    challenge_re = re.findall('Challenge=[0-9]+', text)
+    challengeid_re = re.findall('ChallengeId=[0-9]+', text)
+    challenge = challenge_re[0].split('=')[1]
+    challengeid = challengeid_re[0].split('=')[1]
+    # solve challenge
+    var_str = challenge
+    var_arr = list(var_str)
+    var_arr_rev = var_arr
+    var_arr_rev.reverse()
+    lastdig = var_arr_rev[0]
+    var_arr_sorted = var_arr
+    var_arr_sorted.sort()
+    mindig = var_arr_sorted[0]
+    subvar1 = (2 * int(var_arr[2]))+(int(var_arr[1])*1)
+    subvar2 = str(2 * int(var_arr[2]))+""+var_arr[1]
+    my_pow = int(math.pow(((int(var_arr[0])*1)+2),int(var_arr[1])))
+    x = (int(challenge)*3+subvar1)*1
+    y = int(math.cos(math.pi*int(subvar2)))
+    answer = int(x)*int(y)
+    answer -= my_pow*1
+    answer += (int(mindig)*1)-(int(lastdig)*1)
+    answer = str(answer)+""+str(subvar2)
+    return challengeid, challenge, answer

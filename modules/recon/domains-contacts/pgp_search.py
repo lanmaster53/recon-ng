@@ -27,8 +27,9 @@ class Module(module.Module):
                 line = re.sub('\s*\(.*\)\s*', '', line)
                 # parse out name and email address
                 match = re.search('^(.*)&lt;(.*)&gt;$', line)
-                # clean up and append the parsed elements
-                results.append(tuple([x.strip() for x in match.group(1, 2)]))
+                if match:
+                    # clean up and append the parsed elements
+                    results.append(tuple([x.strip() for x in match.group(1, 2)]))
             results = list(set(results))
             if not results:
                 self.output('No results found.')
