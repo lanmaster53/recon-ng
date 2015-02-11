@@ -268,7 +268,7 @@ class Recon(framework.Framework):
         db_version = lambda self: self.query('PRAGMA user_version')[0][0]
         if db_version(self) == 0:
             # add mname column to contacts table
-            tmp = self._get_random_str(20)
+            tmp = self.get_random_str(20)
             self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
             self.query('CREATE TABLE contacts (fname TEXT, mname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
             self.query('INSERT INTO contacts (fname, lname, email, title, region, country) SELECT fname, lname, email, title, region, country FROM %s' % (tmp))
@@ -276,7 +276,7 @@ class Recon(framework.Framework):
             self.query('PRAGMA user_version = 1')
         if db_version(self) == 1:
             # rename name columns
-            tmp = self._get_random_str(20)
+            tmp = self.get_random_str(20)
             self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
             self.query('CREATE TABLE contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
             self.query('INSERT INTO contacts (first_name, middle_name, last_name, email, title, region, country) SELECT fname, mname, lname, email, title, region, country FROM %s' % (tmp))

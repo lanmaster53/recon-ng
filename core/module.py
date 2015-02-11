@@ -188,7 +188,7 @@ class Module(framework.Framework):
         client_secret = self.get_key(resource+'_secret')
         port = 31337
         redirect_uri = 'http://localhost:%d' % (port)
-        payload = {'response_type': 'code', 'client_id': client_id, 'scope': scope, 'state': self._get_random_str(40), 'redirect_uri': redirect_uri}
+        payload = {'response_type': 'code', 'client_id': client_id, 'scope': scope, 'state': self.get_random_str(40), 'redirect_uri': redirect_uri}
         authorize_url = '%s?%s' % (authorize_url, urllib.urlencode(payload))
         w = webbrowser.get()
         w.open(authorize_url)
