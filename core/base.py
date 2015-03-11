@@ -11,7 +11,6 @@ import random
 import re
 import shutil
 import sys
-import traceback
 import __builtin__
 # framework libs
 import framework
@@ -19,15 +18,21 @@ import framework
 # set the __version__ variable based on the VERSION file
 execfile(os.path.join(sys.path[0], 'VERSION'))
 
+# using stdout to spool causes tab complete issues
+# therefore, override print function
+# use a lock for thread safe console and spool output
+from threading import Lock
+_print_lock = Lock()
 # spooling system
 def spool_print(*args, **kwargs):
-    if framework.Framework._spool:
-        framework.Framework._spool.write('%s\n' % (args[0]))
-        framework.Framework._spool.flush()
-    if 'console' in kwargs and kwargs['console'] is False:
-        return
-    # new print function must still use the old print function via the backup
-    __builtin__._print(*args, **kwargs)
+    with _print_lock:
+        if framework.Framework._spool:
+            framework.Framework._spool.write('%s\n' % (args[0]))
+            framework.Framework._spool.flush()
+        if 'console' in kwargs and kwargs['console'] is False:
+            return
+        # new print function must still use the old print function via the backup
+        __builtin__._print(*args, **kwargs)
 # make a builtin backup of the original print function
 __builtin__._print = print
 # override the builtin print function with the new print function
@@ -138,6 +143,7 @@ class Recon(framework.Framework):
         self.register_option('nameserver', '8.8.8.8', True, 'nameserver for DNS interrogation')
         self.register_option('proxy', None, False, 'proxy server (address:port)')
         self.register_option('store_tables', True, True, 'store module generated tables')
+        self.register_option('threads', 10, True, 'number of threads (where applicable)')
         self.register_option('timeout', 10, True, 'socket timeout (seconds)')
         self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), True, 'user-agent string')
         self.register_option('verbose', True, True, 'enable verbose output')
@@ -439,11 +445,7 @@ class Recon(framework.Framework):
             return
         # notify the user of any other loading or runtime errors
         except:
-            if self.options['debug']:
-                print('%s%s' % (framework.Colors.R, '-'*60))
-                traceback.print_exc()
-                print('%s%s' % ('-'*60, framework.Colors.N))
-            self.error('ModuleError: %s' % (traceback.format_exc().splitlines()[-1]))
+            self.print_exception()
             return
         # send analytics information
         if (self._home not in mod_loadpath) and self.analytics:

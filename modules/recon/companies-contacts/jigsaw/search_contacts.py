@@ -50,7 +50,7 @@ class Module(module.Module):
             # jigsaw rate limits requests per second to the api
             #time.sleep(.25)
         if len(all_companies) == 0:
-            self.output('No contacts available for companies matching \'%s\'.' % (self.options['company']))
+            self.output('No contacts available for companies matching \'%s\'.' % (company_name))
             return
         if len(all_companies) == 1:
             company_id = all_companies[0][0]

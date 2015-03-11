@@ -12,6 +12,7 @@ import sqlite3
 import string
 import subprocess
 import sys
+import traceback
 # framework libs
 import requests
 import mechanize
@@ -208,16 +209,16 @@ class Framework(cmd.Cmd):
                 return hashitem['type']
         return False
 
-    def is_writeable(self, filename):
+    def get_random_str(self, length):
+        return ''.join(random.choice(string.lowercase) for i in range(length))
+
+    def _is_writeable(self, filename):
         try:
             fp = open(filename, 'a')
             fp.close()
             return True
         except IOError:
             return False
-
-    def get_random_str(self, length):
-        return ''.join(random.choice(string.lowercase) for i in range(length))
 
     def _parse_rowids(self, rowids):
         xploded = []
@@ -237,6 +238,14 @@ class Framework(cmd.Cmd):
     #==================================================
     # OUTPUT METHODS
     #==================================================
+
+    def print_exception(self, line=''):
+        if self._global_options['debug']:
+            print('%s%s' % (Colors.R, '-'*60))
+            traceback.print_exc()
+            print('%s%s' % ('-'*60, Colors.N))
+        line = ' '.join([x for x in [traceback.format_exc().splitlines()[-1], line] if x])
+        self.error(line)
 
     def error(self, line):
         '''Formats and presents errors.'''

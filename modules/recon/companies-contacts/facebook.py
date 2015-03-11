@@ -105,7 +105,7 @@ class Module(module.Module):
 
     def extract_entities(self, content):
         names = re.findall(r'class=\"_5d-5\">([^<]*)', content)
-        titles = re.findall(r'data-bt="[^"]*sub_headers[^"]*">(?:<a href="[^"]*" data-hovercard="[^"]*">([^<]*)</a>)*', content)
+        titles = re.findall(r'data-bt="[^"]*sub_headers[^"]*">(?:<a href="[^"]*" data-gt="[^"]*" data-hovercard="[^"]*">([^<]*)</a>)*', content)
         if len(names) != len(titles):
             self.alert('Inconsistent quantity of names and titles parsed. Data corruption imminent.')
         for name, title in zip(names, titles):

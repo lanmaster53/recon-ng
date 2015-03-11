@@ -22,25 +22,23 @@ class Module(module.Module):
         # create sites lookup table
         with open(self.options['site_db']) as db_file:
             site_db = json.load(db_file)
-        self.output('We have %s sites that we will check for your usernames. This will take a while.' % len(site_db["sites"]))
-
+        self.output('We have %s sites that we will check for your usernames. This will take a while.' % len(site_db['sites']))
         for user in usernames: 
-            flag = False
             self.heading('Looking up data for: %s' % user)
-            for site in site_db["sites"]:
-                url = site['u'] % urllib.quote(user)
-                self.verbose('Checking: %s' % site['r'])
-                try:
-                    resp = self.request(url, redirect=False)
-                except KeyboardInterrupt:
-                    raise KeyboardInterrupt
-                except Exception as e:
-                    self.error('%s: %s' % (url, e.__str__()))
-                    continue
-                if resp.status_code == int(site['gRC']):
-                    self.debug('Codes matched %s %s' % (resp.status_code, site['gRC']))
-                    if site['gRT'] in resp.text or site['gRT'] in resp.headers:
-                        self.alert('Probable match: %s' % url)
-                        self.add_profiles(username=user, url=url, resource=site['r'], category=site['c'])
-                        flag = True
-            if flag: self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (user,))
+            self.thread(site_db['sites'], user)
+
+    def module_thread(self, site, user):
+        d = dict(site)
+        self.verbose('Checking: %s' % d['r'])
+        url = d['u'] % urllib.quote(user)
+        try:
+            resp = self.request(url, redirect=False)
+        except Exception as e:
+            self.error('%s: %s' % (url, e.__str__()))
+        else:
+            if resp.status_code == int(d['gRC']):
+                self.debug('Codes matched %s %s' % (resp.status_code, d['gRC']))
+                if d['gRT'] in resp.text or d['gRT'] in resp.headers:
+                    self.alert('Probable match: %s' % url)
+                    self.add_profiles(username=user, url=url, resource=d['r'], category=d['c'])
+                    self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (user,))

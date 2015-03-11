@@ -68,6 +68,6 @@ class Module(module.Module):
                 processed += len(jsonobj['data'])
                 self.verbose('%s photos processed.' % (processed))
                 if len(jsonobj['data']) < 20:
-                    print len(jsonobj['data'])
+                    print(len(jsonobj['data']))
                     break
                 payload['max_timestamp'] = jsonobj['data'][19]['created_time']

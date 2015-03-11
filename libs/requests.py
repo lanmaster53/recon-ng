@@ -1,5 +1,6 @@
 import json
 import socket
+import ssl
 import urllib
 import urllib2
 
@@ -40,8 +41,10 @@ class Request(object):
             socket.setdefaulttimeout(self.timeout)
         
         # set handlers
+        # create an ssl context that ignores certificate validation
+        context = ssl._create_unverified_context()
         # declare handlers list according to debug setting
-        handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1)] if self.debug else []
+        handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1, context=context)] if self.debug else [urllib2.HTTPSHandler(context=context)]
         # process cookiejar handler
         if cookiejar != None:
             handlers.append(urllib2.HTTPCookieProcessor(cookiejar))
