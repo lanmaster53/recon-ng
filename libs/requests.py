@@ -4,6 +4,10 @@ import ssl
 import urllib
 import urllib2
 
+# create a global ssl context that ignores certificate validation
+if hasattr(ssl, '_create_unverified_context'): 
+    ssl._create_default_https_context = ssl._create_unverified_context
+
 class Request(object):
 
     def __init__(self, **kwargs):
@@ -41,10 +45,8 @@ class Request(object):
             socket.setdefaulttimeout(self.timeout)
         
         # set handlers
-        # create an ssl context that ignores certificate validation
-        context = ssl._create_unverified_context()
         # declare handlers list according to debug setting
-        handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1, context=context)] if self.debug else [urllib2.HTTPSHandler(context=context)]
+        handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1)] if self.debug else []
         # process cookiejar handler
         if cookiejar != None:
             handlers.append(urllib2.HTTPCookieProcessor(cookiejar))
