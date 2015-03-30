@@ -1,2 +1,7 @@
-lxml
-XlsxWriter
+dicttoxml==1.6.6
+dnspython==1.12.0
+jsonrpclib==0.1.3
+lxml==3.4.4
+mechanize==0.2.5
+slowaes==0.1a1
+XlsxWriter==0.7.3

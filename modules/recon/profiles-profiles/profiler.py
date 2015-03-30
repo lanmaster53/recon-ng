@@ -1,22 +1,24 @@
-import module
-# unique to module
-import urllib
+from recon.core.module import BaseModule
+from recon.mixins.threads import ThreadingMixin
 import json
+import os
+import urllib
 
-class Module(module.Module):
+class Module(BaseModule, ThreadingMixin):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT username FROM profiles WHERE username IS NOT NULL')
-        self.register_option('site_db', self.data_path+'/profiler_sites.json', True, 'JSON file containing known sites and response codes')
-        self.info = {
-            'Name': 'OSINT HUMINT Profile Collector',
-            'Author':'Micah Hoffman (@WebBreacher)',
-            'Description': 'Takes each username from the profiles table and searches a variety of web sites for those users.',
-            'Comments': [
-                'Note: The global timeout option may need to be increased to support slower sites.',
-                'Warning: Using this module behind a filtering proxy may cause false negatives as some of these sites may be blocked.'
-            ]
-        }
+    meta = {
+        'name': 'OSINT HUMINT Profile Collector',
+        'author':'Micah Hoffman (@WebBreacher)',
+        'description': 'Takes each username from the profiles table and searches a variety of web sites for those users.',
+        'comments': (
+            'Note: The global timeout option may need to be increased to support slower sites.',
+            'Warning: Using this module behind a filtering proxy may cause false negatives as some of these sites may be blocked.',
+        ),
+        'query': 'SELECT DISTINCT username FROM profiles WHERE username IS NOT NULL',
+        'options': (
+            ('site_db', os.path.join(BaseModule.data_path, 'profiler_sites.json'), True, 'JSON file containing known sites and response codes'),
+        ),
+    }
 
     def module_run(self, usernames):
         # create sites lookup table

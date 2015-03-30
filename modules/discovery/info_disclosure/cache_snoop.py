@@ -1,25 +1,23 @@
-import module
-# module specific packages
+from recon.core.module import BaseModule
 import os
 import dns
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params)
-        # could look up the nameserver for each domain and loop
-        self.register_option('nameserver', self._global_options['nameserver'], True, 'ip address of target\'s nameserver')
-        self.register_option('domains', self.data_path+'/av_domains.lst', True, 'file containing the list of domains to snoop for')
-        self.info = {
-            'Name': 'DNS Cache Snooper',
-            'Author': 'thrapt (thrapt@gmail.com)',
-            'Description': 'Uses the DNS cache snooping technique to check for visited domains',
-            'Comments': [
-                'Nameserver must be in IP form.',
-                'http://304geeks.blogspot.com/2013/01/dns-scraping-for-corporate-av-detection.html'
-            ]
-        }
+    meta = {
+        'name': 'DNS Cache Snooper',
+        'author': 'thrapt (thrapt@gmail.com)',
+        'description': 'Uses the DNS cache snooping technique to check for visited domains',
+        'comments': (
+            'Nameserver must be in IP form.',
+            'http://304geeks.blogspot.com/2013/01/dns-scraping-for-corporate-av-detection.html',
+        ),
+        'options': (
+            ('nameserver', None, True, 'IP address of authoritative nameserver'),
+            ('domains', os.path.join(BaseModule.data_path, 'av_domains.lst'), True, 'file containing the list of domains to snoop for'),
+        ),
+    }
 
     def module_run(self):
         nameserver = self.options['nameserver']

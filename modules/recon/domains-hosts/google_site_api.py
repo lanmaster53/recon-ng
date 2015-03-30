@@ -1,16 +1,14 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from urlparse import urlparse
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'Google CSE Hostname Enumerator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Leverages the Google Custom Search Engine API to harvest hosts using the \'site\' search operator. Updates the \'hosts\' table with the results.'
-        }
+    meta = {
+        'name': 'Google CSE Hostname Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Leverages the Google Custom Search Engine API to harvest hosts using the \'site\' search operator. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+    }
 
     def module_run(self, domains):
         for domain in domains:

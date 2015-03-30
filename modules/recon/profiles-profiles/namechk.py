@@ -1,21 +1,20 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
+from recon.mixins.threads import ThreadingMixin
 import re
 from hashlib import sha1
 from hmac import new as hmac
 
-class Module(module.Module):
+class Module(BaseModule, ThreadingMixin):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT username FROM profiles WHERE username IS NOT NULL')
-        self.info = {
-            'Name': 'NameChk.com Username Validator',
-            'Author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
-            'Description': 'Leverages NameChk.com to validate the existance of usernames on specific web sites and updates the \'profiles\' table with the results.',
-            'Comments': [
-                'Note: The global timeout option may need to be increased to support slower sites.'
-            ]
-        }
+    meta = {
+        'name': 'NameChk.com Username Validator',
+        'author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
+        'description': 'Leverages NameChk.com to validate the existance of usernames on specific web sites and updates the \'profiles\' table with the results.',
+        'comments': (
+            'Note: The global timeout option may need to be increased to support slower sites.',
+        ),
+        'query': 'SELECT DISTINCT username FROM profiles WHERE username IS NOT NULL',
+    }
 
     def module_run(self, usernames):
         # hardcoded key for hmac

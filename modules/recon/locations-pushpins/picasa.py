@@ -1,18 +1,18 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from datetime import datetime
 import math
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.register_option('radius', 1, True, 'radius in kilometers')
-        self.info = {
-            'Name': 'Picasa Geolocation Search',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Searches Picasa for media in the specified proximity to a location.',
-        }
+    meta = {
+        'name': 'Picasa Geolocation Search',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Searches Picasa for media in the specified proximity to a location.',
+        'query': 'SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL',
+        'options': (
+            ('radius', 1, True, 'radius in kilometers'),
+        ),
+    }
  
     def module_run(self, points):
         rad = self.options['radius']
@@ -38,7 +38,7 @@ class Module(module.Module):
                 if not processed: self.output('Collecting data for an unknown number of photos...')
                 if not 'entry' in jsonobj['feed']: break
                 for photo in jsonobj['feed']['entry']:
-                    if not 'georss$where' in photo:
+                    if 'georss$where' not in photo:
                         continue
                     source = 'Picasa'
                     screen_name = photo['author'][0]['name']['$t']

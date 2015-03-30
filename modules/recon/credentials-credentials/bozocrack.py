@@ -1,21 +1,19 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import hashlib
 import random
 import time
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL AND type IS NOT \'Adobe\'')
-        self.info = {
-            'Name': 'PyBozoCrack Hash Lookup',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Searches Google for the value of a hash and tests for a match by hashing every word in the resulting page using all hashing algorithms supported by the \'hashlib\' library. Updates the \'credentials\' table with the positive results.',
-            'Comments': [
-                'Inspired by the PyBozoCrack script: https://github.com/ikkebr/PyBozoCrack'
-            ]
-        }
+    meta = {
+        'name': 'PyBozoCrack Hash Lookup',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Searches Google for the value of a hash and tests for a match by hashing every word in the resulting page using all hashing algorithms supported by the \'hashlib\' library. Updates the \'credentials\' table with the positive results.',
+        'comments': (
+            'Inspired by the PyBozoCrack script: https://github.com/ikkebr/PyBozoCrack',
+        ),
+        'query': 'SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL AND type IS NOT \'Adobe\'',
+    }
 
     def module_run(self, hashes):
         url = 'http://www.google.com/search'

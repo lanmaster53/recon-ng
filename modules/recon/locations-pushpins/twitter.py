@@ -1,18 +1,18 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from datetime import datetime
 from urlparse import parse_qs
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.register_option('radius', 1, True, 'radius in kilometers')
-        self.info = {
-            'Name': 'Twitter Geolocation Search',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Searches Twitter for media in the specified proximity to a location.',
-        }
+    meta = {
+        'name': 'Twitter Geolocation Search',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Searches Twitter for media in the specified proximity to a location.',
+        'query': 'SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL',
+        'options': (
+            ('radius', 1, True, 'radius in kilometers'),
+        ),
+    }
 
     def module_run(self, points):
         rad = self.options['radius']

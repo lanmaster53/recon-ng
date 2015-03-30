@@ -1,18 +1,18 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import csv
+import os
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('filename', '%s/results.csv' % (self.workspace), True, 'path and filename for output')
-        self.register_option('table', 'hosts', True, 'source table of data to export')
-        self.info = {
-            'Name': 'CSV File Creator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Creates a CSV file containing the specified harvested data.'
-        }
+    meta = {
+        'name': 'CSV File Creator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Creates a CSV file containing the specified harvested data.',
+        'options': (
+            ('table', 'hosts', True, 'source table of data to export'),
+            ('filename', os.path.join(BaseModule.workspace, 'results.csv'), True, 'path and filename for output'),
+        ),
+    }
 
     def module_run(self):
         filename = self.options['filename']

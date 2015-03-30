@@ -1,28 +1,28 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import warnings
 import gzip
 from StringIO import StringIO
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host')
-        self.register_option('download', True, True, 'download discovered files')
-        self.register_option('protocol', 'http', True, 'request protocol')
-        self.register_option('port', 80, True, 'request port')
-        self.info = {
-            'Name': 'Interesting File Finder',
-            'Author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), Jay Turla (@shipcod3), and Mark Jeffery',
-            'Description': 'Checks hosts for interesting files in predictable locations.',
-            'Comments': [
-                'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status, jmx-console/, admin-console/, web-console/',
-                'Google Dorks:',
-                '%sinurl:robots.txt ext:txt' % (self.spacer),
-                '%sinurl:elmah.axd ext:axd intitle:"Error log for"' % (self.spacer),
-                '%sinurl:server-status "Apache Status"' % (self.spacer)
-            ]
-        }
+    meta = {
+        'name': 'Interesting File Finder',
+        'author': 'Tim Tomes (@LaNMaSteR53), thrapt (thrapt@gmail.com), Jay Turla (@shipcod3), and Mark Jeffery',
+        'description': 'Checks hosts for interesting files in predictable locations.',
+        'comments': (
+            'Files: robots.txt, sitemap.xml, sitemap.xml.gz, crossdomain.xml, phpinfo.php, test.php, elmah.axd, server-status, jmx-console/, admin-console/, web-console/',
+            'Google Dorks:',
+            '\tinurl:robots.txt ext:txt',
+            '\tinurl:elmah.axd ext:axd intitle:"Error log for"',
+            '\tinurl:server-status "Apache Status"',
+        ),
+        'query': 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host',
+        'options': (
+            ('download', True, True, 'download discovered files'),
+            ('protocol', 'http', True, 'request protocol'),
+            ('port', 80, True, 'request port'),
+        ),
+    }
 
     def uncompress(self, data_gz):
         inbuffer = StringIO(data_gz)

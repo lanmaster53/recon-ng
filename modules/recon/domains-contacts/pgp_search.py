@@ -1,17 +1,17 @@
-import module
+from recon.core.module import BaseModule
 import re
 
-class Module(module.Module):
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'PGP Key Owner Lookup',
-            'Author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
-            'Description': 'Searches the MIT public PGP key server for email addresses of the given domain. Updates the \'contacts\' table with the results.',
-            'Comments': [
-                'Inspiration from theHarvester.py by Christan Martorella: cmarorella[at]edge-seecurity.com'
-            ]
-        }
+class Module(BaseModule):
+
+    meta = {
+        'name': 'PGP Key Owner Lookup',
+        'author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
+        'description': 'Searches the MIT public PGP key server for email addresses of the given domain. Updates the \'contacts\' table with the results.',
+        'comments': (
+            'Inspiration from theHarvester.py by Christan Martorella: cmarorella[at]edge-seecurity.com',
+        ),
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+    }
 
     def module_run(self, domains):
         url = 'http://pgp.mit.edu/pks/lookup'

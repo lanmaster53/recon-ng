@@ -1,15 +1,13 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.info = {
-            'Name': 'Reverse Geocoder',
-            'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-            'Description': 'Queries the Google Maps API to obtain an address from coordinates.',
-        }
+    meta = {
+        'name': 'Reverse Geocoder',
+        'author': 'Quentin Kaiser (contact@quentinkaiser.be)',
+        'description': 'Queries the Google Maps API to obtain an address from coordinates.',
+        'query': 'SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL',
+    }
 
     def module_run(self, points):
         for point in points:

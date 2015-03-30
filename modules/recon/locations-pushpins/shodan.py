@@ -1,21 +1,21 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from datetime import datetime
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.register_option('radius', 1, True, 'radius in kilometers')
-        self.register_option('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)')
-        self.info = {
-            'Name': 'Shodan Geolocation Search',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Searches Shodan for media in the specified proximity to a location.',
-            'Comments': [
-                'Shodan \'geo\' searches can take a long time to complete. If receiving connection timeout errors, increase the global SOCKET_TIMEOUT option.'
-            ]
-        }
+    meta = {
+        'name': 'Shodan Geolocation Search',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Searches Shodan for media in the specified proximity to a location.',
+        'comments': (
+            'Shodan \'geo\' searches can take a long time to complete. If receiving connection timeout errors, increase the global SOCKET_TIMEOUT option.',
+        ),
+        'query': 'SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL',
+        'options': (
+            ('radius', 1, True, 'radius in kilometers'),
+            ('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)'),
+        ),
+    }
 
     def module_run(self, points):
         limit = self.options['limit']

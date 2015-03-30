@@ -1,17 +1,16 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from cookielib import CookieJar
 import hashlib
 import ssl
 
-class Module(module.Module):
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'VPNHunter Lookup',
-            'Author': 'Quentin Kaiser (contact[at]quentinkaiser.be)',
-            'Description': 'Checks vpnhunter.com for SSL VPNs, remote accesses, email portals and generic login sites. Updates the \'hosts\' table with the results.'
-        }
+class Module(BaseModule):
+
+    meta = {
+        'name': 'VPNHunter Lookup',
+        'author': 'Quentin Kaiser (contact[at]quentinkaiser.be)',
+        'description': 'Checks vpnhunter.com for SSL VPNs, remote accesses, email portals and generic login sites. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+    }
 
     def module_run(self, domains):
         self.services = {

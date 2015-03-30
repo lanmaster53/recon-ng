@@ -1,16 +1,14 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from urlparse import urlparse
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL')
-        self.info = {
-            'Name': 'Whois POC Harvester',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Uses the ARIN Whois RWS to harvest POC data from whois queries for the given domain. Updates the \'contacts\' table with the results.'
-        }
+    meta = {
+        'name': 'Whois POC Harvester',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Uses the ARIN Whois RWS to harvest POC data from whois queries for the given domain. Updates the \'contacts\' table with the results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
+    }
 
     def module_run(self, domains):
         headers = {'Accept': 'application/json'}

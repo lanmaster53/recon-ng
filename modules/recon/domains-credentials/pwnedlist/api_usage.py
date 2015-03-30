@@ -1,15 +1,12 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.info = {
-            'Name': 'PwnedList - API Usage Statistics Fetcher',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Queries the PwnedList API for account usage statistics.',
-        }
+    meta = {
+        'name': 'PwnedList - API Usage Statistics Fetcher',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Queries the PwnedList API for account usage statistics.',
+    }
 
     def module_run(self):
         key = self.get_key('pwnedlist_api')

@@ -1,17 +1,17 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.register_option('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)')
-        self.info = {
-            'Name': 'Shodan Hostname Enumerator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Harvests hosts from the Shodanhq.com API by using the \'hostname\' search operator. Updates the \'hosts\' table with the results.'
-        }
+    meta = {
+        'name': 'Shodan Hostname Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Harvests hosts from the Shodan API by using the \'hostname\' search operator. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'options': (
+            ('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)'),
+        ),
+    }
 
     def module_run(self, domains):
         limit = self.options['limit']
@@ -22,9 +22,9 @@ class Module(module.Module):
             for host in results:
                 address = host['ip_str']
                 port = host['port']
-                if not 'hostnames' in host.keys():
+                if not host['hostnames']:
                     host['hostnames'] = [None]
                 for hostname in host['hostnames']:
-                    self.output('%s (%s) - %s' % (address, hostname, port))
+                    self.output('%s (%s) - %s' % (address, hostname or 'Unknown', port))
                     self.add_ports(ip_address=address, port=port, host=hostname)
                     self.add_hosts(host=hostname, ip_address=address)

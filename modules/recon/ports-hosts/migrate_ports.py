@@ -1,16 +1,13 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.info = {
-            'Name': 'Ports to Hosts Data Migrator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Adds a new host for all the hostnames stored in the \'ports\' table.',
-        }
+    meta = {
+        'name': 'Ports to Hosts Data Migrator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Adds a new host for all the hostnames stored in the \'ports\' table.',
+    }
 
     def module_run(self):
         # ip address regex

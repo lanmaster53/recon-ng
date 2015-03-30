@@ -1,21 +1,21 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL')
-        self.register_option('restrict', True, True, 'restrict added hosts to current domains')
-        self.info = {
-            'Name': 'My-IP-Neighbors.com Lookup',
-            'Author': 'Micah Hoffman (@WebBreacher)',
-            'Description': 'Checks My-IP-Neighbors.com for virtual hosts on the same server. Updates the \'hosts\' table with the results.',
-            'Comments': [
-                'This module only stores hosts whose domain matches an entry in the domains table.',
-                'Knowing what other hosts are hosted on a provider\'s server can sometimes yield interesting results and help identify additional targets for assessment.'
-            ]
-        }
+    meta = {
+        'name': 'My-IP-Neighbors.com Lookup',
+        'author': 'Micah Hoffman (@WebBreacher)',
+        'description': 'Checks My-IP-Neighbors.com for virtual hosts on the same server. Updates the \'hosts\' table with the results.',
+        'comments': (
+            'This module only stores hosts whose domain matches an entry in the domains table.',
+            'Knowing what other hosts are hosted on a provider\'s server can sometimes yield interesting results and help identify additional targets for assessment.',
+        ),
+        'query': 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL',
+        'options': (
+            ('restrict', True, True, 'restrict added hosts to current domains'),
+        ),
+    }
    
     def module_run(self, hosts):
         # build a regex that matches any of the stored domains

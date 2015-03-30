@@ -1,67 +1,63 @@
-import module
-# unique to module
-import urllib
-import re
+from recon.core.module import BaseModule
+from io import StringIO
+from lxml import etree
+from urlparse import urlparse
 import time
 import random
+import urllib
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'Yahoo Hostname Enumerator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Harvests hosts from Yahoo.com by using the \'domain\' search operator. Updates the \'hosts\' table with the results.'
-        }
+    meta = {
+        'name': 'Yahoo Hostname Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Harvests hosts from Yahoo.com by using the \'domain\' search operator. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+    }
 
     def module_run(self, domains):
         base_url = 'https://search.yahoo.com/search'
         for domain in domains:
             self.heading(domain, level=0)
             base_query = 'domain:' + domain
-            pattern = '"yschttl spt" href="(?:\w*://)*(\S+?)\.%s[^"]*"' % (domain)
-            subs = []
+            hosts = []
             # control variables
             new = True
             page = 0
             nr = 100
-            # execute search engine queries and scrape results storing subdomains in a list
-            # loop until no new subdomains are found
+            # execute search engine queries and scrape results storing hostnames in a list
+            # loop until no new hostnames are found
             while new == True:
                 content = None
                 query = ''
                 # build query based on results of previous results
-                for sub in subs:
-                    query += ' -domain:%s.%s' % (sub, domain)
+                for host in hosts:
+                    query += ' -domain:%s' % (host,)
                 full_query = base_query + query
-                url = '%s?n=%d&b=%d&p=%s' % (base_url, nr, (page*nr), urllib.quote_plus(full_query))
+                payload = {'pz':nr, 'b':(page*nr)+1, 'p':full_query}
                 # yahoo does not appear to have a max url length
-                self.verbose('URL: %s' % (url))
+                self.verbose('URL: %s?%s' % (base_url, urllib.urlencode(payload)))
                 # send query to search engine
-                resp = self.request(url)
+                resp = self.request(base_url, method='POST', payload=payload)
                 if resp.status_code != 200:
                     self.alert('Yahoo has encountered an error. Please submit an issue for debugging.')
                     break
-                content = resp.text
-                sites = re.findall(pattern, content)
+                tree = etree.parse(StringIO(resp.text), etree.HTMLParser())
+                sites = tree.xpath('//a[@class=" ac-algo ac-21th"]/@href')
+                sites = [urlparse(x).hostname for x in sites]
                 # create a unique list
                 sites = list(set(sites))
                 new = False
-                # add subdomain to list if not already exists
+                # add hostname to list if not already exists
                 for site in sites:
-                    # remove left over bold tags remaining after regex
-                    site = site.replace('<b>', '')
-                    site = site.replace('</b>', '')
-                    if site not in subs:
-                        subs.append(site)
+                    if site not in hosts:
+                        hosts.append(site)
                         new = True
-                        host = '%s.%s' % (site, domain)
-                        self.output('%s' % (host))
-                        self.add_hosts(host)
+                        self.output(site)
+                        self.add_hosts(site)
                 if not new:
-                    # exit if all subdomains have been found
-                    if not 'Next &gt;</a>' in content:
+                    # exit if all hostnames have been found
+                    if '>Next<' not in resp.text:
                         break
                     else:
                         page += 1

@@ -1,18 +1,17 @@
-import module
-# module specific packages
+from recon.core.module import BaseModule
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('filename', None, True, 'path and filename for list input')
-        self.register_option('table', None, True, 'table to import the list values')
-        self.register_option('column', None, True, 'column to import the list values')
-        self.info = {
-            'Name': 'List File Importer',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Imports values from a list file into a database table and column.',
-        }
+    meta = {
+        'name': 'List File Importer',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Imports values from a list file into a database table and column.',
+        'options': (
+            ('filename', None, True, 'path and filename for list input'),
+            ('table', None, True, 'table to import the list values'),
+            ('column', None, True, 'column to import the list values'),
+        ),
+    }
     
     def module_run(self):
         cnt = 0

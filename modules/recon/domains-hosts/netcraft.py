@@ -1,5 +1,4 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from cookielib import CookieJar
 import urllib
 import re
@@ -7,15 +6,14 @@ import hashlib
 import time
 import random
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'Netcraft Hostname Enumerator',
-            'Author': 'thrapt (thrapt@gmail.com)',
-            'Description': 'Harvests hosts from Netcraft.com. Updates the \'hosts\' table with the results.'
-        }
+    meta = {
+        'name': 'Netcraft Hostname Enumerator',
+        'author': 'thrapt (thrapt@gmail.com)',
+        'description': 'Harvests hosts from Netcraft.com. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+    }
 
     def module_run(self, domains):
         url = 'http://searchdns.netcraft.com/'

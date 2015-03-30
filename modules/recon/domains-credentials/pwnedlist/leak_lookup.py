@@ -1,15 +1,13 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT leak FROM credentials WHERE leak IS NOT NULL')
-        self.info = {
-            'Name': 'PwnedList - Leak Details Fetcher',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Queries the local database for information associated with a leak ID. The \'leaks_dump\' module must be used to populate the local database before this module will execute successfully.'
-        }
+    meta = {
+        'name': 'PwnedList - Leak Details Fetcher',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Queries the local database for information associated with a leak ID. The \'leaks_dump\' module must be used to populate the local database before this module will execute successfully.',
+        'query': 'SELECT DISTINCT leak FROM credentials WHERE leak IS NOT NULL',
+    }
 
     def module_run(self, leak_ids):
         if not self.query('SELECT COUNT(*) FROM leaks')[0][0]:

@@ -5,11 +5,8 @@ import re
 import sys
 # prevent creation of compiled bytecode files
 sys.dont_write_bytecode = True
-# prep python path for base module
-sys.path.insert(1, sys.path[0]+'/core/')
-sys.path.insert(1, sys.path[0]+'/libs/')
-import base
-from framework import Colors
+from recon.core import base
+from recon.core.framework import Colors
 
 def recon_ui(args):
     # set up command completion

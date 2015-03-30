@@ -1,18 +1,18 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from urlparse import urlparse
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.register_option('limit', 0, True, 'limit total number of api requests (0 = unlimited)')
-        self.info = {
-            'Name': 'Bing API Hostname Enumerator',
-            'Author': 'Marcus Watson (@BranMacMuffin)',
-            'Description': 'Leverages the Bing API and "domain:" advanced search operator to harvest hosts. Updates the \'hosts\' table with the results.'
-        }
+    meta = {
+        'name': 'Bing API Hostname Enumerator',
+        'author': 'Marcus Watson (@BranMacMuffin)',
+        'description': 'Leverages the Bing API and "domain:" advanced search operator to harvest hosts. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'options': (
+            ('limit', 0, True, 'limit total number of api requests (0 = unlimited)'),
+        ),
+    }
 
     def module_run(self, domains):
         limit = self.options['limit']

@@ -1,21 +1,20 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
+from recon.mixins.browser import BrowserMixin
 import json
 import re
 import urllib
 
-class Module(module.Module):
+class Module(BaseModule, BrowserMixin):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
-        self.info = {
-            'Name': 'Facebook Contact Enumerator',
-            'Author': 'Quentin Kaiser (@qkaiser) and Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Harvests contacts from Facebook.com. Updates the \'contacts\' table with the results.',
-        }
+    meta = {
+        'name': 'Facebook Contact Enumerator',
+        'author': 'Quentin Kaiser (@qkaiser) and Tim Tomes (@LaNMaSteR53)',
+        'description': 'Harvests contacts from Facebook.com. Updates the \'contacts\' table with the results.',
+        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company',
+    }
 
     def module_run(self, companies):
-        self.br = self.browser()
+        self.br = self.get_browser()
         username = self.get_key('facebook_username')
         password = self.get_key('facebook_password')
         if self.login(username, password):
@@ -105,7 +104,7 @@ class Module(module.Module):
 
     def extract_entities(self, content):
         names = re.findall(r'class=\"_5d-5\">([^<]*)', content)
-        titles = re.findall(r'data-bt="[^"]*sub_headers[^"]*">(?:<a href="[^"]*" data-gt="[^"]*" data-hovercard="[^"]*">([^<]*)</a>)*', content)
+        titles = re.findall(r'data-bt="[^"]*sub_headers[^"]*">(?:<a [^>]*>([^<]*))*', content)
         if len(names) != len(titles):
             self.alert('Inconsistent quantity of names and titles parsed. Data corruption imminent.')
         for name, title in zip(names, titles):

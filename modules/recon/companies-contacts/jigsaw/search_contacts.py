@@ -1,18 +1,18 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import urllib
 import time
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
-        self.register_option('keywords', None, False, 'additional keywords to identify company')
-        self.info = {
-            'Name': 'Jigsaw Contact Enumerator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Harvests contacts from the Jigsaw.com API. Updates the \'contacts\' table with the results.'
-        }
+    meta = {
+        'name': 'Jigsaw Contact Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Harvests contacts from the Jigsaw.com API. Updates the \'contacts\' table with the results.',
+        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company',
+        'options': (
+            ('keywords', None, False, 'additional keywords to identify company'),
+        ),
+    }
 
     def module_run(self, companies):
         self.api_key = self.get_key('jigsaw_api')

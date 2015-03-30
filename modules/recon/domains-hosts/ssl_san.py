@@ -1,20 +1,18 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import re
 
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'SSL SAN Lookup',
-            'Author': 'Zach Grace (@ztgrace) zgrace@403labs.com',
-            'Description': 'Uses the ssltools.com site to obtain the Subject Alternative Names for a domain. Updates the \'hosts\' table with the results.',
-            'Comments': [
-                'For an alternative version see https://github.com/403labs/recon-ng_modules.'
-            ]
-        }
+    meta = {
+        'name': 'SSL SAN Lookup',
+        'author': 'Zach Grace (@ztgrace) zgrace@403labs.com',
+        'description': 'Uses the ssltools.com site to obtain the Subject Alternative Names for a domain. Updates the \'hosts\' table with the results.',
+        'comments': (
+            'For an alternative version see https://github.com/403labs/recon-ng_modules.',
+        ),
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+    }
 
     def module_run(self, domains):
         for domain in domains:

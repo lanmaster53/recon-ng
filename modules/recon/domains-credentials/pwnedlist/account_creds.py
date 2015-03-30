@@ -1,19 +1,18 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
+from recon.utils.crypto import aes_decrypt
 import os
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT username FROM credentials WHERE username IS NOT NULL and password IS NULL ORDER BY username')
-        self.info = {
-            'Name': 'PwnedList - Account Credentials Fetcher',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Queries the PwnedList API for credentials associated with the given usernames. Updates the \'credentials\' table with the results.',
-            'Comments': [
-                'API Query Cost: 1 query per request.'
-            ]
-        }
+    meta = {
+        'name': 'PwnedList - Account Credentials Fetcher',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Queries the PwnedList API for credentials associated with the given usernames. Updates the \'credentials\' table with the results.',
+        'comments': (
+            'API Query Cost: 1 query per request.',
+        ),
+        'query': 'SELECT DISTINCT username FROM credentials WHERE username IS NOT NULL and password IS NULL ORDER BY username',
+    }
 
     def module_run(self, accounts):
         key = self.get_key('pwnedlist_api')
@@ -39,7 +38,7 @@ class Module(module.Module):
         else:
             for cred in jsonobj['results']:
                 username = cred['plain']
-                password = self.aes_decrypt(cred['password'], decrypt_key, iv)
+                password = aes_decrypt(cred['password'], decrypt_key, iv)
                 leak = cred['leak_id']
                 self.output('%s:%s' % (username, password))
                 self.add_credentials(username=username, password=password, leak=leak)

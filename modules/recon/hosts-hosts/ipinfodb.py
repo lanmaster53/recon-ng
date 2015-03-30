@@ -1,16 +1,14 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import json
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL ORDER BY ip_address')
-        self.info = {
-            'Name': 'IPInfoDB GeoIP',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Leverages the ipinfodb.com API to geolocate a host by IP address. Updates the \'hosts\' table with the results.'
-        }
+    meta = {
+        'name': 'IPInfoDB GeoIP',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Leverages the ipinfodb.com API to geolocate a host by IP address. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL ORDER BY ip_address',
+    }
    
     def module_run(self, hosts):
         api_key = self.get_key('ipinfodb_api')

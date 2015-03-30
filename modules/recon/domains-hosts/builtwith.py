@@ -1,17 +1,17 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import textwrap
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL')
-        self.register_option('show_all', True, True, 'display technologies')
-        self.info = {
-            'Name': 'BuiltWith Enumerator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Leverages the BuiltWith API to identify hosts, technologies, and contacts associated with a domain.',
-        }
+    meta = {
+        'name': 'BuiltWith Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Leverages the BuiltWith API to identify hosts, technologies, and contacts associated with a domain.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
+        'options': (
+            ('show_all', True, True, 'display technologies'),
+        ),
+    }
 
     def module_run(self, domains):
         key = self.get_key('builtwith_api')

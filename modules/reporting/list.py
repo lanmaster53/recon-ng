@@ -1,21 +1,21 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import codecs
+import os
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('table', 'hosts', True, 'source table of data for the list')
-        self.register_option('column', 'ip_address', True, 'source column of data for the list')
-        self.register_option('unique', True, True, 'only return unique items from the dataset')
-        self.register_option('nulls', False, True, 'include nulls in the dataset')
-        self.register_option('filename', '%s/list.txt' % (self.workspace), True, 'path and filename for output')
-        self.info = {
-            'Name': 'List Creator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Creates a file containing a list of records from the database.'
-        }
+    meta = {
+        'name': 'List Creator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Creates a file containing a list of records from the database.',
+        'options': (
+            ('table', 'hosts', True, 'source table of data for the list'),
+            ('column', 'ip_address', True, 'source column of data for the list'),
+            ('unique', True, True, 'only return unique items from the dataset'),
+            ('nulls', False, True, 'include nulls in the dataset'),
+            ('filename', os.path.join(BaseModule.workspace, 'list.txt'), True, 'path and filename for output'),
+        ),
+    }
 
     def module_run(self):
         filename = self.options['filename']

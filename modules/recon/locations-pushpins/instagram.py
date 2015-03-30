@@ -1,22 +1,22 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from datetime import datetime
 import json
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.register_option('radius', 1, True, 'radius in kilometers')
-        self.info = {
-            'Name': 'Instagram Geolocation Search',
-            'Author': 'Nathan Malcolm (@SintheticLabs) and Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Searches Instagram for media in the specified proximity to a location.',
-            'Comments': [
-                'Radius must be greater than zero and no more than 5 kilometers (5000 meters).'
-            ]
-        }
+    meta = {
+        'name': 'Instagram Geolocation Search',
+        'author': 'Nathan Malcolm (@SintheticLabs) and Tim Tomes (@LaNMaSteR53)',
+        'description': 'Searches Instagram for media in the specified proximity to a location.',
+        'comments': (
+            'Radius must be greater than zero and no more than 5 kilometers (5000 meters).',
+        ),
+        'query': 'SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL',
+        'options': (
+            ('radius', 1, True, 'radius in kilometers'),
+        ),
+    }
 
     def get_instagram_access_token(self):
         return self.get_explicit_oauth_token(

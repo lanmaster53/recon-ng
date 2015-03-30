@@ -1,33 +1,31 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('domain', None, False, 'target email domain')
-        self.register_option('pattern', '<fn>.<ln>', True, 'pattern applied to mangle first and last name')
-        self.register_option('substitute', '-', True, 'character to substitute for invalid email address characters')
-        self.register_option('max-length', 30, True, 'maximum length of email address prefix or username')
-        self.register_option('overwrite', False, True, 'overwrite existing email addresses')
-        self.info = {
-            'Name': 'Contact Name Mangler',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact. Updates the \'contacts\' table with the results.',
-            'Comments': [
-                'Pattern options: <fi>,<fn>,<mi>,<mn>,<li>,<ln>',
-                'Example:         <fi>.<ln> => j.doe@domain.com',
-                'Note: Omit the \'domain\' option to create usernames'
-            ]
-        }
+    meta = {
+        'name': 'Contact Name Mangler',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Applies a mangle pattern to all of the contacts stored in the database, creating email addresses or usernames for each harvested contact. Updates the \'contacts\' table with the results.',
+        'comments': (
+            'Pattern options: <fi>,<fn>,<mi>,<mn>,<li>,<ln>',
+            'Example:         <fi>.<ln> => j.doe@domain.com',
+            'Note: Omit the \'domain\' option to create usernames',
+        ),
+        'query': 'SELECT rowid, first_name, middle_name, last_name, email FROM contacts ORDER BY first_name',
+        'options': (
+            ('domain', None, False, 'target email domain'),
+            ('pattern', '<fn>.<ln>', True, 'pattern applied to mangle first and last name'),
+            ('substitute', '-', True, 'character to substitute for invalid email address characters'),
+            ('max-length', 30, True, 'maximum length of email address prefix or username'),
+            ('overwrite', False, True, 'overwrite existing email addresses'),
+        ),
+    }
 
-    def module_run(self):
-        contacts = self.query('SELECT rowid, first_name, middle_name, last_name FROM contacts ORDER BY first_name' if self.options['overwrite'] else 'SELECT rowid, first_name, middle_name, last_name FROM contacts WHERE email IS NULL ORDER BY first_name')
-        if len(contacts) == 0:
-            self.error('No contacts to mangle.')
-            return
+    def module_run(self, contacts):
         for contact in contacts:
+            if not self.options['overwrite'] and contact[4] is not None:
+                continue
             row = contact[0]
             fname = contact[1]
             mname = contact[2]

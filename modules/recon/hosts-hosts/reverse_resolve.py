@@ -1,17 +1,16 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
+from recon.mixins.resolver import ResolverMixin
 import dns.resolver
 import dns.reversename
 
-class Module(module.Module):
+class Module(BaseModule, ResolverMixin):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        self.info = {
-            'Name': 'Reverse Resolver',
-            'Author': 'John Babio (@3vi1john), @vulp1n3, and Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Conducts a reverse lookup for each IP address to resolve the hostname. Updates the \'hosts\' table with the results.'
-        }
+    meta = {
+        'name': 'Reverse Resolver',
+        'author': 'John Babio (@3vi1john), @vulp1n3, and Tim Tomes (@LaNMaSteR53)',
+        'description': 'Conducts a reverse lookup for each IP address to resolve the hostname. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL',
+    }
 
     def module_run(self, addresses):
         max_attempts = 3

@@ -1,17 +1,15 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from io import StringIO
 from lxml import etree
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL')
-        self.info = {
-            'Name': 'MailTester Email Validator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Leverages MailTester.com to validate email addresses.'
-        }
+    meta = {
+        'name': 'MailTester Email Validator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Leverages MailTester.com to validate email addresses.',
+        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL',
+    }
 
     def module_run(self, emails):
         url = 'http://www.mailtester.com/testmail.php'

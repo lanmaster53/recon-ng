@@ -1,18 +1,16 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'PwnedList - Pwned Domain Credentials Fetcher',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Queries the PwnedList API to fetch all credentials for a domain. Updates the \'credentials\' table with the results.',
-            'Comments': [
-                'API Query Cost: 10,000 queries per request plus 1 query for each account returned.'
-            ]
-        }
+    meta = {
+        'name': 'PwnedList - Pwned Domain Credentials Fetcher',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Queries the PwnedList API to fetch all credentials for a domain. Updates the \'credentials\' table with the results.',
+        'comments': (
+            'API Query Cost: 10,000 queries per request plus 1 query for each account returned.',
+        ),
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+    }
 
     def module_run(self, domains):
         key = self.get_key('pwnedlist_api')

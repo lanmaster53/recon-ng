@@ -1,17 +1,15 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import hashlib
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
-        self.info = {
-            'Name': 'PwnedList Validator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'credentials\' table.'
-        }
+    meta = {
+        'name': 'PwnedList Validator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'credentials\' table.',
+        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email',
+    }
 
     def module_run(self, accounts):
         for account in accounts:

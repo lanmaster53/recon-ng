@@ -1,18 +1,16 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from datetime import datetime
 import re
 import time
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'XSSed Domain Lookup',
-            'Author': 'Micah Hoffman (@WebBreacher)',
-            'Description': 'Checks XSSed.com for XSS records associated with a domain and displays the first 20 results.'
-            }
+    meta = {
+        'name': 'XSSed Domain Lookup',
+        'author': 'Micah Hoffman (@WebBreacher)',
+        'description': 'Checks XSSed.com for XSS records associated with a domain and displays the first 20 results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+    }
    
     def module_run(self, domains):
         url = 'http://xssed.com/search?key=%s'

@@ -1,14 +1,13 @@
-import module
+from recon.core.module import BaseModule
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT street_address FROM locations WHERE street_address IS NOT NULL')
-        self.info = {
-            'Name': 'Address Geocoder',
-            'Author': 'Quentin Kaiser (contact@quentinkaiser.be)',
-            'Description': 'Queries the Google Maps API to obtain coordinates for an address. Updates the \'locations\' table with the results.'
-        }
+    meta = {
+        'name': 'Address Geocoder',
+        'author': 'Quentin Kaiser (contact@quentinkaiser.be)',
+        'description': 'Queries the Google Maps API to obtain coordinates for an address. Updates the \'locations\' table with the results.',
+        'query': 'SELECT DISTINCT street_address FROM locations WHERE street_address IS NOT NULL',
+    }
 
     def module_run(self, addresses):
         for address in addresses:

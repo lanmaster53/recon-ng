@@ -1,21 +1,21 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from datetime import datetime
 import json
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.register_option('radius', 1, True, 'radius in kilometers')
-        self.info = {
-            'Name': 'Flickr Geolocation Search',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Searches Flickr for media in the specified proximity to a location.',
-            'Comments': [
-                'Radius must be greater than zero and less than 32 kilometers.'
-            ]
-        }
+    meta = {
+        'name': 'Flickr Geolocation Search',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Searches Flickr for media in the specified proximity to a location.',
+        'comments': (
+            'Radius must be greater than zero and less than 32 kilometers.',
+        ),
+        'query': 'SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL',
+        'options': (
+            ('radius', 1, True, 'radius in kilometers'),
+        ),
+    }
 
     def module_run(self, points):
         api_key = self.get_key('flickr_api')

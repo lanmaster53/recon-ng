@@ -1,24 +1,23 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from io import StringIO
 from lxml import etree
 import re
 import time
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params)
-        self.register_option('url', None, True, 'public LinkedIn profile URL (seed)')
-        self.register_option('company', None, False, 'override the company name harvested from the seed \'URL\'')
-        self.info = {
-            'Name': 'Linkedin Contact Crawler',
-            'Author':'Mike Larch',
-            'Description': 'Harvests contacts from linkedin.com by spidering through "Viewers of this profile also viewed" links, adding them to the \'contacts\' table of the database. URL must be for a public linkedin page. The User of that page must currently be working at the targeted company.',
-            'Comments': [
-                'Seed URL Google Dork: site:linkedin.com inurl:pub -inurl:dir "at <company>" "Current"'
-            ]
-        }
+    meta = {
+        'name': 'Linkedin Contact Crawler',
+        'author': 'Mike Larch',
+        'description': 'Harvests contacts from linkedin.com by spidering through "Viewers of this profile also viewed" links, adding them to the \'contacts\' table of the database. URL must be for a public linkedin page. The User of that page must currently be working at the targeted company.',
+        'comments': (
+            'Seed URL Google Dork: site:linkedin.com inurl:pub -inurl:dir "at <company>" "Current"',
+        ),
+        'options': (
+            ('url', None, True, 'public LinkedIn profile URL (seed)'),
+            ('company', None, False, 'override the company name harvested from the seed \'URL\''),
+        ),
+    }
 
     def module_run(self):
         company = self.get_company()

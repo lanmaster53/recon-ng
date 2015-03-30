@@ -1,23 +1,20 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL')
-        self.info = {
-            'Name': 'Internet Census 2012 Lookup',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Queries the Internet Census 2012 data through Exfiltrated.com to enumerate open ports for a netblock.',
-            'Comments': [
-                'http://exfiltrated.com/querystart.php'
-            ]
-        }
+    meta = {
+        'name': 'Internet Census 2012 Lookup',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Queries the Internet Census 2012 data through Exfiltrated.com to enumerate open ports for a netblock.',
+        'comments': (
+            'http://exfiltrated.com/querystart.php',
+        ),
+        'query': 'SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL',
+    }
 
     def module_run(self, netblocks):
-        #url = 'http://exfiltrated.com/query.php'
-        url = 'http://198.46.145.188//query.php'
+        url = 'http://exfiltrated.com/query.php'
         for netblock in netblocks:
             self.heading(netblock, level=0)
             addresses = self.cidr_to_list(netblock)

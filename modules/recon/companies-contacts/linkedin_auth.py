@@ -1,16 +1,14 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company')
-        self.info = {
-            'Name': 'LinkedIn Authenticated Contact Enumerator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Harvests contacts from the LinkedIn.com API using an authenticated connections network. Updates the \'contacts\' table with the results.'
-        }
+    meta = {
+        'name': 'LinkedIn Authenticated Contact Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Harvests contacts from the LinkedIn.com API using an authenticated connections network. Updates the \'contacts\' table with the results.',
+        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company',
+    }
 
     def get_linkedin_access_token(self):
         return self.get_explicit_oauth_token(

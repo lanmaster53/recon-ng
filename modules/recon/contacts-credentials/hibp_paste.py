@@ -1,20 +1,20 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import urllib
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email')
-        self.register_option('download', True, True, 'download pastes')
-        self.info = {
-            'Name': 'Have I been pwned? Paste Search',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Leverages the haveibeenpwned.com API to determine if email addresses have been published to various paste sites. Adds compromised email addresses to the \'credentials\' table.',
-            'Comments': [
-                'Paste sites supported: Pastebin, Pastie, or Slexy',
-            ]
-        }
+    meta = {
+        'name': 'Have I been pwned? Paste Search',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Leverages the haveibeenpwned.com API to determine if email addresses have been published to various paste sites. Adds compromised email addresses to the \'credentials\' table.',
+        'comments': (
+            'Paste sites supported: Pastebin, Pastie, or Slexy',
+        ),
+        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email',
+        'options': (
+            ('download', True, True, 'download pastes'),
+        ),
+    }
 
     def module_run(self, accounts):
         sites = {

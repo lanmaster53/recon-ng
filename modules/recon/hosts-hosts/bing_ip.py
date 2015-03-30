@@ -1,21 +1,21 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from urlparse import urlparse
 import re
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL')
-        self.register_option('restrict', True, True, 'restrict added hosts to current domains')
-        self.info = {
-            'Name': 'Bing API IP Neighbor Enumerator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Leverages the Bing API and "ip:" advanced search operator to enumerate other virtual hosts sharing the same IP address. Updates the \'hosts\' table with the results.',
-            'Comments': [
-                'This module only stores hosts whose domain matches an entry in the domains table.'
-            ]
-        }
+    meta = {
+        'name': 'Bing API IP Neighbor Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Leverages the Bing API and "ip:" advanced search operator to enumerate other virtual hosts sharing the same IP address. Updates the \'hosts\' table with the results.',
+        'comments': (
+            'This module only stores hosts whose domain matches an entry in the domains table.',
+        ),
+        'query': 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL',
+        'options': (
+            ('restrict', True, True, 'restrict added hosts to current domains'),
+        ),
+    }
 
     def module_run(self, addresses):
         # build a regex that matches any of the stored domains
@@ -23,7 +23,7 @@ class Module(module.Module):
         regex = '(?:%s)' % ('|'.join(['\.'+re.escape(x)+'$' for x in domains]))
         for address in addresses:
             self.heading(address, level=0)
-            query = '\'ip:%s\'' % (address)
+            query = 'ip:%s' % (address)
             results = self.search_bing_api(query)
             if not results:
                 self.verbose('No additional hosts discovered at \'%s\'.' % (address))

@@ -7,10 +7,7 @@ import argparse
 import sys
 # prevent creation of compiled bytecode files
 sys.dont_write_bytecode = True
-# prep python path for base module
-sys.path.insert(1, sys.path[0]+'/core/')
-sys.path.insert(1, sys.path[0]+'/libs/')
-import base
+from recon.core import base
 
 def recon_rpc(args):
     if args.server_type.lower() == 'xmlrpc':

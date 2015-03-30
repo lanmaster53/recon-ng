@@ -1,19 +1,18 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
+from recon.mixins.resolver import ResolverMixin
 import dns.resolver
 
-class Module(module.Module):
+class Module(BaseModule, ResolverMixin):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL AND ip_address IS NULL')
-        self.info = {
-            'Name': 'Hostname Resolver',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Resolves the IP address for a host. Updates the \'hosts\' table with the results.',
-            'Comments': [
-                'Note: Nameserver must be in IP form.'
-            ]
-        }
+    meta = {
+        'name': 'Hostname Resolver',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Resolves the IP address for a host. Updates the \'hosts\' table with the results.',
+        'comments': (
+            'Note: Nameserver must be in IP form.',
+        ),
+        'query': 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL AND ip_address IS NULL',
+    }
 
     def module_run(self, hosts):
         q = self.get_resolver()

@@ -1,24 +1,22 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from datetime import datetime
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL')
-        self.register_option('radius', 1, True, 'radius in kilometers')
-        self.info = {
-            'Name': 'YouTube Geolocation Search',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Searches YouTube for media in the specified proximity to a location.',
-            'Comments': [
-                'Radius must be greater than zero and less than 1000 kilometers.'
-            ]
-        }
+    meta = {
+        'name': 'YouTube Geolocation Search',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Searches YouTube for media in the specified proximity to a location.',
+        'comments': (
+            'Radius must be greater than zero and less than 1000 kilometers.',
+        ),
+        'query': 'SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL',
+        'options': (
+            ('radius', 1, True, 'radius in kilometers'),
+        ),
+    }
 
     def module_run(self, points):
-        #self.alert('This module is broken due to YouTube API issues. See https://code.google.com/p/gdata-issues/issues/detail?id=4234 for details.')
-        #return
         rad = self.options['radius']
         url = 'http://gdata.youtube.com/feeds/api/videos'
         for point in points:
@@ -34,7 +32,7 @@ class Module(module.Module):
                 if not processed: self.output('Collecting data for an unknown number of videos...')
                 if not 'entry' in jsonobj['feed']: break
                 for video in jsonobj['feed']['entry']:
-                    if not video['georss$where']:
+                    if 'georss$where' not in video:
                         continue
                     source = 'YouTube'
                     screen_name = video['author'][0]['name']['$t']

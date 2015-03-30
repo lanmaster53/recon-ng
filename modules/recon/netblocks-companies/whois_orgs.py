@@ -1,16 +1,14 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 from urlparse import urlparse
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL')
-        self.info = {
-            'Name': 'Whois Company Harvester',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Uses the ARIN Whois RWS to harvest Companies data from whois queries for the given netblock. Updates the \'companies\' table with the results.'
-        }
+    meta = {
+        'name': 'Whois Company Harvester',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Uses the ARIN Whois RWS to harvest Companies data from whois queries for the given netblock. Updates the \'companies\' table with the results.',
+        'query': 'SELECT DISTINCT netblock FROM netblocks WHERE netblock IS NOT NULL',
+    }
 
     def module_run(self, netblocks):
         headers = {'Accept': 'application/json'}

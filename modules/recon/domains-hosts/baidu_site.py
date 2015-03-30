@@ -1,19 +1,17 @@
-import module
-# unique to module
+from recon.core.module import BaseModule
 import urllib
 import re
 import time
 import random
 
-class Module(module.Module):
+class Module(BaseModule):
 
-    def __init__(self, params):
-        module.Module.__init__(self, params, query='SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain')
-        self.info = {
-            'Name': 'Baidu Hostname Enumerator',
-            'Author': 'Tim Tomes (@LaNMaSteR53)',
-            'Description': 'Harvests hosts from Baidu.com by using the \'site\' search operator. Updates the \'hosts\' table with the results.'
-        }
+    meta = {
+        'name': 'Baidu Hostname Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53)',
+        'description': 'Harvests hosts from Baidu.com by using the \'site\' search operator. Updates the \'hosts\' table with the results.',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain'
+    }
 
     def module_run(self, domains):
         base_url = 'http://www.baidu.com/s'
