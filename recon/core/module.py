@@ -32,6 +32,7 @@ class BaseModule(framework.Framework):
         if 'options' in self.meta:
             for option in self.meta['options']:
                 self.register_option(*option)
+        self._reload = 0
 
     #==================================================
     # SUPPORT METHODS
@@ -418,6 +419,11 @@ class BaseModule(framework.Framework):
     #==================================================
     # COMMAND METHODS
     #==================================================
+
+    def do_reload(self, params):
+        '''Reloads the current module'''
+        self._reload = 1
+        return True
 
     def do_run(self, params):
         '''Runs the module'''

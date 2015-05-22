@@ -179,28 +179,38 @@ class Recon(framework.Framework):
                 dirnames[:] = [d for d in dirnames if not d[0] == '.']
                 if len(filenames) > 0:
                     for filename in [f for f in filenames if f.endswith('.py')]:
+                        is_loaded = self._load_module(dirpath, filename)
                         mod_category = 'disabled'
-                        mod_name = filename.split('.')[0]
-                        mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
-                        mod_loadname = mod_dispname.replace('/', '_')
-                        mod_loadpath = os.path.join(dirpath, filename)
-                        mod_file = open(mod_loadpath)
-                        try:
-                            # import the module into memory
-                            mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
-                            __import__(mod_loadname)
-                            self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
+                        if is_loaded:
                             mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
-                        except ImportError as e:
-                            # notify the user of missing dependencies
-                            self.error('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_dispname, e.message[16:]))
-                        except:
-                            # notify the user of errors
-                            self.print_exception()
                         # store the resulting category statistics
                         if not mod_category in self.loaded_category:
                             self.loaded_category[mod_category] = 0
                         self.loaded_category[mod_category] += 1
+
+    def _load_module(self, dirpath, filename):
+        mod_name = filename.split('.')[0]
+        mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
+        mod_loadname = mod_dispname.replace('/', '_')
+        mod_loadpath = os.path.join(dirpath, filename)
+        mod_file = open(mod_loadpath)
+        try:
+            # import the module into memory
+            mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
+            __import__(mod_loadname)
+            # add the module to the framework's loaded modules
+            self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
+            return True
+        except ImportError as e:
+            # notify the user of missing dependencies
+            self.error('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_dispname, e.message[16:]))
+        except:
+            # notify the user of errors
+            self.print_exception()
+            self.error('Module \'%s\' disabled.' % (mod_dispname))
+        # remove the module from the framework's loaded modules
+        self._loaded_modules.pop(mod_dispname, None)
+        return False
 
     def _menu_egg(self, params):
         eggs = [
@@ -450,21 +460,33 @@ class Recon(framework.Framework):
             return
         # load the module
         mod_dispname = modules[0]
-        y = self._loaded_modules[mod_dispname]
-        # send analytics information
-        if (self._home not in os.path.abspath(sys.modules[y.__module__].__file__)) and self.analytics:
-            self._send_analytics(mod_dispname)
-        # return the loaded module if in command line mode
-        if self._mode == Mode.CLI:
-            return y
-        # begin a command loop
-        y.prompt = self._prompt_template % (self.prompt[:-3], mod_dispname.split('/')[-1])
-        try:
-            y.cmdloop()
-        except KeyboardInterrupt:
-            print('')
-        if y._exit == 1:
-            return True
+        # loop to support reload logic
+        while True:
+            y = self._loaded_modules[mod_dispname]
+            # send analytics information
+            mod_loadpath = os.path.abspath(sys.modules[y.__module__].__file__)
+            if (self._home not in mod_loadpath) and self.analytics:
+                self._send_analytics(mod_dispname)
+            # return the loaded module if in command line mode
+            if self._mode == Mode.CLI:
+                return y
+            # begin a command loop
+            y.prompt = self._prompt_template % (self.prompt[:-3], mod_dispname.split('/')[-1])
+            try:
+                y.cmdloop()
+            except KeyboardInterrupt:
+                print('')
+            if y._exit == 1:
+                return True
+            if y._reload == 1:
+                self.output('Reloading...')
+                # reload the module in memory
+                is_loaded = self._load_module(os.path.dirname(mod_loadpath), os.path.basename(mod_loadpath))
+                if is_loaded:
+                    # reload the module in the framework
+                    continue
+                # shuffle category counts?
+            break
     do_use = do_load
 
     #==================================================

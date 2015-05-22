@@ -1,6 +1,5 @@
 from recon.core.module import BaseModule
 from recon.utils.crypto import aes_decrypt
-import os
 
 class Module(BaseModule):
 
@@ -19,11 +18,9 @@ class Module(BaseModule):
         secret = self.get_key('pwnedlist_secret')
         decrypt_key = secret[:16]
         iv = self.get_key('pwnedlist_iv')
-
         # setup API call
         method = 'accounts.query'
         url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-
         # build the payload
         payload = {'account_identifier': ','.join(accounts), 'daysAgo': 0}
         payload = self.build_pwnedlist_payload(payload, method, key, secret)

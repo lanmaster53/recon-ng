@@ -1,6 +1,5 @@
 from recon.core.module import BaseModule
-from io import StringIO
-from lxml import etree
+from lxml.html import fromstring
 import re
 import time
 
@@ -31,7 +30,7 @@ class Module(BaseModule):
         company = self.options['company']
         if company is None:
             resp = self.request(self.options['url'])
-            tree = etree.parse(StringIO(resp.text), etree.HTMLParser())
+            tree = fromstring(resp.text)
             company = parse_company(tree)
         return(company)
 
@@ -45,7 +44,7 @@ class Module(BaseModule):
             time.sleep(1)
             self.verbose('Parsing \'%s\'...' % (temp_url))
             resp = self.request(temp_url)
-            tree = etree.parse(StringIO(resp.text), etree.HTMLParser())
+            tree = fromstring(resp.text)
             temp_company = parse_company(tree)
             if company is not None and temp_company is not None and company in temp_company:
                 accepted.append(temp_url)

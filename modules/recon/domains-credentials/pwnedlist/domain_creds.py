@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+from recon.utils.crypto import aes_decrypt
 
 class Module(BaseModule):
 
@@ -17,7 +18,6 @@ class Module(BaseModule):
         secret = self.get_key('pwnedlist_secret')
         decrypt_key = secret[:16]
         iv = self.get_key('pwnedlist_iv')
-
         # setup API call
         method = 'domains.query'
         url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
@@ -39,7 +39,7 @@ class Module(BaseModule):
                 # extract credentials
                 for cred in jsonobj['accounts']:
                     username = cred['plain']
-                    password = self.aes_decrypt(cred['password'], decrypt_key, iv) if cred['password'] else cred['password']
+                    password = aes_decrypt(cred['password'], decrypt_key, iv) if cred['password'] else cred['password']
                     leak = cred['leak_id']
                     self.add_credentials(username=username, password=password, leak=leak)
                     # clean up the password for output

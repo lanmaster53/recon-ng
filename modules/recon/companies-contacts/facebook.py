@@ -103,12 +103,15 @@ class Module(BaseModule, BrowserMixin):
                     break
 
     def extract_entities(self, content):
+        ids = [json.loads(self.html_unescape(x))['id'] for x in re.findall(r'<div class=\"_3u1 _gli _5und\" data-bt=\"([^"]*)\"', content)]
         names = re.findall(r'class=\"_5d-5\">([^<]*)', content)
         titles = re.findall(r'data-bt="[^"]*sub_headers[^"]*">(?:<a [^>]*>([^<]*))*', content)
-        if len(names) != len(titles):
+        length = len(ids)
+        if any(len(lst) != length for lst in [names, titles]):
             self.alert('Inconsistent quantity of names and titles parsed. Data corruption imminent.')
-        for name, title in zip(names, titles):
+        for _id, name, title in zip(ids, names, titles):
             fname, mname, lname = self.parse_name(name)
             title = self.html_unescape(title or 'Employee')
             self.output('%s - %s' % (name, title))
             self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title)
+            self.add_profiles(username=name, resource="facebook", url="https://www.facebook.com/%s" % _id, category="social")

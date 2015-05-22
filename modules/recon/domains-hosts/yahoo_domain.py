@@ -1,6 +1,5 @@
 from recon.core.module import BaseModule
-from io import StringIO
-from lxml import etree
+from lxml.html import fromstring
 from urlparse import urlparse
 import time
 import random
@@ -42,7 +41,7 @@ class Module(BaseModule):
                 if resp.status_code != 200:
                     self.alert('Yahoo has encountered an error. Please submit an issue for debugging.')
                     break
-                tree = etree.parse(StringIO(resp.text), etree.HTMLParser())
+                tree = fromstring(resp.text)
                 sites = tree.xpath('//a[@class=" ac-algo ac-21th"]/@href')
                 sites = [urlparse(x).hostname for x in sites]
                 # create a unique list
