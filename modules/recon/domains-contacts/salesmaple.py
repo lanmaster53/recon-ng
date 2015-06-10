@@ -13,9 +13,9 @@ class Module(BaseModule):
     def module_run(self, domains):
         # https://salesmaple.com/api/contactDomain/lanmaster53.com/0
         base_url = 'https://salesmaple.com/api/contactDomain/%s/%s'
-        start = '0'
         for domain in domains:
             self.heading(domain, level=0)
+            start = '0'
             while start:
                 url = base_url % (domain.lower(), start.lower())
                 self.verbose('URL: %s' % url)
