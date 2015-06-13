@@ -1,8 +1,7 @@
 from recon.core.module import BaseModule
 from recon.mixins.threads import ThreadingMixin
-import re
-from hashlib import sha1
-from hmac import new as hmac
+from cookielib import CookieJar
+from lxml.html import fromstring
 
 class Module(BaseModule, ThreadingMixin):
 
@@ -17,53 +16,57 @@ class Module(BaseModule, ThreadingMixin):
     }
 
     def module_run(self, usernames):
-        # hardcoded key for hmac
-        key = '1Sx8srDg1u57Ei2wqX65ymPGXu0f7uAig13u'
         # retrieve list of sites
         self.verbose('Retrieving site data...')
-        url = 'http://namechk.com/Content/sites.min.js'
-        resp = self.request(url)
-        # extract sites info from the js file
-        pattern = 'n:"([^"]+)",r:\d+,i:(\d+),s:"([^"]+)",b:"([^"]+)"'
-        sites = re.findall(pattern, resp.text.replace('\n', ''))
+        url = 'https://namechk.com/'
+        cookiejar = CookieJar()
+        resp = self.request(url, cookiejar=cookiejar)
+        tree = fromstring(resp.text)
+        # extract sites info from the page
+        names = tree.xpath('//div[@class="media record"]/@data-name')
+        labels = tree.xpath('//div[@class="media record"]//h4[@class="media-heading"]/text()')
+        if not len(names) == len(labels):
+            self.error('Inconsistent number of sites and labels.')
+            return
+        # merge names and labels into a list of tuples
+        sites = zip(names, labels)
+        # extract token from the reponse
+        token = ''.join([x.value for x in resp.cookiejar if x.name=='token'])
         # reset url for site requests
-        url = 'http://namechk.com/check'
+        url = 'https://namechk.com/availability/%s'
+        payload = {'z': token}
         # required header for site requests
-        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        headers = {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
         for username in usernames:
             self.heading(username, level=0)
+            payload['q'] = username
             # validate memberships
-            self.thread(sites, key, url, headers, username)
+            self.thread(sites, url, payload, headers, cookiejar)
 
-    def module_thread(self, site, key, url, headers, username):
-        i = site[1]
-        name = site[0]
-        # build the hmac payload
-        message = "POST&%s?i=%s&u=%s" % (url, i, username)
-        b64_hmac_sha1 = '%s' % hmac(key, message, sha1).digest().encode('base64')[:-1]
-        payload = {'i': i, 'u': username, 'o_0': b64_hmac_sha1}
-        # build and send the request
-        try:
-            resp = self.request(url, method='POST', headers=headers, payload=payload)
-        except Exception as e:
-            self.error('%s: %s' % (name, e.__str__()))
-        else:
-            x = resp.text
-            if int(x) > 0:
-                if int(x) == 2:
-                    # update profiles table
-                    profile_url = site[3].replace('{0}', '%s') % username
-                    self.add_profiles(username=username, resource=name, url=profile_url, category='social')
-                    self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (username,))
-                    self.alert('%s: %s' % (name, STATUSES[x]))
-                else:
-                    self.verbose('%s: %s' % (name, STATUSES[x]))
+    def module_thread(self, site, url, payload, headers, cookiejar):
+        name, label = site
+        fails = 1
+        retries = 5
+        while True:
+            # build and send the request
+            resp = self.request(url % (name), headers=headers, payload=payload, cookiejar=cookiejar)
+            # retry a max # of times for server 500 error
+            if 'error' in resp.json:
+                if fails < retries:
+                    fails += 1
+                    continue
+                self.error('%s: Unknown error!' % (label))
             else:
-                self.error('%s: %s' % (name, 'Unknown error.'))
-
-STATUSES = {
-    '1': 'Available',
-    '2': 'User Exists!',
-    '3': 'Unknown',
-    '4': 'Indefinite'
-}
+                username = resp.json['username']
+                available = resp.json['available']
+                #status = resp.json['status']
+                #reason = resp.json['failed_reason']
+                profile = resp.json['callback_url']
+                if not available:
+                    # update profiles table
+                    self.add_profiles(username=username, resource=label, url=profile, category='social')
+                    self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (username,))
+                    self.alert('%s: User exists!' % (label))
+                else:
+                    self.verbose('%s: Available.' % (label))
+            break

@@ -10,11 +10,12 @@ class Module(BaseModule):
     }
 
     def module_run(self, emails):
-        key = self.get_key('fullcontact_api')
-        url = 'https://api.fullcontact.com/v2/person.json'
-        for email in emails:
-            payload = {'email':email, 'apiKey':key}
-            resp = self.request(url, payload=payload)
+        api_key = self.get_key('fullcontact_api')
+        base_url = 'https://api.fullcontact.com/v2/person.json'
+        while emails:
+            email = emails.pop(0)
+            payload = {'email':email, 'apiKey':api_key}
+            resp = self.request(base_url, payload=payload)
             if resp.status_code == 200:
                 # parse contact information
                 if 'contactInfo' in resp.json:
@@ -42,11 +43,20 @@ class Module(BaseModule):
                 # parse profile information
                 if 'socialProfiles' in resp.json:
                     for profile in resp.json['socialProfiles']:
-                        username = profile['username']
+                        # set the username to 'username' or 'id' and default to email if they are unknown
+                        username = email
+                        for key in ['username', 'id']:
+                            if key in profile:
+                                username = profile[key]
+                                break
                         resource = profile['typeName']
                         url = profile['url']
                         self.add_profiles(username=username, url=url, resource=resource, category='social')
                         self.alert('%s - %s (%s)' % (username, resource, url))
                 self.output('Confidence: %d%%' % (resp.json['likelihood']*100,))
+            elif resp.status_code == 202:
+                # add emails queued by fullcontact back to the list
+                emails.append(email)
+                self.output('%s - Queued for search.' % email)
             else:
-                self.output(resp.json['message'])
+                self.output('%s - %s' % (email, resp.json['message']))

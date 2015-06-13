@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+from recon.utils.requests import encode_payload
 from cookielib import CookieJar
 import urllib
 import re
@@ -36,7 +37,7 @@ class Module(BaseModule):
             # execute search engine queries and scrape results storing subdomains in a list
             # loop until no Next Page is available
             while True:
-                self.verbose('URL: %s?%s' % (url, urllib.urlencode(payload)))
+                self.verbose('URL: %s?%s' % (url, encode_payload(payload)))
                 resp = self.request(url, payload=payload, cookiejar=cookiejar)
                 content = resp.text
                 sites = re.findall(pattern, content)
@@ -60,3 +61,5 @@ class Module(BaseModule):
                     # sleep script to avoid lock-out
                     self.verbose('Sleeping to Avoid Lock-out...')
                     time.sleep(random.randint(5,15))
+            if not subs:
+                self.output('No results found.')

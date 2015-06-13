@@ -2,6 +2,7 @@ from recon.core.module import BaseModule
 from recon.mixins.browser import BrowserMixin
 import json
 import re
+import time
 import urllib
 
 class Module(BaseModule, BrowserMixin):
@@ -26,7 +27,7 @@ class Module(BaseModule, BrowserMixin):
 
     def login(self, username, password):
         self.verbose('Authenticating to Facebook...')
-        resp = self.br.open('https://www.facebook.com')
+        resp = self.br.open('https://www.facebook.com/login')
         for form in self.br.forms():
             if form.attrs['id'] == 'login_form':
                 self.br.form = form
@@ -96,9 +97,15 @@ class Module(BaseModule, BrowserMixin):
                     data = '{"view":"list","encoded_query":"%s","encoded_title":"%s","experience_type":"grammar","cursor":"%s","ads_at_end":true}' % (query, title, cursor.group(1))
                     url = 'https://www.facebook.com/ajax/pagelet/generic.php/BrowseScrollingSetPagelet?data=%s&__a=1' % (urllib.quote(data))
                     resp = self.br.open(url)
-                    content = resp.read()
-                    payload = json.loads(content[9:], encoding='utf-8')['payload']
-                    self.extract_entities(payload)
+                    # detect and bypass rate limiter
+                    _content = resp.read()
+                    if "Security Check Required" in _content:
+                        self.output("Got locked out. Sleeping for 30 seconds.")
+                        time.sleep(30)
+                    else:
+                        content = _content
+                        payload = json.loads(content[9:], encoding='utf-8')['payload']  
+                        self.extract_entities(payload)
                 else:
                     break
 

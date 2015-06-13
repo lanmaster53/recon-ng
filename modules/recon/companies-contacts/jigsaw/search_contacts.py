@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+from recon.utils.requests import encode_payload
 import urllib
 import time
 
@@ -33,7 +34,7 @@ class Module(BaseModule):
         url = 'https://www.jigsaw.com/rest/searchCompany.json'
         #while True:
         payload = {'token': self.api_key, 'name': params, 'offset': cnt, 'pageSize': size}
-        self.verbose('Query: %s?%s' % (url, urllib.urlencode(payload)))
+        self.verbose('Query: %s?%s' % (url, encode_payload(payload)))
         resp = self.request(url, payload=payload, redirect=False)
         jsonobj = resp.json
         if jsonobj['totalHits'] == 0:

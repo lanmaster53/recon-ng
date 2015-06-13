@@ -11,6 +11,7 @@ import struct
 import sys
 import textwrap
 import time
+import urllib
 import urlparse
 # framework libs
 from recon.core import framework
@@ -189,9 +190,12 @@ class BaseModule(framework.Framework):
         sock.listen(1)
         conn, addr = sock.accept()
         data = conn.recv(1024)
-        conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>Recon-ng</title></head><body>Authorization code received. Return to Recon-ng.</body></html>')
+        conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>Recon-ng</title></head><body>Response received. Return to Recon-ng.</body></html>')
         conn.close()
-        # process the received access token
+        # process the received data
+        if 'error_description' in data:
+            self.error(urllib.unquote_plus(re.search('error_description=([^\s&]*)', data).group(1)))
+            return None
         authorization_code = re.search('code=([^\s&]*)', data).group(1)
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': client_id, 'client_secret': client_secret}
         resp = self.request(access_url, method='POST', payload=payload)

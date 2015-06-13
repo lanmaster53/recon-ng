@@ -605,13 +605,12 @@ class Framework(cmd.Cmd):
         # create a config file if one doesn't exist
         open(config_path, 'a').close()
         # retrieve saved config data
-        config_file = open(config_path)
-        try:
-            config_data = json.loads(config_file.read())
-        except ValueError:
-            # file is empty or corrupt, nothing to load
-            config_data = {}
-        config_file.close()
+        with open(config_path) as config_file:
+            try:
+                config_data = json.loads(config_file.read())
+            except ValueError:
+                # file is empty or corrupt, nothing to load
+                config_data = {}
         # create a container for the current module
         if self._modulename not in config_data:
             config_data[self._modulename] = {}
@@ -624,9 +623,8 @@ class Framework(cmd.Cmd):
         if not config_data[self._modulename]:
             del config_data[self._modulename]
         # write the new config data to the config file
-        config_file = open(config_path, 'w')
-        json.dump(config_data, config_file, indent=4)
-        config_file.close()
+        with open(config_path, 'w') as config_file:
+            json.dump(config_data, config_file, indent=4)
 
     #==================================================
     # API KEY METHODS
@@ -908,7 +906,7 @@ class Framework(cmd.Cmd):
         else:
             self.help_add()
 
-    def do_del(self, params):
+    def do_delete(self, params):
         '''Deletes records from the database'''
         table = ''
         # search params for table names
@@ -938,7 +936,7 @@ class Framework(cmd.Cmd):
             for rowid in rowids:
                 self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
         else:
-            self.help_del()
+            self.help_delete()
 
     def do_search(self, params):
         '''Searches available modules'''
@@ -1149,10 +1147,10 @@ class Framework(cmd.Cmd):
         print('%svalues => \'~\' delimited string representing column values (exclude rowid, module)' % (self.spacer))
         print('')
 
-    def help_del(self):
-        print(getattr(self, 'do_del').__doc__)
+    def help_delete(self):
+        print(getattr(self, 'do_delete').__doc__)
         print('')
-        print('Usage: del <table> [rowid(s)]')
+        print('Usage: delete <table> [rowid(s)]')
         print('')
         print('optional arguments:')
         print('%srowid(s) => \',\' delimited values or \'-\' delimited ranges representing rowids' % (self.spacer))
@@ -1195,4 +1193,4 @@ class Framework(cmd.Cmd):
     def complete_add(self, text, *ignored):
         tables = sorted(self.get_tables())
         return [x for x in tables if x.startswith(text)]
-    complete_del = complete_add
+    complete_delete = complete_add

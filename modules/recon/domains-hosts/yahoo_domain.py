@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+from recon.utils.requests import encode_payload
 from lxml.html import fromstring
 from urlparse import urlparse
 import time
@@ -35,7 +36,7 @@ class Module(BaseModule):
                 full_query = base_query + query
                 payload = {'pz':nr, 'b':(page*nr)+1, 'p':full_query}
                 # yahoo does not appear to have a max url length
-                self.verbose('URL: %s?%s' % (base_url, urllib.urlencode(payload)))
+                self.verbose('URL: %s?%s' % (base_url, encode_payload(payload)))
                 # send query to search engine
                 resp = self.request(base_url, method='POST', payload=payload)
                 if resp.status_code != 200:

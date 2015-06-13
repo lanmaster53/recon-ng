@@ -8,6 +8,17 @@ import urllib2
 if hasattr(ssl, '_create_unverified_context'): 
     ssl._create_default_https_context = ssl._create_unverified_context
 
+def encode_payload(in_dict):
+    out_dict = {}
+    for k, v in in_dict.iteritems():
+        if isinstance(v, unicode):
+            v = v.encode('utf8')
+        elif isinstance(v, str):
+            # must be encoded in UTF-8
+            v.decode('utf8')
+        out_dict[k] = v
+    return out_dict
+
 class Request(object):
 
     def __init__(self, **kwargs):
@@ -35,7 +46,7 @@ class Request(object):
             headers['Content-Type'] = 'application/json'
             payload = json.dumps(payload)
         else:
-            payload = urllib.urlencode(payload)
+            payload = urllib.urlencode(encode_payload(payload))
         # process basic authentication
         if len(auth) == 2:
             authorization = ('%s:%s' % (auth[0], auth[1])).encode('base64').replace('\n', '')

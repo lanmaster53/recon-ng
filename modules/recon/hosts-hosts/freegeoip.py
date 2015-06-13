@@ -4,27 +4,29 @@ import json
 class Module(BaseModule):
 
     meta = {
-        'name': 'IPInfoDB GeoIP',
-        'author': 'Tim Tomes (@LaNMaSteR53)',
-        'description': 'Leverages the ipinfodb.com API to geolocate a host by IP address. Updates the \'hosts\' table with the results.',
+        'name': 'FreeGeoIP',
+        'author': 'Gerrit Helm (G) and Tim Tomes (@LaNMaSteR53)',
+        'description': 'Leverages the freegeoip.net API to geolocate a host by IP address. Updates the \'hosts\' table with the results.',
+        'comments': (
+            'Allows up to 10,000 queries per hour by default. Once this limit is reached, all requests will result in HTTP 403, forbidden, until the quota is cleared.',
+        ),
         'query': 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL',
+        'options': (
+            ('serverurl', 'http://freegeoip.net', True, 'overwrite server url (e.g. for local installations)'),
+        ),
     }
    
     def module_run(self, hosts):
-        api_key = self.get_key('ipinfodb_api')
         for host in hosts:
-            url = 'http://api.ipinfodb.com/v3/ip-city/?key=%s&ip=%s&format=json' % (api_key, host)
+            url = '%s/json/%s' % (self.options['serverurl'], host)
             resp = self.request(url)
             if resp.json:
                 jsonobj = resp.json
             else:
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (host, resp.text))
                 continue
-            if jsonobj['statusCode'].lower() == 'error':
-                self.error(jsonobj['statusMessage'])
-                continue
-            region = ', '.join([str(jsonobj[x]).title() for x in ['cityName', 'regionName'] if jsonobj[x]]) or None
-            country = jsonobj['countryName'].title()
+            region = ', '.join([str(jsonobj[x]).title() for x in ['city', 'region_name'] if jsonobj[x]]) or None
+            country = jsonobj['country_name'].title()
             latitude = str(jsonobj['latitude'])
             longitude = str(jsonobj['longitude'])
             self.output('%s - %s,%s - %s' % (host, latitude, longitude, ', '.join([x for x in [region, country] if x])))

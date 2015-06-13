@@ -33,14 +33,10 @@ class Module(BaseModule, ThreadingMixin):
         d = dict(site)
         self.verbose('Checking: %s' % d['r'])
         url = d['u'] % urllib.quote(user)
-        try:
-            resp = self.request(url, redirect=False)
-        except Exception as e:
-            self.error('%s: %s' % (url, e.__str__()))
-        else:
-            if resp.status_code == int(d['gRC']):
-                self.debug('Codes matched %s %s' % (resp.status_code, d['gRC']))
-                if d['gRT'] in resp.text or d['gRT'] in resp.headers:
-                    self.alert('Probable match: %s' % url)
-                    self.add_profiles(username=user, url=url, resource=d['r'], category=d['c'])
-                    self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (user,))
+        self.request(url, redirect=False)
+        if resp.status_code == int(d['gRC']):
+            self.debug('Codes matched %s %s' % (resp.status_code, d['gRC']))
+            if d['gRT'] in resp.text or d['gRT'] in resp.headers:
+                self.alert('Probable match: %s' % url)
+                self.add_profiles(username=user, url=url, resource=d['r'], category=d['c'])
+                self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (user,))
