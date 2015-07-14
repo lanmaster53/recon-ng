@@ -5,13 +5,14 @@ import re
 import time
 
 class Module(BaseModule):
+
     meta = {
         'name': 'Bing Linkedin Profile Harvester',
         'author':'Mike Larch and Brian Fehrman (@fullmetalcache)',
-        'description': 'Harvests contacts from linkedin.com by querying Bing for Linkedin pages related to the given companies, parsing the profiles, and adding them to the \'profiles\' table',
-        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company',
+        'description': 'Harvests profiles from linkedin.com by querying Bing for Linkedin pages related to the given companies, parsing the profiles, and adding them to the \'profiles\' table.',
+        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL',
         'options': ( 
-            ('limit', 2, False, 'number of pages to use from bing search'),
+            ('limit', 2, True, 'number of pages to use from bing search (0 = unlimited)'),
             ('previous', False, True, 'include previous employees'),
         ),
     }
@@ -48,16 +49,29 @@ class Module(BaseModule):
 
     def get_info(self, company, url):
         time.sleep(1)
+        
         self.verbose('Parsing \'%s\'...' % (url))
         
-        resp = self.request(url)
-            
+        retries = 5
+        resp = None
+        
+        while 0 < retries:
+            try:
+                retries -= 1
+                resp = self.request(url)
+                break
+            except Exception as e:
+                self.error('{0}, {1} retries left'.format(e, retries))
+        
+        if resp is None:
+            return
+        
         tree = fromstring(resp.text)
         
         company_found = self.parse_company(tree, resp.text, company)
         
         if company_found is None:
-            self.error('No company found on profile page.')
+            self.error('No match for {0} found on the page or person is not a current employee'.format(company))
             return
 
         # output the results
@@ -97,23 +111,34 @@ class Module(BaseModule):
         try:
             experiences = resp.split('<div id="experience-', 1)[1]
             experiences = experiences.split('-view">', 1)[1]
+            experiences = experiences.split('<script>', 1)[0]
             experiences = experiences.split('</div></div>')
             
         except IndexError:
             return None
-            
+        
+        if (experiences is None) or (company is None):
+            return None
+        
         total = len(experiences)
         for idx, experience in enumerate(experiences):
             if idx == (total - 1):
                 break
-                
-            experience = experience.split("</span>", 1)[0]
-            exp_lower = experience.lower()
-            if company.lower() in exp_lower:
-                if 'present' in exp_lower or previous:
+
+            try:
+                time_exp = experience.split('date-locale',1)[1]
+                time_exp = time_exp.split('</span>', 1)[0]
+            except IndexError:
+                continue
+
+            time_exp = time_exp.lower()
+            experience = experience.lower()
+            
+            if (company.lower() in experience) or (company.replace(" ","").lower() in experience):
+                if 'present' in time_exp or previous:
                     company_found = company
                     break
-                        
+                    
         return company_found
 
     def parse_company_tree(self, tree, company):
@@ -131,7 +156,7 @@ class Module(BaseModule):
                         except:
                             pass
         
-        if company_found is not None:
+        if (company_found is not None) and (company is not None):
             if company.lower() not in company_found.lower():
                 company_found = None
         

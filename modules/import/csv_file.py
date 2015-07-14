@@ -128,7 +128,7 @@ class Module(BaseModule):
         quote = self.options['quote_character']
         values = []
 
-        with open(filename, 'rb') as infile:
+        with open(filename, 'rU') as infile:
             # if sep is not a one character string, csv.reader will raise a TypeError
             if not quote:
                 csvreader = csv.reader(infile, delimiter=str(sep), quoting=csv.QUOTE_NONE)

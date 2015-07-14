@@ -1,71 +1,58 @@
 from recon.core.module import BaseModule
+from recon.mixins.search import GoogleWebMixin
 import urllib
 import re
-import time
-import random
 
-class Module(BaseModule):
+class Module(BaseModule, GoogleWebMixin):
 
     meta = {
         'name': 'Google Hostname Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Harvests hosts from Google.com by using the \'site\' search operator. Updates the \'hosts\' table with the results.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
 
     def module_run(self, domains):
-        base_url = 'https://www.google.com/search'
         for domain in domains:
             self.heading(domain, level=0)
             base_query = 'site:' + domain
-            pattern = '<cite>(?:\w*://)*(\S*?)\.%s[^<]*</cite>'  % (domain)
-            subs = []
+            regmatch = re.compile('//([^/]*\.%s)' % (domain))
+            hosts = []
             # control variables
             new = True
-            page = 0
-            nr = 10
+            page = 1
+            nr = 100
             # execute search engine queries and scrape results storing subdomains in a list
             # loop until no new subdomains are found
-            while new == True:
-                content = None
-                query = ''
+            while new:
                 # build query based on results of previous results
-                for sub in subs:
-                    query += ' -site:%s.%s' % (sub, domain)
-                full_query = base_query + query
-                url = '%s?start=%d&filter=0&q=%s' % (base_url, (page*nr), urllib.quote_plus(full_query))
-                # google errors out at > 2061 characters not including the protocol
-                if len(url) > 2068: url = url[:2068]
-                self.verbose('URL: %s' % (url))
+                query = ''
+                for host in hosts:
+                    query += ' -site:%s' % (host)
                 # send query to search engine
-                resp = self.request(url, redirect=False)
-                if resp.status_code != 200:
-                    if resp.status_code == 302:
-                        self.alert('You\'ve been temporarily banned by Google for violating the terms of service.')
-                    else:
-                        self.alert('Google has encountered an error. Please submit an issue for debugging.')
-                    break
-                content = resp.text
-                sites = re.findall(pattern, content)
+                results = self.search_google_web(base_query + query, limit=1, start_page=page)
+                # extract hosts from search results
+                sites = []
+                for link in results:
+                    site = regmatch.search(link)
+                    if site is not None:
+                        sites.append(site.group(1))
                 # create a unique list
                 sites = list(set(sites))
-                new = False
                 # add subdomain to list if not already exists
+                new = False
                 for site in sites:
-                    if site not in subs:
-                        subs.append(site)
+                    if site not in hosts:
+                        hosts.append(site)
                         new = True
-                        host = '%s.%s' % (site, domain)
-                        self.output('%s' % (host))
-                        self.add_hosts(host)
+                        self.output(site)
+                        self.add_hosts(site)
                 if not new:
                     # exit if all subdomains have been found
-                    if not '>Next</span>' in content:
+                    if not results:
                         break
                     else:
+                        # intelligently paginate separate from the framework to optimize the number of queries required
                         page += 1
                         self.verbose('No New Subdomains Found on the Current Page. Jumping to Result %d.' % ((page*nr)+1))
                         new = True
-                # sleep script to avoid lock-out
-                self.verbose('Sleeping to avoid lockout...')
-                time.sleep(random.randint(5,15))

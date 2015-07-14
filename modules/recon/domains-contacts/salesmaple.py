@@ -11,7 +11,6 @@ class Module(BaseModule):
     }
 
     def module_run(self, domains):
-        # https://salesmaple.com/api/contactDomain/lanmaster53.com/0
         base_url = 'https://salesmaple.com/api/contactDomain/%s/%s'
         for domain in domains:
             self.heading(domain, level=0)

@@ -100,8 +100,9 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
 
     http_error_301 = http_error_303 = http_error_307 = http_error_302
 
-import xml.etree.ElementTree
+import gzip
 import StringIO
+import xml.etree.ElementTree
 
 class ResponseObject(object):
 
@@ -116,6 +117,13 @@ class ResponseObject(object):
         self.encoding = resp.headers.getparam('charset')
         self.content_type = resp.headers.getheader('content-type')
         self.cookiejar = cookiejar
+        # deflate payload if needed
+        if resp.headers.getheader('content-encoding') == 'gzip':
+            self.deflate()
+
+    def deflate(self):
+        with gzip.GzipFile(fileobj=StringIO.StringIO(self.raw)) as gz:
+            self.raw = gz.read()
 
     @property
     def text(self):

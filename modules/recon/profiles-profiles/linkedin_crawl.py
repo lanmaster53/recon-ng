@@ -8,16 +8,16 @@ class Module(BaseModule):
     
     meta = {
         'name': 'Linkedin Profile Crawler',
-        'author':'Mike Larch and Brian Fehrman (@fullmetalcache)',
-        'description': 'Harvests profiles from linkedin.com by visting the given link(s), crawling the "Viewers of this profile also viewed", parsing the pages, and adding new profiles to the \'profiles\' table',
-        'query':'SELECT DISTINCT url FROM profiles WHERE url IS NOT NULL ORDER BY url',
+        'author': 'Mike Larch and Brian Fehrman (@fullmetalcache)',
+        'description': 'Harvests profiles from linkedin.com by visting known profiles, crawling the "Viewers of this profile also viewed", parsing the pages, and adding new profiles to the \'profiles\' table.',
+        'query': 'SELECT DISTINCT url FROM profiles WHERE url IS NOT NULL AND resource LIKE \'linkedin\'',
         'options': (
             ('previous', False, True, 'include previous employees'),
         ),
     }
         
     def module_run(self, urls):
-        query = 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company'
+        query = 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL'
         companies = [x[0] for x in self.query(query)]
         
         if companies is None:
@@ -40,14 +40,26 @@ class Module(BaseModule):
             time.sleep(1)
             self.verbose('Crawling \'%s\'...' % (temp_url))
             
-            resp = self.request(temp_url)
+            retries = 5
+            resp = None
+            
+            while 0 < retries:
+                try:
+                    retries -= 1
+                    resp = self.request(temp_url)
+                    break
+                except Exception as e:
+                    self.error('{0}, {1} retries left'.format(e, retries))
+            
+            if resp is None:
+                continue
                 
             tree = fromstring(resp.text)
             
             company_found = self.parse_company(tree, resp.text, companies)
             
             if company_found is None:
-                self.error('No company found on profile page.')
+                self.error('No company matches found on the page or person is not a current employee')
                 continue
 
             # output the results
@@ -103,8 +115,8 @@ class Module(BaseModule):
         try:
             experiences = resp.split('<div id="experience-', 1)[1]
             experiences = experiences.split('-view">', 1)[1]
+            experiences = experiences.split('<script>', 1)[0]
             experiences = experiences.split('</div></div>')
-            
         except IndexError:
             return None
             
@@ -113,12 +125,19 @@ class Module(BaseModule):
             if idx == (total - 1):
                 break
                 
-            experience = experience.split("</span>", 1)[0]
-            exp_lower = experience.lower()
-            
+            try:
+                time_exp = experience.split('date-locale',1)[1]
+                time_exp = time_exp.split('</span>', 1)[0]
+            except IndexError:
+                continue
+
+            time_exp = time_exp.lower()
+            experience = experience.lower()
+
             for company in companies:
-                if company.lower() in exp_lower:
-                    if 'present' in exp_lower or previous:
+                if (company.lower() in experience) or (company.replace(" ","").lower() in experience):
+                    if 'present' in time_exp or previous:
+                        self.verbose(company)
                         company_found = company
                         break
                         
@@ -141,13 +160,16 @@ class Module(BaseModule):
                         try: company_found = tree.xpath('//tr[@id="overview-summary-current"]/td/ol/li/a/text()')[0]
                         except:
                             pass
+                            
+        isFound = False
         
-        if company_found is not None:
+        if (company_found is not None):
             for company in companies:
                 if company.lower() in company_found.lower():
-                        company_found = company
-                        break
-                else:
-                    company_found = None
-                        
+                    isFound = True
+                    break
+        
+        if isFound == False:
+            company_found = None                
+        
         return company_found

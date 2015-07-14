@@ -332,6 +332,42 @@ class BaseModule(framework.Framework):
             payload['start'] = resp.json['queries']['nextPage'][0]['startIndex']
         return results
 
+    def search_github_api(self, query):
+        self.verbose('Searching Github for: %s' % (query))
+        return self.query_github_api(endpoint='/search/code', payload={'q': query})
+
+    def query_github_api(self, endpoint, payload={}):
+        headers = {'Authorization': 'token %s' % (self.get_key('github_api'))}
+        base_url = 'https://api.github.com'
+        url = base_url + endpoint
+        results = []
+        page = 1
+        while True:
+            # Github rate limit is 30 requests per minute
+            time.sleep(2) # 60s / 30r = 2s/r
+            payload['page'] = page
+            resp = self.request(url=url, headers=headers, payload=payload)
+            # check for errors
+            if resp.status_code != 200:
+                # skip 404s returned for no results
+                if resp.status_code != 404:
+                    self.error('Message from Github: %s' % (resp.json['message']))
+                break
+            # enumerate resuls
+            # handle Search API differently than others
+            if endpoint.lower().startswith('/search/'):
+                results += resp.json['items']
+            elif endpoint.lower().startswith('/gists/'):
+                results += [x for x in resp.json['files']]
+            else:
+                results += resp.json
+            # paginate
+            if 'link' in resp.headers and 'rel="next"' in resp.headers['link']:
+                page += 1
+                continue
+            break
+        return results
+
     #==================================================
     # REQUEST METHODS
     #==================================================

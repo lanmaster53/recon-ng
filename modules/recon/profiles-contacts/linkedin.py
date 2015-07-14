@@ -8,11 +8,10 @@ class Module(BaseModule):
 
     meta  = {
         'name': 'Linkedin Contact Crawler',
-        'author':'Mike Larch and Brian Fehrman',
-        'description': 'Harvests contact information from linkedin.com by parsing the link(s) given and adding the info to the \'contacts\' table.',
-        'query': 'SELECT DISTINCT url FROM profiles WHERE url IS NOT NULL ORDER BY url',
+        'author': 'Mike Larch and Brian Fehrman',
+        'description': 'Harvests contacts from linkedin.com by parsing known profiles and adding the info to the \'contacts\' table.',
+        'query': 'SELECT DISTINCT url FROM profiles WHERE url IS NOT NULL AND resource LIKE \'linkedin\'',
     }
-    
 
     def module_run(self, urls):
         num_urls = len(urls)
@@ -44,6 +43,8 @@ class Module(BaseModule):
                 fname, mname, lname = self.parse_name(name[0])
             else:
                 return
+                
+            fname, mname, lname = self.name_check(fname, mname, lname)
         try:
             region = tree.xpath('//span[@class="locality"]/text()')[0].strip()
         except IndexError:
@@ -52,6 +53,21 @@ class Module(BaseModule):
         # output the results
         self.alert('%s %s - %s (%s)' % (fname, lname, title, region))
         self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region)
+        
+    def name_check(self, fname, mname, lname):
+        titles = ['CISSP', 'CPA', 'DDS', 'ERPA', 'LLM', 'MBA', 'PhD', 'PHD']
+        if lname is not None:
+            lname = lname.split(',')[0]
+            lname = lname.replace('.', '')
+            for title in titles:
+                if title in lname:
+                    lname = mname
+                    mname = ''
+                    
+        if fname is not None:
+            fname = fname.split('/')[0]
+        
+        return fname, mname, lname
         
     def parse_title(self, tree):
         title = None

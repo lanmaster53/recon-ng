@@ -5,3 +5,5 @@ lxml==3.4.4
 mechanize==0.2.5
 slowaes==0.1a1
 XlsxWriter==0.7.3
+olefile==0.42.1
+PyPDF2==1.25.1

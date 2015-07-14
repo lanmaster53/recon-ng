@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+from cookielib import CookieJar
 import StringIO
 import time
 import xml.etree.ElementTree
@@ -15,17 +16,25 @@ class Module(BaseModule):
         'query': 'SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL AND type IS NOT \'Adobe\'',
     }
 
+    cookiejar = CookieJar()
+
+    def login(self, username, password):
+        url = 'https://hashes.org/login.php'
+        payload = { 'username': username, 'password': password, 'action':'action' }
+        resp = self.request(url, method='POST', payload=payload, cookiejar=self.cookiejar, redirect=False)
+        if resp.headers['location'] == 'index.php':
+            return True
+        return False
+
     def module_run(self, hashes):
+        if not self.login(self.get_key('hashes_username'), self.get_key('hashes_password')):
+            self.error('Error authenticating to hashes.org.')
+            return
         url = 'https://hashes.org/api.php'
         hash_groups = map(None, *(iter(hashes),) * 20)
-        first = True
         for group in hash_groups:
-            # rate limit requests
-            if first:
-                first = False
-            else:
-                # 20 requests per minute
-                time.sleep(3)
+            # 20 requests per minute
+            time.sleep(3)
             # rate limit error has "data" tags
             # rate limit error does not have a "hash" element
             # rate limit error response for bulk requests consist of one request element
@@ -34,7 +43,7 @@ class Module(BaseModule):
             group = [x for x in group if x is not None]
             for i in range(0, len(group)):
                 payload['hash'+str(i+1)] = group[i]
-            resp = self.request(url, payload=payload)
+            resp = self.request(url, payload=payload, cookiejar=self.cookiejar)
             tree = resp.xml
             requests = tree.findall('request')
             for request in requests:

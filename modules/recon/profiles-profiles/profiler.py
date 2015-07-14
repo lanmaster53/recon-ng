@@ -33,7 +33,7 @@ class Module(BaseModule, ThreadingMixin):
         d = dict(site)
         self.verbose('Checking: %s' % d['r'])
         url = d['u'] % urllib.quote(user)
-        self.request(url, redirect=False)
+        resp = self.request(url, redirect=False)
         if resp.status_code == int(d['gRC']):
             self.debug('Codes matched %s %s' % (resp.status_code, d['gRC']))
             if d['gRT'] in resp.text or d['gRT'] in resp.headers:

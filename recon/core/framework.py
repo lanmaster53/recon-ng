@@ -193,18 +193,19 @@ class Framework(cmd.Cmd):
 
     def is_hash(self, hashstr):
         hashdict = [
-            {'pattern': '[a-fA-F0-9]', 'len': 32, 'type': 'MD5'},
-            {'pattern': '[a-fA-F0-9]', 'len': 16, 'type': 'MySQL'},
-            {'pattern': '^\*[a-fA-F0-9]', 'len': 41, 'type': 'MySQL5'},
-            {'pattern': '[a-fA-F0-9]', 'len': 40, 'type': 'SHA1'},
-            {'pattern': '[a-fA-F0-9]', 'len': 56, 'type': 'SHA224'},
-            {'pattern': '[a-fA-F0-9]', 'len': 64, 'type': 'SHA256'},
-            {'pattern': '[a-fA-F0-9]', 'len': 96, 'type': 'SHA384'},
-            {'pattern': '[a-fA-F0-9]', 'len': 128, 'type': 'SHA512'},
-            {'pattern': '^\$[PH]{1}\$', 'len': 34, 'type': 'phpass'},
+            {'pattern': '^[a-fA-F0-9]{32}$', 'type': 'MD5'},
+            {'pattern': '^[a-fA-F0-9]{16}$', 'type': 'MySQL'},
+            {'pattern': '^\*[a-fA-F0-9]{40}$', 'type': 'MySQL5'},
+            {'pattern': '^[a-fA-F0-9]{40}$', 'type': 'SHA1'},
+            {'pattern': '^[a-fA-F0-9]{56}$', 'type': 'SHA224'},
+            {'pattern': '^[a-fA-F0-9]{64}$', 'type': 'SHA256'},
+            {'pattern': '^[a-fA-F0-9]{96}$', 'type': 'SHA384'},
+            {'pattern': '^[a-fA-F0-9]{128}$', 'type': 'SHA512'},
+            {'pattern': '^\$[PH]{1}\$.{31}$', 'type': 'phpass'},
+            {'pattern': '^\$2[ya]?\$.{56}$', 'type': 'bcrypt'},
         ]
         for hashitem in hashdict:
-            if len(hashstr) == hashitem['len'] and re.match(hashitem['pattern'], hashstr):
+            if re.match(hashitem['pattern'], hashstr):
                 return hashitem['type']
         return False
 
@@ -404,7 +405,7 @@ class Framework(cmd.Cmd):
             host = self.to_unicode(host),
             reference = self.to_unicode(reference),
             example = self.to_unicode(example),
-            publish_date = self.to_unicode(publish_date.strftime(self.time_format)),
+            publish_date = self.to_unicode(publish_date.strftime(self.time_format) if publish_date else None),
             category = self.to_unicode(category),
             status = self.to_unicode(status)
         )
@@ -465,7 +466,7 @@ class Framework(cmd.Cmd):
             self.add_contacts(first_name=None, last_name=None, title=None, email=username)
         return self.insert('credentials', data, data.keys())
 
-    def add_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, targets=None, media_refs=None):
+    def add_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, password_type=None, targets=None, media_refs=None):
         '''Adds a leak to the database and returns the affected row count.'''
         data = dict(
             leak_id = self.to_unicode(leak_id),
@@ -482,6 +483,7 @@ class Framework(cmd.Cmd):
             attack_method = self.to_unicode(attack_method),
             target_industries = self.to_unicode(target_industries),
             password_hash = self.to_unicode(password_hash),
+            password_type = self.to_unicode(password_type),
             targets = self.to_unicode(targets),
             media_refs = self.to_unicode(media_refs)
         )
@@ -513,6 +515,18 @@ class Framework(cmd.Cmd):
             notes = self.to_unicode(notes)
         )
         return self.insert('profiles', data, ('username', 'url'))
+
+    def add_repositories(self, name=None, owner=None, description=None, resource=None, category=None, url=None):
+        '''Adds a repository to the database and returns the affected row count.'''
+        data = dict(
+            name = self.to_unicode(name),
+            owner = self.to_unicode(owner),
+            description = self.to_unicode(description),
+            resource = self.to_unicode(resource),
+            category = self.to_unicode(category),
+            url = self.to_unicode(url)
+        )
+        return self.insert('repositories', data, data.keys())
 
     def insert(self, table, data, unique_columns=[]):
         '''Inserts items into database and returns the affected row count.

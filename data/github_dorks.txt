@@ -1,0 +1,34 @@
+# https://twitter.com/egyp7/status/628955613528109056
+# rails secret token
+filename:secret_token.rb config
+language:ruby secret_token
+
+# private keys
+path:.ssh/id_rsa BEGIN
+
+# https://twitter.com/TekDefense/status/294556153151647744
+# md5 hash of most used password 123456
+e10adc3949ba59abbe56e057f20f883e
+
+# http://seclists.org/fulldisclosure/2014/Mar/343
+# database passwords
+mysql.binero.se
+define("DB_PASSWORD"
+
+# http://seclists.org/fulldisclosure/2013/Jun/15
+# possible SQL injection
+extension:php mysql_query $_GET
+
+# http://blog.conviso.com.br/2013/06/github-hacking-for-fun-and-sensitive.html
+# private keys
+extension:pem private
+extension:conf FTP server configuration
+# email addresses
+extension:xls mail
+extension:sql mysql dump
+# possible PHP backdoor
+stars:>1000 forks:>100 extension:php "eval(preg_replace("
+
+# https://twitter.com/lanmaster53/status/629102944252772356
+# Flask apps with possible SSTI vulns
+extension:py flask render_template_string

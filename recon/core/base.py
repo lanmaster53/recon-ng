@@ -50,6 +50,9 @@ KEY_RESOURCES = [
     'fullcontact_api',
     'google_api',
     'google_cse',
+    'github_api',
+    'hashes_username',
+    'hashes_password',
     'instagram_api',
     'instagram_secret',
     'instagram_token',
@@ -89,7 +92,6 @@ class Recon(framework.Framework):
         self._init_global_options()
         self._init_home()
         self.init_workspace('default')
-        self._load_modules()
         if self._mode == Mode.CONSOLE:
             self.show_banner()
         self.analytics = False
@@ -251,6 +253,8 @@ class Recon(framework.Framework):
         # load workspace configuration
         self._init_global_options()
         self._load_config()
+        # load modules after config to populate options
+        self._load_modules()
         return True
 
     def delete_workspace(self, workspace):
@@ -288,11 +292,12 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS credentials (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT, module TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, targets TEXT, media_refs TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS leaks (leak_id TEXT, description TEXT, source_refs TEXT, leak_type TEXT, title TEXT, import_date TEXT, leak_date TEXT, attackers TEXT, num_entries TEXT, score TEXT, num_domains_affected TEXT, attack_method TEXT, target_industries TEXT, password_hash TEXT, password_type TEXT, targets TEXT, media_refs TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS pushpins (source TEXT, screen_name TEXT, profile_name TEXT, profile_url TEXT, media_url TEXT, thumb_url TEXT, message TEXT, latitude TEXT, longitude TEXT, time TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS profiles (username TEXT, resource TEXT, url TEXT, category TEXT, notes TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS repositories (name TEXT, owner TEXT, description TEXT, resource TEXT, category TEXT, url TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.query('PRAGMA user_version = 6')
+        self.query('PRAGMA user_version = 8')
 
     def _migrate_db(self):
         db_version = lambda self: self.query('PRAGMA user_version')[0][0]
@@ -345,6 +350,15 @@ class Recon(framework.Framework):
             # add profile table
             self.query('CREATE TABLE IF NOT EXISTS profiles (username TEXT, resource TEXT, url TEXT, category TEXT, notes TEXT, module TEXT)')
             self.query('PRAGMA user_version = 6')
+        if db_version(self) == 6:
+            # add profile table
+            self.query('CREATE TABLE IF NOT EXISTS repositories (name TEXT, owner TEXT, description TEXT, resource TEXT, category TEXT, url TEXT, module TEXT)')
+            self.query('PRAGMA user_version = 7')
+        if db_version(self) == 7:
+            # add password_type column to leaks table
+            self.query('ALTER TABLE leaks ADD COLUMN password_type TEXT')
+            self.query('UPDATE leaks SET password_type=\'unknown\'')
+            self.query('PRAGMA user_version = 8')
 
     #==================================================
     # SHOW METHODS
