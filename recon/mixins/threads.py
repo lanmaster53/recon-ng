@@ -31,6 +31,13 @@ class ThreadingMixin(object):
     # the likelihood of encountering the race condition.
 
     def thread(self, *args):
+        # disable threading in debug mode
+        if self._global_options['debug']:
+            # call the thread method in serial for each input
+            for item in args[0]:
+                self.module_thread(item, *args[1:])
+            return
+        # begin threading code
         thread_count = self._global_options['threads']
         self.stopped = threading.Event()
         self.exc_info = None

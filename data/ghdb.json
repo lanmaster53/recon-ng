@@ -28662,5 +28662,13 @@
         "querystring": "http://www.google.com/search?q=inurl:\"default.php\" intext:\"website\" \"has been successfully installed on the server!\"", 
         "shortDescription": "inurl:\"default.php\" intext:\"website\" \"has been successfully installed on the server!\"", 
         "textualDescription": "Dork=\u00a0inurl:\"default.php\" intext:\"website\" \"has been successfully installed on the server!\"\nDetails:\u00a0Here is a list of files and directories in your public_html folder, it bypass directory-listening restriction.\n\nSilent_z3r0Pakistan Cyber Army"
+    }, 
+    {
+        "signatureReferenceNumber": "4083", 
+        "link": "https://www.exploit-db.com/ghdb/4083/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=site:ws.kik.com | site:ws2.kik.com k=", 
+        "shortDescription": "site:ws.kik.com | site:ws2.kik.com k=", 
+        "textualDescription": "Google Dork: site:ws.kik.com | site:ws2.kik.com k=\nDate: September 16th, 2015\nExploit Author: Matthew Blankenship\nDescription: Shows usernames, emails, and verification tokens for kik messenger accounts."
     }
 ]

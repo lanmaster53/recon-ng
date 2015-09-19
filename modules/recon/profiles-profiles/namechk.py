@@ -34,7 +34,7 @@ class Module(BaseModule, ThreadingMixin):
         token = ''.join([x.value for x in resp.cookiejar if x.name=='token'])
         # reset url for site requests
         url = 'https://namechk.com/availability/%s'
-        payload = {'z': token}
+        payload = {'x': token}
         # required header for site requests
         headers = {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
         for username in usernames:
