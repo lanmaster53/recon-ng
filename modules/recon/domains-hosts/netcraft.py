@@ -13,7 +13,7 @@ class Module(BaseModule):
         'name': 'Netcraft Hostname Enumerator',
         'author': 'thrapt (thrapt@gmail.com)',
         'description': 'Harvests hosts from Netcraft.com. Updates the \'hosts\' table with the results.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
 
     def module_run(self, domains):

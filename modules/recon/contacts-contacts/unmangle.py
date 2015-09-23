@@ -32,7 +32,7 @@ class Module(BaseModule):
         'query': 'SELECT rowid, first_name, middle_name, last_name, email FROM contacts WHERE email IS NOT NULL',
         'options': (
             ('pattern', '<fn>.<ln>', True, 'pattern applied to email'),
-            ('overwrite', True, True, 'if set to true will update existing contact entry, otherwise it will create a new entry'),
+            ('overwrite', False, True, 'if set to true will update existing contact entry, otherwise it will create a new entry'),
         ),
     }
 

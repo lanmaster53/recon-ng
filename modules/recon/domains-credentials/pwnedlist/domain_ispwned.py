@@ -9,7 +9,7 @@ class Module(BaseModule):
         'comments': (
             'API Query Cost: 1 query per request.',
         ),
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
 
     def module_run(self, domains):

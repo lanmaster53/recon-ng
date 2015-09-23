@@ -10,7 +10,7 @@ class Module(BaseModule):
         'comments': (
             'Paste sites supported: Pastebin, Pastie, or Slexy',
         ),
-        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email',
+        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL',
         'options': (
             ('download', True, True, 'download pastes'),
         ),

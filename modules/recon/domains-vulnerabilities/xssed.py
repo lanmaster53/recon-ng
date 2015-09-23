@@ -9,7 +9,7 @@ class Module(BaseModule):
         'name': 'XSSed Domain Lookup',
         'author': 'Micah Hoffman (@WebBreacher)',
         'description': 'Checks XSSed.com for XSS records associated with a domain and displays the first 20 results.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
    
     def module_run(self, domains):

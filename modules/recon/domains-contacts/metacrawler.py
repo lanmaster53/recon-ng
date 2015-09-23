@@ -13,6 +13,9 @@ class Module(BaseModule, GoogleWebMixin):
         'name': 'Meta Data Extractor',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Searches for files associated with the provided domain(s) and extracts any contact related metadata.',
+        'comments': (
+            'Currently supports doc, docx, xls, xlsx, ppt, pptx, and pdf file types.',
+        ),
         'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
         'options': (
             ('extract', False, True, 'extract metadata from discovered files'),
@@ -41,17 +44,21 @@ class Module(BaseModule, GoogleWebMixin):
                         if ext in exts[key]:
                             # check to see if a parser exists for the file type
                             if hasattr(parsers, key+'_parser'):
-                                func = getattr(parsers, key + '_parser')
-                                resp = self.request(result)
-                                # validate that the url resulted in a file 
-                                if resp.headers['content-type'].startswith('application'):
-                                    meta = func(resp.raw)
-                                    # display the extracted metadata
-                                    for key in meta:
-                                        if meta[key]:
-                                            self.output('%s: %s' % (key.title(), meta[key]))
-                                else:
-                                    self.error('Resource not a valid file.')
+                                try:
+                                    func = getattr(parsers, key + '_parser')
+                                    resp = self.request(result)
+                                    # validate that the url resulted in a file 
+                                    if resp.headers['content-type'].startswith('application'):
+                                        meta = func(resp.raw)
+                                        # display the extracted metadata
+                                        for key in meta:
+                                            if meta[key]:
+                                                self.alert('%s: %s' % (key.title(), meta[key]))
+                                    else:
+                                        self.error('Resource not a valid file.')
+                                except Exception:
+                                    self.print_exception()
                             else:
                                 self.alert('No parser available for file type: %s' % ext)
                             break
+            self.alert('%d files found on \'%s\'.' % (len(results), domain))

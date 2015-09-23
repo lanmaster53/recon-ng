@@ -4,20 +4,20 @@ import re
 class Module(BaseModule):
 
     meta = {
-        'name': 'Shodan Hostname Enumerator',
-        'author': 'Tim Tomes (@LaNMaSteR53)',
-        'description': 'Harvests hosts from the Shodan API by using the \'hostname\' search operator. Updates the \'hosts\' table with the results.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
+        'name': 'Shodan IP Enumerator',
+        'author': 'Tim Tomes (@LaNMaSteR53) and Matt Pluckett (@t3lc0)',
+        'description': 'Harvests port information from the Shodan API by using the \'ip\' search operator. Updates the \'ports\' table with the results.',
+        'query': 'SELECT DISTINCT ip_address FROM hosts WHERE ip_address IS NOT NULL',
         'options': (
             ('limit', 1, True, 'limit number of api requests per input source (0 = unlimited)'),
         ),
     }
 
-    def module_run(self, domains):
+    def module_run(self, ipaddrs):
         limit = self.options['limit']
-        for domain in domains:
-            self.heading(domain, level=0)
-            query = 'hostname:%s' % (domain)
+        for ipaddr in ipaddrs:
+            self.heading(ipaddr, level=0)
+            query = 'ip:%s' % (ipaddr)
             results = self.search_shodan_api(query, limit)
             for host in results:
                 address = host['ip_str']
@@ -27,4 +27,3 @@ class Module(BaseModule):
                 for hostname in host['hostnames']:
                     self.output('%s (%s) - %s' % (address, hostname or 'Unknown', port))
                     self.add_ports(ip_address=address, port=port, host=hostname)
-                    self.add_hosts(host=hostname, ip_address=address)

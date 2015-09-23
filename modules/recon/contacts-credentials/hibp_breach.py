@@ -7,7 +7,7 @@ class Module(BaseModule):
         'name': 'Have I been pwned? Breach Search',
         'author': 'Tim Tomes (@LaNMaSteR53) & Tyler Halfpop (@tylerhalfpop)',
         'description': 'Leverages the haveibeenpwned.com API to determine if email addresses are associated with breached credentials. Adds compromised email addresses to the \'credentials\' table.',
-        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email',
+        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL',
     }
 
     def module_run(self, accounts):

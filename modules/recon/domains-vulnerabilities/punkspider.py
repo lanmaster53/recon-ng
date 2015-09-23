@@ -8,7 +8,7 @@ class Module(BaseModule):
         'name': 'PunkSPIDER Vulnerabilty Finder',
         'author': 'Tim Tomes (@LaNMaSteR53) and thrapt (thrapt@gmail.com)',
         'description': 'Leverages the PunkSPIDER API to search for previosuly discovered vulnerabltiies on hosts within a domain.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
    
     def module_run(self, domains):

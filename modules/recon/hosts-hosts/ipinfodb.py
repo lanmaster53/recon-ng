@@ -1,5 +1,6 @@
 from recon.core.module import BaseModule
 import json
+import time
 
 class Module(BaseModule):
 
@@ -23,6 +24,7 @@ class Module(BaseModule):
             if jsonobj['statusCode'].lower() == 'error':
                 self.error(jsonobj['statusMessage'])
                 continue
+            time.sleep(.5)
             region = ', '.join([str(jsonobj[x]).title() for x in ['cityName', 'regionName'] if jsonobj[x]]) or None
             country = jsonobj['countryName'].title()
             latitude = str(jsonobj['latitude'])

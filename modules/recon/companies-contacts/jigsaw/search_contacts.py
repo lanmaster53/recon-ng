@@ -9,7 +9,7 @@ class Module(BaseModule):
         'name': 'Jigsaw Contact Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Harvests contacts from the Jigsaw.com API. Updates the \'contacts\' table with the results.',
-        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company',
+        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL',
         'options': (
             ('keywords', None, False, 'additional keywords to identify company'),
         ),

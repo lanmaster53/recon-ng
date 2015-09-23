@@ -4,28 +4,32 @@ from StringIO import StringIO
 import lxml.etree
 import olefile
 import os
+import re
 import zipfile
+
+def parse_emails(s):
+    return re.findall(r'([^\s]+@[^\s]+)', s)
 
 def ole_parser(s):
     ole = olefile.OleFileIO(s)
     meta = ole.get_metadata()
+    attrs = meta.DOCSUM_ATTRIBS + meta.SUMMARY_ATTRIBS
     #meta.dump()
-    result = {
-        'author': meta.author,
-        'last saved by': meta.last_saved_by,
-        'company': meta.company,
-    }
+    result = {}
+    for attr in attrs:
+        if hasattr(meta, attr):
+            result[attr] = getattr(meta, attr)
     ole.close()
     return result
 
 def ooxml_parser(s):
     zf = zipfile.ZipFile(StringIO(s))
     doc = lxml.etree.fromstring(zf.read('docProps/core.xml'))
+    meta = [(x.tag, x.text) for x in doc.xpath('/*/*', namespaces=doc.nsmap)]
     #print(lxml.etree.tostring(doc, pretty_print=True))
-    result = {
-        'creator': ' '.join([x.text for x in doc.xpath('//dc:creator', namespaces=doc.nsmap)]),
-        'last modified by': ' '.join([x.text for x in doc.xpath('//cp:lastModifiedBy', namespaces=doc.nsmap)]),
-    }
+    result = {}
+    for el in meta:
+        result[el[0].split('}')[-1]] = el[1]
     return result
 
 def pdf_parser(s):
@@ -40,7 +44,7 @@ def pdf_parser(s):
             return {}
     meta = pdf.getDocumentInfo()
     #print(str(meta))
-    result = {
-        'author': meta.author,
-    }
+    result = {}
+    for key in meta.keys():
+        result[key[1:]] = meta.get(key)
     return result

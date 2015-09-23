@@ -8,7 +8,7 @@ class Module(BaseModule):
         'name': 'PwnedList Validator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Leverages PwnedList.com to determine if email addresses are associated with leaked credentials. Adds compromised email addresses to the \'credentials\' table.',
-        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL ORDER BY email',
+        'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL',
     }
 
     def module_run(self, accounts):

@@ -16,7 +16,7 @@ class Module(BaseModule):
             '\tinurl:elmah.axd ext:axd intitle:"Error log for"',
             '\tinurl:server-status "Apache Status"',
         ),
-        'query': 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL ORDER BY host',
+        'query': 'SELECT DISTINCT host FROM hosts WHERE host IS NOT NULL',
         'options': (
             ('download', True, True, 'download discovered files'),
             ('protocol', 'http', True, 'request protocol'),

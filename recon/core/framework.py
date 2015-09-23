@@ -766,6 +766,9 @@ class Framework(cmd.Cmd):
             print('%sNo options available for this module.' % (self.spacer))
             print('')
 
+    def show_keys(self):
+        self.do_keys('list')
+
     def _get_show_names(self):
         # Any method beginning with "show_" will be parsed
         # and added as a subcommand for the show command.

@@ -56,7 +56,7 @@ class GoogleWebMixin(object):
             page += 1
             payload['start'] = set_page(page)
             # check for more pages
-            if 'Next</span>' not in resp.text:
+            if '>Next</' not in resp.text:
                 break
         return results
 

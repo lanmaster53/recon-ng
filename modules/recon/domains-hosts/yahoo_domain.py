@@ -12,7 +12,7 @@ class Module(BaseModule):
         'name': 'Yahoo Hostname Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Harvests hosts from Yahoo.com by using the \'domain\' search operator. Updates the \'hosts\' table with the results.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
 
     def module_run(self, domains):

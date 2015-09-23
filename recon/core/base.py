@@ -42,6 +42,8 @@ __builtin__.print = spool_print
 KEY_RESOURCES = [
     'bing_api',
     'builtwith_api',
+    'censysio_id',
+    'censysio_secret',
     'facebook_api',
     'facebook_password',
     'facebook_secret',
@@ -51,8 +53,7 @@ KEY_RESOURCES = [
     'google_api',
     'google_cse',
     'github_api',
-    'hashes_username',
-    'hashes_password',
+    'hashes_api',
     'instagram_api',
     'instagram_secret',
     'instagram_token',
@@ -378,6 +379,9 @@ class Recon(framework.Framework):
             # create dynamic easter egg command based on counts
             setattr(self, 'do_%d' % count[0], self._menu_egg)
         print('')
+
+    def show_workspaces(self):
+        self.do_workspaces('list')
 
     #==================================================
     # COMMAND METHODS

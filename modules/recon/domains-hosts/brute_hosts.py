@@ -22,18 +22,19 @@ class Module(BaseModule, ResolverMixin, ThreadingMixin):
         resolver = self.get_resolver()
         for domain in domains:
             self.heading(domain, level=0)
+            wildcard = None
             try:
                 answers = resolver.query('*.%s' % (domain))
-                self.output('Wildcard DNS entry found for \'%s\'. Cannot brute force hostnames.' % (domain))
-                continue
+                wildcard = answers.response.answer[0][0].address
+                self.output('Wildcard DNS entry found for \'%s\' at \'%s\'.' % (domain, wildcard))
             except (dns.resolver.NoNameservers, dns.resolver.Timeout):
                 self.error('Invalid nameserver.')
                 continue
             except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                 self.verbose('No Wildcard DNS entry found.')
-            self.thread(words, domain, resolver)
+            self.thread(words, domain, resolver, wildcard)
 
-    def module_thread(self, word, domain, resolver):
+    def module_thread(self, word, domain, resolver, wildcard):
         max_attempts = 3
         attempt = 0
         while attempt < max_attempts:
@@ -52,12 +53,17 @@ class Module(BaseModule, ResolverMixin, ThreadingMixin):
                     for rdata in answer:
                         if rdata.rdtype in (1, 5):
                             if rdata.rdtype == 1:
-                                self.alert('%s => (A) %s - Host found!' % (host, host))
+                                address = rdata.address
+                                if address != wildcard:
+                                    self.alert('%s => (A) %s - Host found!' % (host, address))
+                                    self.add_hosts(host, address)
+                                else:
+                                    self.verbose('%s => Wildcard response.' % (host))
                             if rdata.rdtype == 5:
                                 cname = rdata.target.to_text()[:-1]
                                 self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
                                 self.add_hosts(cname)
-                            # add the host in case a CNAME exists without an A record
-                            self.add_hosts(host)
+                                # add the host in case a CNAME exists without an A record
+                                self.add_hosts(host)
             # break out of the loop
             attempt = max_attempts

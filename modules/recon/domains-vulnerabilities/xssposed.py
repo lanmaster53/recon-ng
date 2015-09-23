@@ -8,7 +8,7 @@ class Module(BaseModule):
         'name': 'XSSposed Domain Lookup',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Checks XSSposed.com for XSS records associated with a domain.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain'
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
    
     def module_run(self, domains):

@@ -11,7 +11,7 @@ class Module(BaseModule):
         'comments': (
             'For an alternative version see https://github.com/403labs/recon-ng_modules.',
         ),
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
 
     def module_run(self, domains):

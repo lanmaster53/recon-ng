@@ -7,7 +7,7 @@ class Module(BaseModule):
         'name': 'LinkedIn Authenticated Contact Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Harvests contacts from the LinkedIn.com API using an authenticated connections network. Updates the \'contacts\' table with the results.',
-        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company',
+        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL',
     }
 
     def get_linkedin_access_token(self):

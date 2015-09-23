@@ -9,7 +9,7 @@ class Module(BaseModule):
         'name': 'VPNHunter Lookup',
         'author': 'Quentin Kaiser (contact[at]quentinkaiser.be)',
         'description': 'Checks vpnhunter.com for SSL VPNs, remote accesses, email portals and generic login sites. Updates the \'hosts\' table with the results.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
 
     def module_run(self, domains):

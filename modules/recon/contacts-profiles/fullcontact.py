@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+import time
 
 class Module(BaseModule):
 
@@ -32,7 +33,10 @@ class Module(BaseModule):
                     if 'organizations' in resp.json:
                         for occupation in resp.json['organizations']:
                             if occupation['current']:
-                                title = '%s at %s' % (occupation['title'], occupation['name'])
+                                if 'title' in occupation:
+                                    title = '%s at %s' % (occupation['title'], occupation['name'])
+                                else:
+                                    title = 'Employee at %s' % occupation['name']
                                 self.output(title)
                     # parse demographics for region
                     region = None
@@ -60,3 +64,5 @@ class Module(BaseModule):
                 self.output('%s - Queued for search.' % email)
             else:
                 self.output('%s - %s' % (email, resp.json['message']))
+            # 60 requests per minute api rate limit
+            time.sleep(1)

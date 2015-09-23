@@ -10,7 +10,7 @@ class Module(BaseModule):
         'comments': (
             'API Query Cost: 1 query per request.',
         ),
-        'query': 'SELECT DISTINCT username FROM credentials WHERE username IS NOT NULL and password IS NULL ORDER BY username',
+        'query': 'SELECT DISTINCT username FROM credentials WHERE username IS NOT NULL and password IS NULL',
     }
 
     def module_run(self, accounts):

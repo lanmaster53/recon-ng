@@ -10,7 +10,7 @@ class Module(BaseModule):
         'comments': (
             'Inspiration from theHarvester.py by Christan Martorella: cmarorella[at]edge-seecurity.com',
         ),
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
 
     def module_run(self, domains):

@@ -11,7 +11,7 @@ class Module(BaseModule):
         'name': 'Jigsaw Authenticated Contact Enumerator',
         'author': 'Travis Lee (@eelsivart)',
         'description': 'Harvests contacts from Data.com using an authenticated user account. Updates the \'contacts\' table with the results. Use \'keys\' to set your jigsaw username and password before use.',
-        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL ORDER BY company',
+        'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL',
     }
 
     cookiejar = CookieJar()

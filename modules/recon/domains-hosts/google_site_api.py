@@ -7,7 +7,7 @@ class Module(BaseModule):
         'name': 'Google CSE Hostname Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Leverages the Google Custom Search Engine API to harvest hosts using the \'site\' search operator. Updates the \'hosts\' table with the results.',
-        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL ORDER BY domain',
+        'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
     }
 
     def module_run(self, domains):
