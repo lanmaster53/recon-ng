@@ -16,24 +16,23 @@ class Module(BaseModule):
         key = self.get_key('pwnedlist_api')
         secret = self.get_key('pwnedlist_secret')
         tdata = []
-        # setup API call
-        method = 'domains.info'
-        url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
+        # setup the API call
+        url = 'https://api.pwnedlist.com/api/1/domains/info'
         for domain in domains:
             payload = {'domain_identifier': domain}
-            payload = self.build_pwnedlist_payload(payload, method, key, secret)
-            # make request
+            payload = self.build_pwnedlist_payload(payload, 'domains.info', key, secret)
+            # make the request
             resp = self.request(url, payload=payload)
             jsonobj = resp.json
             # compare to None to confirm valid json as empty json is returned when domain not found
             if jsonobj is None:
                 self.error('Invalid JSON response for \'%s\'.\n%s' % (domain, resp.text))
                 continue
-            # check for positive response
+            # check for a positive response
             if not jsonobj['num_entries']:
                 self.verbose('Domain \'%s\' has no publicly compromised accounts.' % (domain))
                 continue
-            # handle output
+            # handle the output
             self.alert('Domain \'%s\' has publicly compromised accounts!' % (domain))
             tdata.append([jsonobj['domain'], str(jsonobj['num_entries']), jsonobj['first_seen'], jsonobj['last_seen']])
         if tdata:

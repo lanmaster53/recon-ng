@@ -1,12 +1,11 @@
 from recon.core.module import BaseModule
-from io import StringIO
+from recon.utils.linkedin import parse_name, parse_title, parse_region, perform_login
 from lxml.html import fromstring
-import re
 import time
 
 class Module(BaseModule):
 
-    meta  = {
+    meta = {
         'name': 'Linkedin Contact Crawler',
         'author': 'Mike Larch and Brian Fehrman',
         'description': 'Harvests contacts from linkedin.com by parsing known profiles and adding the info to the \'contacts\' table.',
@@ -15,46 +14,47 @@ class Module(BaseModule):
 
     def module_run(self, urls):
         num_urls = len(urls)
-        for url_curr in urls:
+        cookiej = None
+        for url in urls:
             self.verbose('{0} URLs remaining.'.format(num_urls))
-            self.get_info(url_curr)
+            cookiej = self.get_info(url, cookiej)
             num_urls -= 1
 
-    def get_info(self, url):
-        time.sleep(1)
+    def get_info(self, url, cookiej):
+        time.sleep(0.333)
         self.verbose('Parsing \'%s\'...' % (url))
-
+        retries = 5
+        resp = None
+        resp_text = None
+        while 0 < retries:
+            try:
+                retries -= 1
+                resp = self.request(url, cookiejar=cookiej)
+                resp_text = resp.text
+                if 'D8E90337EA is the' in resp_text:
+                    self.verbose('Linkedin is limiting profile views, try logging in or re-login with a new account')
+                    cookiej = perform_login()
+                    retries += 1
+                    continue
+                break
+            except Exception as e:
+                self.error('{0}, {1} retries left'.format(e, retries))
+        if resp_text is None:
+            return cookiej
         resp = self.request(url)
-            
         tree = fromstring(resp.text)
-        
-        title = self.parse_title(tree)
-        
-        if title is None:
-            title = 'Employee'
-        
-        try:
-            fname = tree.xpath('//span[@class="given-name"]/text()')[0].split(' ',1)[0]
-            mname = ''
-            lname = tree.xpath('//span[@class="family-name"]/text()')[0].split(',',1)[0]
-        except IndexError:
-            name = tree.xpath('//span[@class="full-name"]/text()')
-            if name:
-                fname, mname, lname = self.parse_name(name[0])
-            else:
-                return
-                
-            fname, mname, lname = self.name_check(fname, mname, lname)
-        try:
-            region = tree.xpath('//span[@class="locality"]/text()')[0].strip()
-        except IndexError:
-            region = ''
-        
+        name = parse_name(tree)
+        if name is None:
+            return cookiej
+        fname, mname, lname = self.check_name(*self.parse_name(name))
+        title = parse_title(tree) or 'Employee'
+        region = parse_region(tree) or ''
         # output the results
         self.alert('%s %s - %s (%s)' % (fname, lname, title, region))
         self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region)
+        return cookiej
         
-    def name_check(self, fname, mname, lname):
+    def check_name(self, fname, mname, lname):
         titles = ['CISSP', 'CPA', 'DDS', 'ERPA', 'LLM', 'MBA', 'PhD', 'PHD']
         if lname is not None:
             lname = lname.split(',')[0]
@@ -63,28 +63,6 @@ class Module(BaseModule):
                 if title in lname:
                     lname = mname
                     mname = ''
-                    
         if fname is not None:
             fname = fname.split('/')[0]
-        
         return fname, mname, lname
-        
-    def parse_title(self, tree):
-        title = None
-        
-        #try parsing via the tree method
-        title = self.parse_title_tree(tree)
-                
-        return title
-
-    def parse_title_tree(self, tree):
-        title = None
-                
-        try: title = tree.xpath('//ul[@class="current"]/li/text()')[0].strip()
-        except IndexError:
-            try: title = tree.xpath('//p[@class="headline-title title"]/text()')[0].strip()
-            except IndexError:
-                try: title = tree.xpath('//p[@class="title"]/text()')[0].strip().split(" at ",1)[0]
-                except IndexError:
-                    pass
-        return title

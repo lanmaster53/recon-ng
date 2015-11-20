@@ -234,6 +234,31 @@ class BaseModule(framework.Framework):
         payload['hmac'] = hm.hexdigest()
         return payload
 
+    def get_pwnedlist_leak(self, leak_id):
+        # check if the leak has already been retrieved
+        if self.query('SELECT * FROM leaks WHERE leak_id=?', (leak_id,)):
+            return
+        # set up the API call
+        key = self.get_key('pwnedlist_api')
+        secret = self.get_key('pwnedlist_secret')
+        url = 'https://api.pwnedlist.com/api/1/leaks/info'
+        base_payload = {'leakId': leak_id}
+        payload = self.build_pwnedlist_payload(base_payload, 'leaks.info', key, secret)
+        # make the request
+        resp = self.request(url, payload=payload)
+        if resp.status_code != 200:
+            self.error('Error retrieving leak data.\n%s' % (resp.text))
+            return
+        # add the retrieved leak to the leaks table
+        for leak in resp.json['leaks']:
+            normalized_leak = {}
+            for item in leak:
+                value = leak[item]
+                if type(value) == list:
+                    value = ', '.join(value)
+                normalized_leak[item] = value
+            self.add_leaks(**normalized_leak)
+
     def search_twitter_api(self, payload):
         headers = {'Authorization': 'Bearer %s' % (self.get_twitter_oauth_token())}
         url = 'https://api.twitter.com/1.1/search/tweets.json'

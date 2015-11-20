@@ -1,7 +1,6 @@
 from recon.core.module import BaseModule
-from io import StringIO
+from recon.utils.linkedin import parse_username, parse_company, perform_login
 from lxml.html import fromstring
-import re
 import time
 
 class Module(BaseModule):
@@ -21,143 +20,54 @@ class Module(BaseModule):
         for company in companies:
             self.heading(company, level=0)
             urls = self.get_urls(company)
-            
             num_urls = len(urls)
-            for url_curr in urls:
+            cookiej = None
+            for url in urls:
                 self.verbose('{0} URLs remaining.'.format(num_urls))
-                self.get_info(company, url_curr)
+                cookiej = self.get_info(company, url, cookiej)
                 num_urls -= 1
-    
+
     def get_urls(self, company):
-        limit = self.options['limit']
         urls = []
         results = []
-        
-        base_query = 'site:linkedin.com instreamset:(url):"pub" -instreamset:(url):"dir" '
-        
-        query = base_query + '"' + company + '"'
-        
-        results = self.search_bing_api(query, limit)
-
+        base_query = 'site:linkedin.com instreamset:(url):"pub" -instreamset:(url):"dir"'
+        query = '%s "%s"' % (base_query, company)
+        results = self.search_bing_api(query, self.options['limit'])
         # iterate through results and add new urls
         for result in results:
             url = result['Url']
             if url not in urls:
                 urls.append(url)
-            
         return urls
 
-    def get_info(self, company, url):
-        time.sleep(1)
-        
+    def get_info(self, company, url, cookiej):
+        time.sleep(0.333)
         self.verbose('Parsing \'%s\'...' % (url))
-        
         retries = 5
         resp = None
-        
+        resp_text = None
         while 0 < retries:
             try:
                 retries -= 1
-                resp = self.request(url)
+                resp = self.request(url, cookiejar=cookiej)
+                resp_text = resp.text
+                if 'D8E90337EA is the' in resp_text:
+                    self.verbose('Linkedin is limiting profile views, try logging in or re-login with a new account')
+                    cookiej = perform_login()
+                    retries += 1
+                    continue
                 break
             except Exception as e:
                 self.error('{0}, {1} retries left'.format(e, retries))
-        
-        if resp is None:
-            return
-        
-        tree = fromstring(resp.text)
-        
-        company_found = self.parse_company(tree, resp.text, company)
-        
+        if resp_text is None:
+            return cookiej
+        tree = fromstring(resp_text)
+        company_found = parse_company(tree, resp_text, company, self.options['previous'])
         if company_found is None:
-            self.error('No match for {0} found on the page or person is not a current employee'.format(company))
-            return
-
+            self.error('No company found on profile page.')
+            return cookiej
         # output the results
         self.alert('Probable match: %s' % url)
-        
-        username = self.get_username(url)
-        
-        if username is None:
-            username = 'unknown'
-        
+        username = parse_username(url) or 'unknown'
         self.add_profiles(username=username, url=url, resource='linkedin', category='social', notes=company_found)
-        
-    def get_username(self, url):
-        username = None
-        
-        try:
-            url = url.split('/pub/')[1]
-            username = url.split('/')[0]
-        except IndexError:
-            return None
-            
-        return username
-                
-    def parse_company(self, tree, resp, company):
-        company_found = self.parse_company_exp(resp, company)
-        
-        if company_found is None:
-            company_found = self.parse_company_tree(tree, company)
-            
-        return company_found
-        
-
-    def parse_company_exp(self, resp, company):
-        company_found = None
-        experiences = None
-        previous = self.options['previous']
-        try:
-            experiences = resp.split('<div id="experience-', 1)[1]
-            experiences = experiences.split('-view">', 1)[1]
-            experiences = experiences.split('<script>', 1)[0]
-            experiences = experiences.split('</div></div>')
-            
-        except IndexError:
-            return None
-        
-        if (experiences is None) or (company is None):
-            return None
-        
-        total = len(experiences)
-        for idx, experience in enumerate(experiences):
-            if idx == (total - 1):
-                break
-
-            try:
-                time_exp = experience.split('date-locale',1)[1]
-                time_exp = time_exp.split('</span>', 1)[0]
-            except IndexError:
-                continue
-
-            time_exp = time_exp.lower()
-            experience = experience.lower()
-            
-            if (company.lower() in experience) or (company.replace(" ","").lower() in experience):
-                if 'present' in time_exp or previous:
-                    company_found = company
-                    break
-                    
-        return company_found
-
-    def parse_company_tree(self, tree, company):
-        company_found = None
-        
-        try: company_found = tree.xpath('//ul[@class="current"]/li/a/span[@class="org summary"]/text()')[0]
-        except IndexError:
-            try: company_found = tree.xpath('//ul[@class="current"]/li/text()')[1].strip()
-            except IndexError:
-                try: company_found = tree.xpath('//p[@class="headline-title title"]/text()')[0].strip().split(" at ",1)[1]
-                except IndexError:
-                    try: company_found = tree.xpath('//p[@class="title "]/text()')[0].strip().split(" at ",1)[1]
-                    except IndexError:
-                        try: company_found = tree.xpath('//tr[@id="overview-summary-current"]/td/ol/li/a/text()')[0]
-                        except:
-                            pass
-        
-        if (company_found is not None) and (company is not None):
-            if company.lower() not in company_found.lower():
-                company_found = None
-        
-        return company_found
+        return cookiej

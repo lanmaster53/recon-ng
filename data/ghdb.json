@@ -29070,5 +29070,405 @@
         "querystring": "http://www.google.com/search?q=intitle:FootPrints Login | inurl:/MRcgi/MRentrancePage.pl", 
         "shortDescription": "intitle:FootPrints Login | inurl:/MRcgi/MRentrancePage.pl", 
         "textualDescription": "Numara Software \u00a0FootPrints Logins\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4134", 
+        "link": "https://www.exploit-db.com/ghdb/4134/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intext:\"Roundcube Webmail\" intitle:\"Welcome to Roundcube Webmail\" -site:roundcube.net", 
+        "shortDescription": "intext:\"Roundcube Webmail\" intitle:\"Welcome to Roundcube Webmail\" -site:roundcube.net", 
+        "textualDescription": "Roundcube Webmail Login Portals.\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4135", 
+        "link": "https://www.exploit-db.com/ghdb/4135/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=intitle:Tomcat Status | inurl:/status?full=true", 
+        "shortDescription": "intitle:Tomcat Status | inurl:/status?full=true", 
+        "textualDescription": "JBOSS / Tomcat Status IP info\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4136", 
+        "link": "https://www.exploit-db.com/ghdb/4136/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Mail - AfterLogic WebMail\"", 
+        "shortDescription": "intitle:\"Mail - AfterLogic WebMail\"", 
+        "textualDescription": "AfterLogic WebMail Login Portals.\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4137", 
+        "link": "https://www.exploit-db.com/ghdb/4137/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=inurl:index.php?id= intext:\"mysql_fetch_array\"", 
+        "shortDescription": "inurl:index.php?id= intext:\"mysql_fetch_array\"", 
+        "textualDescription": "here's a dork to find sql injectable sites in general.\ninurl can be replaced to something different...\n\nthx,\n\nDenis Muhic"
+    }, 
+    {
+        "signatureReferenceNumber": "4138", 
+        "link": "https://www.exploit-db.com/ghdb/4138/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=-inurl:http | -inurl:https inurl:ftp ext:xls | ext:xlsx bank", 
+        "shortDescription": "-inurl:http | -inurl:https inurl:ftp ext:xls | ext:xlsx bank", 
+        "textualDescription": "Lots of interesting stuff!\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4139", 
+        "link": "https://www.exploit-db.com/ghdb/4139/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:trafficcams -intext:trafficcams ext:asp OR ext:htm", 
+        "shortDescription": "inurl:trafficcams -intext:trafficcams ext:asp OR ext:htm", 
+        "textualDescription": "Dork who show cams of traffic of a lot of cities.\nDork By Rootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4140", 
+        "link": "https://www.exploit-db.com/ghdb/4140/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=intext:\"GET http://\" ext:txt intext:\"password\" inurl:log", 
+        "shortDescription": "intext:\"GET http://\" ext:txt intext:\"password\" inurl:log", 
+        "textualDescription": "this dork will return password sent in GET request from proxies logs.\n\nsubmitted by: Mohammad Al-Nasser"
+    }, 
+    {
+        "signatureReferenceNumber": "4141", 
+        "link": "https://www.exploit-db.com/ghdb/4141/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:net/net/airprint.html", 
+        "shortDescription": "inurl:net/net/airprint.html", 
+        "textualDescription": "Title: inurl:net/net/airprint.html\nDescription : This dork can access many printers without login.\n\nBy Sivabalan"
+    }, 
+    {
+        "signatureReferenceNumber": "4142", 
+        "link": "https://www.exploit-db.com/ghdb/4142/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/net/net/protocol.html", 
+        "shortDescription": "inurl:/net/net/protocol.html", 
+        "textualDescription": "Title: inurl:/net/net/protocol.html\nDescription: This dork can access many printers without login \n\nBy Sivabalan"
+    }, 
+    {
+        "signatureReferenceNumber": "4143", 
+        "link": "https://www.exploit-db.com/ghdb/4143/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=inurl:\"trace\" ext:axd intext:\"password\"", 
+        "shortDescription": "inurl:\"trace\" ext:axd intext:\"password\"", 
+        "textualDescription": "the dork keyword is:\ninurl:\"trace\" ext:axd intext:\"password\"\n\npurpose of dork:\nsearch for tracing files in the ASP.NET websites which might contain a\nsensitive information such as the username and password entered to the\napplication.\n\ndiscovered by: Asem Al Husaini (SFDA)"
+    }, 
+    {
+        "signatureReferenceNumber": "4144", 
+        "link": "https://www.exploit-db.com/ghdb/4144/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=inurl:/uniquesig0/ or  inurl:/uniquesig0/InternalSite/", 
+        "shortDescription": "inurl:/uniquesig0/ or  inurl:/uniquesig0/InternalSite/", 
+        "textualDescription": "Microsoft Forefront Unified Access Gateway - Error Pages/Logins/LogOffMsg's\n\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4145", 
+        "link": "https://www.exploit-db.com/ghdb/4145/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intext:\"Thehacker - Agd_Scorp - BLaSTER - Cr@zy_King - KinSize - JeXToXiC - s3f4 - rx5\"", 
+        "shortDescription": "intext:\"Thehacker - Agd_Scorp - BLaSTER - Cr@zy_King - KinSize - JeXToXiC - s3f4 - rx5\"", 
+        "textualDescription": "BLaSTER Webshell Footholds.\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4146", 
+        "link": "https://www.exploit-db.com/ghdb/4146/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intext:\"Please select file to upload:\" ext:php", 
+        "shortDescription": "intext:\"Please select file to upload:\" ext:php", 
+        "textualDescription": "Various file upload forms - potential footholds?\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4147", 
+        "link": "https://www.exploit-db.com/ghdb/4147/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:httpmon.php", 
+        "shortDescription": "inurl:httpmon.php", 
+        "textualDescription": "Dork for Zabbix Network Monitoring systems.\nDork Discovered by Rootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4148", 
+        "link": "https://www.exploit-db.com/ghdb/4148/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=intext:\"Powered By OpenCart\" -site:opencart.com -inurl:\"Powered By OpenCart\" -intitle:\"OpenCart\" -intitle:\"powered by\"", 
+        "shortDescription": "intext:\"Powered By OpenCart\" -site:opencart.com -inurl:\"Powered By OpenCart\" -intitle:\"OpenCart\" -intitle:\"powered by\"", 
+        "textualDescription": "Find Open Carts for Remote File Upload vulnerability.\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4149", 
+        "link": "https://www.exploit-db.com/ghdb/4149/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/cgi-bin/MANGA/index.cgi", 
+        "shortDescription": "inurl:/cgi-bin/MANGA/index.cgi", 
+        "textualDescription": "Description: This dork can access many login portal of big companies systems ( use this wisely. )\n\nBy Sivabalan ( CYBER GENIUS ).."
+    }, 
+    {
+        "signatureReferenceNumber": "4150", 
+        "link": "https://www.exploit-db.com/ghdb/4150/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=inurl:http | -inurl:https inurl:ftp ext:pdf taxreturn", 
+        "shortDescription": "inurl:http | -inurl:https inurl:ftp ext:pdf taxreturn", 
+        "textualDescription": "Amazing what you find with this..\n\n-Chopin"
+    }, 
+    {
+        "signatureReferenceNumber": "4151", 
+        "link": "https://www.exploit-db.com/ghdb/4151/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=inurl:\"server-status\" intext:\"Apache Server Status\"", 
+        "shortDescription": "inurl:\"server-status\" intext:\"Apache Server Status\"", 
+        "textualDescription": "Files containing juicy info\n\nThe Status module allows a server administrator to find out how well\ntheir server is performing. A HTML page is presented that gives the\ncurrent server statistics in an easily readable form. If required this\npage can be made to automatically refresh (given a compatible\nbrowser). Another page gives a simple machine-readable list of the\ncurrent server state.\n\nThe details given are:\n\nThe number of worker serving requests\nThe number of idle worker\nThe status of each worker, the number of requests that worker has\nperformed and the total number of bytes served by the worker (*)\nA total number of accesses and byte count served (*)\nThe time the server was started/restarted and the time it has been running for\nAverages giving the number of requests per second, the number of bytes\nserved per second and the average number of bytes per request (*)\nThe current percentage CPU used by each worker and in total by Apache (*)\nThe current hosts and requests being processed (*)\n\n-- \nAshish Kumar Sahu"
+    }, 
+    {
+        "signatureReferenceNumber": "4152", 
+        "link": "https://www.exploit-db.com/ghdb/4152/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intitle:\"CPPLUS DVR -Web View\"", 
+        "shortDescription": "intitle:\"CPPLUS DVR -Web View\"", 
+        "textualDescription": "CPPLUS DVR\n\n- Stefano"
+    }, 
+    {
+        "signatureReferenceNumber": "4153", 
+        "link": "https://www.exploit-db.com/ghdb/4153/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intitle:(build 13064) - Info", 
+        "shortDescription": "intitle:(build 13064) - Info", 
+        "textualDescription": "Dork for DD-WRT routers with V24 build number 13064.\nAuthor: Augusto Pereira\nhttp://www.augustopereira.com.br"
+    }, 
+    {
+        "signatureReferenceNumber": "4154", 
+        "link": "https://www.exploit-db.com/ghdb/4154/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=inurl:wp-content/uploads filetype:xls | filetype:xlsx password", 
+        "shortDescription": "inurl:wp-content/uploads filetype:xls | filetype:xlsx password", 
+        "textualDescription": "inurl:wp-content/uploads filetype:xls | filetype:xlsx password"
+    }, 
+    {
+        "signatureReferenceNumber": "4155", 
+        "link": "https://www.exploit-db.com/ghdb/4155/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=inurl:/node/add/event", 
+        "shortDescription": "inurl:/node/add/event", 
+        "textualDescription": "Dorks For Drupal HTML& Arbitrary File Upload Vulnerabilities\n\ninurl:/node/add/event\ninurl:/node/add/announcement\n\nThis Dork Original By Mr.XSecr3t :p\n\nNO COPAS brooh :v\n\n\n~GAME OVER~"
+    }, 
+    {
+        "signatureReferenceNumber": "4156", 
+        "link": "https://www.exploit-db.com/ghdb/4156/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:\"cgi-bin\" \"No password set!\" \" There is no password set on this router.\"", 
+        "shortDescription": "inurl:\"cgi-bin\" \"No password set!\" \" There is no password set on this router.\"", 
+        "textualDescription": "Dork reveals panels of router without passwords. Enjoy xD.\nThis Dork discovered by Rootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4157", 
+        "link": "https://www.exploit-db.com/ghdb/4157/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/tcpipv6.htm", 
+        "shortDescription": "inurl:/tcpipv6.htm", 
+        "textualDescription": "inurl:/tcpipv6.htm\nDescription: This google dork can access many HP LASER JET printers without login..\n\nBy Sivabalan ( CYBER GENIUS ).."
+    }, 
+    {
+        "signatureReferenceNumber": "4158", 
+        "link": "https://www.exploit-db.com/ghdb/4158/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/cgi-bin/luci/freifunk/graph/olsrd/topology/", 
+        "shortDescription": "inurl:/cgi-bin/luci/freifunk/graph/olsrd/topology/", 
+        "textualDescription": "inurl:/cgi-bin/luci/freifunk/graph/olsrd/topology/\nDescription : This google dork can access many ( LuCI Trunk based wireless system management) \n\u00a0By Sivabalan( CYBER GENIUS ) ..."
+    }, 
+    {
+        "signatureReferenceNumber": "4159", 
+        "link": "https://www.exploit-db.com/ghdb/4159/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/hp/device/supply_status.htm", 
+        "shortDescription": "inurl:/hp/device/supply_status.htm", 
+        "textualDescription": "inurl:/hp/device/supply_status.htm\nDescription : This google dork can access many HP LASER JET printers without login\nBy Sivabalan ( CYBER GENIUS )..."
+    }, 
+    {
+        "signatureReferenceNumber": "4160", 
+        "link": "https://www.exploit-db.com/ghdb/4160/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/index.htm?cat=info&pagesRemaining", 
+        "shortDescription": "inurl:/index.htm?cat=info&pagesRemaining", 
+        "textualDescription": "inurl:/index.htm?cat=info&pagesRemaining\n\nDescription: This google dork can access many HP LASER JET PRO printer..\nBy Sivabalan( CYBER GENIUS ) ..."
+    }, 
+    {
+        "signatureReferenceNumber": "4161", 
+        "link": "https://www.exploit-db.com/ghdb/4161/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/index.htm?cat=info&printerInfo", 
+        "shortDescription": "inurl:/index.htm?cat=info&printerInfo", 
+        "textualDescription": "inurl:/index.htm?cat=info&printerInfo\nDescription : This google dork can access many HP LASER JET printers without login..\nBy Sivabalan ( CYBER GENIUS )"
+    }, 
+    {
+        "signatureReferenceNumber": "4162", 
+        "link": "https://www.exploit-db.com/ghdb/4162/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=\"Stats generated by pisg v0.73\"", 
+        "shortDescription": "\"Stats generated by pisg v0.73\"", 
+        "textualDescription": "Dork with Stats for irc channels.\nDiscovered by Rootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4163", 
+        "link": "https://www.exploit-db.com/ghdb/4163/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=inurl:/server/webapps", 
+        "shortDescription": "inurl:/server/webapps", 
+        "textualDescription": "Google Search: inurl:/server/webapps\nSubmission Date:  12/19/2015\nDescription:  Apache Tomcat information disclosure.\nby @pwns4cash"
+    }, 
+    {
+        "signatureReferenceNumber": "4164", 
+        "link": "https://www.exploit-db.com/ghdb/4164/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Lost Password Reset\" | inurl:/secure/pwreset.php | inurl:/portal/index.php", 
+        "shortDescription": "intitle:\"Lost Password Reset\" | inurl:/secure/pwreset.php | inurl:/portal/index.php", 
+        "textualDescription": "Lost Password Reset for Websites.\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4165", 
+        "link": "https://www.exploit-db.com/ghdb/4165/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/weblogin.aspx", 
+        "shortDescription": "inurl:/weblogin.aspx", 
+        "textualDescription": "inurl:/weblogin.aspx\nDescription : This google dork can access can access many login portals...\nBY Sivabalan ( CYBER GENIUS ).."
+    }, 
+    {
+        "signatureReferenceNumber": "4166", 
+        "link": "https://www.exploit-db.com/ghdb/4166/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/tcpipv4.htm", 
+        "shortDescription": "inurl:/tcpipv4.htm", 
+        "textualDescription": "TCP/IP Settings HP LaserJet Logins\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4167", 
+        "link": "https://www.exploit-db.com/ghdb/4167/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Microsoft+Outlook+Web+Access+Log+On\" | inurl:/owa/auth/logon.aspx", 
+        "shortDescription": "intitle:\"Microsoft+Outlook+Web+Access+Log+On\" | inurl:/owa/auth/logon.aspx", 
+        "textualDescription": "Microsoft Outlook Web Logins\u00a0\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4168", 
+        "link": "https://www.exploit-db.com/ghdb/4168/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=ext:html intext:Airties inurl:login.html", 
+        "shortDescription": "ext:html intext:Airties inurl:login.html", 
+        "textualDescription": "AirTies Modems\n\next:html intext:Airties inurl:login.html\n\natawho-sonadam"
+    }, 
+    {
+        "signatureReferenceNumber": "4169", 
+        "link": "https://www.exploit-db.com/ghdb/4169/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=\"IPSentry - Device Statistics Information\"", 
+        "shortDescription": "\"IPSentry - Device Statistics Information\"", 
+        "textualDescription": "This Dork show Device Statistics Information, about a lot of network\ninfraestructures xD. Enjoy Healthy.\nDork Discovered for Rootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4170", 
+        "link": "https://www.exploit-db.com/ghdb/4170/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=crime24 stealer ext:txt", 
+        "shortDescription": "crime24 stealer ext:txt", 
+        "textualDescription": "crime24 stealer ext:txt\natawho-sonadam-hackunity"
+    }, 
+    {
+        "signatureReferenceNumber": "4171", 
+        "link": "https://www.exploit-db.com/ghdb/4171/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=ext:php intitle:\"b374k\"", 
+        "shortDescription": "ext:php intitle:\"b374k\"", 
+        "textualDescription": "ext:php intitle:\"b374k\"\ndetails; http://atawho.blogspot.com.tr/2015/12/b374k-shell-tespiti.html\natawho-sonadam-hackunity"
+    }, 
+    {
+        "signatureReferenceNumber": "4172", 
+        "link": "https://www.exploit-db.com/ghdb/4172/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intitle:\"WSO \" ext:php intext:\"server ip\" 2015 intext:\" [ home ]\"", 
+        "shortDescription": "intitle:\"WSO \" ext:php intext:\"server ip\" 2015 intext:\" [ home ]\"", 
+        "textualDescription": "intitle:\"WSO \" ext:php intext:\"server ip\" 2015 intext:\" [ home ]\"\n\natawho-sonadam-hackunity"
+    }, 
+    {
+        "signatureReferenceNumber": "4173", 
+        "link": "https://www.exploit-db.com/ghdb/4173/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=ext:aspx intitle:aspxspy", 
+        "shortDescription": "ext:aspx intitle:aspxspy", 
+        "textualDescription": "Asp shells\n\next:aspx intitle:aspxspy\n\n\ndetails:\nhttp://atawho.blogspot.com.tr/2015/11/aspx-shell-dorku-ghbd.html\n\nsonadam-atawho-hackunity"
+    }, 
+    {
+        "signatureReferenceNumber": "4174", 
+        "link": "https://www.exploit-db.com/ghdb/4174/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intext:\"Sw Bilgi\" ext:php", 
+        "shortDescription": "intext:\"Sw Bilgi\" ext:php", 
+        "textualDescription": "Upload Shell Dork\n\nintext:\"Sw Bilgi\" ext:php\n\n                details:\nhttp://atawho.blogspot.com.tr/2015/11/shell-dork-031115.html\natawho-sonadam-hackunity"
+    }, 
+    {
+        "signatureReferenceNumber": "4175", 
+        "link": "https://www.exploit-db.com/ghdb/4175/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intext:Developed By Black.Hack3r ext:php", 
+        "shortDescription": "intext:Developed By Black.Hack3r ext:php", 
+        "textualDescription": "Upload Shell Dorks\n\nintext:Developed By Black.Hack3r ext:php\n\nintitle:.:: Private Uploder By Black.Hack3r ::. ext:php\n\ndetail:"
+    }, 
+    {
+        "signatureReferenceNumber": "4176", 
+        "link": "https://www.exploit-db.com/ghdb/4176/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/tmui/login.jsp", 
+        "shortDescription": "inurl:/tmui/login.jsp", 
+        "textualDescription": "Administrative Panel Web F5 BIG-IP appliances\n\ninurl:/tmui/login.jsp\n\n@firebitsbr"
+    }, 
+    {
+        "signatureReferenceNumber": "4177", 
+        "link": "https://www.exploit-db.com/ghdb/4177/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=intitle: Index of /awstats/data", 
+        "shortDescription": "intitle: Index of /awstats/data", 
+        "textualDescription": "Awstats Log file's directory can reveal file/directory location\nThese logs file may also reveal hosting account usernames,\nas awstats keep track of all files and folders traffic stats you can also\nget a chance to see some secret.txt or secret.php~\n\n\n\nRegards\nDevender Mahto\n@devendermahto"
+    }, 
+    {
+        "signatureReferenceNumber": "4178", 
+        "link": "https://www.exploit-db.com/ghdb/4178/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=\"Password=\" inurl:web.config -intext:web.config ext:config", 
+        "shortDescription": "\"Password=\" inurl:web.config -intext:web.config ext:config", 
+        "textualDescription": "This Dork show Passwords of web.config files.\nEnjoy them!.\nDork by Rootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4179", 
+        "link": "https://www.exploit-db.com/ghdb/4179/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=inurl:/SAML2/SOAP/ | inurl:/SAML2/POST", 
+        "shortDescription": "inurl:/SAML2/SOAP/ | inurl:/SAML2/POST", 
+        "textualDescription": "Shibboleth Error XML\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4180", 
+        "link": "https://www.exploit-db.com/ghdb/4180/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:intranet -intext:intranet", 
+        "shortDescription": "inurl:intranet -intext:intranet", 
+        "textualDescription": "This Dork show millions of access to intranet pages.\nDork by Rootkit Pentester.\nRegards."
+    }, 
+    {
+        "signatureReferenceNumber": "4181", 
+        "link": "https://www.exploit-db.com/ghdb/4181/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=inurl:wp-config -intext:wp-config \"'DB_PASSWORD'\"", 
+        "shortDescription": "inurl:wp-config -intext:wp-config \"'DB_PASSWORD'\"", 
+        "textualDescription": "I give this Dork for Wordpress Passwords. I hope you enjoy with this!.\nDork: inurl:wp-config -intext:wp-config \"'DB_PASSWORD'\"\nBest Regards Rookit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4182", 
+        "link": "https://www.exploit-db.com/ghdb/4182/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Shell I\" inurl:revslider inurl:error.php inurl:cmd", 
+        "shortDescription": "intitle:\"Shell I\" inurl:revslider inurl:error.php inurl:cmd", 
+        "textualDescription": "Find shells inserted using the revslider vulnerability.\n\n--\nStephen Haywood\nOwner: ASG Consulting\naveragesecurityguy.info"
+    }, 
+    {
+        "signatureReferenceNumber": "4183", 
+        "link": "https://www.exploit-db.com/ghdb/4183/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=inurl:revslider inurl:temp inurl:update_extract inurl:sym1", 
+        "shortDescription": "inurl:revslider inurl:temp inurl:update_extract inurl:sym1", 
+        "textualDescription": "Symlinks to files using the revslider vulnerability.\n\n--\nStephen Haywood\nOwner: ASG Consulting\naveragesecurityguy.info"
     }
 ]

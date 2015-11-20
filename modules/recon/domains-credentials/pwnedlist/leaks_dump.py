@@ -3,46 +3,15 @@ from recon.core.module import BaseModule
 class Module(BaseModule):
 
     meta = {
-        'name': 'PwnedList - Leak Details Fetcher',
+        'name': 'PwnedList - Leak Details Retriever',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Queries the PwnedList API for information associated with all known leaks. Updates the \'leaks\' table with the results.',
         'comments': (
             'API Query Cost: 1 query per request.',
         ),
+        'query': 'SELECT DISTINCT leak_id FROM leaks WHERE leak_id IS NOT NULL',
     }
 
-    def module_run(self):
-        key = self.get_key('pwnedlist_api')
-        secret = self.get_key('pwnedlist_secret')
-        # delete leaks table
-        self.output('Purging \'leaks\' table...')
-        self.query('DELETE FROM leaks')
-        self.output('Table data purged.')
-        # setup API call
-        self.output('Downloading leak data...')
-        method = 'leaks.info'
-        url = 'https://api.pwnedlist.com/api/1/%s' % (method.replace('.','/'))
-        base_payload = {'daysAgo':3650}
-        page = 1
-        while True:
-            self.output('Populating \'leaks\' table (page %d)...' % page)
-            payload = self.build_pwnedlist_payload(base_payload, method, key, secret)
-            # make request
-            resp = self.request(url, payload=payload)
-            if resp.json:
-                jsonobj = resp.json
-            else:
-                self.error('Invalid JSON response.\n%s' % (resp.text))
-                return
-            # populate leaks table
-            for leak in jsonobj['leaks']:
-                normalized_leak = {}
-                for item in leak:
-                    value = leak[item]
-                    if type(value) == list:
-                        value = ', '.join(value)
-                    normalized_leak[item] = value
-                self.add_leaks(**normalized_leak)
-            if not jsonobj['token']: break
-            base_payload['token'] = jsonobj['token']
-            page += 1
+    def module_run(self, leak_ids):
+        for leak_id in leak_ids:
+            self.get_pwnedlist_leak(leak_id)
