@@ -21,7 +21,7 @@ class Module(BaseModule):
     def get_instagram_access_token(self):
         return self.get_explicit_oauth_token(
             'instagram',
-            'basic',
+            'basic public_content',
             'https://instagram.com/oauth/authorize/',
             'https://api.instagram.com/oauth/access_token'
         )

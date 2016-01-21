@@ -22,7 +22,7 @@ class Module(BaseModule):
             # set up parameters
             past_emps = self.options['past_emps']
             self.keyword = self.options['keyword']
-            self.company_flag = 'company' if past_emps else 'anycompany'
+            self.company_flag = 'anycompany' if past_emps else 'company'
             # get count of resumes found and set cap if needed
             self.output('Crawling Indeed.com for \'%s\'...' % (company))
             base_url = 'http://www.indeed.com/resumes'

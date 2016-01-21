@@ -29470,5 +29470,661 @@
         "querystring": "http://www.google.com/search?q=inurl:revslider inurl:temp inurl:update_extract inurl:sym1", 
         "shortDescription": "inurl:revslider inurl:temp inurl:update_extract inurl:sym1", 
         "textualDescription": "Symlinks to files using the revslider vulnerability.\n\n--\nStephen Haywood\nOwner: ASG Consulting\naveragesecurityguy.info"
+    }, 
+    {
+        "signatureReferenceNumber": "4184", 
+        "link": "https://www.exploit-db.com/ghdb/4184/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/welcome.cgi? | p=no-cert", 
+        "shortDescription": "inurl:/welcome.cgi? | p=no-cert", 
+        "textualDescription": "Another Dork with Remote Logins\u00a0\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4185", 
+        "link": "https://www.exploit-db.com/ghdb/4185/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:autodiscover/autodiscover ext:xml", 
+        "shortDescription": "inurl:autodiscover/autodiscover ext:xml", 
+        "textualDescription": "Locate Outlook Web Apps that have auto-discover feature enabled\n\n-Oni49"
+    }, 
+    {
+        "signatureReferenceNumber": "4186", 
+        "link": "https://www.exploit-db.com/ghdb/4186/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=intext:\"Microsoft(R) Server Maintenance Utility (Unicode)\" ext:txt", 
+        "shortDescription": "intext:\"Microsoft(R) Server Maintenance Utility (Unicode)\" ext:txt", 
+        "textualDescription": "Details:\nSearch result shows Txt files. Text files contains database information+server path disclosure+different db queries.\u00a0\n(\u00af`\u00b7._.\u00b7[ Silent_Z3R0 ]\u00b7._.\u00b7\u00b4\u00af)(\u00af`\u00b7._.\u00b7[ Pak Cyber Army ]\u00b7._.\u00b7\u00b4\u00af)"
+    }, 
+    {
+        "signatureReferenceNumber": "4187", 
+        "link": "https://www.exploit-db.com/ghdb/4187/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/oam/server/obrareq.cgi | ext:\"encquery\" | ext:\"Portal_Webcenter\"", 
+        "shortDescription": "inurl:/oam/server/obrareq.cgi | ext:\"encquery\" | ext:\"Portal_Webcenter\"", 
+        "textualDescription": "Login's for Oracle Access Management\n\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4188", 
+        "link": "https://www.exploit-db.com/ghdb/4188/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:phpPgAdmin/browser.php intitle:\"phpPgAdmin\"", 
+        "shortDescription": "inurl:phpPgAdmin/browser.php intitle:\"phpPgAdmin\"", 
+        "textualDescription": "Dork For phpPgAdmin servers portal.\nDiscovered for Rootkit Pentester.\nRegards."
+    }, 
+    {
+        "signatureReferenceNumber": "4189", 
+        "link": "https://www.exploit-db.com/ghdb/4189/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=site:www.comune.*.*.* inurl:login", 
+        "shortDescription": "site:www.comune.*.*.* inurl:login", 
+        "textualDescription": "# Exploit Title: Dork to find Comune Websites.\n# Google Dork: site:www.comune.*.*.* inurl:login\n#  Description : Finds out login portals to Comune Websites.\n# Date: 27/01/2016\n# Author: XDarkCoder"
+    }, 
+    {
+        "signatureReferenceNumber": "4190", 
+        "link": "https://www.exploit-db.com/ghdb/4190/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/AirWatch/Login?", 
+        "shortDescription": "inurl:/AirWatch/Login?", 
+        "textualDescription": "AirWatch Company.\nLogin/Trouble Logging In/ Back to Login Page / Don't remember your Username Login \"Errors\"\n\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4191", 
+        "link": "https://www.exploit-db.com/ghdb/4191/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=inurl:haproxy-status site:example.com", 
+        "shortDescription": "inurl:haproxy-status site:example.com", 
+        "textualDescription": "Dork to find system info leaks using haproxy stats.\n\n- ivxenog"
+    }, 
+    {
+        "signatureReferenceNumber": "4192", 
+        "link": "https://www.exploit-db.com/ghdb/4192/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=intitle:\"TurnKey LAMP\" intext:\"turnkey lamp release notes\" \"Apache PHP information\"", 
+        "shortDescription": "intitle:\"TurnKey LAMP\" intext:\"turnkey lamp release notes\" \"Apache PHP information\"", 
+        "textualDescription": "Detail:\n\u00a0 \u00a0 Google results shows turnkey lamp default page which discloses information server like PHPINFO page, Apache server Status, webmin login page and many more.\n\n[ Silent Z3R0 ]-[Pakistan Cyber Army]"
+    }, 
+    {
+        "signatureReferenceNumber": "4193", 
+        "link": "https://www.exploit-db.com/ghdb/4193/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=site:www.tribunale.*.*.* inurl:login", 
+        "shortDescription": "site:www.tribunale.*.*.* inurl:login", 
+        "textualDescription": "# Exploit Title: Dork to find Tribunale Websites.\n# Google Dork: site:www.tribunale.*.*.* inurl:login\n#  Description : Finds out login portals on Tribunale Websites. Gov related\n# Date: 07/02/2016\n# Exploit Author: XDarkCoder"
+    }, 
+    {
+        "signatureReferenceNumber": "4194", 
+        "link": "https://www.exploit-db.com/ghdb/4194/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=inurl:/nesp/app", 
+        "shortDescription": "inurl:/nesp/app", 
+        "textualDescription": "Novell Access Manager and NetIQ Access Manager\u00a0\nError:NIDPMAIN\u00a0(No ESP card defined)\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4195", 
+        "link": "https://www.exploit-db.com/ghdb/4195/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Welcome | PRTG Network Monitor\" inurl:/index.htm", 
+        "shortDescription": "intitle:\"Welcome | PRTG Network Monitor\" inurl:/index.htm", 
+        "textualDescription": "Login screen for network monitoring system.\n\nAuthor: Manuel Mancera (@sinkmanu)"
+    }, 
+    {
+        "signatureReferenceNumber": "4196", 
+        "link": "https://www.exploit-db.com/ghdb/4196/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=\"Web page sent by InterMapper\"", 
+        "shortDescription": "\"Web page sent by InterMapper\"", 
+        "textualDescription": "Dork with funny maps of networks.\nDork by Rootkit Pentester.\nRegards."
+    }, 
+    {
+        "signatureReferenceNumber": "4197", 
+        "link": "https://www.exploit-db.com/ghdb/4197/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:login.do intext:government", 
+        "shortDescription": "inurl:login.do intext:government", 
+        "textualDescription": "# Exploit Title: Dork to find Government and Military website access\nportals.\n# Google Dork: inurl:login.do intext:government\n#  Description : Finds out login access portals to Military and Government\nSystems. Enjoy.\n# Date: 09/02/2016\n# Exploit Author: XDarkCoder"
+    }, 
+    {
+        "signatureReferenceNumber": "4198", 
+        "link": "https://www.exploit-db.com/ghdb/4198/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:intranet site:www.*.gov", 
+        "shortDescription": "inurl:intranet site:www.*.gov", 
+        "textualDescription": "# Exploit Title:  inurl:intranet site:www.*.gov\n# Google Dork: inurl:intranet site:www.*.gov\n#  Description : Dork to find login portal access to intranet systems\non government websites.\n# Date: 09/02/2016\n# Exploit Author: XDarkCoder"
+    }, 
+    {
+        "signatureReferenceNumber": "4199", 
+        "link": "https://www.exploit-db.com/ghdb/4199/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intitle:\"homematic webui\"", 
+        "shortDescription": "intitle:\"homematic webui\"", 
+        "textualDescription": "Description: WebUI for Homematic Home-Control-System\n\nGoogle search : intitle:\"homematic webui\"\n\nAuthor : BasisX & DonJoe"
+    }, 
+    {
+        "signatureReferenceNumber": "4200", 
+        "link": "https://www.exploit-db.com/ghdb/4200/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intitle:webcam 7 inurl:8080 -intext:8080", 
+        "shortDescription": "intitle:webcam 7 inurl:8080 -intext:8080", 
+        "textualDescription": "Dork with webcams servers.\nEnjoy with the view.\nDork by Rootkit Pentester.\nRegards."
+    }, 
+    {
+        "signatureReferenceNumber": "4201", 
+        "link": "https://www.exploit-db.com/ghdb/4201/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=(intitle:\"phpshell\" OR intitle:\"c99shell\" OR intitle:\"r57shell\" OR intitle:\"PHP Shell \" OR intitle:\"phpRemoteView\") `rwx` \"uname\"", 
+        "shortDescription": "(intitle:\"phpshell\" OR intitle:\"c99shell\" OR intitle:\"r57shell\" OR intitle:\"PHP Shell \" OR intitle:\"phpRemoteView\") `rwx` \"uname\"", 
+        "textualDescription": "(intitle:\"phpshell\" OR intitle:\"c99shell\" OR intitle:\"r57shell\" OR intitle:\"PHP Shell \" OR intitle:\"phpRemoteView\") `rwx` \"uname\""
+    }, 
+    {
+        "signatureReferenceNumber": "4202", 
+        "link": "https://www.exploit-db.com/ghdb/4202/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intitle: \"phpshell\" \"Php Safe-Mode Bypass\"", 
+        "shortDescription": "intitle: \"phpshell\" \"Php Safe-Mode Bypass\"", 
+        "textualDescription": "intitle: \"phpshell\" \"Php Safe-Mode Bypass\""
+    }, 
+    {
+        "signatureReferenceNumber": "4203", 
+        "link": "https://www.exploit-db.com/ghdb/4203/", 
+        "category": "Web Server Detection", 
+        "querystring": "http://www.google.com/search?q=intext:Apache/2.2.29 (Unix) mod_ssl/2.2.29 | intitle:\"Index of /\"", 
+        "shortDescription": "intext:Apache/2.2.29 (Unix) mod_ssl/2.2.29 | intitle:\"Index of /\"", 
+        "textualDescription": "Server Name and Port.\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4204", 
+        "link": "https://www.exploit-db.com/ghdb/4204/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/AT-admin.cgi? intitle:login | private | employee | intranet | admin", 
+        "shortDescription": "inurl:/AT-admin.cgi? intitle:login | private | employee | intranet | admin", 
+        "textualDescription": "inurl:/AT-admin.cgi? intitle:login | private | employee | intranet | admin\n\n\nPages containing login portals\n\n\nBruno Schmid\nhttps://ch.linkedin.com/in/schmidbruno"
+    }, 
+    {
+        "signatureReferenceNumber": "4205", 
+        "link": "https://www.exploit-db.com/ghdb/4205/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:login inurl:user inurl:pass -intext:pass -intext:user", 
+        "shortDescription": "inurl:login inurl:user inurl:pass -intext:pass -intext:user", 
+        "textualDescription": "With this Dork you can Bypass the security of a lot of Cpanel Portal.\nHave Fun.\nDork discovered by Rootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4206", 
+        "link": "https://www.exploit-db.com/ghdb/4206/", 
+        "category": "Web Server Detection", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Apache Status\" | intext:\"Apache Server Status\"", 
+        "shortDescription": "intitle:\"Apache Status\" | intext:\"Apache Server Status\"", 
+        "textualDescription": "This dork gives,\nApache Server Status\nServer Version:\u00a0\nServer Built:\u00a0\nCurrent Time:\u00a0\nRestart Time:\u00a0\nParent Server Generation:\u00a0\nServer uptime:\u00a0\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4207", 
+        "link": "https://www.exploit-db.com/ghdb/4207/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=inurl:safm.asp ext:asp", 
+        "shortDescription": "inurl:safm.asp ext:asp", 
+        "textualDescription": "inurl:safm.asp ext:asp\n\nhttp://atawho.blogspot.com.tr/2016/03/simple-asp-filemanager.html\n\natawho-sonadam"
+    }, 
+    {
+        "signatureReferenceNumber": "4208", 
+        "link": "https://www.exploit-db.com/ghdb/4208/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Helm : The Web Hosting Control System\"", 
+        "shortDescription": "intitle:\"Helm : The Web Hosting Control System\"", 
+        "textualDescription": "Description: Helm Control Panel login page\nGoogle search: intitle:\"Helm : The Web Hosting Control System\"\nAutor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4209", 
+        "link": "https://www.exploit-db.com/ghdb/4209/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"FirstSpirit - login\"", 
+        "shortDescription": "intitle:\"FirstSpirit - login\"", 
+        "textualDescription": "Description: FirstSpirit Content Management System login page\nGoogle search: intitle:\"FirstSpirit - login\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4210", 
+        "link": "https://www.exploit-db.com/ghdb/4210/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"D-Link VoIP Router\" \"Welcome\"", 
+        "shortDescription": "intitle:\"D-Link VoIP Router\" \"Welcome\"", 
+        "textualDescription": "Description: D-Link VoIP Router login page\nGoogle search: intitle:\"D-Link VoIP Router\" \"Welcome\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4211", 
+        "link": "https://www.exploit-db.com/ghdb/4211/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"ASUS Login\" \"SIGN IN\"", 
+        "shortDescription": "intitle:\"ASUS Login\" \"SIGN IN\"", 
+        "textualDescription": "Description: ASUS router login page\nGoogle search: intitle:\"ASUS Login\" \"SIGN IN\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4212", 
+        "link": "https://www.exploit-db.com/ghdb/4212/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:\"8000\" inurl:\"login\"", 
+        "shortDescription": "inurl:\"8000\" inurl:\"login\"", 
+        "textualDescription": "Login forms. Mostly ftp.\n\nGoogle dork:\ninurl:\"8000\" inurl:\"login\"\n\nD0bby"
+    }, 
+    {
+        "signatureReferenceNumber": "4213", 
+        "link": "https://www.exploit-db.com/ghdb/4213/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=inurl:/console-selfservice/common/scripts/calendar/ipopeng.htm", 
+        "shortDescription": "inurl:/console-selfservice/common/scripts/calendar/ipopeng.htm", 
+        "textualDescription": "RSA Self-Service Console \"Error\"\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4214", 
+        "link": "https://www.exploit-db.com/ghdb/4214/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=inurl:\"sugarcrm.log\" ext:log -git -google", 
+        "shortDescription": "inurl:\"sugarcrm.log\" ext:log -git -google", 
+        "textualDescription": "Description: SugarCRM log files\nGoogle search: inurl:\"sugarcrm.log\" ext:log -git -google\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4215", 
+        "link": "https://www.exploit-db.com/ghdb/4215/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"DirectAdmin Login\" \"Please enter your Username and Password\"", 
+        "shortDescription": "intitle:\"DirectAdmin Login\" \"Please enter your Username and Password\"", 
+        "textualDescription": "Description: DirectAdmin Web Control Panel login page\nGoogle search: intitle:\"DirectAdmin Login\" \"Please enter your Username\nand Password\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4216", 
+        "link": "https://www.exploit-db.com/ghdb/4216/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:\"topPage.cgi\" | inurl:\"mainFrame.cgi\" intext:\"Web Image Monitor\"", 
+        "shortDescription": "inurl:\"topPage.cgi\" | inurl:\"mainFrame.cgi\" intext:\"Web Image Monitor\"", 
+        "textualDescription": "Description: Web Image Monitor allows users to remotely monitor and\nchange the network configuration of Ricoh copiers, multifunctions and\nprinters via common web browsers\nGoogle search: inurl:\"topPage.cgi\" | inurl:\"mainFrame.cgi\" intext:\"Web\nImage Monitor\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4217", 
+        "link": "https://www.exploit-db.com/ghdb/4217/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:\"info_deviceStatus.html\" | inurl:\"info_suppliesStatus.html\" | inurl:\"info_configuration.html\" | inurl:\"info_config_network.html\" | inurl:\"info_specialPages.html\" | inurl:\"info_colorUsageJobLog.html\" | inurl:\"info_event", 
+        "shortDescription": "inurl:\"info_deviceStatus.html\" | inurl:\"info_suppliesStatus.html\" | inurl:\"info_configuration.html\" | inurl:\"info_config_network.html\" | inurl:\"info_specialPages.html\" | inurl:\"info_colorUsageJobLog.html\" | inurl:\"info_eventLog.html\"", 
+        "textualDescription": "Description: HP LaserJet printer web panel\nGoogle search: inurl:\"info_deviceStatus.html\" |\ninurl:\"info_suppliesStatus.html\" | inurl:\"info_configuration.html\" |\ninurl:\"info_config_network.html\" | inurl:\"info_specialPages.html\" |\ninurl:\"info_colorUsageJobLog.html\" | inurl:\"info_eventLog.html\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4218", 
+        "link": "https://www.exploit-db.com/ghdb/4218/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intitle:\"SyncThru Web Service\" inurl:\"sws\"", 
+        "shortDescription": "intitle:\"SyncThru Web Service\" inurl:\"sws\"", 
+        "textualDescription": "Description: Samsung printer web panel\nGoogle search: intitle:\"SyncThru Web Service\" inurl:\"sws\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4219", 
+        "link": "https://www.exploit-db.com/ghdb/4219/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:\"home.htm?cat=home\" | inurl:\"index.htm?cat=info\" | inurl:\"index.htm?cat=settings\" | inurl:\"index.htm?cat=network\" | inurl:\"index.htm?cat=bluetooth\"", 
+        "shortDescription": "inurl:\"home.htm?cat=home\" | inurl:\"index.htm?cat=info\" | inurl:\"index.htm?cat=settings\" | inurl:\"index.htm?cat=network\" | inurl:\"index.htm?cat=bluetooth\"", 
+        "textualDescription": "Description: HP OfficeJet printer web panel\nGoogle search: inurl:\"home.htm?cat=home\" | inurl:\"index.htm?cat=info\"\n| inurl:\"index.htm?cat=settings\" | inurl:\"index.htm?cat=network\" |\ninurl:\"index.htm?cat=bluetooth\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4220", 
+        "link": "https://www.exploit-db.com/ghdb/4220/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:\"cgi-bin/dynamic/\" inurl:\"html\" intitle:\"Printer Status\"", 
+        "shortDescription": "inurl:\"cgi-bin/dynamic/\" inurl:\"html\" intitle:\"Printer Status\"", 
+        "textualDescription": "Description: Dell Laser printer web panel\nGoogle search: inurl:\"cgi-bin/dynamic/\" inurl:\"html\" intitle:\"Printer Status\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4221", 
+        "link": "https://www.exploit-db.com/ghdb/4221/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:\"login.php?action=recover\"", 
+        "shortDescription": "inurl:\"login.php?action=recover\"", 
+        "textualDescription": "Description: Password recovery forms\nGoogle search: inurl:\"login.php?action=recover\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4222", 
+        "link": "https://www.exploit-db.com/ghdb/4222/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=intext:\"END_FILE\" ext:log", 
+        "shortDescription": "intext:\"END_FILE\" ext:log", 
+        "textualDescription": "Description: Files containing passwords\nGoogle search: intext:\"END_FILE\" ext:log\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4223", 
+        "link": "https://www.exploit-db.com/ghdb/4223/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:\"/,DanaInfo=\"", 
+        "shortDescription": "inurl:\"/,DanaInfo=\"", 
+        "textualDescription": "Yet another Remote Login Dork.\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4224", 
+        "link": "https://www.exploit-db.com/ghdb/4224/", 
+        "category": "Web Server Detection", 
+        "querystring": "http://www.google.com/search?q=inurl:phpsysinfo/index.php?disp=dynamic", 
+        "shortDescription": "inurl:phpsysinfo/index.php?disp=dynamic", 
+        "textualDescription": "These Dork show a lot of info about servers behind the webpages.\nEnjoy healthy.\nBest Regard.\nRootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4225", 
+        "link": "https://www.exploit-db.com/ghdb/4225/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:\"sap-system-login\"", 
+        "shortDescription": "inurl:\"sap-system-login\"", 
+        "textualDescription": "Description: SAP Web Application Server login page\nGoogle search: inurl:\"sap-system-login\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4226", 
+        "link": "https://www.exploit-db.com/ghdb/4226/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:\"sap/hrrcf_a_startpage_ext_cand\" | inurl:\"sap/hrrcf_a_pw_via_email_extern\"", 
+        "shortDescription": "inurl:\"sap/hrrcf_a_startpage_ext_cand\" | inurl:\"sap/hrrcf_a_pw_via_email_extern\"", 
+        "textualDescription": "Description: SAP Web Application Server login page\nGoogle search: inurl:\"sap/hrrcf_a_startpage_ext_cand\" |\ninurl:\"sap/hrrcf_a_pw_via_email_extern\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4227", 
+        "link": "https://www.exploit-db.com/ghdb/4227/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Logon - SAP Web Application Server\"", 
+        "shortDescription": "intitle:\"Logon - SAP Web Application Server\"", 
+        "textualDescription": "Description: SAP Web Application Server login page\nGoogle search: intitle:\"Logon - SAP Web Application Server\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4228", 
+        "link": "https://www.exploit-db.com/ghdb/4228/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intext:\"2016 SAP AG. All rights reserved.\" intitle:\"Logon\"", 
+        "shortDescription": "intext:\"2016 SAP AG. All rights reserved.\" intitle:\"Logon\"", 
+        "textualDescription": "Description: SAP Web Application Server login page\nGoogle search: intext:\"2016 SAP AG. All rights reserved.\" intitle:\"Logon\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4229", 
+        "link": "https://www.exploit-db.com/ghdb/4229/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intext:\"Powered by net2ftp\"", 
+        "shortDescription": "intext:\"Powered by net2ftp\"", 
+        "textualDescription": "Description: Web based FTP client login page\nGoogle search: intext:\"Powered by net2ftp\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4230", 
+        "link": "https://www.exploit-db.com/ghdb/4230/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Login\" intext:\"Use Web Messaging Lite\"", 
+        "shortDescription": "intitle:\"Login\" intext:\"Use Web Messaging Lite\"", 
+        "textualDescription": "Description: Webmail login page\nGoogle search: intitle:\"Login\" intext:\"Use Web Messaging Lite\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4231", 
+        "link": "https://www.exploit-db.com/ghdb/4231/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intext:\"2008\" intext:\"OpenERP SA\" intitle:\"Login\"", 
+        "shortDescription": "intext:\"2008\" intext:\"OpenERP SA\" intitle:\"Login\"", 
+        "textualDescription": "Description: OpenERP login page\nGoogle search: intext:\"2008\" intext:\"OpenERP SA\" intitle:\"Login\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4232", 
+        "link": "https://www.exploit-db.com/ghdb/4232/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"mikrotik routeros > administration\" intext:\"mikrotik routeros\" intext:\"configuration page\" -demo intext:\"Mikrotik, RouterOS and the Mikrotik logo are registered trademarks of Mikrotikls SIA\"", 
+        "shortDescription": "intitle:\"mikrotik routeros > administration\" intext:\"mikrotik routeros\" intext:\"configuration page\" -demo intext:\"Mikrotik, RouterOS and the Mikrotik logo are registered trademarks of Mikrotikls SIA\"", 
+        "textualDescription": "Description: MikroTik RouterOS configuration & login page\nGoogle search: intitle:\"mikrotik routeros > administration\"\nintext:\"mikrotik routeros\" intext:\"configuration page\" -demo\nintext:\"Mikrotik, RouterOS and the Mikrotik logo are registered\ntrademarks of Mikrotikls SIA\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4233", 
+        "link": "https://www.exploit-db.com/ghdb/4233/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"RouterOS\" intitle:\"configuration page\" intext:\"You have connected to a router. Administrative access only.\"", 
+        "shortDescription": "intitle:\"RouterOS\" intitle:\"configuration page\" intext:\"You have connected to a router. Administrative access only.\"", 
+        "textualDescription": "Description: RouterOS configuration & login page\nGoogle search: intitle:\"RouterOS\" intitle:\"configuration page\"\nintext:\"You have connected to a router. Administrative access only.\"\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4234", 
+        "link": "https://www.exploit-db.com/ghdb/4234/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intitle:\"TRENDnet\" (inurl:\"top.htm\"| inurl:\"STSSYS.HTM\"| inurl:\"AVIEW.HTM\"| inurl:\"JPlug.htm\" | inurl:\"JVIEW.HTM\")", 
+        "shortDescription": "intitle:\"TRENDnet\" (inurl:\"top.htm\"| inurl:\"STSSYS.HTM\"| inurl:\"AVIEW.HTM\"| inurl:\"JPlug.htm\" | inurl:\"JVIEW.HTM\")", 
+        "textualDescription": "Description: TRENDnet IP camera\nGoogle search: intitle:\"TRENDnet\" (inurl:\"top.htm\"|\ninurl:\"STSSYS.HTM\"| inurl:\"AVIEW.HTM\"| inurl:\"JPlug.htm\" |\ninurl:\"JVIEW.HTM\")\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4235", 
+        "link": "https://www.exploit-db.com/ghdb/4235/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Honeywell XL Web Controller - Login\" (inurl:\"standard/default.php\" | inurl:\"standard/header/header.php\" | inurl:\"standard/mainframe.php\" | inurl:\"standard/footer/footer.php\" | inurl:\"standard/update.php\")", 
+        "shortDescription": "intitle:\"Honeywell XL Web Controller - Login\" (inurl:\"standard/default.php\" | inurl:\"standard/header/header.php\" | inurl:\"standard/mainframe.php\" | inurl:\"standard/footer/footer.php\" | inurl:\"standard/update.php\")", 
+        "textualDescription": "Description: Honeywell XL Web Controller login page\nGoogle search: intitle:\"Honeywell XL Web Controller - Login\"\n(inurl:\"standard/default.php\" | inurl:\"standard/header/header.php\" |\ninurl:\"standard/mainframe.php\" | inurl:\"standard/footer/footer.php\" |\ninurl:\"standard/update.php\")\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4236", 
+        "link": "https://www.exploit-db.com/ghdb/4236/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Openbravo\" (inurl:\"openbravo/security/Login_FS.html\" | inurl:\"openbravo/security/Login_Welcome.html\" | inurl:\"openbravo/security/Login_F1.html\" | inurl:\"openbravo/security/Login_F0.html\")", 
+        "shortDescription": "intitle:\"Openbravo\" (inurl:\"openbravo/security/Login_FS.html\" | inurl:\"openbravo/security/Login_Welcome.html\" | inurl:\"openbravo/security/Login_F1.html\" | inurl:\"openbravo/security/Login_F0.html\")", 
+        "textualDescription": "Description: Openbravo login page\nGoogle search: intitle:\"Openbravo\"\n(inurl:\"openbravo/security/Login_FS.html\" |\ninurl:\"openbravo/security/Login_Welcome.html\" |\ninurl:\"openbravo/security/Login_F1.html\" |\ninurl:\"openbravo/security/Login_F0.html\")\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4237", 
+        "link": "https://www.exploit-db.com/ghdb/4237/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intitle:Tenda ADSL2/2+ Modem inurl:main.html", 
+        "shortDescription": "intitle:Tenda ADSL2/2+ Modem inurl:main.html", 
+        "textualDescription": "Description: Tenda ADSL2/2+ Modem with Wireless Router\nGoogle search: intitle:Tenda ADSL2/2+ Modem inurl:main.html\nAuthor: nebo_oben"
+    }, 
+    {
+        "signatureReferenceNumber": "4238", 
+        "link": "https://www.exploit-db.com/ghdb/4238/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/sap/bc/webdynpro/sap/ | \"sap-system-login-oninputprocessing\"", 
+        "shortDescription": "inurl:/sap/bc/webdynpro/sap/ | \"sap-system-login-oninputprocessing\"", 
+        "textualDescription": "Logon - SAP Web Application Server and Job Search:  inurl:/sap/bc/webdynpro/sap/ | \"sap-system-login-oninputprocessing\"\n\nSAP Web Application Server Password Reset:  inurl:/sap/bc/webdynpro/sap/ | \"ysccwa_password_reset?sap-client\"\n\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4239", 
+        "link": "https://www.exploit-db.com/ghdb/4239/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=(intext:\"index of /.git\") (\"parent directory\")", 
+        "shortDescription": "(intext:\"index of /.git\") (\"parent directory\")", 
+        "textualDescription": "This dork will find git repository's which may have sensitive information.\n\n(intext:\"index of /.git\") (\"parent directory\")\n\nEnjoy!\nnecrodamus"
+    }, 
+    {
+        "signatureReferenceNumber": "4240", 
+        "link": "https://www.exploit-db.com/ghdb/4240/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"VOOD - Welcome to Vood Residential Gateway >Login\"", 
+        "shortDescription": "intitle:\"VOOD - Welcome to Vood Residential Gateway >Login\"", 
+        "textualDescription": "Multiple VOOD Online Gateways!\nAuthor: Augusto Pereira\nhttp://www.augustopereira.com.br"
+    }, 
+    {
+        "signatureReferenceNumber": "4241", 
+        "link": "https://www.exploit-db.com/ghdb/4241/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Residential Gateway Configuration:\" intext:\"Cable Modem Information.\"", 
+        "shortDescription": "intitle:\"Residential Gateway Configuration:\" intext:\"Cable Modem Information.\"", 
+        "textualDescription": "Various online cable modem devices! More info:\nhttp://www.ubeeinteractive.com \n\nAuthor: Augusto Pereira\nhttp://www.augustopereira.com.br"
+    }, 
+    {
+        "signatureReferenceNumber": "4242", 
+        "link": "https://www.exploit-db.com/ghdb/4242/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Login Page\" intext:\"Phone Adapter Configuration Utility\"", 
+        "shortDescription": "intitle:\"Login Page\" intext:\"Phone Adapter Configuration Utility\"", 
+        "textualDescription": "Various online Cisco VOIP devices (SPA 112)! More info:\nhttp://www.cisco.com/\n\nAuthor: Augusto Pereira\nhttp://www.augustopereira.com.br"
+    }, 
+    {
+        "signatureReferenceNumber": "4243", 
+        "link": "https://www.exploit-db.com/ghdb/4243/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:vood act=index Gateway >Login", 
+        "shortDescription": "intitle:vood act=index Gateway >Login", 
+        "textualDescription": "More VOOD Online Gateway Logins\ninurl:/vood/cgi-bin/vood_view.cgi?act=index\n\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4244", 
+        "link": "https://www.exploit-db.com/ghdb/4244/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intext:\"powered by webcamXP 5\"", 
+        "shortDescription": "intext:\"powered by webcamXP 5\"", 
+        "textualDescription": "Various webcamXP version 5! More info: http://webcamxp.com\n\nAuthor: Augusto Pereira\nhttp://www.augustopereira.com.br"
+    }, 
+    {
+        "signatureReferenceNumber": "4245", 
+        "link": "https://www.exploit-db.com/ghdb/4245/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=inurl:\".asp?strParents=\"", 
+        "shortDescription": "inurl:\".asp?strParents=\"", 
+        "textualDescription": "Author: Charley Celice (@charleycelice)\n\n99% of sites I found using this dork are vulnerable to XSS attacks. The\n\"strParents\" parameter seems to always be injectable.\n\nExample:\n\nhttps://example/whatever.asp?strParents=\n\"/>&CAT_ID=1337&whatever=1337&etc...\n\n\n-stmerry"
+    }, 
+    {
+        "signatureReferenceNumber": "4246", 
+        "link": "https://www.exploit-db.com/ghdb/4246/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=inurl:/smpwservices.fcc | \"/lm_private/CkeSetter.aspx\"", 
+        "shortDescription": "inurl:/smpwservices.fcc | \"/lm_private/CkeSetter.aspx\"", 
+        "textualDescription": "CA Technologies\u00a0CA Single Sign-On (CA SSO) Error's.\u00a0\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4247", 
+        "link": "https://www.exploit-db.com/ghdb/4247/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=inurl:/siteminderagent/ | app:\"Error 404: java.io.FileNotFoundException: SRVE0190E: File not found: /siteminderagent/\"", 
+        "shortDescription": "inurl:/siteminderagent/ | app:\"Error 404: java.io.FileNotFoundException: SRVE0190E: File not found: /siteminderagent/\"", 
+        "textualDescription": "CA Technologies\u00a0CA Single Sign-On (CA SSO) Error's.\u00a0\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4248", 
+        "link": "https://www.exploit-db.com/ghdb/4248/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intitle:Automatic cPanel Finder/Cracker | 3xp1r3 Cyber Army", 
+        "shortDescription": "intitle:Automatic cPanel Finder/Cracker | 3xp1r3 Cyber Army", 
+        "textualDescription": "Google dork Description :\u00a0intitle:\"Automatic cPanel Finder/Cracker | 3xp1r3 Cyber Army\"\n\nAuthor: youssef hesham\nan exploit to find uploaded cPanel Finder/Cracker script and find cracked cpanle on it"
+    }, 
+    {
+        "signatureReferenceNumber": "4249", 
+        "link": "https://www.exploit-db.com/ghdb/4249/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=filetype:asp intitle:\" Microsoft Outlook Web Access\"", 
+        "shortDescription": "filetype:asp intitle:\" Microsoft Outlook Web Access\"", 
+        "textualDescription": "Dork who get access to \"Microsoft Outlook Web Access\" Panels.\nBest Regards.\nRootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4250", 
+        "link": "https://www.exploit-db.com/ghdb/4250/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"OneAccess WCF\" Username", 
+        "shortDescription": "intitle:\"OneAccess WCF\" Username", 
+        "textualDescription": "Login screen for the OneAccess routers.\n\nAuthor: Manuel Mancera (@sinkmanu)"
+    }, 
+    {
+        "signatureReferenceNumber": "4251", 
+        "link": "https://www.exploit-db.com/ghdb/4251/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=intitle:\"DSM Terminator [ ABORT ]\" | inurl:\"./com.sap.portal.dsm.Terminator\"", 
+        "shortDescription": "intitle:\"DSM Terminator [ ABORT ]\" | inurl:\"./com.sap.portal.dsm.Terminator\"", 
+        "textualDescription": "DSM Terminator Error\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4252", 
+        "link": "https://www.exploit-db.com/ghdb/4252/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:backoffice intitle:login", 
+        "shortDescription": "inurl:backoffice intitle:login", 
+        "textualDescription": "# Exploit Title: BackOffice Login Portals\n# Google Dork: inurl:backoffice intitle:login\n#  Description: Dork to find login portal access to Backoffice CMS..\n# Date: 01/04/2016\n# Exploit Author: XDarkCoder"
+    }, 
+    {
+        "signatureReferenceNumber": "4253", 
+        "link": "https://www.exploit-db.com/ghdb/4253/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:9443/vsphere-client", 
+        "shortDescription": "inurl:9443/vsphere-client", 
+        "textualDescription": "Google dork Description: inurl:9443/vsphere-client\nGoogle search: inurl:9443/vsphere-client\nDate: 2016-02-04\nAuthor: khajj16\nSummary: The VMware vSphere Web Client is the Web-based application that\nconnects users to the vCenter Server to manage installations and handle\ninventory objects in a vSphere environment."
+    }, 
+    {
+        "signatureReferenceNumber": "4254", 
+        "link": "https://www.exploit-db.com/ghdb/4254/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:lg intitle:\"Looking Glass\"", 
+        "shortDescription": "inurl:lg intitle:\"Looking Glass\"", 
+        "textualDescription": "Panels with lot of information of bgp and ping, tracert services and more\nxD.\nBest Regards.\nRootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4255", 
+        "link": "https://www.exploit-db.com/ghdb/4255/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=inurl:\"id=\" & intext:\"MySQL Error: 1064\" & \"Session halted.\"", 
+        "shortDescription": "inurl:\"id=\" & intext:\"MySQL Error: 1064\" & \"Session halted.\"", 
+        "textualDescription": "inurl:\"id=\" & intext:\"MySQL Error: 1064\" & \"Session halted.\"\n\nProduces about 11,000 results.\n\nAuthor: pHr0ZZy"
+    }, 
+    {
+        "signatureReferenceNumber": "4256", 
+        "link": "https://www.exploit-db.com/ghdb/4256/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/view/viewer_index.shtml", 
+        "shortDescription": "inurl:/view/viewer_index.shtml", 
+        "textualDescription": "inurl:/view/viewer_index.shtml \n\nUsing this google dork can access various camera LIVE AXIS MODEL around the world ..\nTHis google dork is created by CYBER GENIUS ( SIVABALAN )."
+    }, 
+    {
+        "signatureReferenceNumber": "4257", 
+        "link": "https://www.exploit-db.com/ghdb/4257/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:index.php?app=main intitle:sms", 
+        "shortDescription": "inurl:index.php?app=main intitle:sms", 
+        "textualDescription": "login portals to playsms webapp\ndefault password admin:admin"
+    }, 
+    {
+        "signatureReferenceNumber": "4258", 
+        "link": "https://www.exploit-db.com/ghdb/4258/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/Remote/logon?ReturnUrl", 
+        "shortDescription": "inurl:/Remote/logon?ReturnUrl", 
+        "textualDescription": "inurl:/Remote/logon?ReturnUrl \n\nThis google dork can access many outdated and vulnerable windows servers out there..\n\nCreated by Sivabalan ( CYBER GENIUS)"
+    }, 
+    {
+        "signatureReferenceNumber": "4259", 
+        "link": "https://www.exploit-db.com/ghdb/4259/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/dynamic/login-simple.html?", 
+        "shortDescription": "inurl:/dynamic/login-simple.html?", 
+        "textualDescription": "inurl:/dynamic/login-simple.html?\n\nThis google dork can access many linksys Smart wifi accounts .\n\nCreated by Sivabalan ( CYBER GENIUS )"
+    }, 
+    {
+        "signatureReferenceNumber": "4260", 
+        "link": "https://www.exploit-db.com/ghdb/4260/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:https://pma.", 
+        "shortDescription": "inurl:https://pma.", 
+        "textualDescription": "Google dork Description: inurl:https://pma.\nGoogle search: inurl:https://pma.\nDate: 2016-11-04\nAuthor: khajj16\nSummary: phpmyadmin login portals intended to handle the administration of\nMySQL or MariaDB with the use of a web browser."
+    }, 
+    {
+        "signatureReferenceNumber": "4261", 
+        "link": "https://www.exploit-db.com/ghdb/4261/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:userRpm inurl:LoginRpm.htm", 
+        "shortDescription": "inurl:userRpm inurl:LoginRpm.htm", 
+        "textualDescription": "The below dork can list all the TPLink routers available.inurl:userRpm inurl:LoginRpm.htm\n\nRegards,\nSrini"
+    }, 
+    {
+        "signatureReferenceNumber": "4262", 
+        "link": "https://www.exploit-db.com/ghdb/4262/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=site:pastebin.com intext:@gmail.com | @yahoo.com | @hotmail.com daterange:2457388-2457491", 
+        "shortDescription": "site:pastebin.com intext:@gmail.com | @yahoo.com | @hotmail.com daterange:2457388-2457491", 
+        "textualDescription": "# Exploit Title: [Files Containing E-mail and Associated Password Lists]\n# Google Dork: [site:pastebin.com intext:@gmail.com | @yahoo.com |  \n@hotmail.com daterange:2457388-2457491 (adjust daterange as required)]\n# Date: [04/13/2016]\n# Exploit Author: [Stephanie Jensen]\n# Contact: [https://twitter.com/Steph_J_]\n# Website: [http://www.scriptkittysecurity.com]\n\n1.Description\n\nThis dork searches for all files within pastebin.com containing email  \naddresses associated with yahoo, gmail or hotmail accounts. Due to the  \nculture of pastebin.com most entries contain associated passwords for  \nthese email addresses. Setting a relatively recent daterange query  \nterm allows for recent files to be displayed.\n\nsite:pastebin.com intext:@gmail.com | @yahoo.com | @hotmail.com  \ndaterange:2457388-2457491 (date range can be changed for recent  \nlisting of files - must use julian dates)"
+    }, 
+    {
+        "signatureReferenceNumber": "4263", 
+        "link": "https://www.exploit-db.com/ghdb/4263/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:inmotionhosting.com:2096/", 
+        "shortDescription": "inurl:inmotionhosting.com:2096/", 
+        "textualDescription": "# Title: Webmail login pages\n# Google Dork: inurl:inmotionhosting.com:2096/\n# Date: 04/14/2016\n# Author: Stephanie Jensen (https://twitter.com/Steph_J_)\n\n\nSummary\n\nSearching with omitted results gives you webmail login pages. Some  \nsearch results even display login credentials in search result titles."
+    }, 
+    {
+        "signatureReferenceNumber": "4264", 
+        "link": "https://www.exploit-db.com/ghdb/4264/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:dynamic.php?page=mailbox", 
+        "shortDescription": "inurl:dynamic.php?page=mailbox", 
+        "textualDescription": "# Exploit Title: Webmail login pages\n# Google Dork: inurl:dynamic.php?page=mailbox\n# Date: 04/14/2016\n# Author: Stephanie Jensen\n\nSummary\n\nwebmail login pages - many with obvious usernames in search results.  \nLogin attempts seem unlimited."
+    }, 
+    {
+        "signatureReferenceNumber": "4265", 
+        "link": "https://www.exploit-db.com/ghdb/4265/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=intitle:Index of /__MACOSX ...", 
+        "shortDescription": "intitle:Index of /__MACOSX ...", 
+        "textualDescription": "MAC OS X. Parent Directory \u00a0Wordpress information.\n\n-Xploit"
     }
 ]

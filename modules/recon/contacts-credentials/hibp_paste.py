@@ -17,10 +17,14 @@ class Module(BaseModule):
     }
 
     def module_run(self, accounts):
+        # check back often for new paste sources
         sites = {
             'Pastebin': 'http://pastebin.com/raw.php?i=%s',
             'Pastie': 'http://pastie.org/pastes/%s/text',
             'Slexy': 'http://slexy.org/raw/%s',
+            'Ghostbin': 'https://ghostbin.com/paste/%s/raw',
+            'QuickLeak': 'http://www.quickleak.ir/%s',
+            'JustPaste': 'https://justpaste.it/%s',
             }
         # retrieve status
         base_url = 'https://haveibeenpwned.com/api/v2/%s/%s'
@@ -35,9 +39,13 @@ class Module(BaseModule):
                 continue
             else:
                 for paste in resp.json:
-                    fileurl = sites[paste['Source']] % (paste['Id'])
+                    download = False
+                    fileurl = paste['Id']
+                    if paste['Source'] in sites:
+                        fileurl = sites[paste['Source']] % (paste['Id'])
+                        download = self.options['download']
                     self.alert('%s => Paste found! Seen in a %s on %s (%s).' % (account, paste['Source'], paste['Date'], fileurl))
-                    if self.options['download'] == True:
+                    if download == True:
                         resp = self.request(fileurl)
                         if resp.status_code == 200:
                             filepath = '%s/%s_%s_%s.txt' % (self.workspace, account, paste['Source'], paste['Id'])
