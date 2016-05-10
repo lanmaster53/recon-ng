@@ -30126,5 +30126,125 @@
         "querystring": "http://www.google.com/search?q=intitle:Index of /__MACOSX ...", 
         "shortDescription": "intitle:Index of /__MACOSX ...", 
         "textualDescription": "MAC OS X. Parent Directory \u00a0Wordpress information.\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4266", 
+        "link": "https://www.exploit-db.com/ghdb/4266/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=filetype:rcf inurl:vpn", 
+        "shortDescription": "filetype:rcf inurl:vpn", 
+        "textualDescription": "Sonicwall Global VPN Client files containing sensitive information and login"
+    }, 
+    {
+        "signatureReferenceNumber": "4267", 
+        "link": "https://www.exploit-db.com/ghdb/4267/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=filetype:pcf \"cisco\" \"GroupPwd\"", 
+        "shortDescription": "filetype:pcf \"cisco\" \"GroupPwd\"", 
+        "textualDescription": "Cisco VPN files with Group Passwords for remote access"
+    }, 
+    {
+        "signatureReferenceNumber": "4268", 
+        "link": "https://www.exploit-db.com/ghdb/4268/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Skipfish . scan\"", 
+        "shortDescription": "intitle:\"Skipfish . scan\"", 
+        "textualDescription": "Google Dork: intitle:\"Skipfish . scan\"\nURL: http://www.google.com/search?q=intitle:%22Skipfish+.+scan%22\nDescription: Skipfish Vulnerability Scan Report\nAuthor: Andrea (aka theMiddle) Menin\n\n-theMiddle"
+    }, 
+    {
+        "signatureReferenceNumber": "4269", 
+        "link": "https://www.exploit-db.com/ghdb/4269/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=filetype:pdf intitle:\"SSL Report\"", 
+        "shortDescription": "filetype:pdf intitle:\"SSL Report\"", 
+        "textualDescription": "These dork show Qualys SSL Reports Hosts.\nEnjoy with them.\nRegards.\nRootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4270", 
+        "link": "https://www.exploit-db.com/ghdb/4270/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=/@fmb80_encoder.htm", 
+        "shortDescription": "/@fmb80_encoder.htm", 
+        "textualDescription": "Hi !\nI'm a sound technicien in radio fm world\n\nThis dork give u acces to digiplexer (u can change text of all the listener of a FM radio in there car for exemple : ) )\n\npeace"
+    }, 
+    {
+        "signatureReferenceNumber": "4271", 
+        "link": "https://www.exploit-db.com/ghdb/4271/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=site:github.com filetype:md | filetype:js | filetype:txt \"xoxp-\"", 
+        "shortDescription": "site:github.com filetype:md | filetype:js | filetype:txt \"xoxp-\"", 
+        "textualDescription": "Slack auth tokens used by \"chatops\" bot developers mistakenly disclosed on github.com:\n\nsite:github.com filetype:md | filetype:js | filetype:txt  \"xoxp-\"\n\n-- \nNicholas Hinsch"
+    }, 
+    {
+        "signatureReferenceNumber": "4272", 
+        "link": "https://www.exploit-db.com/ghdb/4272/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=filetype:pwd intitle:index", 
+        "shortDescription": "filetype:pwd intitle:index", 
+        "textualDescription": "Google dork:\nfiletype:pwd intitle:index\n\n\nD0bby"
+    }, 
+    {
+        "signatureReferenceNumber": "4273", 
+        "link": "https://www.exploit-db.com/ghdb/4273/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=inurl:configfile.cgi", 
+        "shortDescription": "inurl:configfile.cgi", 
+        "textualDescription": "Google dork:\ninurl:configfile.cgi\n\n\nD0bby"
+    }, 
+    {
+        "signatureReferenceNumber": "4274", 
+        "link": "https://www.exploit-db.com/ghdb/4274/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:\"/owncloud/index.php\" -github -forum", 
+        "shortDescription": "inurl:\"/owncloud/index.php\" -github -forum", 
+        "textualDescription": "Google dork Description: inurl:\"/owncloud/index.php\" -github -forum\nGoogle search: inurl:\"/owncloud/index.php\" -github -forum\nDate: 2016-29-04\nAuthor: khajj16\nSummary: Owncloud login portal."
+    }, 
+    {
+        "signatureReferenceNumber": "4275", 
+        "link": "https://www.exploit-db.com/ghdb/4275/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:\"/eyeos/index.php\" -github -forum", 
+        "shortDescription": "inurl:\"/eyeos/index.php\" -github -forum", 
+        "textualDescription": "Google dork Description: inurl:\"/eyeos/index.php\" -github -forum\nGoogle search: inurl:\"/eyeos/index.php\" -github -forum\nDate: 2016-29-04\nAuthor: khajj16\nSummary: WebOS login portal for EyeOS."
+    }, 
+    {
+        "signatureReferenceNumber": "4276", 
+        "link": "https://www.exploit-db.com/ghdb/4276/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:\"/owncloud/public.php\" -github -forum", 
+        "shortDescription": "inurl:\"/owncloud/public.php\" -github -forum", 
+        "textualDescription": "Dork for shared files Owncloud.\nHave Fun.\nRegards.\nRootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4277", 
+        "link": "https://www.exploit-db.com/ghdb/4277/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=index of /wp-content/uploads/userpro", 
+        "shortDescription": "index of /wp-content/uploads/userpro", 
+        "textualDescription": "Alot of juicy info found, some csv files found that had alot of personal\ninformation.\n\nSometimes if you type ConversationUnread you can get the same results.\n\nstag_1"
+    }, 
+    {
+        "signatureReferenceNumber": "4278", 
+        "link": "https://www.exploit-db.com/ghdb/4278/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Struts Problem Report\" intext:\"development mode is enabled.\"", 
+        "shortDescription": "intitle:\"Struts Problem Report\" intext:\"development mode is enabled.\"", 
+        "textualDescription": "intitle:\"Struts Problem Report\" intext:\"development mode is\nenabled.\"\n\nabout 51,600 apache struts apps in dev-mode.\n\npHr0ZZy"
+    }, 
+    {
+        "signatureReferenceNumber": "4279", 
+        "link": "https://www.exploit-db.com/ghdb/4279/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=intext:\"eav\" filetype:txt", 
+        "shortDescription": "intext:\"eav\" filetype:txt", 
+        "textualDescription": "Files containing usernames & passwords of NOD32 antivirus accounts. \nGoogle dork:\nintext:\"eav\" filetype:txt\n\nThanks!\n\nD0bby"
+    }, 
+    {
+        "signatureReferenceNumber": "4280", 
+        "link": "https://www.exploit-db.com/ghdb/4280/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=inurl:/sites/default/files/webform/", 
+        "shortDescription": "inurl:/sites/default/files/webform/", 
+        "textualDescription": "Description: Drupal default web-forms' storage path, usually a lot of files there contains juicy info\n\nGoogle search: inurl:/sites/default/files/webform/\n\nDork Author: Serhii Pronin"
     }
 ]

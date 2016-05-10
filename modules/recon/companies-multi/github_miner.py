@@ -18,7 +18,7 @@ class Module(BaseModule):
             for member in members:
                 data = {
                     'username': member['login'],
-                    'url': member['html_url'],
+                    'url': member['url'],
                     'notes': company,
                     'resource': 'Github',
                     'category': 'coding',

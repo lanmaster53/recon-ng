@@ -361,7 +361,9 @@ class BaseModule(framework.Framework):
         self.verbose('Searching Github for: %s' % (query))
         return self.query_github_api(endpoint='/search/code', payload={'q': query})
 
-    def query_github_api(self, endpoint, payload={}):
+    def query_github_api(self, endpoint, payload={}, options={}):
+        opts = {'max_pages': None}
+        opts.update(options)
         headers = {'Authorization': 'token %s' % (self.get_key('github_api'))}
         base_url = 'https://api.github.com'
         url = base_url + endpoint
@@ -378,16 +380,18 @@ class BaseModule(framework.Framework):
                 if resp.status_code != 404:
                     self.error('Message from Github: %s' % (resp.json['message']))
                 break
-            # enumerate resuls
+            # enumerate results
             # handle Search API differently than others
             if endpoint.lower().startswith('/search/'):
                 results += resp.json['items']
             elif endpoint.lower().startswith('/gists/'):
                 results += [x for x in resp.json['files']]
+            elif endpoint.lower().startswith('/users/'):
+                results += [resp.json]
             else:
                 results += resp.json
             # paginate
-            if 'link' in resp.headers and 'rel="next"' in resp.headers['link']:
+            if 'link' in resp.headers and 'rel="next"' in resp.headers['link'] and (opts['max_pages'] is None or page < opts['max_pages']):
                 page += 1
                 continue
             break

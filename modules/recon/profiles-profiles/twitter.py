@@ -10,7 +10,7 @@ class Module(BaseModule):
         'comments': (
             'Twitter limits searchable tweet history to ~3 days.',
         ),
-        'query': 'SELECT DISTINCT username FROM profiles WHERE username IS NOT NULL AND resource=\'Twitter\' COLLATE NOCASE',
+        'query': "SELECT DISTINCT username FROM profiles WHERE username IS NOT NULL AND resource LIKE 'Twitter' COLLATE NOCASE",
         'options': (
             ('until', None, False, 'date-time group in the form YYYY-MM-DD'),
         ),
