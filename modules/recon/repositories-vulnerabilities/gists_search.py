@@ -7,6 +7,9 @@ class Module(BaseModule):
         'name': 'Github Gist Searcher',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Uses the Github API to download and search Gists for possible information disclosures. Updates the \'vulnerabilities\' table with the results.',
+        'comments': (
+            'Gist searches are case sensitive. Include all desired permutations in the keyword list.',
+        ),
         'query': "SELECT DISTINCT url FROM repositories WHERE url IS NOT NULL AND resource LIKE 'Github' AND category LIKE 'gist'",
         'options': (
             ('keywords', os.path.join(BaseModule.data_path, 'gist_keywords.txt'), True, 'file containing a list of keywords'),
@@ -31,7 +34,4 @@ class Module(BaseModule):
                             'example': 'line %d: %s' % (lineno, line.strip()),
                             'category': 'Information Disclosure',
                         }
-                        for key in sorted(data.keys()):
-                            self.output('%s: %s' % (key.title(), data[key]))
-                        print(self.ruler*50)
                         self.add_vulnerabilities(**data)

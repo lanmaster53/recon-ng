@@ -1,1 +1,3 @@
 password
+Password
+PASSWORD

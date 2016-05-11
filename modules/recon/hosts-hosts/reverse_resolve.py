@@ -35,6 +35,5 @@ class Module(BaseModule, ResolverMixin):
                     for host in hosts:
                         host = str(host)[:-1] # slice the trailing dot
                         self.add_hosts(host, address)
-                        self.alert('%s => %s' % (address, host))
                 # break out of the loop
                 attempt = max_attempts

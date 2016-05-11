@@ -236,8 +236,11 @@ class BaseModule(framework.Framework):
 
     def get_pwnedlist_leak(self, leak_id):
         # check if the leak has already been retrieved
-        if self.query('SELECT * FROM leaks WHERE leak_id=?', (leak_id,)):
-            return
+        leak = self.query('SELECT * FROM leaks WHERE leak_id=?', (leak_id,))
+        if leak:
+            leak = dict(zip([x[0] for x in self.get_columns('leaks')], leak[0]))
+            del leak['module']
+            return leak
         # set up the API call
         key = self.get_key('pwnedlist_api')
         secret = self.get_key('pwnedlist_secret')
@@ -249,15 +252,15 @@ class BaseModule(framework.Framework):
         if resp.status_code != 200:
             self.error('Error retrieving leak data.\n%s' % (resp.text))
             return
-        # add the retrieved leak to the leaks table
-        for leak in resp.json['leaks']:
-            normalized_leak = {}
-            for item in leak:
-                value = leak[item]
-                if type(value) == list:
-                    value = ', '.join(value)
-                normalized_leak[item] = value
-            self.add_leaks(**normalized_leak)
+        leak = resp.json['leaks'][0]
+        # normalize the leak for storage
+        normalized_leak = {}
+        for item in leak:
+            value = leak[item]
+            if type(value) == list:
+                value = ', '.join(value)
+            normalized_leak[item] = value
+        return normalized_leak
 
     def search_twitter_api(self, payload):
         headers = {'Authorization': 'Bearer %s' % (self.get_twitter_oauth_token())}
@@ -359,7 +362,10 @@ class BaseModule(framework.Framework):
 
     def search_github_api(self, query):
         self.verbose('Searching Github for: %s' % (query))
-        return self.query_github_api(endpoint='/search/code', payload={'q': query})
+        results = self.query_github_api(endpoint='/search/code', payload={'q': query})
+        # reduce the nested lists of search results and return
+        results = [result['items'] for result in results]
+        return [x for sublist in results for x in sublist]
 
     def query_github_api(self, endpoint, payload={}, options={}):
         opts = {'max_pages': None}
@@ -381,15 +387,7 @@ class BaseModule(framework.Framework):
                     self.error('Message from Github: %s' % (resp.json['message']))
                 break
             # enumerate results
-            # handle Search API differently than others
-            if endpoint.lower().startswith('/search/'):
-                results += resp.json['items']
-            elif endpoint.lower().startswith('/gists/'):
-                results += [x for x in resp.json['files']]
-            elif endpoint.lower().startswith('/users/'):
-                results += [resp.json]
-            else:
-                results += resp.json
+            results.append(resp.json)
             # paginate
             if 'link' in resp.headers and 'rel="next"' in resp.headers['link'] and (opts['max_pages'] is None or page < opts['max_pages']):
                 page += 1

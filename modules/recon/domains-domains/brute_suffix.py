@@ -44,7 +44,7 @@ class Module(BaseModule, ResolverMixin):
                         for answer in answers.response.answer:                                        
                             if answer.rdtype == 6:
                                 soa = answer.name.to_text()[:-1]
-                                self.alert('%s => (SOA) %s - Host found!' % (domain, soa))
+                                self.alert('%s => (SOA) %s' % (domain, soa))
                                 # use "host" rather than "soa" as sometimes the SOA record has a CNAME
                                 self.add_domains(domain)
                     # break out of the loop

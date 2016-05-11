@@ -49,25 +49,31 @@ class Module(BaseModule):
                         continue
                     self.error(jsonobj['meta']['error_message'])
                     break
-                if not processed: self.output('Collecting data for an unknown number of photos...')
+                if not processed:
+                    self.output('Collecting data for an unknown number of photos...')
                 for item in jsonobj['data']:
                     latitude = item['location']['latitude']
                     longitude = item['location']['longitude']
-                    if not all((latitude, longitude)): continue
+                    if not all((latitude, longitude)):
+                        continue
                     source = 'Instagram'
                     screen_name = item['user']['username']
                     profile_name = item['user']['full_name']
                     profile_url = 'http://instagram.com/%s' % screen_name
                     media_url = item['images']['standard_resolution']['url']
                     thumb_url = item['images']['thumbnail']['url']
-                    try: message = item['caption']['text']
-                    except: message = ''
-                    try: time = datetime.fromtimestamp(float(item['created_time']))
-                    except ValueError: time = datetime(1970, 1, 1)
+                    try:
+                        message = item['caption']['text']
+                    except:
+                        message = ''
+                    try:
+                        time = datetime.fromtimestamp(float(item['created_time']))
+                    except ValueError:
+                        time = datetime(1970, 1, 1)
                     self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                 processed += len(jsonobj['data'])
                 self.verbose('%s photos processed.' % (processed))
                 if len(jsonobj['data']) < 20:
-                    print(len(jsonobj['data']))
+                    self.verbose(len(jsonobj['data']))
                     break
                 payload['max_timestamp'] = jsonobj['data'][19]['created_time']

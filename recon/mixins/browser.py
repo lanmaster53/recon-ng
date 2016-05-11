@@ -9,7 +9,7 @@ class BrowserMixin(object):
         # set the user-agent header
         br.addheaders = [('User-agent', self._global_options['user-agent'])]
         # set debug options
-        if self._global_options['debug']:
+        if self._global_options['verbosity'] >= 2:
             br.set_debug_http(True)
             br.set_debug_redirects(True)
             br.set_debug_responses(True)

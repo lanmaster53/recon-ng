@@ -57,6 +57,5 @@ class Module(BaseModule):
             except: 
                 location = ''
             # add results to contacts and profiles tables
-            self.output('%s - %s' % (fullname, title))
             self.add_contacts(first_name=firstname, middle_name=middlename, last_name=lastname, title=title, region=location)
             self.add_profiles(username=fullname, resource='Indeed', url=resumeurl, category='resume')

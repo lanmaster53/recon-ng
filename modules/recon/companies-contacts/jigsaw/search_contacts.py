@@ -91,7 +91,6 @@ class Module(BaseModule):
                     if item: region.append(item)
                 region = ', '.join(region)
                 country = self.html_unescape(contact['country']).title()
-                self.output('[%s] %s - %s (%s - %s)' % (contact_id, name, title, region, country))
                 self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=title, region=region, country=country)
             cnt += size
             if cnt > jsonobj['totalHits']: break

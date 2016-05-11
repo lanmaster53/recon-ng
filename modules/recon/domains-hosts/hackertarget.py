@@ -25,5 +25,4 @@ class Module(BaseModule):
                 if line == '':
                     continue
                 host, address = line.split(",")
-                self.output('%s (%s)' % (address, host))
                 self.add_hosts(host=host, ip_address=address)

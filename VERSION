@@ -1,4 +1,4 @@
-__version__ = '4.7.5'
+__version__ = '4.8.0'
 
 # ex. x.y.z
 # x - Incremented for changes requiring migration. (major revision)

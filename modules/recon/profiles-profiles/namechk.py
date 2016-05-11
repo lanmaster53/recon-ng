@@ -66,7 +66,4 @@ class Module(BaseModule, ThreadingMixin):
                     # update profiles table
                     self.add_profiles(username=username, resource=label, url=profile, category='social')
                     self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (username,))
-                    self.alert('%s: User exists!' % (label))
-                else:
-                    self.verbose('%s: Available.' % (label))
             break

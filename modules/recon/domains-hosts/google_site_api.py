@@ -27,6 +27,5 @@ class Module(BaseModule):
                     host = urlparse(result['link']).netloc
                     if not host in hosts:
                         hosts.append(host)
-                        self.output(host)
                         # add each host to the database
                         self.add_hosts(host)

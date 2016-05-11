@@ -29,6 +29,4 @@ class Module(BaseModule):
                     address = result['formatted_address']
                     # store the result
                     self.add_locations(lat, lon, address)
-                    # output the result
-                    self.alert(address)
             if found: self.query('DELETE FROM locations WHERE latitude=? AND longitude=? AND street_address IS NULL', (lat, lon))

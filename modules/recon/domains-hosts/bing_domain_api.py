@@ -44,7 +44,6 @@ class Module(BaseModule):
                     host = urlparse(result['Url']).netloc
                     if host.endswith('.'+domain) and host not in hosts:
                         hosts.append(host)
-                        self.output(host)
                         self.add_hosts(host)
                         flag = True
                 if not flag and last_len == len(results):

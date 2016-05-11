@@ -15,9 +15,12 @@ class Module(BaseModule):
             # should only be one result, but loop just in case
             for user in users:
                 name = user['name']
-                fname, mname, lname = self.parse_name(name)
+                fname, mname, lname = self.parse_name(name or '')
                 email = user['email']
-                title = 'Github Contributor at %s' % (user['company'])
+                title = 'Github Contributor'
+                if user['company']:
+                    title += ' at %s' % (user['company'])
                 region = user['location']
-                self.output('%s (%s)' % (name, email))
-                self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, email=email, title=title, region=region)
+                # don't add if lacking meaningful data
+                if any((fname, lname, email)):
+                    self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, email=email, title=title, region=region)

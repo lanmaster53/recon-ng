@@ -39,7 +39,6 @@ class Module(BaseModule):
                         # state, postal code or country
                         '%s %s' % (resp.json[rtype]['iso3166-2']['$'].upper(), resp.json[rtype]['postalCode']['$']) if 'iso3166-2' in resp.json[rtype] else resp.json[rtype]['iso3166-1']['name']['$'].title(),
                     )).strip()
-                    self.output('Location: %s' % (address))
                     self.add_locations(street_address=address)
                     # add netblocks
                     url = 'http://whois.arin.net/rest/%s/%s/nets' % (rtype, entity['@handle'])
@@ -55,7 +54,6 @@ class Module(BaseModule):
                         for block in blocks:
                             ip = netblock.iptostr(block[0])
                             cidr = '%s/%s' % (ip, str(block[1]))
-                            self.output('Netblock: %s' % (cidr))
                             self.add_netblocks(netblock=cidr)
                     # add contacts
                     url = 'http://whois.arin.net/rest/%s/%s/pocs' % (rtype, entity['@handle'])
@@ -75,7 +73,6 @@ class Module(BaseModule):
                             state = poc['iso3166-2']['$'].upper() if 'iso3166-2' in poc else None
                             region = ', '.join([x for x in [city, state] if x])
                             country = poc['iso3166-1']['name']['$'].title()
-                            self.output('Contact: %s (%s) - %s (%s - %s)' % (name, email, title, region, country))
                             self.add_contacts(first_name=fname, last_name=lname, email=email, title=title, region=region, country=country)
 
     def _request(self, url, headers, grp, ref):

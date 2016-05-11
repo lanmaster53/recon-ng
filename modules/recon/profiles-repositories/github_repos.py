@@ -13,9 +13,8 @@ class Module(BaseModule):
         for user in users:
             self.heading(user, level=0)
             # enumerate repositories
-            self.heading('Repositories', level=1)
             repos = self.query_github_api('/users/%s/repos' % (quote_plus(user)))
-            for repo in repos:
+            for repo in repos[0]:
                 data = {
                     'name': repo['name'],
                     'owner': repo['owner']['login'],
@@ -24,12 +23,10 @@ class Module(BaseModule):
                     'resource': 'Github',
                     'category': 'repo',
                 }
-                self.output('%s - %s' % (data['name'], data['description']))
                 self.add_repositories(**data)
             # enumerate gists
-            self.heading('Gists', level=1)
             gists = self.query_github_api('/users/%s/gists' % (quote_plus(user)))
-            for gist in gists:
+            for gist in gists[0]:
                 files = gist['files'].values()
                 for _file in files:
                     data = {
@@ -40,5 +37,4 @@ class Module(BaseModule):
                         'resource': 'Github',
                         'category': 'gist',
                     }
-                    self.output('%s - %s' % (data['name'], data['description']))
                     self.add_repositories(**data)

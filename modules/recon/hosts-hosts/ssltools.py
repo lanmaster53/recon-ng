@@ -47,7 +47,6 @@ class Module(BaseModule):
                 # apply restriction
                 if self.options['restrict'] and not re.search(regex, host):
                     continue
-                self.alert('Discovered hostname: \'%s\'' % host)
                 self.add_hosts(host)
 
             # vulns
@@ -60,21 +59,15 @@ class Module(BaseModule):
             if vuln_expired:
                 self.output('Vulnerability: ')
                 data['category'] = 'SSL Certificate Expired'
-                for key in sorted(data.keys()):
-                    self.output('%s%s: %s' % (self.spacer, key.title(), data[key]))
                 self.add_vulnerabilities(**data)
             vuln_hostname_mismatch = re.search('<br>Incorrect : Certificate Name does not match hostname', html)
             if vuln_hostname_mismatch:
                 self.output('Vulnerability: ')
                 data['category'] = 'SSL Certificate Name Does Not Match Hostname'
-                for key in sorted(data.keys()):
-                    self.output('%s%s: %s' % (self.spacer, key.title(), data[key]))
                 self.add_vulnerabilities(**data)
             vuln_untrusted = re.search('<br>SSL Certificate is not trusted<br>The certificate is not signed by a trusted authority', html)
             # ssltools appears to say "the certificate is not signed by a trusted authority" whenever there is a trust problem, no matter what the cause
             if vuln_untrusted:
                 self.output('Vulnerability: ')
                 data['category'] = 'SSL Certificate Not Signed By Trusted Authority'
-                for key in sorted(data.keys()):
-                    self.output('%s%s: %s' % (self.spacer, key.title(), data[key]))
                 self.add_vulnerabilities(**data)

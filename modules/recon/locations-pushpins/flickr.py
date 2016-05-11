@@ -34,21 +34,27 @@ class Module(BaseModule):
                 if jsonobj['stat'] == 'fail':
                     self.error(jsonobj['message'])
                     break
-                if not processed: self.output('Collecting data for ~%s total photos...' % (jsonobj['photos']['total']))
+                if not processed:
+                    self.output('Collecting data for ~%s total photos...' % (jsonobj['photos']['total']))
                 for photo in jsonobj['photos']['photo']:
                     latitude = photo['latitude']
                     longitude = photo['longitude']
-                    if not all((latitude, longitude)): continue
+                    if not all((latitude, longitude)):
+                        continue
                     source = 'Flickr'
                     screen_name = photo['owner']
                     profile_name = photo['ownername']
                     profile_url = 'http://flickr.com/photos/%s' % screen_name
-                    try: media_url = photo['url_m']
-                    except KeyError: media_url = photo['url_t'].replace('_t.', '.')
+                    try:
+                        media_url = photo['url_m']
+                    except KeyError:
+                        media_url = photo['url_t'].replace('_t.', '.')
                     thumb_url = photo['url_t']
                     message = photo['title']
-                    try: time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S')
-                    except ValueError: time = datetime(1970, 1, 1)
+                    try:
+                        time = datetime.strptime(photo['datetaken'], '%Y-%m-%d %H:%M:%S')
+                    except ValueError:
+                        time = datetime(1970, 1, 1)
                     self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                 processed += len(jsonobj['photos']['photo'])
                 self.verbose('%s photos processed.' % (processed))

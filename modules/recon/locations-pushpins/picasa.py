@@ -35,8 +35,10 @@ class Module(BaseModule):
                 if not jsonobj:
                     self.error(resp.text)
                     break
-                if not processed: self.output('Collecting data for an unknown number of photos...')
-                if not 'entry' in jsonobj['feed']: break
+                if not processed:
+                    self.output('Collecting data for an unknown number of photos...')
+                if not 'entry' in jsonobj['feed']:
+                    break
                 for photo in jsonobj['feed']['entry']:
                     if 'georss$where' not in photo:
                         continue
@@ -56,5 +58,6 @@ class Module(BaseModule):
                 qty = jsonobj['feed']['openSearch$itemsPerPage']['$t']
                 start = jsonobj['feed']['openSearch$startIndex']['$t']
                 next = qty + start
-                if next > 1000: break
+                if next > 1000:
+                    break
                 payload['start-index'] = next

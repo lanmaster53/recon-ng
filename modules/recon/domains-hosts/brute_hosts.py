@@ -57,11 +57,11 @@ class Module(BaseModule, ResolverMixin, ThreadingMixin):
                             if rdata.rdtype in (1, 5):
                                 if rdata.rdtype == 1:
                                     address = rdata.address
-                                    self.alert('%s => (A) %s - Host found!' % (host, address))
+                                    self.alert('%s => (A) %s' % (host, address))
                                     self.add_hosts(host, address)
                                 if rdata.rdtype == 5:
                                     cname = rdata.target.to_text()[:-1]
-                                    self.alert('%s => (CNAME) %s - Host found!' % (host, cname))
+                                    self.alert('%s => (CNAME) %s' % (host, cname))
                                     self.add_hosts(cname)
                                     # add the host in case a CNAME exists without an A record
                                     self.add_hosts(host)

@@ -77,7 +77,7 @@ class GoogleWebMixin(object):
             # temporary captcha file removed on close
         # extract the form elements for the capctah answer request
         form = tree.xpath('//form[@action="CaptchaRedirect"]')[0]
-        for x in ['continue', 'id', 'submit']:
+        for x in ['q', 'continue', 'id', 'submit']:
             _payload[x] = form.xpath('//input[@name="%s"]/@value' % (x))[0]
         # send the captcha answer
         return self.request('https://ipv4.google.com/sorry/CaptchaRedirect', payload=_payload, cookiejar=self.cookiejar, agent=self.user_agent)

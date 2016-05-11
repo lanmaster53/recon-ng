@@ -38,4 +38,3 @@ class Module(BaseModule):
                 for service in result.get('protocols'):
                     port, protocol = service.split('/')
                     self.add_ports(ip_address=ip_address, port=port, protocol=protocol)
-                    self.output('Added {} for {}.'.format(service, ip_address))

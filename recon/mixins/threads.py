@@ -32,7 +32,7 @@ class ThreadingMixin(object):
 
     def thread(self, *args):
         # disable threading in debug mode
-        if self._global_options['debug']:
+        if self._global_options['verbosity'] >= 2:
             # call the thread method in serial for each input
             for item in args[0]:
                 self.module_thread(item, *args[1:])

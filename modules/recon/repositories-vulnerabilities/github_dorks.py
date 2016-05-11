@@ -26,7 +26,4 @@ class Module(BaseModule):
                         'example': result['html_url'],
                         'category': 'Github Dork',
                     }
-                    for key in sorted(data.keys()):
-                        self.output('%s: %s' % (key.title(), data[key]))
-                    print(self.ruler*50)
                     self.add_vulnerabilities(**data)

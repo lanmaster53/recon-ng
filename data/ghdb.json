@@ -30246,5 +30246,13 @@
         "querystring": "http://www.google.com/search?q=inurl:/sites/default/files/webform/", 
         "shortDescription": "inurl:/sites/default/files/webform/", 
         "textualDescription": "Description: Drupal default web-forms' storage path, usually a lot of files there contains juicy info\n\nGoogle search: inurl:/sites/default/files/webform/\n\nDork Author: Serhii Pronin"
+    }, 
+    {
+        "signatureReferenceNumber": "4281", 
+        "link": "https://www.exploit-db.com/ghdb/4281/", 
+        "category": "Vulnerable Files", 
+        "querystring": "http://www.google.com/search?q=inurl:demo.browse.php intitle:getid3", 
+        "shortDescription": "inurl:demo.browse.php intitle:getid3", 
+        "textualDescription": "The getID3 demo can allow directory traversal, deleting files, etc.\n\nhttps://github.com/JamesHeinrich/getID3/blob/master/demos/demo.browse.php\n\nSean Murphy / Senior Developer / Wordfence\n4948 DD81 CF99 3510 DFF0 44A6 A6D8 401E D683 98F5"
     }
 ]

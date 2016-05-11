@@ -29,7 +29,7 @@ class Module(BaseModule):
                 self.verbose('No additional hosts discovered at \'%s\'.' % (address))
             for result in results:
                 host = urlparse(result['Url']).netloc
-                self.output(host)
+                self.verbose(host)
                 # apply restriction
                 if self.options['restrict'] and not re.search(regex, host):
                     continue

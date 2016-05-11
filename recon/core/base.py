@@ -142,13 +142,12 @@ class Recon(framework.Framework):
             pass
 
     def _init_global_options(self):
-        self.register_option('debug', False, True, 'enable debugging output')
         self.register_option('nameserver', '8.8.8.8', True, 'nameserver for DNS interrogation')
         self.register_option('proxy', None, False, 'proxy server (address:port)')
         self.register_option('threads', 10, True, 'number of threads (where applicable)')
         self.register_option('timeout', 10, True, 'socket timeout (seconds)')
         self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), True, 'user-agent string')
-        self.register_option('verbose', True, True, 'enable verbose output')
+        self.register_option('verbosity', 1, True, 'verbosity level (0 = minimal, 1 = verbose, 2 = debug)')
 
     def _init_home(self):
         self._home = framework.Framework._home = os.path.join(os.path.expanduser('~'), '.recon-ng')

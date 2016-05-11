@@ -26,5 +26,4 @@ class Module(BaseModule):
             names = match.group(1)
             hosts = [x.strip() for x in names.split(',') if '*' not in x]
             for host in hosts:
-                self.output(host)
                 self.add_hosts(host)

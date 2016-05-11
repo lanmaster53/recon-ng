@@ -25,6 +25,5 @@ class Module(BaseModule):
                 if not host['hostnames']:
                     host['hostnames'] = [None]
                 for hostname in host['hostnames']:
-                    self.output('%s (%s) - %s' % (address, hostname or 'Unknown', port))
                     self.add_ports(ip_address=address, port=port, host=hostname)
                     self.add_hosts(host=hostname, ip_address=address)

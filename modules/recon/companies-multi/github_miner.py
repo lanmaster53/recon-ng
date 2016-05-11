@@ -13,22 +13,19 @@ class Module(BaseModule):
         for company in companies:
             self.heading(company, level=0)
             # enumerate members
-            self.heading('Members', level=1)
             members = self.query_github_api('/orgs/%s/members' % (quote_plus(company)))
-            for member in members:
+            for member in members[0]:
                 data = {
                     'username': member['login'],
-                    'url': member['url'],
+                    'url': member['html_url'],
                     'notes': company,
                     'resource': 'Github',
                     'category': 'coding',
                 }
-                self.output('%s (%s)' % (data['username'], data['url']))
                 self.add_profiles(**data)
             # enumerate repositories
-            self.heading('Repositories', level=1)
             repos = self.query_github_api('/orgs/%s/repos' % (quote_plus(company)))
-            for repo in repos:
+            for repo in repos[0]:
                 data = {
                     'name': repo['name'],
                     'owner': repo['owner']['login'],
@@ -37,5 +34,4 @@ class Module(BaseModule):
                     'resource': 'Github',
                     'category': 'repo',
                 }
-                self.output('%s - %s' % (data['name'], data['description']))
                 self.add_repositories(**data)

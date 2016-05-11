@@ -56,7 +56,6 @@ class Module(BaseModule):
                         subs.append(site)
                         new = True
                         host = '%s.%s' % (site, domain)
-                        self.output('%s' % (host))
                         self.add_hosts(host)
                 if not new:
                     # exit if all subdomains have been found

@@ -33,6 +33,5 @@ class Module(BaseModule, ThreadingMixin):
             if resp.status_code == int(d['account_existence_code']):
                 self.debug('Codes matched %s %s' % (resp.status_code, d['account_existence_code']))
                 if d['account_existence_string'] in resp.text or d['account_existence_string'] in resp.headers:
-                    self.alert('Probable match: %s' % url)
                     self.add_profiles(username=user, url=url, resource=d['name'], category=d['category'])
                     self.query('DELETE FROM profiles WHERE username = ? and url IS NULL', (user,))

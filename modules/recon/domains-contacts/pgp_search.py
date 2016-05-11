@@ -38,6 +38,5 @@ class Module(BaseModule):
                 name = contact[0].strip()
                 fname, mname, lname = self.parse_name(name)
                 email = contact[1]
-                self.output('%s (%s)' % (name, email))
                 if email.lower().endswith(domain.lower()):
                     self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, email=email, title='PGP key association')

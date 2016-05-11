@@ -16,4 +16,3 @@ class Module(BaseModule):
         hosts = [x[0] for x in self.query('SELECT DISTINCT host FROM ports WHERE host IS NOT NULL') if not re.match(regex, x[0])]
         for host in hosts:
             self.add_hosts(host=host)
-            self.output('\'%s\' successfully migrated.' % (host))

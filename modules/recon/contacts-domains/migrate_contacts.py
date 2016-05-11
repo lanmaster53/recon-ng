@@ -22,4 +22,3 @@ class Module(BaseModule):
         domains = self.hosts_to_domains(hosts, suffixes)
         for domain in domains:
             self.add_domains(domain=domain)
-            self.output('\'%s\' successfully migrated.' % (domain))

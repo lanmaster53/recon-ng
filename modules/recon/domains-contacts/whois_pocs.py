@@ -37,6 +37,5 @@ class Module(BaseModule):
                     state = poc['iso3166-2']['$'].upper() if 'iso3166-2' in poc else None
                     region = ', '.join([x for x in [city, state] if x])
                     country = poc['iso3166-1']['name']['$'].title()
-                    self.output('%s (%s) - %s (%s - %s)' % (name, email, title, region, country))
                     if email.lower().endswith(domain.lower()):
                         self.add_contacts(first_name=fname, last_name=lname, email=email, title=title, region=region, country=country)

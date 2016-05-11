@@ -47,7 +47,6 @@ class Module(BaseModule):
                 for site in sites:
                     if site not in subs:
                         subs.append(site)
-                        self.output('%s' % (site))
                         self.add_hosts(site)
                 # verifies if there's more pages to look while grabbing the correct 
                 # values for our payload...

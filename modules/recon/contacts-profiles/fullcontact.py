@@ -56,7 +56,6 @@ class Module(BaseModule):
                         resource = profile['typeName']
                         url = profile['url']
                         self.add_profiles(username=username, url=url, resource=resource, category='social')
-                        self.alert('%s - %s (%s)' % (username, resource, url))
                 self.output('Confidence: %d%%' % (resp.json['likelihood']*100,))
             elif resp.status_code == 202:
                 # add emails queued by fullcontact back to the list
