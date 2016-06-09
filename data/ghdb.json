@@ -30254,5 +30254,261 @@
         "querystring": "http://www.google.com/search?q=inurl:demo.browse.php intitle:getid3", 
         "shortDescription": "inurl:demo.browse.php intitle:getid3", 
         "textualDescription": "The getID3 demo can allow directory traversal, deleting files, etc.\n\nhttps://github.com/JamesHeinrich/getID3/blob/master/demos/demo.browse.php\n\nSean Murphy / Senior Developer / Wordfence\n4948 DD81 CF99 3510 DFF0 44A6 A6D8 401E D683 98F5"
+    }, 
+    {
+        "signatureReferenceNumber": "4282", 
+        "link": "https://www.exploit-db.com/ghdb/4282/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=\"Fenix Final Version v2.0\" filetype:php", 
+        "shortDescription": "\"Fenix Final Version v2.0\" filetype:php", 
+        "textualDescription": "Web-Shell new, very interesting.\nHave Fun.\n\nRegards.\nRootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4283", 
+        "link": "https://www.exploit-db.com/ghdb/4283/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=intitle:\"MODX CMF Manager Login\"", 
+        "shortDescription": "intitle:\"MODX CMF Manager Login\"", 
+        "textualDescription": "Searches for MODX login portals, even if admin portal URL is not at usual\nlocation of /manager/\n\nAuthor: Charles Holtzkampf"
+    }, 
+    {
+        "signatureReferenceNumber": "4284", 
+        "link": "https://www.exploit-db.com/ghdb/4284/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=inurl:vidyo -site:vidyo.com inurl:portal", 
+        "shortDescription": "inurl:vidyo -site:vidyo.com inurl:portal", 
+        "textualDescription": "Vidyo Portals. File Disclosure\n\ninurl:vidyo -site:vidyo.com inurl:portal"
+    }, 
+    {
+        "signatureReferenceNumber": "4285", 
+        "link": "https://www.exploit-db.com/ghdb/4285/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:citrix inurl:login.asp -site:citrix.com", 
+        "shortDescription": "inurl:citrix inurl:login.asp -site:citrix.com", 
+        "textualDescription": "Citrix Login Portals\n\ninurl:citrix inurl:login.asp -site:citrix.com"
+    }, 
+    {
+        "signatureReferenceNumber": "4286", 
+        "link": "https://www.exploit-db.com/ghdb/4286/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=filetype:txt \"gmail\" | \"hotmail\" | \"yahoo\" -robots site:gov | site:us", 
+        "shortDescription": "filetype:txt \"gmail\" | \"hotmail\" | \"yahoo\" -robots site:gov | site:us", 
+        "textualDescription": "filetype:txt \"gmail\" | \"hotmail\" | \"yahoo\" -robots site:gov | site:us\n\nEmails"
+    }, 
+    {
+        "signatureReferenceNumber": "4287", 
+        "link": "https://www.exploit-db.com/ghdb/4287/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=inurl:\"/webmail/\" intitle:\"Mail - AfterLogic WebMail\" -site:afterlogic.org -site:afterlogic.com", 
+        "shortDescription": "inurl:\"/webmail/\" intitle:\"Mail - AfterLogic WebMail\" -site:afterlogic.org -site:afterlogic.com", 
+        "textualDescription": "inurl:\"/webmail/\" intitle:\"Mail - AfterLogic WebMail\" -site:afterlogic.org -site:afterlogic.com\n\nAfterLogic WebMail\n\nXXE Injection Vulnerability\n\nhttps://www.exploit-db.com/exploits/39850/\n\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4288", 
+        "link": "https://www.exploit-db.com/ghdb/4288/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=ext:php inurl:\"api.php?action=\"", 
+        "shortDescription": "ext:php inurl:\"api.php?action=\"", 
+        "textualDescription": "ext:php inurl:\"api.php?action=\"\n\nXenAPI/XenForo SQLi Vulnerability\n\nhttps://www.exploit-db.com/exploits/39849/"
+    }, 
+    {
+        "signatureReferenceNumber": "4289", 
+        "link": "https://www.exploit-db.com/ghdb/4289/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=intext:\"Forum software by XenForo\u2122\"", 
+        "shortDescription": "intext:\"Forum software by XenForo\u2122\"", 
+        "textualDescription": "intext:\"Forum software by XenForo\u2122\"\n\nXenForo SQLi Vulnerability. - https://www.exploit-db.com/exploits/39849/\n\n\"value\" parameter unsanitized."
+    }, 
+    {
+        "signatureReferenceNumber": "4290", 
+        "link": "https://www.exploit-db.com/ghdb/4290/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=intext:\"Powered by BOMGAR\"", 
+        "shortDescription": "intext:\"Powered by BOMGAR\"", 
+        "textualDescription": "intext:\"Powered by BOMGAR\""
+    }, 
+    {
+        "signatureReferenceNumber": "4291", 
+        "link": "https://www.exploit-db.com/ghdb/4291/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/WebInterface/login.html", 
+        "shortDescription": "inurl:/WebInterface/login.html", 
+        "textualDescription": "Login Pages for CrushFTP\nMay bring up other programs FTP pages."
+    }, 
+    {
+        "signatureReferenceNumber": "4292", 
+        "link": "https://www.exploit-db.com/ghdb/4292/", 
+        "category": "Footholds", 
+        "querystring": "http://www.google.com/search?q=intitle:\"Hamdida X_Shell Backd00r\"", 
+        "shortDescription": "intitle:\"Hamdida X_Shell Backd00r\"", 
+        "textualDescription": "Interesting little backdoor.\n\nintitle:\"Hamdida X_Shell Backd00r\"\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4293", 
+        "link": "https://www.exploit-db.com/ghdb/4293/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=inurl:/remote/login/ intext:\"please login\"|intext:\"FortiToken clock drift detected\"", 
+        "shortDescription": "inurl:/remote/login/ intext:\"please login\"|intext:\"FortiToken clock drift detected\"", 
+        "textualDescription": "Description : inurl:/remote/login/ intext:\"please login\"|intext:\"FortiToken\nclock drift detected\"\nSearch :  inurl:/remote/login/ intext:\"please login\"|intext:\"FortiToken\nclock drift detected\"\nDate: 05-06-2016\nAuthor: Krishna\nSummary:Exposed SSL VPN Login pages for Fortiguard SSL VPN."
+    }, 
+    {
+        "signatureReferenceNumber": "4294", 
+        "link": "https://www.exploit-db.com/ghdb/4294/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=inurl:.ssh intitle:index.of authorized_keys", 
+        "shortDescription": "inurl:.ssh intitle:index.of authorized_keys", 
+        "textualDescription": "SSH Keys\n\ninurl:.ssh intitle:index.of authorized_keys\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4295", 
+        "link": "https://www.exploit-db.com/ghdb/4295/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=inurl:trash intitle:index.of", 
+        "shortDescription": "inurl:trash intitle:index.of", 
+        "textualDescription": "One man's trash is another man's treasure.\n\ninurl:trash intitle:index.of\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4296", 
+        "link": "https://www.exploit-db.com/ghdb/4296/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=inurl:\"/wp-content/plugins/wp-mobile-detector/\" ext:php", 
+        "shortDescription": "inurl:\"/wp-content/plugins/wp-mobile-detector/\" ext:php", 
+        "textualDescription": "WP Mobile Detector 3.5 Remote Shell Upload\n\nhttps://www.exploit-db.com/exploits/39891/\n\ninurl:\"/wp-content/plugins/wp-mobile-detector/\" ext:php\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4297", 
+        "link": "https://www.exploit-db.com/ghdb/4297/", 
+        "category": "Pages containing login portals", 
+        "querystring": "http://www.google.com/search?q=Zixmail inurl:/s/login?", 
+        "shortDescription": "Zixmail inurl:/s/login?", 
+        "textualDescription": "Zixmail Secure Email Logon Portals.\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4298", 
+        "link": "https://www.exploit-db.com/ghdb/4298/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=inurl:\"/wp-content/uploads/levoslideshow/\"", 
+        "shortDescription": "inurl:\"/wp-content/uploads/levoslideshow/\"", 
+        "textualDescription": "Webshell Upload.\n\nWordpress Levo-Slideshow 2.3\n\ninurl:\"/wp-content/uploads/levoslideshow/\"\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4299", 
+        "link": "https://www.exploit-db.com/ghdb/4299/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=site:github.com ext:csv userid | username | user -example password", 
+        "shortDescription": "site:github.com ext:csv userid | username | user -example password", 
+        "textualDescription": "Whoops.\n\nsite:github.com ext:csv userid | username | user -example password\n\nDecoy"
+    }, 
+    {
+        "signatureReferenceNumber": "4300", 
+        "link": "https://www.exploit-db.com/ghdb/4300/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:/awcuser/cgi-bin/", 
+        "shortDescription": "inurl:/awcuser/cgi-bin/", 
+        "textualDescription": "Google Dork for Mitel systems:\n\ninurl:/awcuser/cgi-bin/\n\n@_aliardic_"
+    }, 
+    {
+        "signatureReferenceNumber": "4301", 
+        "link": "https://www.exploit-db.com/ghdb/4301/", 
+        "category": "Error Messages", 
+        "querystring": "http://www.google.com/search?q=intext:\"expects parameter 1 to be resource, boolean given\" filetype:php", 
+        "shortDescription": "intext:\"expects parameter 1 to be resource, boolean given\" filetype:php", 
+        "textualDescription": "intext:\"expects parameter 1 to be resource, boolean given\" filetype:php\n\nReturns around 997,000 vulnerable mysql-based websites."
+    }, 
+    {
+        "signatureReferenceNumber": "4302", 
+        "link": "https://www.exploit-db.com/ghdb/4302/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=intext:\"Hello visitor from\" ext:asp", 
+        "shortDescription": "intext:\"Hello visitor from\" ext:asp", 
+        "textualDescription": "intext:\"Hello visitor from\" ext:asp\natawho - sonadam - antidote\ndetails\nhttps://monodram.net/2015/10/10/user-agent-xss-inj.html"
+    }, 
+    {
+        "signatureReferenceNumber": "4303", 
+        "link": "https://www.exploit-db.com/ghdb/4303/", 
+        "category": "Various Online Devices", 
+        "querystring": "http://www.google.com/search?q=inurl:top.htm inurl:currenttime", 
+        "shortDescription": "inurl:top.htm inurl:currenttime", 
+        "textualDescription": "Dork with a lot of cameras online.\nEnjoy Healthy.\nRegards.\nDork by Rootkit Pentester."
+    }, 
+    {
+        "signatureReferenceNumber": "4304", 
+        "link": "https://www.exploit-db.com/ghdb/4304/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=intext:\"/LM/W3SVC/\" ext:asp", 
+        "shortDescription": "intext:\"/LM/W3SVC/\" ext:asp", 
+        "textualDescription": "intext:\"/LM/W3SVC/\" ext:asp\nServerVariables that give information.\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4305", 
+        "link": "https://www.exploit-db.com/ghdb/4305/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=intext:\"/showme.asp\" HTTP_ACCEPT", 
+        "shortDescription": "intext:\"/showme.asp\" HTTP_ACCEPT", 
+        "textualDescription": "intext:\"/showme.asp\" HTTP_ACCEPT\nApplication & Session Contents for Servers.\n\n-Xploit"
+    }, 
+    {
+        "signatureReferenceNumber": "4306", 
+        "link": "https://www.exploit-db.com/ghdb/4306/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=\"Index of /wp-content/uploads/backupbuddy_backups\" zip", 
+        "shortDescription": "\"Index of /wp-content/uploads/backupbuddy_backups\" zip", 
+        "textualDescription": "Search for iThemes BackupBuddy backup zips\n\n\u2013 balcsida"
+    }, 
+    {
+        "signatureReferenceNumber": "4307", 
+        "link": "https://www.exploit-db.com/ghdb/4307/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=\"index of\" bigdump.php", 
+        "shortDescription": "\"index of\" bigdump.php", 
+        "textualDescription": "Search for BigDump: Staggered MySQL Dump Importer file\n- Arbitrary Upload\n- Juicy info/passwords\n- Deleting files\n- MySQL injection"
+    }, 
+    {
+        "signatureReferenceNumber": "4308", 
+        "link": "https://www.exploit-db.com/ghdb/4308/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=filetype:sql intext:wp_users phpmyadmin", 
+        "shortDescription": "filetype:sql intext:wp_users phpmyadmin", 
+        "textualDescription": "# Exploit Title: (Google Dork) filetype:sql intext:wp_users phpmyadmin\n# Google Dork: filetype:sql intext:wp_users phpmyadmin\n# Date: 2016-07-06\n# Exploit Author: RuBiQc\n\nDescription: Finds SQL dump files of Wordpress sites with usernames and \npasswords. Pretty funny that people make these publicly available!"
+    }, 
+    {
+        "signatureReferenceNumber": "4309", 
+        "link": "https://www.exploit-db.com/ghdb/4309/", 
+        "category": "Sensitive Online Shopping Info", 
+        "querystring": "http://www.google.com/search?q=intext:\"Dumping data for table `orders`\"", 
+        "shortDescription": "intext:\"Dumping data for table `orders`\"", 
+        "textualDescription": "Dork finds SQL dump files containing personal information\nBy warlock72"
+    }, 
+    {
+        "signatureReferenceNumber": "4310", 
+        "link": "https://www.exploit-db.com/ghdb/4310/", 
+        "category": "Files containing juicy info", 
+        "querystring": "http://www.google.com/search?q=inurl:DiGIR.php", 
+        "shortDescription": "inurl:DiGIR.php", 
+        "textualDescription": "# Exploit Title: (Google Dork) inurl:DiGIR.php\n# Google Dork: inurl:DiGIR.php\n# Date: 7-7-2016\n# Exploit Author: fnkym0nky\n\nDescription: Finds files that contain diagnostic issues for SQL databases,\nPHP code, among other things. Able to be used in tandem with Error Based\nSQLi, and vulnerability enumeration"
+    }, 
+    {
+        "signatureReferenceNumber": "4311", 
+        "link": "https://www.exploit-db.com/ghdb/4311/", 
+        "category": "Files containing passwords", 
+        "querystring": "http://www.google.com/search?q=site:static.ow.ly/docs/ intext:@gmail.com | Password", 
+        "shortDescription": "site:static.ow.ly/docs/ intext:@gmail.com | Password", 
+        "textualDescription": "This dork results in documents containing passwords that are stuck in ow.ly\ncache.\nMajority are from 2016 and are still working.\n\nDiscovered by @BLM_KRS (Twitter)"
+    }, 
+    {
+        "signatureReferenceNumber": "4312", 
+        "link": "https://www.exploit-db.com/ghdb/4312/", 
+        "category": "Advisories and Vulnerabilities", 
+        "querystring": "http://www.google.com/search?q=inurl:sgms/auth", 
+        "shortDescription": "inurl:sgms/auth", 
+        "textualDescription": "inurl:sgms/auth\n\nThis will allow you to find Sonicwall GMS servers.\nThis article mentions 6 vulnerabilities recently found.\n\nhttps://www.digitaldefense.com/vrt-discoveries/"
+    }, 
+    {
+        "signatureReferenceNumber": "4313", 
+        "link": "https://www.exploit-db.com/ghdb/4313/", 
+        "category": "Sensitive Directories", 
+        "querystring": "http://www.google.com/search?q=inurl:pictures intitle:index.of", 
+        "shortDescription": "inurl:pictures intitle:index.of", 
+        "textualDescription": "inurl:pictures  intitle:index.of\nLoads of personal pictures and what not \n\nSent from trump tower"
     }
 ]
