@@ -440,7 +440,7 @@ class Framework(cmd.Cmd):
             protocol = self.to_unicode(protocol)
         )
         rowcount = self.insert('ports', data.copy(), ('ip_address', 'port', 'host'))
-        if not mute: self._display(data, rowcount, '[port] %s (%s) - %s', ('ip_address', 'port', 'host'))
+        if not mute: self._display(data, rowcount, '[port] %s (%s/%s) - %s', ('ip_address', 'port', 'protocol', 'host'))
         return rowcount
 
     def add_hosts(self, host=None, ip_address=None, region=None, country=None, latitude=None, longitude=None, mute=False):

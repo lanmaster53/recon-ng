@@ -262,14 +262,15 @@ class BaseModule(framework.Framework):
             normalized_leak[item] = value
         return normalized_leak
 
-    def search_twitter_api(self, payload):
+    def search_twitter_api(self, payload, limit=False):
         headers = {'Authorization': 'Bearer %s' % (self.get_twitter_oauth_token())}
         url = 'https://api.twitter.com/1.1/search/tweets.json'
-        # count causes inconsistent results when applied
-        #payload['count'] = 50 # api stops paginating at count=90
         results = []
         while True:
             resp = self.request(url, payload=payload, headers=headers)
+            if limit:
+                # app auth rate limit for search/tweets is 450/15min
+                time.sleep(2)
             jsonobj = resp.json
             for item in ['error', 'errors']:
                 if item in jsonobj:

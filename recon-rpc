@@ -70,7 +70,7 @@ class ReconState:
         return self._fetch_results(sid)
 
     def delete(self, table, param, sid):
-        self.sessions[sid]["module"].do_del(table + " " + param)
+        self.sessions[sid]["module"].do_delete(table + " " + param)
 
     def show(self, param, sid):
         if param in self.sessions[sid]["module"].get_tables():

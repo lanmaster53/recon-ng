@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+import time
 import urllib
 
 class Module(BaseModule):
@@ -7,6 +8,9 @@ class Module(BaseModule):
         'name': 'Have I been pwned? Breach Search',
         'author': 'Tim Tomes (@LaNMaSteR53) & Tyler Halfpop (@tylerhalfpop)',
         'description': 'Leverages the haveibeenpwned.com API to determine if email addresses are associated with breached credentials. Adds compromised email addresses to the \'credentials\' table.',
+        'comments': (
+            'The API is rate limited to 1 request per 1.5 seconds.',
+        ),
         'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL',
     }
 
@@ -26,3 +30,4 @@ class Module(BaseModule):
                 for breach in resp.json:
                     self.alert('%s => Breach found! Seen in the %s breach that occurred on %s.' % (account, breach['Title'], breach['BreachDate']))
                 self.add_credentials(account)
+            time.sleep(1.6)

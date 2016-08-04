@@ -30,10 +30,15 @@ class GoogleWebMixin(object):
             # detect and handle captchas until answered correctly
             # first visit = 302, actual captcha = 503
             # follow the redirect to the captcha
-            if resp.status_code == 302:
+            count = 0
+            while resp.status_code == 302:
                 redirect = resp.headers['location']
                 # request the captcha page
                 resp = self.request(redirect, redirect=False, cookiejar=self.cookiejar, agent=self.user_agent)
+                count += 1
+                # account for the possibility of infinite redirects
+                if count == 20:
+                    break
             # handle the captcha
             # check needed because the redirect could result in an error
             # will properly exit the loop and fall to the error check below

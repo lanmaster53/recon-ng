@@ -32,7 +32,7 @@ class Module(BaseModule):
                     title = None
                     if 'organizations' in resp.json:
                         for occupation in resp.json['organizations']:
-                            if occupation['current']:
+                            if 'current' in occupation and occupation['current']:
                                 if 'title' in occupation:
                                     title = '%s at %s' % (occupation['title'], occupation['name'])
                                 else:

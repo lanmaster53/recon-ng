@@ -31,14 +31,14 @@ class Module(BaseModule):
                     # add company
                     self.add_companies(company=entity['@name'], description=rtype)
                     # add location
-                    address = ', '.join((
+                    address = ', '.join(e for e in (
                         # street address
                         self._enum_ref(resp.json[rtype]['streetAddress']['line'])[-1]['$'].title(),
                         # city
-                        resp.json[rtype]['city']['$'].title(),
+                        resp.json[rtype]['city']['$'].title() if 'city' in resp.json[rtype] else None,
                         # state, postal code or country
                         '%s %s' % (resp.json[rtype]['iso3166-2']['$'].upper(), resp.json[rtype]['postalCode']['$']) if 'iso3166-2' in resp.json[rtype] else resp.json[rtype]['iso3166-1']['name']['$'].title(),
-                    )).strip()
+                    ) if e).strip()
                     self.add_locations(street_address=address)
                     # add netblocks
                     url = 'http://whois.arin.net/rest/%s/%s/nets' % (rtype, entity['@handle'])

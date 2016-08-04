@@ -30,7 +30,8 @@ class Module(BaseModule):
             elif jsonobj['REQUEST'] != 'FOUND':
                 self.verbose('%s => %s' % (hashstr, jsonobj['REQUEST'].lower()))
             else:
-                plaintext = jsonobj[hashstr]['plain']
-                hashtype = jsonobj[hashstr]['algorithm']
+                # hashes.org converts the hash to lowercase
+                plaintext = jsonobj[hashstr.lower()]['plain']
+                hashtype = jsonobj[hashstr.lower()]['algorithm']
                 self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
                 self.query('UPDATE credentials SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
