@@ -20,7 +20,7 @@ class Module(BaseModule):
         for point in points:
             self.heading(point, level=0)
             self.output('Collecting data for an unknown number of tweets...')
-            results = self.search_twitter_api({'q':'', 'geocode': '%s,%dkm' % (point, rad)})
+            results = self.search_twitter_api({'q':'', 'geocode': '%s,%fkm' % (point, rad)})
             for tweet in results:
                 if not tweet['geo']:
                     continue
