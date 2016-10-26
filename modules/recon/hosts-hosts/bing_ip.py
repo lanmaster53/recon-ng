@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+from recon.utils.parsers import parse_hostname
 from urlparse import urlparse
 import re
 
@@ -28,7 +29,7 @@ class Module(BaseModule):
             if not results:
                 self.verbose('No additional hosts discovered at \'%s\'.' % (address))
             for result in results:
-                host = urlparse(result['Url']).netloc
+                host = parse_hostname(result['displayUrl'])
                 self.verbose(host)
                 # apply restriction
                 if self.options['restrict'] and not re.search(regex, host):

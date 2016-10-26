@@ -29,7 +29,7 @@ class Module(BaseModule):
     def get_profiles(self, company):
         results = []
         subdomains = self.options['subdomains']
-        subdomain_list = [''] if not subdomains else [x.strip()+'.' for x in subdomain.split(',')]
+        subdomain_list = [''] if not subdomains else [x.strip()+'.' for x in subdomains.split(',')]
         for subdomain in subdomain_list:
             base_query = [
                 "site:\"%slinkedin.com/in/\" && %s" % (subdomain, company),

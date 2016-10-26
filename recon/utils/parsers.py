@@ -1,11 +1,18 @@
 from PyPDF2 import PdfFileReader
 from PyPDF2.utils import PdfReadError
 from StringIO import StringIO
+from urlparse import urlparse
 import lxml.etree
 import olefile
 import os
 import re
 import zipfile
+
+def parse_hostname(s):
+    host = urlparse(s)
+    if not host.scheme:
+        host = urlparse('//'+s)
+    return host.netloc
 
 def parse_emails(s):
     return re.findall(r'([^\s]+@[^\s]+)', s)

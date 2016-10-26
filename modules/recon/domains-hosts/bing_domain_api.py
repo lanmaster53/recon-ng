@@ -1,4 +1,5 @@
 from recon.core.module import BaseModule
+from recon.utils.parsers import parse_hostname
 from urlparse import urlparse
 import re
 
@@ -28,10 +29,10 @@ class Module(BaseModule):
                 # build query string based on api limitations
                 for host in hosts:
                     omit_domain = ' -domain:%s' % (host)
-                    if len(query) + len(omit_domain) < 1425:
-                        query += omit_domain
-                    else:
+                    # https://msdn.microsoft.com/en-us/library/dn760794.aspx
+                    if len(query) + len(omit_domain) >= 1500:
                         break
+                    query += omit_domain
                 # make api requests
                 if limit and requests + pages > limit:
                     pages = limit - requests
@@ -41,7 +42,7 @@ class Module(BaseModule):
                 # iterate through results and add new hosts
                 flag = False
                 for result in results:
-                    host = urlparse(result['Url']).netloc
+                    host = parse_hostname(result['displayUrl'])
                     if host.endswith('.'+domain) and host not in hosts:
                         hosts.append(host)
                         self.add_hosts(host)

@@ -288,7 +288,7 @@ class BaseModule(framework.Framework):
         url = 'https://api.shodan.io/shodan/host/search'
         payload = {'query': query, 'key': api_key}
         results = []
-        cnt = 1
+        cnt = 0
         page = 1
         self.verbose('Searching Shodan API for: %s' % (query))
         while True:
@@ -301,38 +301,41 @@ class BaseModule(framework.Framework):
                 break
             # add new results
             results.extend(resp.json['matches'])
-            # check limit
+            # increment and check the limit
+            cnt += 1
             if limit == cnt:
                 break
-            cnt += 1
             # next page
             page += 1
             payload['page'] = page
         return results
 
     def search_bing_api(self, query, limit=0):
-        api_key = self.get_key('bing_api')
-        url = 'https://api.datamarket.azure.com/Bing/Search/Web'
-        payload = {'Query': "'%s'" % (query), '$format': 'json'}
+        url = 'https://api.cognitive.microsoft.com/bing/v5.0/search'
+        payload = {'q': query, 'count': 50, 'offset': 0, 'responseFilter': 'WebPages'}
+        headers = {'Ocp-Apim-Subscription-Key': self.get_key('bing_api')}
         results = []
-        cnt = 1
+        cnt = 0
         self.verbose('Searching Bing API for: %s' % (query))
         while True:
-            resp = None
-            resp = self.request(url, payload=payload, auth=(api_key, api_key))
+            resp = self.request(url, payload=payload, headers=headers)
             if resp.json == None:
                 raise framework.FrameworkException('Invalid JSON response.\n%s' % (resp.text))
+            elif 'error' in resp.json:
+                raise framework.FrameworkException('%s: %s' % (resp.json['error']['statusCode'], resp.json['error']['message']))
             # add new results
-            if 'results' in resp.json['d']:
-                results.extend(resp.json['d']['results'])
-            # check limit
+            if 'webPages' in resp.json:
+                results.extend(resp.json['webPages']['value'])
+            # increment and check the limit
+            cnt += 1
             if limit == cnt:
                 break
-            cnt += 1
             # check for more pages
-            if not '__next' in resp.json['d']:
+            # https://msdn.microsoft.com/en-us/library/dn760787.aspx
+            if payload['offset'] > (resp.json['webPages']['totalEstimatedMatches'] - payload['count']):
                 break
-            payload['$skip'] = resp.json['d']['__next'].split('=')[-1]
+            # set the payload for the next request
+            payload['offset'] += payload['count']
         return results
 
     def search_google_api(self, query, limit=0):
@@ -341,20 +344,19 @@ class BaseModule(framework.Framework):
         url = 'https://www.googleapis.com/customsearch/v1'
         payload = {'alt': 'json', 'prettyPrint': 'false', 'key': api_key, 'cx': cse_id, 'q': query}
         results = []
-        cnt = 1
+        cnt = 0
         self.verbose('Searching Google API for: %s' % (query))
         while True:
-            resp = None
             resp = self.request(url, payload=payload)
             if resp.json == None:
                 raise framework.FrameworkException('Invalid JSON response.\n%s' % (resp.text))
             # add new results
             if 'items' in resp.json:
                 results.extend(resp.json['items'])
-            # check limit
+            # increment and check the limit
+            cnt += 1
             if limit == cnt:
                 break
-            cnt += 1
             # check for more pages
             if not 'nextPage' in resp.json['queries']:
                 break

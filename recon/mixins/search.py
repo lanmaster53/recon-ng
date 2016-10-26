@@ -85,4 +85,4 @@ class GoogleWebMixin(object):
         for x in ['q', 'continue', 'submit']:
             _payload[x] = form.xpath('//input[@name="%s"]/@value' % (x))[0]
         # send the captcha answer
-        return self.request('https://ipv4.google.com/sorry/CaptchaRedirect', payload=_payload, cookiejar=self.cookiejar, agent=self.user_agent)
+        return self.request('https://ipv4.google.com/sorry/index', payload=_payload, cookiejar=self.cookiejar, agent=self.user_agent)
