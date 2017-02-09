@@ -6,6 +6,7 @@ class Module(BaseModule):
         'name': 'Github Resource Miner',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Uses the Github API to enumerate repositories and member profiles associated with a company search string. Updates the respective tables with the results.',
+        'required_keys': ['github_api'],
         'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL',
     }
 
@@ -14,7 +15,7 @@ class Module(BaseModule):
             self.heading(company, level=0)
             # enumerate members
             members = self.query_github_api('/orgs/%s/members' % (quote_plus(company)))
-            for member in members[0]:
+            for member in members:
                 data = {
                     'username': member['login'],
                     'url': member['html_url'],
@@ -25,7 +26,7 @@ class Module(BaseModule):
                 self.add_profiles(**data)
             # enumerate repositories
             repos = self.query_github_api('/orgs/%s/repos' % (quote_plus(company)))
-            for repo in repos[0]:
+            for repo in repos:
                 data = {
                     'name': repo['name'],
                     'owner': repo['owner']['login'],

@@ -7,6 +7,7 @@ class Module(BaseModule):
         'name': 'PwnedList - Account Credentials Fetcher',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Queries the PwnedList API for credentials associated with the given usernames. Updates the \'credentials\' table with the results.',
+        'required_keys': ['pwnedlist_api', 'pwnedlist_secret', 'pwnedlist_iv'],
         'comments': (
             'API Query Cost: 1 query per request and 1 query per unique leak.',
         ),
@@ -14,10 +15,10 @@ class Module(BaseModule):
     }
 
     def module_run(self, accounts):
-        key = self.get_key('pwnedlist_api')
-        secret = self.get_key('pwnedlist_secret')
+        key = self.keys.get('pwnedlist_api')
+        secret = self.keys.get('pwnedlist_secret')
         decrypt_key = secret[:16]
-        iv = self.get_key('pwnedlist_iv')
+        iv = self.keys.get('pwnedlist_iv')
         # setup the API call
         url = 'https://api.pwnedlist.com/api/1/accounts/query'
         # build the payload

@@ -9,6 +9,7 @@ class Module(BaseModule):
         'name': 'Instagram Geolocation Search',
         'author': 'Nathan Malcolm (@SintheticLabs) and Tim Tomes (@LaNMaSteR53)',
         'description': 'Searches Instagram for media in the specified proximity to a location.',
+        'required_keys': ['instagram_api', 'instagram_secret'],
         'comments': (
             'Radius must be greater than zero and no more than 5 kilometers (5000 meters).',
         ),

@@ -6,6 +6,7 @@ class Module(BaseModule):
         'name': 'Github Profile Harvester',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Uses the Github API to gather user info from harvested profiles. Updates the \'contacts\' table with the results.',
+        'required_keys': ['github_api'],
         'query': "SELECT DISTINCT username FROM profiles WHERE username IS NOT NULL AND resource LIKE 'Github'",
     }
 

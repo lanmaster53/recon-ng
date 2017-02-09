@@ -91,7 +91,6 @@ class Framework(cmd.Cmd):
     _load = 0
     # framework variables
     _global_options = Options()
-    #keys = {}
     _loaded_modules = {}
     app_path = ''
     data_path = ''
@@ -240,11 +239,15 @@ class Framework(cmd.Cmd):
     #==================================================
 
     def print_exception(self, line=''):
-        if self._global_options['verbosity'] >= 2:
+        stack_list = [x.strip() for x in traceback.format_exc().strip().splitlines()]
+        line = ' '.join([x for x in [stack_list[-1], line] if x])
+        if self._global_options['verbosity'] == 1:
+            if len(stack_list) > 3:
+                line = os.linesep.join((stack_list[-1], stack_list[-3]))
+        elif self._global_options['verbosity'] == 2:
             print('%s%s' % (Colors.R, '-'*60))
             traceback.print_exc()
             print('%s%s' % ('-'*60, Colors.N))
-        line = ' '.join([x for x in [traceback.format_exc().strip().splitlines()[-1], line] if x])
         self.error(line)
 
     def error(self, line):
@@ -683,7 +686,7 @@ class Framework(cmd.Cmd):
     def get_key(self, name):
         rows = self._query_keys('SELECT value FROM keys WHERE name=? AND value NOT NULL', (name,))
         if not rows:
-            raise FrameworkException('API key \'%s\' not found. Add API keys with the \'keys add\' command.' % (name))
+            return None
         return rows[0][0]
 
     def add_key(self, name, value):

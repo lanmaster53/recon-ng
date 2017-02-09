@@ -7,6 +7,7 @@ class Module(BaseModule):
         'name': 'Jigsaw - Single Contact Retriever',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Retrieves a single complete contact from the Jigsaw.com API using points from the given account.',
+        'required_keys': ['jigsaw_username', 'jigsaw_password', 'jigsaw_api'],
         'comments': (
             'Account Point Cost: 5 points per request.',
             'This module is typically used to validate email address naming conventions and gather alternative social engineering information.',
@@ -17,9 +18,9 @@ class Module(BaseModule):
     }
 
     def module_run(self):
-        username = self.get_key('jigsaw_username')
-        password = self.get_key('jigsaw_password')
-        key = self.get_key('jigsaw_api')
+        username = self.keys.get('jigsaw_username')
+        password = self.keys.get('jigsaw_password')
+        key = self.keys.get('jigsaw_api')
         url = 'https://www.jigsaw.com/rest/contacts/%s.json' % (self.options['contact'])
         payload = {'token': key, 'username': username, 'password': password, 'purchaseFlag': 'true'}
         resp = self.request(url, payload=payload, redirect=False)

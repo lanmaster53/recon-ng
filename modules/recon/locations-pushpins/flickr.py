@@ -8,6 +8,7 @@ class Module(BaseModule):
         'name': 'Flickr Geolocation Search',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Searches Flickr for media in the specified proximity to a location.',
+        'required_keys': ['flickr_api'],
         'comments': (
             'Radius must be greater than zero and less than 32 kilometers.',
         ),
@@ -18,7 +19,7 @@ class Module(BaseModule):
     }
 
     def module_run(self, points):
-        api_key = self.get_key('flickr_api')
+        api_key = self.keys.get('flickr_api')
         rad = self.options['radius']
         url = 'https://api.flickr.com/services/rest/'
         for point in points:

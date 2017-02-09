@@ -7,6 +7,7 @@ class Module(BaseModule):
         'name': 'Censys.io Netblock Enumerator',
         'author': 'John Askew (https://bitbucket.org/skew)',
         'description': 'Queries the censys.io API to enumerate information about netblocks.',
+        'required_keys': ['censysio_id', 'censysio_secret'],
         'comments': (
             'To enumerate ports for hosts, use the following query as the SOURCE option.',
             '\tSELECT DISTINCT ip_address || \'/32\' FROM hosts WHERE ip_address IS NOT NULL',
@@ -44,8 +45,8 @@ class Module(BaseModule):
             'https://censys.io/api/v1/search/ipv4',
             payload=payload,
             auth=(
-                self.get_key('censysio_id'),
-                self.get_key('censysio_secret')
+                self.keys.get('censysio_id'),
+                self.keys.get('censysio_secret')
             ),
             method='POST',
             content='JSON',

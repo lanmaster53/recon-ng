@@ -9,6 +9,7 @@ class Module(BaseModule):
         'name': 'Bing API Hostname Enumerator',
         'author': 'Marcus Watson (@BranMacMuffin)',
         'description': 'Leverages the Bing API and "domain:" advanced search operator to harvest hosts. Updates the \'hosts\' table with the results.',
+        'required_keys': ['bing_api'],
         'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
         'options': (
             ('limit', 0, True, 'limit total number of api requests (0 = unlimited)'),

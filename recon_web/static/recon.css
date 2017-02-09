@@ -1,0 +1,283 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* unvisited link */
+a:link {
+    color: inherit;
+}
+
+/* visited link */
+a:visited {
+    color: inherit;
+}
+
+/* mouse over link */
+a:hover {
+    color: inherit;
+}
+
+/* selected link */
+a:active {
+    color: inherit;
+}
+
+#nav {
+    /* made visible on load after size adjustments */
+    visibility: hidden;
+}
+
+.nav {
+    display: table;
+    width: 100%;
+    margin-top: .5rem;
+    font-size: 3rem;
+    text-align: left;
+}
+
+.nav #nav {
+    line-height: 38px;
+}
+
+.nav #reports {
+    font-size: 1.5rem;
+}
+
+.nav a {
+    text-decoration: inherit;
+}
+
+.nav select {
+    color: #f69741;
+    background: transparent;
+    border: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding: 0;
+    margin: 0 -0.5rem;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.nav #template {
+    visibility: hidden;
+    position: absolute;
+    top: -200px;
+}
+
+.tooltip {
+    position: relative;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    background-color: #222;
+    color: #fff;
+    text-align: center;
+    padding: 0 .5rem;
+    border-radius: .5rem;
+    position: fixed;
+    z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+.tooltip .tooltiptext::after {
+    content: " ";
+    position: absolute;
+    top: 100%; /* at the bottom of the tooltip */
+    left: 50%;
+    margin-left: -.5rem;
+    border-width: .5rem;
+    border-style: solid;
+    border-color: black transparent transparent transparent;
+}
+
+.db-tables {
+    overflow: auto;
+    margin: .5rem 0;
+}
+
+.db-tables .label {
+    float: left;
+    margin: .5rem;
+}
+
+.button-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.button-list li {
+    float: left;
+    margin: .5rem;
+    padding: 0;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+.button-list li a {
+    margin: 0;
+    padding: .5rem;
+    text-align: center;
+    font-weight: bolder;
+    text-decoration: none;
+}
+
+.button-list li:hover {
+    background-color: #ddd;
+}
+
+.summary {
+    text-align: center;
+    margin-top: .5rem;
+}
+
+.summary.left, .summary.right {
+    overflow: auto;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.summary.left {
+}
+
+.summary.left .name {
+    font-size: 3rem;
+    text-decoration: underline;
+}
+
+.summary.left .count {
+    font-size: 5rem;
+    font-weight: bolder;
+}
+
+.summary.right {
+}
+
+.summary.right .module {
+    font-size: 2rem;
+    text-decoration: underline;
+}
+
+.summary.right .runs {
+    font-size: 3rem;
+    font-weight: bolder;
+}
+
+.ck-button {
+    float: left;
+    margin: .5rem;
+    padding: 0;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    overflow: hidden;
+}
+
+.ck-button label {
+    float: left;
+    margin: 0;
+    padding: 0;
+}
+
+.ck-button label span {
+    text-align: center;
+    padding: .5rem;
+    cursor: pointer;
+}
+
+.ck-button label input {
+    position: absolute;
+    top: -20px;
+}
+
+.ck-button label input:checked + span {
+    background-color: #ddd;
+}
+
+.ck-filter {
+    color: white;
+    background-color: #f69741;
+    border-color: #bbb;
+}
+
+.ck-filter label input:hover + span {
+    background-color: #f4821c;
+    border-color: 0;
+}
+
+.db-table {
+    overflow: auto;
+    margin: .5rem 0;
+    padding: 0 1rem;
+    height: 100vh;
+}
+
+#sorttable th {
+    cursor: pointer;
+}
+
+.active {
+    background-color: #ddd !important;
+}
+
+.no-select {
+    -webkit-user-select: none; /* Chrome all / Safari all */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -khtml-user-select: none; /* Konqueror */
+    -moz-user-select: none; /* Firefox all */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none; /* Common (limited support) */
+}
+
+.pulsate {
+    -webkit-animation: pulsate 3s ease-out;
+    -webkit-animation-iteration-count: infinite;
+    font-size: 2rem;
+}
+
+@-webkit-keyframes pulsate {
+    0% { 
+        opacity: 0.1;
+    }
+    50% { 
+        opacity: 1.0;
+    }
+    100% { 
+        opacity: 0.1;
+    }
+}
+
+.outlined {
+    border: 1px solid #ccc;
+}
+
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.center-content {
+    text-align: center;
+}
+
+.cell {
+    display: table-cell !important;
+    vertical-align: middle;
+}
+
+.content-left {
+    float: left;
+}
+
+.content-right {
+    float: right;
+}
+
+#reports, #summary, #tables, #columns, #exports, #data {
+    display: none;
+}

@@ -6,6 +6,7 @@ class Module(BaseModule):
         'name': 'PwnedList - Pwned Domain Statistics Fetcher',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Queries the PwnedList API for a domain to determine if any associated credentials have been compromised. This module does NOT return any credentials, only a total number of compromised credentials.',
+        'required_keys': ['pwnedlist_api', 'pwnedlist_secret'],
         'comments': (
             'API Query Cost: 1 query per request.',
         ),
@@ -13,8 +14,8 @@ class Module(BaseModule):
     }
 
     def module_run(self, domains):
-        key = self.get_key('pwnedlist_api')
-        secret = self.get_key('pwnedlist_secret')
+        key = self.keys.get('pwnedlist_api')
+        secret = self.keys.get('pwnedlist_secret')
         tdata = []
         # setup the API call
         url = 'https://api.pwnedlist.com/api/1/domains/info'

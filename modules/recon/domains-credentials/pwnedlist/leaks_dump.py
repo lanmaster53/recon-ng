@@ -6,6 +6,7 @@ class Module(BaseModule):
         'name': 'PwnedList - Leak Details Retriever',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Queries the PwnedList API for information associated with all known leaks. Updates the \'leaks\' table with the results.',
+        'required_keys': ['pwnedlist_api', 'pwnedlist_secret'],
         'comments': (
             'API Query Cost: 1 query per request.',
         ),

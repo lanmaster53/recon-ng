@@ -6,6 +6,7 @@ class Module(BaseModule):
         'name': 'Github Dork Analyzer',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Uses the Github API to search for possible vulnerabilites in source code by leveraging Github Dorks and the \'repo\' search operator. Updates the \'vulnerabilities\' table with the results.',
+        'required_keys': ['github_api'],
         'query': "SELECT DISTINCT owner || '/' || name FROM repositories WHERE name IS NOT NULL AND resource LIKE 'Github' AND category LIKE 'repo'",
         'options': (
             ('dorks', os.path.join(BaseModule.data_path, 'github_dorks.txt'), True, 'file containing a list of Github dorks'),

@@ -7,11 +7,12 @@ class Module(BaseModule):
         'name': 'FullContact Contact Enumerator',
         'author': 'Quentin Kaiser (@qkaiser, contact[at]quentinkaiser.be) and Tim Tomes (@LaNMaSteR53)',
         'description': 'Harvests contact information and profiles from the fullcontact.com API using email addresses as input. Updates the \'contacts\' and \'profiles\' tables with the results.',
+        'required_keys': ['fullcontact_api'],
         'query': 'SELECT DISTINCT email FROM contacts WHERE email IS NOT NULL',
     }
 
     def module_run(self, emails):
-        api_key = self.get_key('fullcontact_api')
+        api_key = self.keys.get('fullcontact_api')
         base_url = 'https://api.fullcontact.com/v2/person.json'
         while emails:
             email = emails.pop(0)

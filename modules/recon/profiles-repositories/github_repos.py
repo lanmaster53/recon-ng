@@ -6,6 +6,7 @@ class Module(BaseModule):
         'name': 'Github Code Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Uses the Github API to enumerate repositories and gists owned by a Github user. Updates the \'repositories\' table with the results.',
+        'required_keys': ['github_api'],
         'query': "SELECT DISTINCT username FROM profiles WHERE username IS NOT NULL AND resource LIKE 'Github'",
     }
 
@@ -14,7 +15,7 @@ class Module(BaseModule):
             self.heading(user, level=0)
             # enumerate repositories
             repos = self.query_github_api('/users/%s/repos' % (quote_plus(user)))
-            for repo in repos[0]:
+            for repo in repos:
                 data = {
                     'name': repo['name'],
                     'owner': repo['owner']['login'],
@@ -26,7 +27,7 @@ class Module(BaseModule):
                 self.add_repositories(**data)
             # enumerate gists
             gists = self.query_github_api('/users/%s/gists' % (quote_plus(user)))
-            for gist in gists[0]:
+            for gist in gists:
                 files = gist['files'].values()
                 for _file in files:
                     data = {

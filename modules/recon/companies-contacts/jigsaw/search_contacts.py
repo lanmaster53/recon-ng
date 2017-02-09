@@ -9,6 +9,7 @@ class Module(BaseModule):
         'name': 'Jigsaw Contact Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Harvests contacts from the Jigsaw.com API. Updates the \'contacts\' table with the results.',
+        'required_keys': ['jigsaw_api'],
         'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL',
         'options': (
             ('keywords', None, False, 'additional keywords to identify company'),
@@ -16,7 +17,7 @@ class Module(BaseModule):
     }
 
     def module_run(self, companies):
-        self.api_key = self.get_key('jigsaw_api')
+        self.api_key = self.keys.get('jigsaw_api')
         for company in companies:
             company_id = self.get_company_id(company)
             if company_id:

@@ -7,6 +7,7 @@ class Module(BaseModule):
         'name': 'YouTube Geolocation Search',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Searches the YouTube API for media in the specified proximity to a location.',
+        'required_keys': ['google_api'],
         'query': 'SELECT DISTINCT latitude || \',\' || longitude FROM locations WHERE latitude IS NOT NULL AND longitude IS NOT NULL',
         'options': (
             ('radius', 1, True, 'radius in kilometers'),
@@ -14,7 +15,7 @@ class Module(BaseModule):
     }
 
     def module_run(self, locations):
-        self.api_key = self.get_key('google_api')
+        self.api_key = self.keys.get('google_api')
         self.url = 'https://www.googleapis.com/youtube/v3/%s'
         payload = {'part': 'snippet', 'type': 'video', 'key': self.api_key, 'locationRadius': '%skm' % (self.options['radius']), 'maxResults': 5}
         for location in locations:
@@ -39,7 +40,7 @@ class Module(BaseModule):
                     time = datetime.strptime(video['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%S.%fZ')
                     self.add_pushpins(source, screen_name, profile_name, profile_url, media_url, thumb_url, message, latitude, longitude, time)
                 processed += len(resp.json['items'])
-                self.verbose('%s photos processed.' % (processed))
+                self.verbose('%s videos processed.' % (processed))
                 if 'nextPageToken' in resp.json:
                     payload['pageToken'] = resp.json['nextPageToken']
                     continue

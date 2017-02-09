@@ -7,6 +7,7 @@ class Module(BaseModule):
         'name': 'BuiltWith Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Leverages the BuiltWith API to identify hosts, technologies, and contacts associated with a domain.',
+        'required_keys': ['builtwith_api'],
         'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
         'options': (
             ('show_all', True, True, 'display technologies'),
@@ -14,7 +15,7 @@ class Module(BaseModule):
     }
 
     def module_run(self, domains):
-        key = self.get_key('builtwith_api')
+        key = self.keys.get('builtwith_api')
         url = ' http://api.builtwith.com/v5/api.json'
         title = 'BuiltWith contact'
         for domain in domains:

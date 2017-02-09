@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Pushpin</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='normalize.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='skeleton.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='recon.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='pushpin.css') }}">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        var workspace = "{{ session.workspace }}";
+    </script>
+</head>
+<body>
+    <div class="toolbar rounded shaded">
+        <div class="center-content">workspace</div>
+        <div class="filter center-content"><span class="header">{{ session.workspace }}</span></div>
+        <div class="center-content">sources</div>
+        <div id="filter-source" class="filter"></div>
+    </div>
+    <div id="map" class="map">Loading pushpins...</div>
+    <script src="http://maps.google.com/maps/api/js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='pushpin.js') }}"></script>
+</body>
+</html>

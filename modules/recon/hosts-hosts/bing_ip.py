@@ -9,6 +9,7 @@ class Module(BaseModule):
         'name': 'Bing API IP Neighbor Enumerator',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Leverages the Bing API and "ip:" advanced search operator to enumerate other virtual hosts sharing the same IP address. Updates the \'hosts\' table with the results.',
+        'required_keys': ['bing_api'],
         'comments': (
             'This module only stores hosts whose domain matches an entry in the domains table.',
         ),

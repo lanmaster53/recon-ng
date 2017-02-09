@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Recon-web</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='normalize.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='skeleton.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='recon.css') }}">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='sorttable.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <div class="cell" id="nav">
+                <div class="content-left">
+                    <select id="template">
+                        <option id="templateOption"></option>
+                    </select>
+                    <a href="{{ url_for('index') }}">[recon-ng]</a>
+                    <span>[</span>
+                    <select id="workspace">
+                    {% for workspace in workspaces %}
+                        <option value="{{ workspace }}"{% if workspace == session.workspace %}selected{% endif %}>{{ workspace }}</option>
+                    {% endfor %}
+                    </select>
+                    <span>]</span>
+                </div>
+            </div>
+            <div class="cell" id="reports">
+                <div class="content-right">
+                    <ul class="button-list" id="reports-list"></ul>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <div class="row" id="tables">
+                <div class="u-full-width db-tables outlined tooltip">
+                    <span class="tooltiptext">select a table</span>
+                    <div class="label">Tables:</div>
+                    <ul class="button-list" id="tables-list"></ul>
+                </div>
+            </div>
+            <div class="row" id="summary">
+                <div class="one-third column summary left outlined tooltip fill">
+                    <span class="tooltiptext">harvested items</span>
+                    <div id="summary-list-l"></div>
+                </div>
+                <div class="two-thirds column summary right outlined tooltip fill">
+                    <span class="tooltiptext">module activity</span>
+                    <div id="summary-list-r"></div>
+                </div>
+            </div>
+            <div class="row" id="columns">
+                <div class="u-full-width db-tables outlined tooltip">
+                    <span class="tooltiptext">filter data by columns</span>
+                    <div id="columns-list"></div>
+                </div>
+            </div>
+            <div class="row" id="exports">
+                <div class="u-full-width db-tables outlined tooltip">
+                    <span class="tooltiptext">export filtered data</span>
+                    <div class="label">Export:</div>
+                    <ul class="button-list" id="exports-list"></ul>
+                </div>
+            </div>
+            <div class="row" id="data">
+                <div class="u-full-width db-table outlined">
+                    <div id="data-table"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="{{ url_for('static', filename='recon.js') }}"></script>
+</body>
+</html>

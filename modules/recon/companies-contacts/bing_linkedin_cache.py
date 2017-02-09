@@ -6,6 +6,7 @@ class Module(BaseModule):
         'name': 'Bing Cache Linkedin Profile and Contact Harvester',
         'author':'Joe Black (@MyChickenNinja) and @fullmetalcache',
         'description': 'Harvests profiles from LinkedIn by querying the Bing API cache for LinkedIn pages related to the given companies, and adds them to the \'profiles\' table. The module will then parse the resulting information to extract the user\'s full name and job title (title parsing is a bit spotty currently). The user\'s full name and title are then added to the \'contacts\' table. This module does not access LinkedIn at any time.',
+        'required_keys': ['bing_api'],
         'comments': (
             'Be sure to set the \'SUBDOMAINS\' option to the region your target is located in.',
             'You will get better results if you use more subdomains other than just \'www\'.',
@@ -39,44 +40,43 @@ class Module(BaseModule):
             for query in base_query:
                 results = self.search_bing_api(query, self.options['limit'])
                 for result in results:
-                    url = result['Url']
-                    description = result['Description']
-                    title = result['Title']
-                    cache = (title, description)
+                    name = result['name']
+                    url = result['displayUrl']
+                    description = result['snippet']
+                    username = self.parse_username(url)
+                    cache = (name,description,url)
+                    self.get_contact_info(cache)
                     # still getting quite a few false positives for former employees
                     # also, getting a log of jobs, article, etc. that aren't people
-                    if '/pub/dir/' not in url and company.lower() not in title.lower():
-                        if company.lower() in description.lower():
-                            self.alert('Probable match: %s' % (url))
-                            self.verbose('Parsing \'%s\'...' % (url))
-                            username = self.parse_username(url)
-                            self.add_profiles(username=username, url=url, resource='LinkedIn', category='social')
-                            self.get_contact_info(cache)
+                    #if '/pub/dir/' not in url and company.lower() not in title.lower():
+                    #    if company.lower() in description.lower():
+                    #        self.alert('Probable match: %s' % (url))
+                    #        self.verbose('Parsing \'%s\'...' % (url))
+                    #        username = self.parse_username(url)
+                    #        self.add_profiles(username=username, url=url, resource='LinkedIn', category='social')
+                    #        self.get_contact_info(cache)
 
     def parse_username(self, url):
         username = None
-        # skip this for now. too unreliable
+        username = url.split("/")[-1]
         return username
-        # regex might be better for this
-        if '/in/' in url:
-            url = url.split('/in/')[1]
-            url = url.split('?')[0]
-            username = url.rsplit('-',1)[0]
-        elif '/pub/' in url:
-            url = url.split('/pub/')[1]
-            url = url.split('?')[0]
-            username = url.split('/')[0]
         return username
 
     def get_contact_info(self, cache):
-        title = cache[0]
+        name = cache[0]
         description = cache[1]
-        fullname, fname, mname, lname = self.parse_fullname(title)
-        jobtitle = self.parse_jobtitle(fullname, description)
-        self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title=jobtitle)
+        url = cache[2]
+        fullname, fname, mname, lname = self.parse_fullname(name)
+        username = self.parse_username(url)
+        #jobtitle = self.parse_jobtitle(fullname, description)
+        if 'Top' in fname:  # skip over things like "Top 25 Tim Tomes profiles..."
+            pass
+        else:
+            self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title="")
+            self.add_profiles(username=username, url=url, resource='LinkedIn', category='social')
 
-    def parse_fullname(self, title):
-        fullname = title.split(" |")[0]
+    def parse_fullname(self, name):
+        fullname = name.split(" |")[0]
         fullname = fullname.split(",")[0]
         fname, mname, lname = self.parse_name(fullname)
         return fullname, fname, mname, lname

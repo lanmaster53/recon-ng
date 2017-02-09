@@ -6,6 +6,7 @@ class Module(BaseModule):
         'name': 'Github Commit Searcher',
         'author': 'Michael Henriksen (@michenriksen)',
         'description': 'Uses the Github API to gather user profiles from repository commits. Updates the \'profiles\' table with the results.',
+        'required_keys': ['github_api'],
         'query': "SELECT DISTINCT owner, name FROM repositories WHERE resource LIKE 'Github' AND category LIKE 'repo'",
         'options': (
             ('maxpages', 1, True, 'maximum number of commit pages to process for each repository (0 = unlimited)'),
@@ -21,7 +22,7 @@ class Module(BaseModule):
                 payload={},
                 options={'max_pages': int(self.options['maxpages']) or None},
             )
-            for commit in commits[0]:
+            for commit in commits:
                 for key in ('committer', 'author'):
                     if self.options[key] and key in commit and commit[key]:
                         url = commit[key]['html_url']

@@ -7,6 +7,7 @@ class Module(BaseModule):
         'name': 'Twitter Mentioned',
         'author': 'Robert Frost (@frosty_1313, frosty[at]unluckyfrosty.net)',
         'description': 'Leverages the Twitter API to enumerate users that mentioned the given handle. Updates the \'profiles\' table with the results.',
+        'required_keys': ['twitter_api', 'twitter_secret'],
         'comments': (
             'Twitter limits searchable tweet history to 7 days.',
         ),

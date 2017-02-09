@@ -1,0 +1,83 @@
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.map {
+    width: 100%;
+    height: 100%;
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+}
+
+.toolbar {
+    color: white;
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    z-index: 99;
+    padding: .5rem;
+    border: 2px solid #f69741;
+    /* Fallback for web browsers that doesn't support RGBa */
+    background: rgb(0, 0, 0);
+    /* RGBa opacity */
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.toolbar .header {
+    font-size: 2rem;
+}
+
+.filter {
+    border-top: 2px solid #f69741;
+    padding: 0 .5rem;
+}
+
+.filter input {
+    margin: 0;
+}
+
+.iw-content {
+    max-width: 300px;
+    margin-bottom: 0;
+}
+
+.iw-content caption {
+    background-color: #f69741;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 400;
+}
+
+.iw-content td {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.iw-content a {
+    text-decoration: none;
+}
+
+.iw-content img {
+    width: 100%;
+    margin: .5rem 0;
+}
+
+.rounded {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.shaded {
+    border: 1px solid orange;
+    -webkit-box-shadow: 3px 3px 3px gray;
+    -moz-box-shadow: 3px 3px 3px gray;
+    box-shadow: 3px 3px 3px gray;
+}

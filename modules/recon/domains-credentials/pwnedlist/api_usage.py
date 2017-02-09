@@ -6,11 +6,12 @@ class Module(BaseModule):
         'name': 'PwnedList - API Usage Statistics Fetcher',
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Queries the PwnedList API for account usage statistics.',
+        'required_keys': ['pwnedlist_api', 'pwnedlist_secret'],
     }
 
     def module_run(self):
-        key = self.get_key('pwnedlist_api')
-        secret = self.get_key('pwnedlist_secret')
+        key = self.keys.get('pwnedlist_api')
+        secret = self.keys.get('pwnedlist_secret')
         # setup the API call
         url = 'https://api.pwnedlist.com/api/1/usage/info'
         payload = {}

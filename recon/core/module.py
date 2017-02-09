@@ -26,18 +26,46 @@ class BaseModule(framework.Framework):
         framework.Framework.__init__(self, params)
         self.options = framework.Options()
         # register a data source option if a default query is specified in the module
-        if 'query' in self.meta:
-            self._default_source = self.meta['query']
+        if self.meta.get('query'):
+            self._default_source = self.meta.get('query')
             self.register_option('source', 'default', True, 'source of input (see \'show info\' for details)')
         # register all other specified options
-        if 'options' in self.meta:
-            for option in self.meta['options']:
+        if self.meta.get('options'):
+            for option in self.meta.get('options'):
                 self.register_option(*option)
+        # register any required keys
+        if self.meta.get('required_keys'):
+            self.keys = {}
+            for key in self.meta.get('required_keys'):
+                # add key to the database
+                self._query_keys('INSERT OR IGNORE INTO keys (name) VALUES (?)', (key,))
+                # migrate the old key if needed
+                self._migrate_key(key)
+                # add key to local keys dictionary
+                # could fail to load on exception here to prevent loading modules
+                # without required keys, but would need to do it in a separate loop
+                # so that all keys get added to the database first. for now, the
+                # framework will warn users of the missing key, but allow the module
+                # to load.
+                self.keys[key] = self.get_key(key)
+                if not self.keys.get(key):
+                    self.error('\'%s\' key not set. %s module will likely fail at runtime. See \'keys add\'.' % (key, self._modulename.split('/')[-1]))
         self._reload = 0
 
     #==================================================
     # SUPPORT METHODS
     #==================================================
+
+    def _migrate_key(self, key):
+        '''migrate key from old .dat file'''
+        key_path = os.path.join(self._home, 'keys.dat')
+        if os.path.exists(key_path):
+            try:
+                key_data = json.loads(open(key_path, 'rb').read())
+                if key_data.get(key):
+                    self.add_key(key, key_data.get(key))
+            except:
+                self.error('Corrupt key file. Manual migration of \'%s\' required.' % (key))
 
     def ascii_sanitize(self, s):
         return ''.join([char for char in s if ord(char) in [10,13] + range(32, 126)])
@@ -169,10 +197,9 @@ class BaseModule(framework.Framework):
 
     def get_explicit_oauth_token(self, resource, scope, authorize_url, access_url):
         token_name = resource+'_token'
-        try:
-            return self.get_key(token_name)
-        except:
-            pass
+        token = self.get_key(token_name)
+        if token:
+            return token
         import urllib
         import webbrowser
         import socket
@@ -208,10 +235,9 @@ class BaseModule(framework.Framework):
 
     def get_twitter_oauth_token(self):
         token_name = 'twitter_token'
-        try:
-            return self.get_key(token_name)
-        except:
-            pass
+        token = self.get_key(token_name)
+        if token:
+            return token
         twitter_key = self.get_key('twitter_api')
         twitter_secret = self.get_key('twitter_secret')
         url = 'https://api.twitter.com/oauth2/token'
@@ -389,8 +415,11 @@ class BaseModule(framework.Framework):
                 if resp.status_code != 404:
                     self.error('Message from Github: %s' % (resp.json['message']))
                 break
-            # enumerate results
-            results.append(resp.json)
+            # some APIs return lists, and others a single dictionary
+            method = 'extend'
+            if type(resp.json) == dict:
+                method = 'append'
+            getattr(results, method)(resp.json)
             # paginate
             if 'link' in resp.headers and 'rel="next"' in resp.headers['link'] and (opts['max_pages'] is None or page < opts['max_pages']):
                 page += 1
@@ -453,8 +482,11 @@ class BaseModule(framework.Framework):
         print('')
         # meta info
         for item in ['name', 'path', 'author', 'version']:
-            if item in self.meta:
+            if self.meta.get(item):
                 print('%s: %s' % (item.title().rjust(10), self.meta[item]))
+        # required keys
+        if self.meta.get('required_keys'):
+            print('%s: %s' % ('keys'.title().rjust(10), ', '.join(self.meta.get('required_keys'))))
         print('')
         # description
         if 'description' in self.meta:
