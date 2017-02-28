@@ -31,15 +31,8 @@ class Module(BaseModule):
                     # add company
                     self.add_companies(company=entity['@name'], description=rtype)
                     # add location
-                    address = ', '.join(e for e in (
-                        # street address
-                        self._enum_ref(resp.json[rtype]['streetAddress']['line'])[-1]['$'].title(),
-                        # city
-                        resp.json[rtype]['city']['$'].title() if 'city' in resp.json[rtype] else None,
-                        # state, postal code or country
-                        '%s %s' % (resp.json[rtype]['iso3166-2']['$'].upper(), resp.json[rtype]['postalCode']['$']) if 'iso3166-2' in resp.json[rtype] else resp.json[rtype]['iso3166-1']['name']['$'].title(),
-                    ) if e).strip()
-                    self.add_locations(street_address=address)
+                    location = WhoisLocation(resp.json[rtype])
+                    self.add_locations(street_address=location.address)
                     # add netblocks
                     url = 'http://whois.arin.net/rest/%s/%s/nets' % (rtype, entity['@handle'])
                     nets = self._request(url, headers, 'nets', 'netRef')
@@ -62,18 +55,15 @@ class Module(BaseModule):
                         url = pocLink['$']
                         resp = self.request(url, headers=headers)
                         poc = resp.json['poc']
-                        emails = self._enum_ref(poc['emails']['email'])
+                        emails = _enum_ref(poc['emails']['email'])
                         for email in emails:
                             fname = poc['firstName']['$'] if 'firstName' in poc else None
                             lname = poc['lastName']['$']
                             name = ' '.join([x for x in [fname, lname] if x])
                             email = email['$']
                             title = 'Whois contact (%s)' % (pocLink['@description'])
-                            city = poc['city']['$'].title()
-                            state = poc['iso3166-2']['$'].upper() if 'iso3166-2' in poc else None
-                            region = ', '.join([x for x in [city, state] if x])
-                            country = poc['iso3166-1']['name']['$'].title()
-                            self.add_contacts(first_name=fname, last_name=lname, email=email, title=title, region=region, country=country)
+                            location = WhoisLocation(poc)
+                            self.add_contacts(first_name=fname, last_name=lname, email=email, title=title, region=location.region, country=location.country)
 
     def _request(self, url, headers, grp, ref):
         self.verbose('URL: %s' % url)
@@ -85,11 +75,23 @@ class Module(BaseModule):
         if any(x in resp.text for x in strs) or ref not in resp.json[grp]:
             self.output('No %s found.' % (grp.upper()))
             return []
-        return self._enum_ref(resp.json[grp][ref])
+        return _enum_ref(resp.json[grp][ref])
 
-    def _enum_ref(self, ref):
-        if type(ref) == list:
-            objs = [x for x in ref]
-        else:
-            objs = [ref]
-        return objs
+def _enum_ref(ref):
+    if type(ref) == list:
+        objs = [x for x in ref]
+    else:
+        objs = [ref]
+    return objs
+
+class WhoisLocation(object):
+
+    def __init__(self, obj):
+        self.street_address = _enum_ref(obj['streetAddress']['line'])[-1]['$'].title() if 'streetAddress' in obj else None
+        self.city = obj['city']['$'].title() if 'city' in obj else None
+        self.state = obj['iso3166-2']['$'].upper() if 'iso3166-2' in obj else None
+        self.postal_code = obj['postalCode']['$'] if 'postalCode' in obj else None
+        self.country = obj['iso3166-1']['name']['$'].title() if 'iso3166-1' in obj else None
+        self.state_zip = ' '.join([e for e in (self.state, self.postal_code) if e]).strip()
+        self.region = ', '.join([e for e in (self.city, self.state_zip) if e]).strip()
+        self.address = ', '.join(e for e in (self.street_address, self.region, self.country) if e).strip()

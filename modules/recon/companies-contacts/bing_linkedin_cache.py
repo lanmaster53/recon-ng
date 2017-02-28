@@ -33,11 +33,11 @@ class Module(BaseModule):
         subdomain_list = [''] if not subdomains else [x.strip()+'.' for x in subdomains.split(',')]
         for subdomain in subdomain_list:
             base_query = [
-                "site:\"%slinkedin.com/in/\" && %s" % (subdomain, company),
-                "site:%slinkedin.com -jobs && %s" % (subdomain, company),
-                "site:%slinkedin.com instreamset:(url):\"pub\" -instreamset:(url):\"dir\" && %s" % (subdomain, company)
+                "site:\"%slinkedin.com/in/\" \"%s\"" % (subdomain, company),
+                "site:%slinkedin.com -jobs \"%s\"" % (subdomain, company),
             ]
             for query in base_query:
+                #self.verbose("Now sending this query: '%s'" % query)
                 results = self.search_bing_api(query, self.options['limit'])
                 for result in results:
                     name = result['name']
@@ -46,9 +46,11 @@ class Module(BaseModule):
                     username = self.parse_username(url)
                     cache = (name,description,url)
                     self.get_contact_info(cache)
+                    #title = result['Title']
+                    #cache = (description)
                     # still getting quite a few false positives for former employees
                     # also, getting a log of jobs, article, etc. that aren't people
-                    #if '/pub/dir/' not in url and company.lower() not in title.lower():
+                    #if '/pub/dir/' not in url: # and company.lower() not in title.lower():
                     #    if company.lower() in description.lower():
                     #        self.alert('Probable match: %s' % (url))
                     #        self.verbose('Parsing \'%s\'...' % (url))
@@ -69,7 +71,7 @@ class Module(BaseModule):
         fullname, fname, mname, lname = self.parse_fullname(name)
         username = self.parse_username(url)
         #jobtitle = self.parse_jobtitle(fullname, description)
-        if 'Top' in fname:  # skip over things like "Top 25 Tim Tomes profiles..."
+        if fname is None or 'Top' in fname:  # skip over things like "Top 25 Tim Tomes profiles..."
             pass
         else:
             self.add_contacts(first_name=fname, middle_name=mname, last_name=lname, title="")
@@ -78,6 +80,7 @@ class Module(BaseModule):
     def parse_fullname(self, name):
         fullname = name.split(" |")[0]
         fullname = fullname.split(",")[0]
+        self.verbose("fullname in parse_fullname is %s" % fullname)
         fname, mname, lname = self.parse_name(fullname)
         return fullname, fname, mname, lname
 

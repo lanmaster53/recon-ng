@@ -1,8 +1,8 @@
 from flask import jsonify, render_template, request, session
-from recon_web import app
-from recon_web.utils import get_workspaces, get_tables, get_columns, query
-from recon_web.exports import csvify, xmlify, listify, xlsxify, proxify
-from recon_web.reports import pushpin, xlsx
+from recon.core.web import app
+from recon.core.web.utils import get_workspaces, get_tables, get_columns, query
+from recon.core.web.exports import csvify, xmlify, listify, xlsxify, proxify
+from recon.core.web.reports import pushpin, xlsx
 
 EXPORTS = {
     'json': jsonify,
