@@ -345,6 +345,8 @@ class Framework(cmd.Cmd):
         self.debug('DATABASE => %s' % (path))
         self.debug('QUERY => %s' % (query))
         with sqlite3.connect(path) as conn:
+            # coerce all text to bytes (str) for internal processing
+            conn.text_factory = bytes
             with closing(conn.cursor()) as cur:
                 if values:
                     self.debug('VALUES => %s' % (repr(values)))
@@ -384,7 +386,7 @@ class Framework(cmd.Cmd):
     def add_domains(self, domain=None, mute=False):
         '''Adds a domain to the database and returns the affected row count.'''
         data = dict(
-            domain = self.to_unicode(domain)
+            domain = domain
         )
         rowcount = self.insert('domains', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[domain] %s', data.keys())
@@ -393,8 +395,8 @@ class Framework(cmd.Cmd):
     def add_companies(self, company=None, description=None, mute=False):
         '''Adds a company to the database and returns the affected row count.'''
         data = dict(
-            company = self.to_unicode(company),
-            description = self.to_unicode(description)
+            company = company,
+            description = description
         )
         rowcount = self.insert('companies', data.copy(), ('company',))
         if not mute: self._display(data, rowcount, '[company] %s - %s', data.keys())
@@ -403,7 +405,7 @@ class Framework(cmd.Cmd):
     def add_netblocks(self, netblock=None, mute=False):
         '''Adds a netblock to the database and returns the affected row count.'''
         data = dict(
-            netblock = self.to_unicode(netblock)
+            netblock = netblock
         )
         rowcount = self.insert('netblocks', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[netblock] %s', data.keys())
@@ -412,9 +414,9 @@ class Framework(cmd.Cmd):
     def add_locations(self, latitude=None, longitude=None, street_address=None, mute=False):
         '''Adds a location to the database and returns the affected row count.'''
         data = dict(
-            latitude = self.to_unicode(latitude),
-            longitude = self.to_unicode(longitude),
-            street_address = self.to_unicode(street_address)
+            latitude = latitude,
+            longitude = longitude,
+            street_address = street_address
         )
         rowcount = self.insert('locations', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[location] %s, %s - %s', data.keys())
@@ -423,12 +425,12 @@ class Framework(cmd.Cmd):
     def add_vulnerabilities(self, host=None, reference=None, example=None, publish_date=None, category=None, status=None, mute=False):
         '''Adds a vulnerability to the database and returns the affected row count.'''
         data = dict(
-            host = self.to_unicode(host),
-            reference = self.to_unicode(reference),
-            example = self.to_unicode(example),
-            publish_date = self.to_unicode(publish_date.strftime(self.time_format) if publish_date else None),
-            category = self.to_unicode(category),
-            status = self.to_unicode(status)
+            host = host,
+            reference = reference,
+            example = example,
+            publish_date = publish_date.strftime(self.time_format) if publish_date else None,
+            category = category,
+            status = status
         )
         rowcount = self.insert('vulnerabilities', data.copy(), data.keys())
         if not mute: self._display(data, rowcount)
@@ -437,10 +439,10 @@ class Framework(cmd.Cmd):
     def add_ports(self, ip_address=None, host=None, port=None, protocol=None, mute=False):
         '''Adds a port to the database and returns the affected row count.'''
         data = dict(
-            ip_address = self.to_unicode(ip_address),
-            port = self.to_unicode(port),
-            host = self.to_unicode(host),
-            protocol = self.to_unicode(protocol)
+            ip_address = ip_address,
+            port = port,
+            host = host,
+            protocol = protocol
         )
         rowcount = self.insert('ports', data.copy(), ('ip_address', 'port', 'host'))
         if not mute: self._display(data, rowcount, '[port] %s (%s/%s) - %s', ('ip_address', 'port', 'protocol', 'host'))
@@ -449,12 +451,12 @@ class Framework(cmd.Cmd):
     def add_hosts(self, host=None, ip_address=None, region=None, country=None, latitude=None, longitude=None, mute=False):
         '''Adds a host to the database and returns the affected row count.'''
         data = dict(
-            host = self.to_unicode(host),
-            ip_address = self.to_unicode(ip_address),
-            region = self.to_unicode(region),
-            country = self.to_unicode(country),
-            latitude = self.to_unicode(latitude),
-            longitude = self.to_unicode(longitude)
+            host = host,
+            ip_address = ip_address,
+            region = region,
+            country = country,
+            latitude = latitude,
+            longitude = longitude
         )
         rowcount = self.insert('hosts', data.copy(), ('host', 'ip_address'))
         if not mute: self._display(data, rowcount, '[host] %s (%s)', ('host', 'ip_address'))
@@ -463,13 +465,13 @@ class Framework(cmd.Cmd):
     def add_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None, mute=False):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
-            first_name = self.to_unicode(first_name),
-            middle_name = self.to_unicode(middle_name),
-            last_name = self.to_unicode(last_name),
-            title = self.to_unicode(title),
-            email = self.to_unicode(email),
-            region = self.to_unicode(region),
-            country = self.to_unicode(country)
+            first_name = first_name,
+            middle_name = middle_name,
+            last_name = last_name,
+            title = title,
+            email = email,
+            region = region,
+            country = country
         )
         rowcount = self.insert('contacts', data.copy(), ('first_name', 'middle_name', 'last_name', 'title', 'email'))
         if not mute: self._display(data, rowcount, '[contact] %s %s (%s) - %s', ('first_name', 'last_name', 'email', 'title'))
@@ -478,17 +480,17 @@ class Framework(cmd.Cmd):
     def add_credentials(self, username=None, password=None, _hash=None, _type=None, leak=None, mute=False):
         '''Adds a credential to the database and returns the affected row count.'''
         data = dict (
-            username = self.to_unicode(username),
-            password = self.to_unicode(password),
-            hash = self.to_unicode(_hash),
-            type = self.to_unicode(_type),
-            leak = self.to_unicode(leak)
+            username = username,
+            password = password,
+            hash = _hash,
+            type = _type,
+            leak = leak
         )
         if password and not _hash:
             hash_type = self.is_hash(password)
             if hash_type:
-                data['hash'] = self.to_unicode(password)
-                data['type'] = self.to_unicode(hash_type)
+                data['hash'] = password
+                data['type'] = hash_type
                 data['password'] = None
         # add email usernames to contacts
         if username is not None and '@' in username:
@@ -500,23 +502,23 @@ class Framework(cmd.Cmd):
     def add_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, password_type=None, targets=None, media_refs=None, mute=False):
         '''Adds a leak to the database and returns the affected row count.'''
         data = dict(
-            leak_id = self.to_unicode(leak_id),
-            description = self.to_unicode(description),
-            source_refs = self.to_unicode(source_refs),
-            leak_type = self.to_unicode(leak_type),
-            title = self.to_unicode(title),
-            import_date = self.to_unicode(import_date),
-            leak_date = self.to_unicode(leak_date),
-            attackers = self.to_unicode(attackers),
-            num_entries = self.to_unicode(num_entries),
-            score = self.to_unicode(score),
-            num_domains_affected = self.to_unicode(num_domains_affected),
-            attack_method = self.to_unicode(attack_method),
-            target_industries = self.to_unicode(target_industries),
-            password_hash = self.to_unicode(password_hash),
-            password_type = self.to_unicode(password_type),
-            targets = self.to_unicode(targets),
-            media_refs = self.to_unicode(media_refs)
+            leak_id = leak_id,
+            description = description,
+            source_refs = source_refs,
+            leak_type = leak_type,
+            title = title,
+            import_date = import_date,
+            leak_date = leak_date,
+            attackers = attackers,
+            num_entries = num_entries,
+            score = score,
+            num_domains_affected = num_domains_affected,
+            attack_method = attack_method,
+            target_industries = target_industries,
+            password_hash = password_hash,
+            password_type = password_type,
+            targets = targets,
+            media_refs = media_refs
         )
         rowcount = self.insert('leaks', data.copy(), data.keys())
         if not mute: self._display(data, rowcount)
@@ -525,16 +527,16 @@ class Framework(cmd.Cmd):
     def add_pushpins(self, source=None, screen_name=None, profile_name=None, profile_url=None, media_url=None, thumb_url=None, message=None, latitude=None, longitude=None, time=None, mute=False):
         '''Adds a pushpin to the database and returns the affected row count.'''
         data = dict(
-            source = self.to_unicode(source),
-            screen_name = self.to_unicode(screen_name),
-            profile_name = self.to_unicode(profile_name),
-            profile_url = self.to_unicode(profile_url),
-            media_url = self.to_unicode(media_url),
-            thumb_url = self.to_unicode(thumb_url),
-            message = self.to_unicode(message),
-            latitude = self.to_unicode(latitude),
-            longitude = self.to_unicode(longitude),
-            time = self.to_unicode(time.strftime(self.time_format))
+            source = source,
+            screen_name = screen_name,
+            profile_name = profile_name,
+            profile_url = profile_url,
+            media_url = media_url,
+            thumb_url = thumb_url,
+            message = message,
+            latitude = latitude,
+            longitude = longitude,
+            time = time.strftime(self.time_format)
         )
         rowcount = self.insert('pushpins', data.copy(), data.keys())
         if not mute: self._display(data, rowcount)
@@ -543,11 +545,11 @@ class Framework(cmd.Cmd):
     def add_profiles(self, username=None, resource=None, url=None, category=None, notes=None, mute=False):
         '''Adds a profile to the database and returns the affected row count.'''
         data = dict(
-            username = self.to_unicode(username),
-            resource = self.to_unicode(resource),
-            url = self.to_unicode(url),
-            category = self.to_unicode(category),
-            notes = self.to_unicode(notes)
+            username = username,
+            resource = resource,
+            url = url,
+            category = category,
+            notes = notes
         )
         rowcount = self.insert('profiles', data.copy(), ('username', 'url'))
         if not mute: self._display(data, rowcount, '[profile] %s - %s (%s)', ('username', 'resource', 'url'))
@@ -556,12 +558,12 @@ class Framework(cmd.Cmd):
     def add_repositories(self, name=None, owner=None, description=None, resource=None, category=None, url=None, mute=False):
         '''Adds a repository to the database and returns the affected row count.'''
         data = dict(
-            name = self.to_unicode(name),
-            owner = self.to_unicode(owner),
-            description = self.to_unicode(description),
-            resource = self.to_unicode(resource),
-            category = self.to_unicode(category),
-            url = self.to_unicode(url)
+            name = name,
+            owner = owner,
+            description = description,
+            resource = resource,
+            category = category,
+            url = url
         )
         rowcount = self.insert('repositories', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[repository] %s - %s', ('name', 'description'))
@@ -582,6 +584,9 @@ class Framework(cmd.Cmd):
         unique_columns = [x for x in unique_columns if x in columns and x != 'module']
         # exit if there is nothing left to insert
         if not columns: return 0
+        # convert all bytes (str) to unicode for external processing
+        for column in columns:
+            data[column] = self.to_unicode(data[column])
 
         if not unique_columns:
             query = u'INSERT INTO "%s" ("%s") VALUES (%s)' % (
@@ -874,6 +879,7 @@ class Framework(cmd.Cmd):
             self.help_query()
             return
         with sqlite3.connect(os.path.join(self.workspace, 'data.db')) as conn:
+            conn.text_factory = bytes
             with closing(conn.cursor()) as cur:
                 self.debug('QUERY => %s' % (params))
                 try: cur.execute(params)

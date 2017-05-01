@@ -186,10 +186,9 @@ class BaseModule(framework.Framework):
             sources = open(params).read().split()
         else:
             sources = [params]
-        source = [self.to_unicode(x) for x in sources]
-        if not source:
+        if not sources:
             raise framework.FrameworkException('Source contains no input.')
-        return source
+        return sources
 
     #==================================================
     # 3RD PARTY API METHODS
@@ -347,11 +346,14 @@ class BaseModule(framework.Framework):
             resp = self.request(url, payload=payload, headers=headers)
             if resp.json == None:
                 raise framework.FrameworkException('Invalid JSON response.\n%s' % (resp.text))
-            elif 'error' in resp.json:
-                raise framework.FrameworkException('%s: %s' % (resp.json['error']['statusCode'], resp.json['error']['message']))
-            # add new results
+            #elif 'error' in resp.json:
+            elif resp.status_code == 401:
+                raise framework.FrameworkException('%s: %s' % (resp.json['statusCode'], resp.json['message']))
+            # add new results, or if there's no more, return what we have...
             if 'webPages' in resp.json:
                 results.extend(resp.json['webPages']['value'])
+            else:
+                return results
             # increment and check the limit
             cnt += 1
             if limit == cnt:
