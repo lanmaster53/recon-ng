@@ -20,6 +20,9 @@ class Module(BaseModule):
             if resp.text == '':
                 self.output('No results found.')
                 continue
+            if resp.text.startswith('error'):
+                self.error(resp.text)
+                continue
             for line in resp.text.split("\n"):
                 line = line.strip()
                 if line == '':

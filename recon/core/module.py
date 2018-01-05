@@ -317,6 +317,7 @@ class BaseModule(framework.Framework):
         page = 1
         self.verbose('Searching Shodan API for: %s' % (query))
         while True:
+            time.sleep(1)
             resp = self.request(url, payload=payload)
             if resp.json == None:
                 raise framework.FrameworkException('Invalid JSON response.\n%s' % (resp.text))
@@ -336,7 +337,7 @@ class BaseModule(framework.Framework):
         return results
 
     def search_bing_api(self, query, limit=0):
-        url = 'https://api.cognitive.microsoft.com/bing/v5.0/search'
+        url = 'https://api.cognitive.microsoft.com/bing/v7.0/search'
         payload = {'q': query, 'count': 50, 'offset': 0, 'responseFilter': 'WebPages'}
         headers = {'Ocp-Apim-Subscription-Key': self.get_key('bing_api')}
         results = []

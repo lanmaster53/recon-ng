@@ -16,8 +16,9 @@ class Module(BaseModule):
         base_url = 'https://api.fullcontact.com/v2/person.json'
         while emails:
             email = emails.pop(0)
-            payload = {'email':email, 'apiKey':api_key}
-            resp = self.request(base_url, payload=payload)
+            payload = {'email':email}
+            headers = {'X-FullContact-APIKey': api_key}
+            resp = self.request(base_url, payload=payload, headers=headers)
             if resp.status_code == 200:
                 # parse contact information
                 if 'contactInfo' in resp.json:

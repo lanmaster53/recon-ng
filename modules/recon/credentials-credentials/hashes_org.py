@@ -12,6 +12,7 @@ class Module(BaseModule):
         'required_keys': ['hashes_api'],
         'comments': (
             'Hash types supported: MD5, MD4, NTLM, LM, DOUBLEMD5, TRIPLEMD5, MD5SHA1, SHA1, MYSQL5, SHA1MD5, DOUBLESHA1, RIPEMD160',
+            'Hashes.org is a free service. Please consider a small donation to keep the service running. Thanks. - @s3inlc'
         ),
         'query': 'SELECT DISTINCT hash FROM credentials WHERE hash IS NOT NULL AND password IS NULL AND type IS NOT \'Adobe\'',
     }
@@ -19,20 +20,23 @@ class Module(BaseModule):
     def module_run(self, hashes):
         api_key = self.keys.get('hashes_api')
         url = 'https://hashes.org/api.php'
-        payload = {'act':'REQUEST', 'key':api_key}
+        payload = {'key':api_key}
         for hashstr in hashes:
-            payload['hash'] = hashstr
+            payload['query'] = hashstr
             # 20 requests per minute
             time.sleep(3)
             resp = self.request(url, payload=payload)
-            jsonobj = resp.json
-            if 'ERROR' in jsonobj:
-                self.verbose('%s => %s' % (hashstr, jsonobj['ERROR'].lower()))
-            elif jsonobj['REQUEST'] != 'FOUND':
-                self.verbose('%s => %s' % (hashstr, jsonobj['REQUEST'].lower()))
-            else:
-                # hashes.org converts the hash to lowercase
-                plaintext = jsonobj[hashstr.lower()]['plain']
-                hashtype = jsonobj[hashstr.lower()]['algorithm']
-                self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
-                self.query('UPDATE credentials SET password=\'%s\', type=\'%s\' WHERE hash=\'%s\'' % (plaintext, hashtype, hashstr))
+            if resp.status_code != 200:
+                self.error('Unexpected service response: %d' % resp.status_code)
+                break
+            elif resp.json['status'] == 'error':
+                self.error(resp.json['errorMessage'])
+                break
+            for result in resp.json['result']:
+                if resp.json['result'][result]:
+                    plaintext = resp.json['result'][result]['plain']
+                    hashtype = resp.json['result'][result]['algorithm']
+                    self.alert('%s (%s) => %s' % (hashstr, hashtype, plaintext))
+                    self.query('UPDATE credentials SET password=?, type=? WHERE hash=?', (plaintext, hashtype, hashstr))
+                else:
+                    self.verbose('%s => %s' % (hashstr, 'Not found.'))
