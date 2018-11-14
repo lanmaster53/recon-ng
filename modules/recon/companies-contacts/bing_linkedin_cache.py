@@ -70,7 +70,8 @@ class Module(BaseModule):
             self.add_profiles(username=username, url=url, resource='LinkedIn', category='social')
 
     def parse_fullname(self, name):
-        fullname = name.split(" |")[0]
+        fullname = name.split(" -")[0]
+        fullname = fullname.split(" |")[0]
         fullname = fullname.split(",")[0]
         fname, mname, lname = self.parse_name(fullname)
         return fullname, fname, mname, lname
