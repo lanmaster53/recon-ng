@@ -24,7 +24,7 @@ class Module(BaseModule, GoogleWebMixin):
         'author': 'Tim Tomes (@LaNMaSteR53)',
         'description': 'Searches for possible vulnerabilites in a domain by leveraging the Google Hacking Database (GHDB) and the \'site\' search operator. Updates the \'vulnerabilities\' table with the results.',
         'comments': (
-            'Special thanks to the Offenvise Security crew for maintaining the GHDB and making it available to open source projects like Recon-ng. Thanks Muts!',
+            'Offensive Security no longer provides access to the GHDB for Recon-ng. The included list was last updated on 8/1/2016.',
         ),
         'query': 'SELECT DISTINCT domain FROM domains WHERE domain IS NOT NULL',
         'options': [

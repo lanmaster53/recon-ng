@@ -16,6 +16,7 @@ class Module(BaseModule):
     }
 
     def module_run(self):
+        badcharacters = ['+', '-', '@', '=']
         filename = self.options['filename']
         # codecs module not used because the csv module converts to ascii
         with open(filename, 'w') as outfile:
@@ -30,5 +31,11 @@ class Module(BaseModule):
                 row = [x if x else '' for x in row]
                 if any(row):
                     cnt += 1
-                    csvwriter.writerow([s.encode("utf-8") for s in row])
+                    # Prevent CSV Injection
+                    sanitized_row = []
+                    for cell in row:
+                        if cell and cell[0] in badcharacters:
+                            cell = ' '+cell
+                        sanitized_row.append(cell.encode("utf-8"))
+                    csvwriter.writerow(sanitized_row)
         self.output('%d records added to \'%s\'.' % (cnt, filename))
