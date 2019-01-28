@@ -17,6 +17,5 @@ class Module(BaseModule):
             if resp.status_code != 200:
                 self.output('Invalid response for \'%s\'' % domain)
                 continue
-            fixed_raw = '[%s]' % resp.raw.replace('}{', '},{')
-            for cert in json.loads(fixed_raw):
+            for cert in resp.json:
                 self.add_hosts(cert.get('name_value'))
