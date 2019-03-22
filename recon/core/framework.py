@@ -749,17 +749,20 @@ class Framework(cmd.Cmd):
                 return
         else:
             modules = Framework._loaded_modules
-        # display the modules
-        key_len = len(max(modules, key=len)) + len(self.spacer)
-        last_category = ''
-        for module in sorted(modules):
-            category = module.split('/')[0]
-            if category != last_category:
-                # print header
-                last_category = category
-                self.heading(last_category)
-            # print module
-            print('%s%s' % (self.spacer*2, module))
+        if modules:
+            # display the modules
+            key_len = len(max(modules, key=len)) + len(self.spacer)
+            last_category = ''
+            for module in sorted(modules):
+                category = module.split('/')[0]
+                if category != last_category:
+                    # print header
+                    last_category = category
+                    self.heading(last_category)
+                # print module
+                print('%s%s' % (self.spacer*2, module))
+        else:
+            print('\nNo modules installed.')
         print('')
 
     def show_dashboard(self):

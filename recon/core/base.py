@@ -3,6 +3,7 @@ from __future__ import print_function
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
 
+from urlparse import urljoin
 import errno
 import imp
 import json
@@ -11,6 +12,7 @@ import random
 import re
 import shutil
 import sys
+import yaml
 import __builtin__
 
 # import framework libs
@@ -44,6 +46,8 @@ __builtin__.print = spool_print
 #=================================================
 
 class Recon(framework.Framework):
+
+    repo_url = 'https://raw.githubusercontent.com/lanmaster53/recon-ng-modules/master/'
 
     def __init__(self, mode):
         framework.Framework.__init__(self, 'base')
@@ -122,26 +126,122 @@ class Recon(framework.Framework):
             os.makedirs(self._home)
         # initialize keys database
         self._query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
+        # initialize module index
+        self._fetch_module_index()
+        self._update_module_index()
+
+    def _request_file_from_repo(self, path):
+        resp = self.request(urljoin(self.repo_url, path))
+        return resp.raw
+
+    def _write_local_file(self, path, content):
+        dirpath = os.path.sep.join(path.split(os.path.sep)[:-1])
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+        with open(path, 'w') as outfile:
+            outfile.write(content)
+
+    def _remove_empty_dirs(self, base_path):
+        for root, dirs, files in os.walk(base_path, topdown=False):
+            for rel_path in dirs:
+                abs_path = os.path.join(root, rel_path)
+                if os.path.exists(abs_path):
+                    if not os.listdir(abs_path):
+                        os.removedirs(abs_path)
+
+    def _menu_egg(self, params):
+        eggs = [
+            'Really? A menu option? Try again.',
+            'You clearly need \'help\'.',
+            'That makes no sense to me.',
+            '*grunt* *grunt* Nope. I got nothin\'.',
+            'Wait for it...',
+            'This is not the Social Engineering Toolkit.',
+            'Don\'t you think if that worked the numbers would at least be in order?',
+            'Reserving that option for the next-NEXT generation of the framework.',
+            'You\'ve clearly got the wrong framework. Attempting to start SET...',
+            '1980 called. They want there menu driven UI back.',
+        ]
+        print(random.choice(eggs))
+        return
+
+    #==================================================
+    # MODULE METHODS
+    #==================================================
+
+    def _fetch_module_index(self):
+        content = self._request_file_from_repo('modules.yml')
+        path = os.path.join(self._home, 'modules.yml')
+        self._write_local_file(path, content)
+
+    def _update_module_index(self):
+        # load module index from local copy
+        path = os.path.join(self._home, 'modules.yml')
+        with open(path, 'r') as infile:
+            self._module_index = yaml.safe_load(infile)
+        # add status to index for each module
+        for module in self._module_index:
+            status = 'not installed'
+            if module['path'] in self._loaded_modules.keys():
+                status = 'installed'
+                loaded = self._loaded_modules[module['path']]
+                #if loaded.meta['version'] < module['version']:
+                if float(1.0) < float(module['version']):
+                    status = 'outdated'
+            module['status'] = status
+
+    def _search_module_index(self, s):
+        self.output('Searching module index for \'%s\'...'%(s))
+        keys = ('path', 'name', 'description', 'status')
+        modules = []
+        for module in self._module_index:
+            for key in keys:
+                #if s in module[key]:
+                #    modules.append(modules)
+                #    break
+                if re.search(s, module[key]):
+                    modules.append(modules)
+                    break
+        return modules
+
+    def _install_module(self, path):
+        rel_path = '.'.join([path, 'py'])
+        content = self._request_file_from_repo(rel_path)
+        abs_path = os.path.join(self._home, 'modules', rel_path)
+        self._write_local_file(abs_path, content)
+        self.output('Module installed: %s' % (path))
+        self.do_reload('')
+
+    def _remove_module(self, path):
+        rel_path = '.'.join([path, 'py'])
+        abs_path = os.path.join(self._home, 'modules', rel_path)
+        os.remove(abs_path)
+        self.output('Module removed: %s' % (path))
+        self.do_reload('')
 
     def _load_modules(self):
         self.loaded_category = {}
-        self._loaded_modules = framework.Framework._loaded_modules
+        self._loaded_modules = framework.Framework._loaded_modules = {}
         # crawl the module directory and build the module tree
-        for path in [os.path.join(x, 'modules') for x in (self.app_path, self._home)]:
-            for dirpath, dirnames, filenames in os.walk(path):
-                # remove hidden files and directories
-                filenames = [f for f in filenames if not f[0] == '.']
-                dirnames[:] = [d for d in dirnames if not d[0] == '.']
-                if len(filenames) > 0:
-                    for filename in [f for f in filenames if f.endswith('.py')]:
-                        is_loaded = self._load_module(dirpath, filename)
-                        mod_category = 'disabled'
-                        if is_loaded:
-                            mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
-                        # store the resulting category statistics
-                        if not mod_category in self.loaded_category:
-                            self.loaded_category[mod_category] = 0
-                        self.loaded_category[mod_category] += 1
+        path = os.path.join(self._home, 'modules')
+        for dirpath, dirnames, filenames in os.walk(path):
+            # remove hidden files and directories
+            filenames = [f for f in filenames if not f[0] == '.']
+            dirnames[:] = [d for d in dirnames if not d[0] == '.']
+            if len(filenames) > 0:
+                for filename in [f for f in filenames if f.endswith('.py')]:
+                    is_loaded = self._load_module(dirpath, filename)
+                    mod_category = 'disabled'
+                    if is_loaded:
+                        mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
+                    # store the resulting category statistics
+                    if not mod_category in self.loaded_category:
+                        self.loaded_category[mod_category] = 0
+                    self.loaded_category[mod_category] += 1
+        # cleanup module directory
+        self._remove_empty_dirs(os.path.join(self._home, 'modules'))
+        # update module index
+        self._update_module_index()
 
     def _load_module(self, dirpath, filename):
         mod_name = filename.split('.')[0]
@@ -166,23 +266,6 @@ class Recon(framework.Framework):
         # remove the module from the framework's loaded modules
         self._loaded_modules.pop(mod_dispname, None)
         return False
-
-    def _menu_egg(self, params):
-        eggs = [
-                'Really? A menu option? Try again.',
-                'You clearly need \'help\'.',
-                'That makes no sense to me.',
-                '*grunt* *grunt* Nope. I got nothin\'.',
-                'Wait for it...',
-                'This is not the Social Engineering Toolkit.',
-                'Don\'t you think if that worked the numbers would at least be in order?',
-                'Reserving that option for the next-NEXT generation of the framework.',
-                'You\'ve clearly got the wrong framework. Attempting to start SET...',
-                'Your mother called. She wants her menu driven UI back.',
-                'What\'s the samurai password?'
-                ]
-        print(random.choice(eggs))
-        return 
 
     #==================================================
     # WORKSPACE METHODS
@@ -324,12 +407,15 @@ class Recon(framework.Framework):
         print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (framework.Colors.O, self._name, __version__, __author__, framework.Colors.N), banner_len+8)) # +8 compensates for the color bytes
         print('')
         counts = [(self.loaded_category[x], x) for x in self.loaded_category]
-        count_len = len(max([str(x[0]) for x in counts], key=len))
-        for count in sorted(counts, reverse=True):
-            cnt = '[%d]' % (count[0])
-            print('%s%s %s modules%s' % (framework.Colors.B, cnt.ljust(count_len+2), count[1].title(), framework.Colors.N))
-            # create dynamic easter egg command based on counts
-            setattr(self, 'do_%d' % count[0], self._menu_egg)
+        if counts:
+            count_len = len(max([str(x[0]) for x in counts], key=len))
+            for count in sorted(counts, reverse=True):
+                cnt = '[%d]' % (count[0])
+                print('%s%s %s modules%s' % (framework.Colors.B, cnt.ljust(count_len+2), count[1].title(), framework.Colors.N))
+                # create dynamic easter egg command based on counts
+                setattr(self, 'do_%d' % count[0], self._menu_egg)
+        else:
+            print('No modules installed.')
         print('')
 
     def show_workspaces(self):
@@ -338,6 +424,60 @@ class Recon(framework.Framework):
     #==================================================
     # COMMAND METHODS
     #==================================================
+
+    def do_modules(self, params):
+        '''Manages modules'''
+        if not params:
+            self.help_modules()
+            return
+        params = params.split()
+        arg = params.pop(0).lower()
+        if arg == 'list':
+            modules = [m for m in self._module_index if not params or self._search_module_index(' '.join(params))]
+            if modules:
+                rows = []
+                for module in modules:
+                    row = []
+                    for key in ('path', 'name', 'status', 'last-updated'):
+                        row.append(module[key])
+                    rows.append(row)
+                header = ('Path', 'Name', 'Status', 'Updated')
+                self.table(rows, header=header)
+            else:
+                self.error('No modules found.')
+        elif arg == 'info':
+            if len(params) == 1:
+                modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
+                if modules:
+                    for module in modules:
+                        rows = []
+                        for key in ('path', 'name', 'author', 'version', 'last-updated', 'description', 'key-required', 'dependencies', 'status'):
+                            row = (key, module[key])
+                            rows.append(row)
+                        self.table(rows)
+                else:
+                    self.error('Invalid module path.')
+            else: print('Usage: modules info [<path>|<prefix>|all]')
+        elif arg == 'install':
+            if len(params) == 1:
+                modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
+                if modules:
+                    for module in modules:
+                        self._install_module(module['path'])
+                else:
+                    self.error('Invalid module path.')
+            else: print('Usage: modules install [<path>|<prefix>|all]')
+        elif arg == 'remove':
+            if len(params) == 1:
+                modules = [m for m in self._module_index if m['status'] == 'installed' and params[0] in m['path'] or params[0] == 'all']
+                if modules:
+                    for module in modules:
+                        self._remove_module(module['path'])
+                else:
+                    self.error('Invalid module path.')
+            else: print('Usage: modules remove [<path>|<prefix>|all]')
+        else:
+            self.help_modules()
 
     def do_reload(self, params):
         '''Reloads all modules'''
@@ -463,6 +603,12 @@ class Recon(framework.Framework):
     # HELP METHODS
     #==================================================
 
+    def help_modules(self):
+        print(getattr(self, 'do_modules').__doc__)
+        print('')
+        print('Usage: modules [list|info|install|remove]')
+        print('')
+
     def help_workspaces(self):
         print(getattr(self, 'do_workspaces').__doc__)
         print('')
@@ -478,6 +624,16 @@ class Recon(framework.Framework):
     #==================================================
     # COMPLETE METHODS
     #==================================================
+
+    def complete_modules(self, text, line, *ignored):
+        args = line.split()
+        options = ['list', 'info', 'install', 'remove']
+        if 1 < len(args) < 4:
+            if args[1].lower() in options[1:]:
+                return [x['path'] for x in self._module_index if x['path'].startswith(text)]
+            if args[1].lower() in options[:1]:
+                return []
+        return [x for x in options if x.startswith(text)]
 
     def complete_workspaces(self, text, line, *ignored):
         args = line.split()

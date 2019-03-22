@@ -9,3 +9,4 @@ olefile
 PyPDF2
 flask
 unicodecsv
+pyyaml
