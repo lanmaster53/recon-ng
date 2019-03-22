@@ -90,6 +90,9 @@ class Request(object):
         except urllib2.HTTPError as e:
             resp = e
 
+        # clean up
+        opener.close()
+
         # build and return response object
         return ResponseObject(resp, cookiejar)
 
