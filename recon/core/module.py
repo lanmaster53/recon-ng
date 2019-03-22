@@ -13,6 +13,7 @@ import textwrap
 import time
 import urllib
 import urlparse
+import yaml
 # framework libs
 from recon.core import framework
 
@@ -25,6 +26,8 @@ class BaseModule(framework.Framework):
     def __init__(self, params, query=None):
         framework.Framework.__init__(self, params)
         self.options = framework.Options()
+        # create meta dictionary from frontmatter
+        self.meta = self._parse_frontmatter()
         # register a data source option if a default query is specified in the module
         if self.meta.get('query'):
             self._default_source = self.meta.get('query')
@@ -55,6 +58,20 @@ class BaseModule(framework.Framework):
     #==================================================
     # SUPPORT METHODS
     #==================================================
+
+    def _parse_frontmatter(self):
+        rel_path = '.'.join([self._modulename, 'py'])
+        abs_path = os.path.join(self._home, 'modules', rel_path)
+        with open(abs_path) as fp:
+            state = False
+            yaml_src = ''
+            for line in fp:
+                 if line == '---\n':
+                      state = not state
+                      continue
+                 if state:
+                      yaml_src += line
+        return yaml.safe_load(yaml_src)
 
     def _migrate_key(self, key):
         '''migrate key from old .dat file'''
