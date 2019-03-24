@@ -95,8 +95,10 @@ class Framework(cmd.Cmd):
     app_path = ''
     data_path = ''
     core_path = ''
+    home_path = ''
+    mod_path = ''
+    spaces_path = ''
     workspace = ''
-    _home = ''
     _record = None
     _spool = None
     _summary_counts = {}
@@ -706,7 +708,7 @@ class Framework(cmd.Cmd):
         return self._query_keys('DELETE FROM keys WHERE name=?', (name,))
 
     def _query_keys(self, query, values=()):
-        path = os.path.join(self._home, 'keys.db')
+        path = os.path.join(self.home_path, 'keys.db')
         result = self.query(query, values, path)
         # filter out tokens when not called from the get_key method
         if type(result) is list and 'get_key' not in [x[3] for x in inspect.stack()]:

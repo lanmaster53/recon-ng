@@ -55,10 +55,14 @@ class Recon(framework.Framework):
         self._name = 'recon-ng'
         self._prompt_template = '%s[%s] > '
         self._base_prompt = self._prompt_template % ('', self._name)
-        # establish dynamic paths for framework elements
+        # establish dynamic paths for framework components
         self.app_path = framework.Framework.app_path = sys.path[0]
         self.data_path = framework.Framework.data_path = os.path.join(self.app_path, 'data')
         self.core_path = framework.Framework.core_path = os.path.join(self.app_path, 'core')
+        self.home_path = framework.Framework.home_path = os.path.join(os.path.expanduser('~'), '.recon-ng')
+        self.mod_path = framework.Framework.mod_path = os.path.join(self.home_path, 'modules')
+        self.spaces_path = framework.Framework.spaces_path = os.path.join(self.home_path, 'workspaces')
+        # initialize framework components
         self.options = self._global_options
         self._init_global_options()
         self._init_home()
@@ -90,7 +94,7 @@ class Recon(framework.Framework):
 
     def _send_analytics(self, cd):
         try:
-            cid_path = os.path.join(self._home, '.cid')
+            cid_path = os.path.join(self.home_path, '.cid')
             if not os.path.exists(cid_path):
                 # create the cid and file
                 import uuid
@@ -120,15 +124,13 @@ class Recon(framework.Framework):
         self.register_option('verbosity', 1, True, 'verbosity level (0 = minimal, 1 = verbose, 2 = debug)')
 
     def _init_home(self):
-        self._home = framework.Framework._home = os.path.join(os.path.expanduser('~'), '.recon-ng')
         # initialize home folder
-        if not os.path.exists(self._home):
-            os.makedirs(self._home)
+        if not os.path.exists(self.home_path):
+            os.makedirs(self.home_path)
         # initialize keys database
         self._query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
         # initialize module index
         self._fetch_module_index()
-        self._update_module_index()
 
     def _request_file_from_repo(self, path):
         resp = self.request(urljoin(self.repo_url, path))
@@ -170,13 +172,15 @@ class Recon(framework.Framework):
     #==================================================
 
     def _fetch_module_index(self):
+        self.debug('Fetching index file...')
         content = self._request_file_from_repo('modules.yml')
-        path = os.path.join(self._home, 'modules.yml')
+        path = os.path.join(self.home_path, 'modules.yml')
         self._write_local_file(path, content)
 
     def _update_module_index(self):
+        self.debug('Updating index file...')
         # load module index from local copy
-        path = os.path.join(self._home, 'modules.yml')
+        path = os.path.join(self.home_path, 'modules.yml')
         with open(path, 'r') as infile:
             self._module_index = yaml.safe_load(infile)
         # add status to index for each module
@@ -185,45 +189,40 @@ class Recon(framework.Framework):
             if module['path'] in self._loaded_modules.keys():
                 status = 'installed'
                 loaded = self._loaded_modules[module['path']]
-                #if loaded.meta['version'] < module['version']:
-                if float(1.0) < float(module['version']):
+                if loaded.meta['version'] != module['version']:
                     status = 'outdated'
             module['status'] = status
 
     def _search_module_index(self, s):
-        self.output('Searching module index for \'%s\'...'%(s))
         keys = ('path', 'name', 'description', 'status')
         modules = []
         for module in self._module_index:
             for key in keys:
-                #if s in module[key]:
-                #    modules.append(modules)
-                #    break
                 if re.search(s, module[key]):
-                    modules.append(modules)
+                    modules.append(module)
                     break
         return modules
 
     def _install_module(self, path):
         rel_path = '.'.join([path, 'py'])
-        content = self._request_file_from_repo(rel_path)
-        abs_path = os.path.join(self._home, 'modules', rel_path)
+        content = self._request_file_from_repo('/'.join(['modules', rel_path]))
+        abs_path = os.path.join(self.mod_path, rel_path)
         self._write_local_file(abs_path, content)
         self.output('Module installed: %s' % (path))
         self.do_reload('')
 
     def _remove_module(self, path):
         rel_path = '.'.join([path, 'py'])
-        abs_path = os.path.join(self._home, 'modules', rel_path)
+        abs_path = os.path.join(self.mod_path, rel_path)
         os.remove(abs_path)
         self.output('Module removed: %s' % (path))
         self.do_reload('')
 
-    def _load_modules(self):
+    def _load_modules(self, module_dir=None):
         self.loaded_category = {}
         self._loaded_modules = framework.Framework._loaded_modules = {}
         # crawl the module directory and build the module tree
-        path = os.path.join(self._home, 'modules')
+        path = module_dir if module_dir else self.mod_path
         for dirpath, dirnames, filenames in os.walk(path):
             # remove hidden files and directories
             filenames = [f for f in filenames if not f[0] == '.']
@@ -239,7 +238,7 @@ class Recon(framework.Framework):
                         self.loaded_category[mod_category] = 0
                     self.loaded_category[mod_category] += 1
         # cleanup module directory
-        self._remove_empty_dirs(os.path.join(self._home, 'modules'))
+        self._remove_empty_dirs(self.mod_path)
         # update module index
         self._update_module_index()
 
@@ -272,7 +271,7 @@ class Recon(framework.Framework):
     #==================================================
 
     def init_workspace(self, workspace):
-        workspace = os.path.join(self._home, 'workspaces', workspace)
+        workspace = os.path.join(self.spaces_path, workspace)
         new = False
         try:
             os.makedirs(workspace)
@@ -294,7 +293,7 @@ class Recon(framework.Framework):
         return True
 
     def delete_workspace(self, workspace):
-        path = os.path.join(self._home, 'workspaces', workspace)
+        path = os.path.join(self.spaces_path, workspace)
         try:
             shutil.rmtree(path)
         except OSError:
@@ -305,7 +304,7 @@ class Recon(framework.Framework):
 
     def _get_workspaces(self):
         dirnames = []
-        path = os.path.join(self._home, 'workspaces')
+        path = os.path.join(self.spaces_path)
         for name in os.listdir(path):
             if os.path.isdir(os.path.join(path, name)):
                 dirnames.append(name)
@@ -425,6 +424,36 @@ class Recon(framework.Framework):
     # COMMAND METHODS
     #==================================================
 
+    def do_index(self, params):
+        params = params.split()
+        dir_path = params[0]
+        file_name = params[1]
+        if os.path.exists(dir_path):
+            self._load_modules(dir_path)
+            yaml_objs = []
+            for path, module in self._loaded_modules.iteritems():
+                yaml_obj = {}
+                yaml_obj['path'] = path
+                yaml_obj['name'] = module.meta.get('name')
+                yaml_obj['author'] = module.meta.get('author')
+                yaml_obj['version'] = module.meta.get('version') or '1.0'
+                yaml_obj['last_updated'] = '1970-01-01'
+                yaml_obj['description'] = module.meta.get('description')
+                yaml_obj['required_keys'] = module.meta.get('required_keys') or []
+                yaml_obj['dependencies'] = []
+                #for key in module.meta:
+                #    yaml_obj[key] = module.meta.get(key)
+                yaml_objs.append(yaml_obj)
+            if yaml_objs:
+                file_path = os.path.join(dir_path, file_name)
+                with open(file_path, 'w') as outfile:
+                    yaml.safe_dump(yaml_objs, outfile)
+                self.output('Module index created.')
+            else:
+                self.output('No modules found.')
+        else:
+            self.error('Invalid modules path.')
+
     def do_modules(self, params):
         '''Manages modules'''
         if not params:
@@ -433,15 +462,20 @@ class Recon(framework.Framework):
         params = params.split()
         arg = params.pop(0).lower()
         if arg == 'list':
-            modules = [m for m in self._module_index if not params or self._search_module_index(' '.join(params))]
+            pattern = ' '.join(params)
+            results = []
+            if pattern:
+                self.output('Searching module index for \'%s\'...'%(pattern))
+                results = self._search_module_index(pattern)
+            modules = [m for m in self._module_index if not params or m in results]
             if modules:
                 rows = []
-                for module in modules:
+                for module in sorted(modules, key=lambda m: m['path']):
                     row = []
-                    for key in ('path', 'name', 'status', 'last-updated'):
+                    for key in ('path', 'version', 'status', 'last_updated'):
                         row.append(module[key])
                     rows.append(row)
-                header = ('Path', 'Name', 'Status', 'Updated')
+                header = ('Path', 'Version', 'Status', 'Updated')
                 self.table(rows, header=header)
             else:
                 self.error('No modules found.')
@@ -451,7 +485,7 @@ class Recon(framework.Framework):
                 if modules:
                     for module in modules:
                         rows = []
-                        for key in ('path', 'name', 'author', 'version', 'last-updated', 'description', 'key-required', 'dependencies', 'status'):
+                        for key in ('path', 'name', 'author', 'version', 'last_updated', 'description', 'required_keys', 'dependencies', 'status'):
                             row = (key, module[key])
                             rows.append(row)
                         self.table(rows)
@@ -575,7 +609,7 @@ class Recon(framework.Framework):
             y = self._loaded_modules[mod_dispname]
             # send analytics information
             mod_loadpath = os.path.abspath(sys.modules[y.__module__].__file__)
-            if (self._home not in mod_loadpath) and self.analytics:
+            if self.analytics:
                 self._send_analytics(mod_dispname)
             # return the loaded module if in command line mode
             if self._mode == Mode.CLI:
@@ -629,7 +663,9 @@ class Recon(framework.Framework):
         args = line.split()
         options = ['list', 'info', 'install', 'remove']
         if 1 < len(args) < 4:
-            if args[1].lower() in options[1:]:
+            if args[1].lower() in options[-1:]:
+                return [x['path'] for x in self._module_index if x['status'] == 'installed' and x['path'].startswith(text)]
+            if args[1].lower() in options[1:-1]:
                 return [x['path'] for x in self._module_index if x['path'].startswith(text)]
             if args[1].lower() in options[:1]:
                 return []

@@ -27,7 +27,7 @@ class BaseModule(framework.Framework):
         framework.Framework.__init__(self, params)
         self.options = framework.Options()
         # create meta dictionary from frontmatter
-        self.meta = self._parse_frontmatter()
+        #self.meta = self._parse_frontmatter()
         # register a data source option if a default query is specified in the module
         if self.meta.get('query'):
             self._default_source = self.meta.get('query')
@@ -61,7 +61,7 @@ class BaseModule(framework.Framework):
 
     def _parse_frontmatter(self):
         rel_path = '.'.join([self._modulename, 'py'])
-        abs_path = os.path.join(self._home, 'modules', rel_path)
+        abs_path = os.path.join(self.mod_path, rel_path)
         with open(abs_path) as fp:
             state = False
             yaml_src = ''
@@ -75,7 +75,7 @@ class BaseModule(framework.Framework):
 
     def _migrate_key(self, key):
         '''migrate key from old .dat file'''
-        key_path = os.path.join(self._home, 'keys.dat')
+        key_path = os.path.join(self.home_path, 'keys.dat')
         if os.path.exists(key_path):
             try:
                 key_data = json.loads(open(key_path, 'rb').read())
@@ -487,10 +487,9 @@ class BaseModule(framework.Framework):
             self.output('Source option not available for this module.')
 
     def show_source(self):
-        for path in [os.path.join(x, 'modules', self._modulename) +'.py' for x in (self.app_path, self._home)]:
-            if os.path.exists(path):
-                filename = path
-        with open(filename) as f:
+        rel_path = '.'.join([self._modulename, 'py'])
+        abs_path = os.path.join(self.mod_path, rel_path)
+        with open(abs_path) as f:
             content = f.readlines()
             nums = [str(x) for x in range(1, len(content)+1)]
             num_len = len(max(nums, key=len))
@@ -498,7 +497,6 @@ class BaseModule(framework.Framework):
                 print('%s|%s' % (num.rjust(num_len), content[int(num)-1]), end='')
 
     def show_info(self):
-        self.meta['path'] = os.path.join('modules', self._modulename) + '.py'
         print('')
         # meta info
         for item in ['name', 'path', 'author', 'version']:
