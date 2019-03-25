@@ -425,6 +425,7 @@ class Recon(framework.Framework):
     #==================================================
 
     def do_index(self, params):
+        '''Creates module index (dev only)'''
         params = params.split()
         dir_path = params[0]
         file_name = params[1]
@@ -636,6 +637,12 @@ class Recon(framework.Framework):
     #==================================================
     # HELP METHODS
     #==================================================
+
+    def help_index(self):
+        print(getattr(self, 'do_index').__doc__)
+        print('')
+        print('Usage: index <directory> <filename>')
+        print('')
 
     def help_modules(self):
         print(getattr(self, 'do_modules').__doc__)
