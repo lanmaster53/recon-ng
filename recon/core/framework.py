@@ -163,7 +163,10 @@ class Framework(cmd.Cmd):
                 func = getattr(self, 'do_' + cmd)
             except AttributeError:
                 return self.default(line)
-            return func(arg)
+            try:
+                return func(arg)
+            except Exception:
+                self.print_exception()
 
     # make help menu more attractive
     def print_topics(self, header, cmds, cmdlen, maxcol):
