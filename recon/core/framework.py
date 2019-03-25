@@ -840,7 +840,7 @@ class Framework(cmd.Cmd):
         return True
 
     def do_set(self, params):
-        '''Sets module options'''
+        '''Sets current context options'''
         options = params.split()
         if len(options) < 2:
             self.help_set()
@@ -854,7 +854,7 @@ class Framework(cmd.Cmd):
         else: self.error('Invalid option.')
 
     def do_unset(self, params):
-        '''Unsets module options'''
+        '''Unsets current context options'''
         self.do_set('%s %s' % (params, 'None'))
 
     def do_keys(self, params):
@@ -1008,7 +1008,7 @@ class Framework(cmd.Cmd):
             self.help_delete()
 
     def do_search(self, params):
-        '''Searches available modules'''
+        '''Searches installed modules'''
         if not params:
             self.help_search()
             return
@@ -1123,7 +1123,7 @@ class Framework(cmd.Cmd):
     do_use = do_load
 
     def do_pdb(self, params):
-        '''Starts a Python Debugger session'''
+        '''Starts a Python Debugger session (dev only)'''
         import pdb
         pdb.set_trace()
 
