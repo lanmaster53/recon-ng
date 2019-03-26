@@ -17,6 +17,7 @@ import __builtin__
 
 # import framework libs
 from recon.core import framework
+from recon.core.constants import BANNER
 
 # set the __version__ variable based on the VERSION file
 execfile(os.path.join(sys.path[0], 'VERSION'))
@@ -57,10 +58,10 @@ class Recon(framework.Framework):
         self._base_prompt = self._prompt_template % ('', self._name)
         # establish dynamic paths for framework components
         self.app_path = framework.Framework.app_path = sys.path[0]
-        self.data_path = framework.Framework.data_path = os.path.join(self.app_path, 'data')
         self.core_path = framework.Framework.core_path = os.path.join(self.app_path, 'core')
         self.home_path = framework.Framework.home_path = os.path.join(os.path.expanduser('~'), '.recon-ng')
         self.mod_path = framework.Framework.mod_path = os.path.join(self.home_path, 'modules')
+        self.data_path = framework.Framework.data_path = os.path.join(self.home_path, 'data')
         self.spaces_path = framework.Framework.spaces_path = os.path.join(self.home_path, 'workspaces')
         # initialize framework components
         self.options = self._global_options
@@ -77,7 +78,7 @@ class Recon(framework.Framework):
 
     def version_check(self):
         try:
-            pattern = "'(\d+\.\d+\.\d+[^']*)'"
+            pattern = r"'(\d+\.\d+\.\d+[^']*)'"
             remote = re.search(pattern, self.request('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').raw).group(1)
             local = re.search(pattern, open('VERSION').read()).group(1)
             if remote != local:
@@ -132,25 +133,6 @@ class Recon(framework.Framework):
         # initialize module index
         self._fetch_module_index()
 
-    def _request_file_from_repo(self, path):
-        resp = self.request(urljoin(self.repo_url, path))
-        return resp.raw
-
-    def _write_local_file(self, path, content):
-        dirpath = os.path.sep.join(path.split(os.path.sep)[:-1])
-        if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
-        with open(path, 'w') as outfile:
-            outfile.write(content)
-
-    def _remove_empty_dirs(self, base_path):
-        for root, dirs, files in os.walk(base_path, topdown=False):
-            for rel_path in dirs:
-                abs_path = os.path.join(root, rel_path)
-                if os.path.exists(abs_path):
-                    if not os.listdir(abs_path):
-                        os.removedirs(abs_path)
-
     def _menu_egg(self, params):
         eggs = [
             'Really? A menu option? Try again.',
@@ -171,11 +153,37 @@ class Recon(framework.Framework):
     # MODULE METHODS
     #==================================================
 
+    def _request_file_from_repo(self, path):
+        resp = self.request(urljoin(self.repo_url, path))
+        if resp.status_code != 200:
+            raise framework.FrameworkException('Invalid response from module repository (%d).' % resp.status_code)
+        return resp
+
+    def _write_local_file(self, path, content):
+        dirpath = os.path.sep.join(path.split(os.path.sep)[:-1])
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+        with open(path, 'w') as outfile:
+            outfile.write(content)
+
+    def _remove_empty_dirs(self, base_path):
+        for root, dirs, files in os.walk(base_path, topdown=False):
+            for rel_path in dirs:
+                abs_path = os.path.join(root, rel_path)
+                if os.path.exists(abs_path):
+                    if not os.listdir(abs_path):
+                        os.removedirs(abs_path)
+
     def _fetch_module_index(self):
         self.debug('Fetching index file...')
-        content = self._request_file_from_repo('modules.yml')
+        try:
+            resp = self._request_file_from_repo('modules.yml')
+        except:
+            self.error('Unable to synchronize module index.')
+            self.print_exception()
+            return
         path = os.path.join(self.home_path, 'modules.yml')
-        self._write_local_file(path, content)
+        self._write_local_file(path, resp.raw)
 
     def _update_module_index(self):
         self.debug('Updating index file...')
@@ -203,20 +211,50 @@ class Recon(framework.Framework):
                     break
         return modules
 
+    def _get_module_from_index(self, path):
+        for module in self._module_index:
+            if module['path'] == path:
+                return module
+        return None
+
     def _install_module(self, path):
+        # download supporting data files
+        downloads = {}
+        files = self._get_module_from_index(path).get('files', [])
+        for filename in files:
+            try:
+                resp = self._request_file_from_repo('/'.join(['data', filename]))
+            except:
+                self.error('Supporting file download for %s failed: (%s)' % (path, filename))
+                self.error('Module installation aborted.')
+                raise
+            abs_path = os.path.join(self.data_path, filename)
+            downloads[abs_path] = resp.raw
+        # download the module
         rel_path = '.'.join([path, 'py'])
-        content = self._request_file_from_repo('/'.join(['modules', rel_path]))
+        try:
+            resp = self._request_file_from_repo('/'.join(['modules', rel_path]))
+        except:
+            self.error('Module installation failed: %s' % (path))
+            raise
         abs_path = os.path.join(self.mod_path, rel_path)
-        self._write_local_file(abs_path, content)
+        downloads[abs_path] = resp.raw
+        # install the module
+        for abs_path, content in downloads.iteritems():
+            self._write_local_file(abs_path, content)
         self.output('Module installed: %s' % (path))
-        self.do_reload('')
 
     def _remove_module(self, path):
+        # remove the module
         rel_path = '.'.join([path, 'py'])
         abs_path = os.path.join(self.mod_path, rel_path)
         os.remove(abs_path)
+        # remove supporting data files
+        files = self._get_module_from_index(path).get('files', [])
+        for filename in files:
+            abs_path = os.path.join(self.data_path, filename)
+            os.remove(abs_path)
         self.output('Module removed: %s' % (path))
-        self.do_reload('')
 
     def _load_modules(self, module_dir=None):
         self.loaded_category = {}
@@ -400,9 +438,8 @@ class Recon(framework.Framework):
     #==================================================
 
     def show_banner(self):
-        banner = open(os.path.join(self.data_path, 'banner.txt')).read()
-        banner_len = len(max(banner.split('\n'), key=len))
-        print(banner)
+        banner_len = len(max(BANNER.split('\n'), key=len))
+        print(BANNER)
         print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (framework.Colors.O, self._name, __version__, __author__, framework.Colors.N), banner_len+8)) # +8 compensates for the color bytes
         print('')
         counts = [(self.loaded_category[x], x) for x in self.loaded_category]
@@ -437,13 +474,12 @@ class Recon(framework.Framework):
                 yaml_obj['path'] = path
                 yaml_obj['name'] = module.meta.get('name')
                 yaml_obj['author'] = module.meta.get('author')
-                yaml_obj['version'] = module.meta.get('version') or '1.0'
-                yaml_obj['last_updated'] = '1970-01-01'
+                yaml_obj['version'] = module.meta.get('version', '1.0')
+                yaml_obj['last_updated'] = '2019-03-25'
                 yaml_obj['description'] = module.meta.get('description')
-                yaml_obj['required_keys'] = module.meta.get('required_keys') or []
-                yaml_obj['dependencies'] = []
-                #for key in module.meta:
-                #    yaml_obj[key] = module.meta.get(key)
+                yaml_obj['required_keys'] = module.meta.get('required_keys', [])
+                yaml_obj['dependencies'] = module.meta.get('dependencies', [])
+                yaml_obj['files'] = module.meta.get('files', [])
                 yaml_objs.append(yaml_obj)
             if yaml_objs:
                 file_path = os.path.join(dir_path, file_name)
@@ -486,7 +522,7 @@ class Recon(framework.Framework):
                 if modules:
                     for module in modules:
                         rows = []
-                        for key in ('path', 'name', 'author', 'version', 'last_updated', 'description', 'required_keys', 'dependencies', 'status'):
+                        for key in ('path', 'name', 'author', 'version', 'last_updated', 'description', 'required_keys', 'dependencies', 'files', 'status'):
                             row = (key, module[key])
                             rows.append(row)
                         self.table(rows)
@@ -499,6 +535,7 @@ class Recon(framework.Framework):
                 if modules:
                     for module in modules:
                         self._install_module(module['path'])
+                    self.do_reload('')
                 else:
                     self.error('Invalid module path.')
             else: print('Usage: modules install [<path>|<prefix>|all]')
@@ -508,6 +545,7 @@ class Recon(framework.Framework):
                 if modules:
                     for module in modules:
                         self._remove_module(module['path'])
+                    self.do_reload('')
                 else:
                     self.error('Invalid module path.')
             else: print('Usage: modules remove [<path>|<prefix>|all]')
