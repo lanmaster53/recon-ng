@@ -246,15 +246,17 @@ class Framework(cmd.Cmd):
 
     def print_exception(self, line=''):
         stack_list = [x.strip() for x in traceback.format_exc().strip().splitlines()]
-        line = ' '.join([x for x in [stack_list[-1], line] if x])
-        if self._global_options['verbosity'] == 1:
-            if len(stack_list) > 3:
-                line = os.linesep.join((stack_list[-1], stack_list[-3]))
+        exctype = stack_list[-1].split(':')[0].strip()
+        message = ' '.join(stack_list[-1].split(':')[1:]).strip()
+        if self._global_options['verbosity'] == 0:
+            return
+        elif self._global_options['verbosity'] == 1:
+            line = ' '.join([x for x in [message, line] if x])
+            self.error(line)
         elif self._global_options['verbosity'] == 2:
             print('%s%s' % (Colors.R, '-'*60))
             traceback.print_exc()
             print('%s%s' % ('-'*60, Colors.N))
-        self.error(line)
 
     def error(self, line):
         '''Formats and presents errors.'''
