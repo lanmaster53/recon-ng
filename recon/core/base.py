@@ -1,7 +1,6 @@
 from __future__ import print_function
 
-__author__    = 'Tim Tomes (@LaNMaSteR53)'
-__email__     = 'tjt1980[at]gmail.com'
+__author__    = 'Tim Tomes (@lanmaster53)'
 
 from urlparse import urljoin
 import errno
@@ -50,73 +49,40 @@ class Recon(framework.Framework):
 
     repo_url = 'https://raw.githubusercontent.com/lanmaster53/recon-ng-modules/master/'
 
-    def __init__(self, mode):
+    def __init__(self, check=True, analytics=True, index=True):
         framework.Framework.__init__(self, 'base')
-        self._mode = mode
         self._name = 'recon-ng'
         self._prompt_template = '%s[%s] > '
         self._base_prompt = self._prompt_template % ('', self._name)
-        # establish dynamic paths for framework components
+        # set toggle flags
+        self._check = check
+        self._analytics = analytics
+        self._index = index
+        # set path variables
         self.app_path = framework.Framework.app_path = sys.path[0]
         self.core_path = framework.Framework.core_path = os.path.join(self.app_path, 'core')
         self.home_path = framework.Framework.home_path = os.path.join(os.path.expanduser('~'), '.recon-ng')
         self.mod_path = framework.Framework.mod_path = os.path.join(self.home_path, 'modules')
         self.data_path = framework.Framework.data_path = os.path.join(self.home_path, 'data')
         self.spaces_path = framework.Framework.spaces_path = os.path.join(self.home_path, 'workspaces')
+
+    def start(self, mode, workspace='default'):
         # initialize framework components
-        self.options = self._global_options
+        self._mode = mode
         self._init_global_options()
         self._init_home()
-        self.init_workspace('default')
+        self._init_workspace(workspace)
+        self._check_version()
         if self._mode == Mode.CONSOLE:
             self.show_banner()
-        self.analytics = False
+            self.cmdloop()
 
     #==================================================
     # SUPPORT METHODS
     #==================================================
 
-    def version_check(self):
-        try:
-            pattern = r"'(\d+\.\d+\.\d+[^']*)'"
-            remote = re.search(pattern, self.request('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').raw).group(1)
-            local = re.search(pattern, open('VERSION').read()).group(1)
-            if remote != local:
-                self.alert('Your version of Recon-ng does not match the latest release.')
-                self.alert('Please update or use the \'--no-check\' switch to continue using the old version.')
-                if remote.split('.')[0] != local.split('.')[0]:
-                    self.alert('Read the migration notes for pre-requisites before upgrading.')
-                    self.output('Migration Notes: https://bitbucket.org/LaNMaSteR53/recon-ng/wiki/Usage%20Guide#!migration-notes')
-                self.output('Remote version:  %s' % (remote))
-                self.output('Local version:   %s' % (local))
-            return local == remote
-        except:
-            return True
-
-    def _send_analytics(self, cd):
-        try:
-            cid_path = os.path.join(self.home_path, '.cid')
-            if not os.path.exists(cid_path):
-                # create the cid and file
-                import uuid
-                with open(cid_path, 'w') as fp:
-                    fp.write(str(uuid.uuid4()))
-            with open(cid_path) as fp:
-                cid = fp.read().strip()
-            data = {
-                    'v': 1,
-                    'tid': 'UA-52269615-2',
-                    'cid': cid,
-                    't': 'screenview',
-                    'an': 'Recon-ng',
-                    'av': __version__,
-                    'cd': cd
-                    }
-            self.request('http://www.google-analytics.com/collect', payload=data)
-        except:
-            pass
-
     def _init_global_options(self):
+        self.options = self._global_options
         self.register_option('nameserver', '8.8.8.8', True, 'nameserver for DNS interrogation')
         self.register_option('proxy', None, False, 'proxy server (address:port)')
         self.register_option('threads', 10, True, 'number of threads (where applicable)')
@@ -132,6 +98,53 @@ class Recon(framework.Framework):
         self._query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
         # initialize module index
         self._fetch_module_index()
+
+    def _check_version(self):
+        if self._check:
+            pattern = r"'(\d+\.\d+\.\d+[^']*)'"
+            remote = 0
+            local = 0
+            try:
+                remote = re.search(pattern, self.request('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').raw).group(1)
+                local = re.search(pattern, open('VERSION').read()).group(1)
+            except:
+                self.error('Version check failed.')
+                self.print_exception()
+            if remote != local:
+                self.alert('Your version of Recon-ng does not match the latest release.')
+                self.alert('Please consider updating before further use.')
+                self.output('Remote version:  %s' % (remote))
+                self.output('Local version:   %s' % (local))
+        else:
+            self.alert('Version check disabled.')
+
+    def _send_analytics(self, cd):
+        if self._analytics:
+            try:
+                cid_path = os.path.join(self.home_path, '.cid')
+                if not os.path.exists(cid_path):
+                    # create the cid and file
+                    import uuid
+                    with open(cid_path, 'w') as fp:
+                        fp.write(str(uuid.uuid4()))
+                with open(cid_path) as fp:
+                    cid = fp.read().strip()
+                data = {
+                        'v': 1,
+                        'tid': 'UA-52269615-2',
+                        'cid': cid,
+                        't': 'screenview',
+                        'an': 'Recon-ng',
+                        'av': __version__,
+                        'cd': cd
+                        }
+                self.request('http://www.google-analytics.com/collect', payload=data)
+            except:
+                self.debug('Analytics failed.')
+                self.print_exception()
+                raise
+        else:
+            self.debug('Analytics disabled.')
 
     def _menu_egg(self, params):
         eggs = [
@@ -150,183 +163,22 @@ class Recon(framework.Framework):
         return
 
     #==================================================
-    # MODULE METHODS
-    #==================================================
-
-    def _request_file_from_repo(self, path):
-        resp = self.request(urljoin(self.repo_url, path))
-        if resp.status_code != 200:
-            raise framework.FrameworkException('Invalid response from module repository (%d).' % resp.status_code)
-        return resp
-
-    def _write_local_file(self, path, content):
-        dirpath = os.path.sep.join(path.split(os.path.sep)[:-1])
-        if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
-        with open(path, 'w') as outfile:
-            outfile.write(content)
-
-    def _remove_empty_dirs(self, base_path):
-        for root, dirs, files in os.walk(base_path, topdown=False):
-            for rel_path in dirs:
-                abs_path = os.path.join(root, rel_path)
-                if os.path.exists(abs_path):
-                    if not os.listdir(abs_path):
-                        os.removedirs(abs_path)
-
-    def _fetch_module_index(self):
-        self.debug('Fetching index file...')
-        try:
-            resp = self._request_file_from_repo('modules.yml')
-        except:
-            self.error('Unable to synchronize module index.')
-            self.print_exception()
-            return
-        path = os.path.join(self.home_path, 'modules.yml')
-        self._write_local_file(path, resp.raw)
-
-    def _update_module_index(self):
-        self.debug('Updating index file...')
-        # load module index from local copy
-        path = os.path.join(self.home_path, 'modules.yml')
-        with open(path, 'r') as infile:
-            self._module_index = yaml.safe_load(infile)
-        # add status to index for each module
-        for module in self._module_index:
-            status = 'not installed'
-            if module['path'] in self._loaded_modules.keys():
-                status = 'installed'
-                loaded = self._loaded_modules[module['path']]
-                if loaded.meta['version'] != module['version']:
-                    status = 'outdated'
-            module['status'] = status
-
-    def _search_module_index(self, s):
-        keys = ('path', 'name', 'description', 'status')
-        modules = []
-        for module in self._module_index:
-            for key in keys:
-                if re.search(s, module[key]):
-                    modules.append(module)
-                    break
-        return modules
-
-    def _get_module_from_index(self, path):
-        for module in self._module_index:
-            if module['path'] == path:
-                return module
-        return None
-
-    def _install_module(self, path):
-        # download supporting data files
-        downloads = {}
-        files = self._get_module_from_index(path).get('files', [])
-        for filename in files:
-            try:
-                resp = self._request_file_from_repo('/'.join(['data', filename]))
-            except:
-                self.error('Supporting file download for %s failed: (%s)' % (path, filename))
-                self.error('Module installation aborted.')
-                raise
-            abs_path = os.path.join(self.data_path, filename)
-            downloads[abs_path] = resp.raw
-        # download the module
-        rel_path = '.'.join([path, 'py'])
-        try:
-            resp = self._request_file_from_repo('/'.join(['modules', rel_path]))
-        except:
-            self.error('Module installation failed: %s' % (path))
-            raise
-        abs_path = os.path.join(self.mod_path, rel_path)
-        downloads[abs_path] = resp.raw
-        # install the module
-        for abs_path, content in downloads.iteritems():
-            self._write_local_file(abs_path, content)
-        self.output('Module installed: %s' % (path))
-
-    def _remove_module(self, path):
-        # remove the module
-        rel_path = '.'.join([path, 'py'])
-        abs_path = os.path.join(self.mod_path, rel_path)
-        os.remove(abs_path)
-        # remove supporting data files
-        files = self._get_module_from_index(path).get('files', [])
-        for filename in files:
-            abs_path = os.path.join(self.data_path, filename)
-            os.remove(abs_path)
-        self.output('Module removed: %s' % (path))
-
-    def _load_modules(self, module_dir=None):
-        self.loaded_category = {}
-        self._loaded_modules = framework.Framework._loaded_modules = {}
-        # crawl the module directory and build the module tree
-        path = module_dir if module_dir else self.mod_path
-        for dirpath, dirnames, filenames in os.walk(path):
-            # remove hidden files and directories
-            filenames = [f for f in filenames if not f[0] == '.']
-            dirnames[:] = [d for d in dirnames if not d[0] == '.']
-            if len(filenames) > 0:
-                for filename in [f for f in filenames if f.endswith('.py')]:
-                    is_loaded = self._load_module(dirpath, filename)
-                    mod_category = 'disabled'
-                    if is_loaded:
-                        mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
-                    # store the resulting category statistics
-                    if not mod_category in self.loaded_category:
-                        self.loaded_category[mod_category] = 0
-                    self.loaded_category[mod_category] += 1
-        # cleanup module directory
-        self._remove_empty_dirs(self.mod_path)
-        # update module index
-        self._update_module_index()
-
-    def _load_module(self, dirpath, filename):
-        mod_name = filename.split('.')[0]
-        mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
-        mod_loadname = mod_dispname.replace('/', '_')
-        mod_loadpath = os.path.join(dirpath, filename)
-        mod_file = open(mod_loadpath)
-        try:
-            # import the module into memory
-            mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
-            __import__(mod_loadname)
-            # add the module to the framework's loaded modules
-            self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
-            return True
-        except ImportError as e:
-            # notify the user of missing dependencies
-            self.error('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_dispname, e.message[16:]))
-        except:
-            # notify the user of errors
-            self.print_exception()
-            self.error('Module \'%s\' disabled.' % (mod_dispname))
-        # remove the module from the framework's loaded modules
-        self._loaded_modules.pop(mod_dispname, None)
-        return False
-
-    #==================================================
     # WORKSPACE METHODS
     #==================================================
 
-    def init_workspace(self, workspace):
-        workspace = os.path.join(self.spaces_path, workspace)
-        new = False
-        try:
-            os.makedirs(workspace)
-            new = True
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                self.error(e.__str__())
-                return False
-        # set workspace attributes
-        self.workspace = framework.Framework.workspace = workspace
+    def _init_workspace(self, workspace):
+        path = os.path.join(self.spaces_path, workspace)
+        self.workspace = framework.Framework.workspace = path
+        if not os.path.exists(path):
+            os.makedirs(path)
+            self._create_db()
+        else:
+            self._migrate_db()
+        # set workspace prompt
         self.prompt = self._prompt_template % (self._base_prompt[:-3], self.workspace.split('/')[-1])
-        # configure new database or conduct migrations
-        self._create_db() if new else self._migrate_db()
         # load workspace configuration
-        self._init_global_options()
         self._load_config()
-        # load modules after config to populate options
+        # reload modules after config to populate options
         self._load_modules()
         return True
 
@@ -337,7 +189,7 @@ class Recon(framework.Framework):
         except OSError:
             return False
         if workspace == self.workspace.split('/')[-1]:
-            self.init_workspace('default')
+            self._init_workspace('default')
         return True
 
     def _get_workspaces(self):
@@ -351,7 +203,7 @@ class Recon(framework.Framework):
     def _get_snapshots(self):
         snapshots = []
         for f in os.listdir(self.workspace):
-            if re.search('^snapshot_\d{14}.db$', f):
+            if re.search(r'^snapshot_\d{14}.db$', f):
                 snapshots.append(f)
         return snapshots
 
@@ -432,6 +284,168 @@ class Recon(framework.Framework):
             self.query('ALTER TABLE leaks ADD COLUMN password_type TEXT')
             self.query('UPDATE leaks SET password_type=\'unknown\'')
             self.query('PRAGMA user_version = 8')
+
+    #==================================================
+    # MODULE METHODS
+    #==================================================
+
+    def _request_file_from_repo(self, path):
+        resp = self.request(urljoin(self.repo_url, path))
+        if resp.status_code != 200:
+            raise framework.FrameworkException('Invalid response from module repository (%d).' % resp.status_code)
+        return resp
+
+    def _write_local_file(self, path, content):
+        dirpath = os.path.sep.join(path.split(os.path.sep)[:-1])
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+        with open(path, 'w') as outfile:
+            outfile.write(content)
+
+    def _remove_empty_dirs(self, base_path):
+        for root, dirs, files in os.walk(base_path, topdown=False):
+            for rel_path in dirs:
+                abs_path = os.path.join(root, rel_path)
+                if os.path.exists(abs_path):
+                    if not os.listdir(abs_path):
+                        os.removedirs(abs_path)
+
+    def _fetch_module_index(self):
+        content = '[]'
+        if self._index:
+            self.debug('Fetching index file...')
+            try:
+                resp = self._request_file_from_repo('modules.yml')
+            except:
+                self.error('Unable to synchronize module index.')
+                self.print_exception()
+                return
+            content = resp.raw
+        path = os.path.join(self.home_path, 'modules.yml')
+        self._write_local_file(path, content)
+
+    def _update_module_index(self):
+        self.debug('Updating index file...')
+        # initialize module index
+        self._module_index = []
+        # load module index from local copy
+        path = os.path.join(self.home_path, 'modules.yml')
+        if os.path.exists(path):
+            with open(path, 'r') as infile:
+                self._module_index = yaml.safe_load(infile)
+            # add status to index for each module
+            for module in self._module_index:
+                status = 'not installed'
+                if module['path'] in self._loaded_modules.keys():
+                    status = 'installed'
+                    loaded = self._loaded_modules[module['path']]
+                    if loaded.meta['version'] != module['version']:
+                        status = 'outdated'
+                module['status'] = status
+
+    def _search_module_index(self, s):
+        keys = ('path', 'name', 'description', 'status')
+        modules = []
+        for module in self._module_index:
+            for key in keys:
+                if re.search(s, module[key]):
+                    modules.append(module)
+                    break
+        return modules
+
+    def _get_module_from_index(self, path):
+        for module in self._module_index:
+            if module['path'] == path:
+                return module
+        return None
+
+    def _install_module(self, path):
+        # download supporting data files
+        downloads = {}
+        files = self._get_module_from_index(path).get('files', [])
+        for filename in files:
+            try:
+                resp = self._request_file_from_repo('/'.join(['data', filename]))
+            except:
+                self.error('Supporting file download for %s failed: (%s)' % (path, filename))
+                self.error('Module installation aborted.')
+                raise
+            abs_path = os.path.join(self.data_path, filename)
+            downloads[abs_path] = resp.raw
+        # download the module
+        rel_path = '.'.join([path, 'py'])
+        try:
+            resp = self._request_file_from_repo('/'.join(['modules', rel_path]))
+        except:
+            self.error('Module installation failed: %s' % (path))
+            raise
+        abs_path = os.path.join(self.mod_path, rel_path)
+        downloads[abs_path] = resp.raw
+        # install the module
+        for abs_path, content in downloads.iteritems():
+            self._write_local_file(abs_path, content)
+        self.output('Module installed: %s' % (path))
+
+    def _remove_module(self, path):
+        # remove the module
+        rel_path = '.'.join([path, 'py'])
+        abs_path = os.path.join(self.mod_path, rel_path)
+        os.remove(abs_path)
+        # remove supporting data files
+        files = self._get_module_from_index(path).get('files', [])
+        for filename in files:
+            abs_path = os.path.join(self.data_path, filename)
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
+        self.output('Module removed: %s' % (path))
+
+    def _load_modules(self, module_dir=None):
+        self.loaded_category = {}
+        self._loaded_modules = framework.Framework._loaded_modules = {}
+        # crawl the module directory and build the module tree
+        path = module_dir if module_dir else self.mod_path
+        for dirpath, dirnames, filenames in os.walk(path):
+            # remove hidden files and directories
+            filenames = [f for f in filenames if not f[0] == '.']
+            dirnames[:] = [d for d in dirnames if not d[0] == '.']
+            if len(filenames) > 0:
+                for filename in [f for f in filenames if f.endswith('.py')]:
+                    is_loaded = self._load_module(dirpath, filename)
+                    mod_category = 'disabled'
+                    if is_loaded:
+                        mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
+                    # store the resulting category statistics
+                    if not mod_category in self.loaded_category:
+                        self.loaded_category[mod_category] = 0
+                    self.loaded_category[mod_category] += 1
+        # cleanup module directory
+        self._remove_empty_dirs(self.mod_path)
+        # update module index
+        self._update_module_index()
+
+    def _load_module(self, dirpath, filename):
+        mod_name = filename.split('.')[0]
+        mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
+        mod_loadname = mod_dispname.replace('/', '_')
+        mod_loadpath = os.path.join(dirpath, filename)
+        mod_file = open(mod_loadpath)
+        try:
+            # import the module into memory
+            mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
+            __import__(mod_loadname)
+            # add the module to the framework's loaded modules
+            self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
+            return True
+        except ImportError as e:
+            # notify the user of missing dependencies
+            self.error('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_dispname, e.message[16:]))
+        except:
+            # notify the user of errors
+            self.print_exception()
+            self.error('Module \'%s\' disabled.' % (mod_dispname))
+        # remove the module from the framework's loaded modules
+        self._loaded_modules.pop(mod_dispname, None)
+        return False
 
     #==================================================
     # SHOW METHODS
@@ -528,17 +542,22 @@ class Recon(framework.Framework):
                         self.table(rows)
                 else:
                     self.error('Invalid module path.')
-            else: print('Usage: modules info [<path>|<prefix>|all]')
+            else:
+                print('Usage: modules info [<path>|<prefix>|all]')
         elif arg == 'install':
-            if len(params) == 1:
-                modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
-                if modules:
-                    for module in modules:
-                        self._install_module(module['path'])
-                    self.do_reload('')
+            if self._index:
+                if len(params) == 1:
+                    modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
+                    if modules:
+                        for module in modules:
+                            self._install_module(module['path'])
+                        self.do_reload('')
+                    else:
+                        self.error('Invalid module path.')
                 else:
-                    self.error('Invalid module path.')
-            else: print('Usage: modules install [<path>|<prefix>|all]')
+                    print('Usage: modules install [<path>|<prefix>|all]')
+            else:
+                self.error('Module installation disabled.')
         elif arg == 'remove':
             if len(params) == 1:
                 modules = [m for m in self._module_index if m['status'] == 'installed' and params[0] in m['path'] or params[0] == 'all']
@@ -548,7 +567,8 @@ class Recon(framework.Framework):
                     self.do_reload('')
                 else:
                     self.error('Invalid module path.')
-            else: print('Usage: modules remove [<path>|<prefix>|all]')
+            else:
+                print('Usage: modules remove [<path>|<prefix>|all]')
         else:
             self.help_modules()
 
@@ -568,14 +588,16 @@ class Recon(framework.Framework):
             self.table([[x] for x in self._get_workspaces()], header=['Workspaces'])
         elif arg in ['add', 'select']:
             if len(params) == 1:
-                if not self.init_workspace(params[0]):
+                if not self._init_workspace(params[0]):
                     self.output('Unable to initialize \'%s\' workspace.' % (params[0]))
-            else: print('Usage: workspace [add|select] <name>')
+            else:
+                print('Usage: workspace [add|select] <name>')
         elif arg == 'delete':
             if len(params) == 1:
                 if not self.delete_workspace(params[0]):
                     self.output('Unable to delete \'%s\' workspace.' % (params[0]))
-            else: print('Usage: workspace delete <name>')
+            else:
+                print('Usage: workspace delete <name>')
         else:
             self.help_workspaces()
 
@@ -609,7 +631,8 @@ class Recon(framework.Framework):
                     self.output('Snapshot loaded: %s' % (params[0]))
                 else:
                     self.error('No snapshot named \'%s\'.' % (params[0]))
-            else: print('Usage: snapshots [load] <name>')
+            else:
+                print('Usage: snapshots [load] <name>')
         elif arg == 'delete':
             if len(params) == 1:
                 if params[0] in self._get_snapshots():
@@ -617,7 +640,8 @@ class Recon(framework.Framework):
                     self.output('Snapshot removed: %s' % (params[0]))
                 else:
                     self.error('No snapshot named \'%s\'.' % (params[0]))
-            else: print('Usage: snapshots [delete] <name>')
+            else:
+                print('Usage: snapshots [delete] <name>')
         else:
             self.help_snapshots()
 
@@ -648,8 +672,7 @@ class Recon(framework.Framework):
             y = self._loaded_modules[mod_dispname]
             # send analytics information
             mod_loadpath = os.path.abspath(sys.modules[y.__module__].__file__)
-            if self.analytics:
-                self._send_analytics(mod_dispname)
+            self._send_analytics(mod_dispname)
             # return the loaded module if in command line mode
             if self._mode == Mode.CLI:
                 return y

@@ -23,29 +23,33 @@ def recon_ui(args):
         readline.set_completer_delims(re.sub('[/-]', '', readline.get_completer_delims()))
         # for possible future use to format command completion output
         #readline.set_completion_display_matches_hook(display_hook)
-    x = base.Recon(base.Mode.CONSOLE)
-    # check for and run version check
-    if args.check:
-        if not x.version_check(): return
-    # check for and enable analytics
-    if args.analytics:
-        x.analytics = True
-    # check for and load workspace
-    if args.workspace:
-        x.init_workspace(args.workspace)
+    # process toggle flag arguments
+    flags = {
+        'check': args.check if not args.stealth else False,
+        'analytics': args.analytics if not args.stealth else False,
+        'index': args.index if not args.stealth else False,
+    }
+    # instantiate framework
+    x = base.Recon(**flags)
     # check for and run script session
     if args.script_file:
         x.do_resource(args.script_file)
+    # launch the interactive session
+    options = [base.Mode.CONSOLE]
+    if args.workspace:
+        options.append(args.workspace)
     try:
-        x.cmdloop()
+        x.start(*options)
     except KeyboardInterrupt:
         print('')
 
-description = '%%(prog)s - %s %s' % (base.__author__, base.__email__)
+description = '%%(prog)s - %s' % (base.__author__)
 parser = argparse.ArgumentParser(description=description, version=base.__version__)
 parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
 parser.add_argument('-r', help='load commands from a resource file', metavar='filename', dest='script_file', action='store')
-parser.add_argument('--no-check', help='disable version check', dest='check', default=True, action='store_false')
+parser.add_argument('--no-version', help='disable version check', dest='check', default=True, action='store_false')
 parser.add_argument('--no-analytics', help='disable analytics reporting', dest='analytics', default=True, action='store_false')
+parser.add_argument('--no-index', help='disable remote module management', dest='index', default=True, action='store_false')
+parser.add_argument('--stealth', help='disable all passive requests (--no-*)', dest='stealth', default=False, action='store_true')
 args = parser.parse_args()
 recon_ui(args)

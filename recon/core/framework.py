@@ -346,10 +346,12 @@ class Framework(cmd.Cmd):
     # DATABASE METHODS
     #==================================================
 
-    def query(self, query, values=(), path=''):
+    def query(self, query, values=()):
+        path = os.path.join(self.workspace, 'data.db')
+        return self._query(path, query, values)
+
+    def _query(self, path, query, values=()):
         '''Queries the database and returns the results as a list.'''
-        if not path:
-            path = os.path.join(self.workspace, 'data.db')
         self.debug('DATABASE => %s' % (path))
         self.debug('QUERY => %s' % (query))
         with sqlite3.connect(path) as conn:
@@ -714,7 +716,7 @@ class Framework(cmd.Cmd):
 
     def _query_keys(self, query, values=()):
         path = os.path.join(self.home_path, 'keys.db')
-        result = self.query(query, values, path)
+        result = self._query(path, query, values)
         # filter out tokens when not called from the get_key method
         if type(result) is list and 'get_key' not in [x[3] for x in inspect.stack()]:
             result = [x for x in result if not x[0].endswith('_token')]
@@ -1096,6 +1098,8 @@ class Framework(cmd.Cmd):
             self.help_resource()
             return
         if os.path.exists(params):
+            # works even when called before Recon.start due
+            # to stdin waiting for the iteractive prompt
             sys.stdin = open(params)
             Framework._script = 1
         else:
