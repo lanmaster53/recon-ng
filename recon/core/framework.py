@@ -771,7 +771,8 @@ class Framework(cmd.Cmd):
                 # print module
                 print('%s%s' % (self.spacer*2, module))
         else:
-            print('\nNo modules installed.')
+            print('')
+            self.alert('No modules enabled/installed.')
         print('')
 
     def show_dashboard(self):

@@ -336,7 +336,9 @@ class Recon(framework.Framework):
             # add status to index for each module
             for module in self._module_index:
                 status = 'not installed'
-                if module['path'] in self._loaded_modules.keys():
+                if module['path'] in self._loaded_category.get('disabled', []):
+                    status = 'disabled'
+                elif module['path'] in self._loaded_modules.keys():
                     status = 'installed'
                     loaded = self._loaded_modules[module['path']]
                     if loaded.meta['version'] != module['version']:
@@ -400,7 +402,7 @@ class Recon(framework.Framework):
         self.output('Module removed: %s' % (path))
 
     def _load_modules(self, module_dir=None):
-        self.loaded_category = {}
+        self._loaded_category = {}
         self._loaded_modules = framework.Framework._loaded_modules = {}
         # crawl the module directory and build the module tree
         path = module_dir if module_dir else self.mod_path
@@ -410,14 +412,7 @@ class Recon(framework.Framework):
             dirnames[:] = [d for d in dirnames if not d[0] == '.']
             if len(filenames) > 0:
                 for filename in [f for f in filenames if f.endswith('.py')]:
-                    is_loaded = self._load_module(dirpath, filename)
-                    mod_category = 'disabled'
-                    if is_loaded:
-                        mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
-                    # store the resulting category statistics
-                    if not mod_category in self.loaded_category:
-                        self.loaded_category[mod_category] = 0
-                    self.loaded_category[mod_category] += 1
+                    self._load_module(dirpath, filename)
         # cleanup module directory
         self._remove_empty_dirs(self.mod_path)
         # update module index
@@ -425,6 +420,7 @@ class Recon(framework.Framework):
 
     def _load_module(self, dirpath, filename):
         mod_name = filename.split('.')[0]
+        mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
         mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
         mod_loadname = mod_dispname.replace('/', '_')
         mod_loadpath = os.path.join(dirpath, filename)
@@ -435,7 +431,8 @@ class Recon(framework.Framework):
             __import__(mod_loadname)
             # add the module to the framework's loaded modules
             self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
-            return True
+            self._categorize_module(mod_category, mod_dispname)
+            return
         except ImportError as e:
             # notify the user of missing dependencies
             self.error('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_dispname, e.message[16:]))
@@ -445,7 +442,12 @@ class Recon(framework.Framework):
             self.error('Module \'%s\' disabled.' % (mod_dispname))
         # remove the module from the framework's loaded modules
         self._loaded_modules.pop(mod_dispname, None)
-        return False
+        self._categorize_module('disabled', mod_dispname)
+
+    def _categorize_module(self, category, module):
+        if not category in self._loaded_category:
+            self._loaded_category[category] = []
+        self._loaded_category[category].append(module)
 
     #==================================================
     # SHOW METHODS
@@ -456,7 +458,7 @@ class Recon(framework.Framework):
         print(BANNER)
         print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (framework.Colors.O, self._name, __version__, __author__, framework.Colors.N), banner_len+8)) # +8 compensates for the color bytes
         print('')
-        counts = [(self.loaded_category[x], x) for x in self.loaded_category]
+        counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
         if counts:
             count_len = len(max([str(x[0]) for x in counts], key=len))
             for count in sorted(counts, reverse=True):
@@ -465,7 +467,7 @@ class Recon(framework.Framework):
                 # create dynamic easter egg command based on counts
                 setattr(self, 'do_%d' % count[0], self._menu_egg)
         else:
-            print('No modules installed.')
+            self.alert('No modules enabled/installed.')
         print('')
 
     def show_workspaces(self):
@@ -525,9 +527,11 @@ class Recon(framework.Framework):
                     row = []
                     for key in ('path', 'version', 'status', 'last_updated'):
                         row.append(module[key])
+                    row.append('' if not module['dependencies'] else '*')
                     rows.append(row)
-                header = ('Path', 'Version', 'Status', 'Updated')
+                header = ('Path', 'Version', 'Status', 'Updated', '*')
                 self.table(rows, header=header)
+                self.alert('* = Has dependencies. See info for details.\n')
             else:
                 self.error('No modules found.')
         elif arg == 'info':
@@ -560,7 +564,7 @@ class Recon(framework.Framework):
                 self.error('Module installation disabled.')
         elif arg == 'remove':
             if len(params) == 1:
-                modules = [m for m in self._module_index if m['status'] == 'installed' and params[0] in m['path'] or params[0] == 'all']
+                modules = [m for m in self._module_index if m['status'] in ('installed', 'disabled') and (params[0] in m['path'] or params[0] == 'all')]
                 if modules:
                     for module in modules:
                         self._remove_module(module['path'])
