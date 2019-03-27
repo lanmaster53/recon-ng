@@ -1,12 +1,10 @@
-dicttoxml
+# framework
+pyyaml
 dnspython
-jsonrpclib
 lxml
 mechanize
-slowaes
-XlsxWriter
-olefile
-PyPDF2
+# web
 flask
+dicttoxml
+XlsxWriter
 unicodecsv
-pyyaml
