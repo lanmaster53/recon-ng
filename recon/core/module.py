@@ -26,8 +26,8 @@ class BaseModule(framework.Framework):
     def __init__(self, params, query=None):
         framework.Framework.__init__(self, params)
         self.options = framework.Options()
-        # create meta dictionary from frontmatter
-        #self.meta = self._parse_frontmatter()
+        # update the meta dictionary by merging the class variable with any frontmatter
+        self.meta = self._merge_dicts(self.meta, self._parse_frontmatter())
         # register a data source option if a default query is specified in the module
         if self.meta.get('query'):
             self._default_source = self.meta.get('query')
@@ -59,6 +59,13 @@ class BaseModule(framework.Framework):
     # SUPPORT METHODS
     #==================================================
 
+    def _merge_dicts(self, x, y):
+        # start with x's keys and values
+        z = x.copy()
+        # modify z with y's keys and values
+        z.update(y)
+        return z
+
     def _parse_frontmatter(self):
         rel_path = '.'.join([self._modulename, 'py'])
         abs_path = os.path.join(self.mod_path, rel_path)
@@ -71,7 +78,7 @@ class BaseModule(framework.Framework):
                       continue
                  if state:
                       yaml_src += line
-        return yaml.safe_load(yaml_src)
+        return yaml.safe_load(yaml_src) or {}
 
     def _migrate_key(self, key):
         '''migrate key from old .dat file'''
@@ -499,18 +506,16 @@ class BaseModule(framework.Framework):
     def show_info(self):
         print('')
         # meta info
-        for item in ['name', 'path', 'author', 'version']:
-            if self.meta.get(item):
-                print('%s: %s' % (item.title().rjust(10), self.meta[item]))
+        for item in ['name', 'author', 'version']:
+            print('%s: %s' % (item.title().rjust(10), self.meta[item]))
         # required keys
         if self.meta.get('required_keys'):
             print('%s: %s' % ('keys'.title().rjust(10), ', '.join(self.meta.get('required_keys'))))
         print('')
         # description
-        if 'description' in self.meta:
-            print('Description:')
-            print('%s%s' % (self.spacer, textwrap.fill(self.meta['description'], 100, subsequent_indent=self.spacer)))
-            print('')
+        print('Description:')
+        print('%s%s' % (self.spacer, textwrap.fill(self.meta['description'], 100, subsequent_indent=self.spacer)))
+        print('')
         # options
         print('Options:', end='')
         self.show_options()
@@ -523,7 +528,7 @@ class BaseModule(framework.Framework):
             print('%s%sdatabase query returning one column of inputs' % (self.spacer, 'query <sql>'.ljust(15)))
             print('')
         # comments
-        if 'comments' in self.meta:
+        if self.meta.get('comments'):
             print('Comments:')
             for comment in self.meta['comments']:
                 prefix = '* '
