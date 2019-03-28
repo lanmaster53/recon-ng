@@ -50,7 +50,7 @@ class Recon(framework.Framework):
 
     repo_url = 'https://raw.githubusercontent.com/lanmaster53/recon-ng-modules/master/'
 
-    def __init__(self, check=True, analytics=True, index=True):
+    def __init__(self, check=True, analytics=True, marketplace=True):
         framework.Framework.__init__(self, 'base')
         self._name = 'recon-ng'
         self._prompt_template = '%s[%s] > '
@@ -58,7 +58,7 @@ class Recon(framework.Framework):
         # set toggle flags
         self._check = check
         self._analytics = analytics
-        self._index = index
+        self._marketplace = marketplace
         # set path variables
         self.app_path = framework.Framework.app_path = sys.path[0]
         self.core_path = framework.Framework.core_path = os.path.join(self.app_path, 'core')
@@ -312,8 +312,8 @@ class Recon(framework.Framework):
                         os.removedirs(abs_path)
 
     def _fetch_module_index(self):
-        content = '[]'
-        if self._index:
+        if self._marketplace:
+            content = '[]'
             self.debug('Fetching index file...')
             try:
                 resp = self._request_file_from_repo('modules.yml')
@@ -322,8 +322,10 @@ class Recon(framework.Framework):
                 self.print_exception()
                 return
             content = resp.raw
-        path = os.path.join(self.home_path, 'modules.yml')
-        self._write_local_file(path, content)
+            path = os.path.join(self.home_path, 'modules.yml')
+            self._write_local_file(path, content)
+        else:
+            self.alert('Marketplace disabled.')
 
     def _update_module_index(self):
         self.debug('Updating index file...')
@@ -524,6 +526,9 @@ class Recon(framework.Framework):
 
     def do_marketplace(self, params):
         '''Interfaces with the module marketplace'''
+        if not self._marketplace:
+            self.alert('Marketplace disabled.')
+            return
         if not params:
             self.help_marketplace()
             return
@@ -564,19 +569,16 @@ class Recon(framework.Framework):
             else:
                 print('Usage: marketplace info <<path>|<prefix>|all>')
         elif arg == 'install':
-            if self._index:
-                if len(params) == 1:
-                    modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
-                    if modules:
-                        for module in modules:
-                            self._install_module(module['path'])
-                        self.do_reload('')
-                    else:
-                        self.error('Invalid module path.')
+            if len(params) == 1:
+                modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
+                if modules:
+                    for module in modules:
+                        self._install_module(module['path'])
+                    self.do_reload('')
                 else:
-                    print('Usage: marketplace install <<path>|<prefix>|all>')
+                    self.error('Invalid module path.')
             else:
-                self.error('Module installation disabled.')
+                print('Usage: marketplace install <<path>|<prefix>|all>')
         elif arg == 'remove':
             if len(params) == 1:
                 modules = [m for m in self._module_index if m['status'] in ('installed', 'disabled') and (params[0] in m['path'] or params[0] == 'all')]

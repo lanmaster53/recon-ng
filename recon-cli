@@ -15,7 +15,7 @@ def recon_cli(args):
     flags = {
         'check': args.check if not args.stealth else False,
         'analytics': args.analytics if not args.stealth else False,
-        'index': args.index if not args.stealth else False,
+        'marketplace': args.marketplace if not args.stealth else False,
     }
     # instantiate framework
     x = base.Recon(**flags)
@@ -82,7 +82,7 @@ parser.add_argument('-o', help='set a module option (can be used more than once)
 parser.add_argument('-x', help='run the module', dest='run', default=False, action='store_true')
 parser.add_argument('--no-version', help='disable version check', dest='check', default=True, action='store_false')
 parser.add_argument('--no-analytics', help='disable analytics reporting', dest='analytics', default=True, action='store_false')
-parser.add_argument('--no-index', help='disable remote module management', dest='index', default=True, action='store_false')
+parser.add_argument('--no-marketplace', help='disable remote module management', dest='marketplace', default=True, action='store_false')
 parser.add_argument('--stealth', help='disable all passive requests (--no-*)', dest='stealth', default=False, action='store_true')
 args = parser.parse_args()
 recon_cli(args)
