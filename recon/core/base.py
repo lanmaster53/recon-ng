@@ -106,7 +106,7 @@ class Recon(framework.Framework):
             remote = 0
             local = 0
             try:
-                remote = re.search(pattern, self.request('https://bitbucket.org/LaNMaSteR53/recon-ng/raw/master/VERSION').raw).group(1)
+                remote = re.search(pattern, self.request('https://raw.githubusercontent.com/lanmaster53/recon-ng/master/VERSION').raw).group(1)
                 local = re.search(pattern, open('VERSION').read()).group(1)
             except:
                 self.error('Version check failed.')
