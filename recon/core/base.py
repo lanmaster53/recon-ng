@@ -2,6 +2,7 @@ from __future__ import print_function
 
 __author__    = 'Tim Tomes (@lanmaster53)'
 
+from datetime import datetime
 from urlparse import urljoin
 import errno
 import imp
@@ -480,28 +481,42 @@ class Recon(framework.Framework):
     def do_index(self, params):
         '''Creates module index (dev only)'''
         params = params.split()
-        dir_path = params[0]
-        file_name = params[1]
-        if os.path.exists(dir_path):
-            self._load_modules(dir_path)
+        if not params or len(params) < 2:
+            self.help_index()
+            return
+        mod_dir = params.pop(0)
+        mod_path = params.pop(0)
+        if os.path.exists(mod_dir):
+            self._load_modules(mod_dir)
             yaml_objs = []
-            for path, module in self._loaded_modules.iteritems():
+            modules = [m for m in self._loaded_modules.iteritems() if mod_path in m[0] or mod_path == 'all']
+            for path, module in modules:
                 yaml_obj = {}
+                # not in meta
                 yaml_obj['path'] = path
-                yaml_obj['name'] = module.meta.get('name')
+                yaml_obj['last_updated'] = datetime.strftime(datetime.now(), '%Y-%m-%d')
+                # meta required
                 yaml_obj['author'] = module.meta.get('author')
-                yaml_obj['version'] = module.meta.get('version', '1.0')
-                yaml_obj['last_updated'] = '2019-03-25'
+                yaml_obj['name'] = module.meta.get('name')
                 yaml_obj['description'] = module.meta.get('description')
-                yaml_obj['required_keys'] = module.meta.get('required_keys', [])
+                yaml_obj['version'] = module.meta.get('version', '1.0')
+                # meta optional
+                #yaml_obj['comments'] = module.meta.get('comments', [])
                 yaml_obj['dependencies'] = module.meta.get('dependencies', [])
                 yaml_obj['files'] = module.meta.get('files', [])
+                #yaml_obj['options'] = module.meta.get('options', [])
+                #yaml_obj['query'] = module.meta.get('query', '')
+                yaml_obj['required_keys'] = module.meta.get('required_keys', [])
                 yaml_objs.append(yaml_obj)
             if yaml_objs:
-                file_path = os.path.join(dir_path, file_name)
-                with open(file_path, 'w') as outfile:
-                    yaml.safe_dump(yaml_objs, outfile)
-                self.output('Module index created.')
+                markup = yaml.safe_dump(yaml_objs)
+                print(markup)
+                # write to file if index name provided
+                if params:
+                    file_path = os.path.join(mod_dir, params.pop(0))
+                    with open(file_path, 'w') as outfile:
+                        outfile.write(markup)
+                    self.output('Module index created.')
             else:
                 self.output('No modules found.')
         else:
@@ -619,7 +634,6 @@ class Recon(framework.Framework):
             else:
                 self.output('This workspace has no snapshots.')
         elif arg == 'take':
-            from datetime import datetime
             snapshot = 'snapshot_%s.db' % (datetime.strftime(datetime.now(), '%Y%m%d%H%M%S'))
             src = os.path.join(self.workspace, 'data.db')
             dst = os.path.join(self.workspace, snapshot)
@@ -706,7 +720,7 @@ class Recon(framework.Framework):
     def help_index(self):
         print(getattr(self, 'do_index').__doc__)
         print('')
-        print('Usage: index <directory> <filename>')
+        print('Usage: index <directory> <module|all> <index>')
         print('')
 
     def help_modules(self):
@@ -730,6 +744,12 @@ class Recon(framework.Framework):
     #==================================================
     # COMPLETE METHODS
     #==================================================
+
+    def complete_index(self, text, line, *ignored):
+        args = line.split()
+        if len(args) == 3:
+            return [x for x in self._loaded_modules if x.startswith(args[2])]
+        return []
 
     def complete_modules(self, text, line, *ignored):
         args = line.split()
