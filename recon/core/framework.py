@@ -878,12 +878,14 @@ class Framework(cmd.Cmd):
             if len(params) == 2:
                 if self.add_key(params[0], params[1]):
                     self.output('Key \'%s\' added.' % (params[0]))
-            else: print('\nUsage: keys add <name> <value>\n')
+            else:
+                print('\nUsage: keys add <name> <value>\n')
         elif arg == 'delete':
             if len(params) == 1:
                 if self.delete_key(params[0]):
                     self.output('Key \'%s\' deleted.' % (params[0]))
-            else: print('\nUsage: keys delete <name>\n')
+            else:
+                print('\nUsage: keys delete <name>\n')
         else:
             self.help_keys()
 
@@ -1043,7 +1045,8 @@ class Framework(cmd.Cmd):
                     else:
                         Framework._record = filename
                         self.output('Recording commands to \'%s\'.' % (Framework._record))
-                else: self.help_record()
+                else:
+                    print('Usage: record start <filename>')
             else: self.output('Recording is already started.')
         elif arg == 'stop':
             if Framework._record:
@@ -1071,7 +1074,8 @@ class Framework(cmd.Cmd):
                     else:
                         Framework._spool = codecs.open(filename, 'ab', encoding='utf-8')
                         self.output('Spooling output to \'%s\'.' % (Framework._spool.name))
-                else: self.help_spool()
+                else:
+                    print('Usage: spool start <filename>')
             else: self.output('Spooling is already started.')
         elif arg == 'stop':
             if Framework._spool:
@@ -1144,26 +1148,26 @@ class Framework(cmd.Cmd):
     def help_keys(self):
         print(getattr(self, 'do_keys').__doc__)
         print('')
-        print('Usage: keys [list|add|delete]')
+        print('Usage: keys <list|add|delete> [...]')
         print('')
 
     def help_load(self):
         print(getattr(self, 'do_load').__doc__)
         print('')
-        print('Usage: [load|use] <module>')
+        print('Usage: <load|use> <module>')
         print('')
     help_use = help_load
 
     def help_record(self):
         print(getattr(self, 'do_record').__doc__)
         print('')
-        print('Usage: record [start <filename>|stop|status]')
+        print('Usage: record <start|stop|status> [...]')
         print('')
 
     def help_spool(self):
         print(getattr(self, 'do_spool').__doc__)
         print('')
-        print('Usage: spool [start <filename>|stop|status]')
+        print('Usage: spool <start|stop|status> [...]')
         print('')
 
     def help_resource(self):
@@ -1214,13 +1218,13 @@ class Framework(cmd.Cmd):
         options = sorted(self._get_show_names() + self.get_tables())
         print(getattr(self, 'do_show').__doc__)
         print('')
-        print('Usage: show [%s]' % ('|'.join(options)))
+        print('Usage: show <%s>' % ('|'.join(options)))
         print('')
 
     def help_add(self):
         print(getattr(self, 'do_add').__doc__)
         print('')
-        print('Usage: add <table> [values]')
+        print('Usage: add <table> [<values>]')
         print('')
         print('optional arguments:')
         print('%svalues => \'~\' delimited string representing column values (exclude rowid, module)' % (self.spacer))
@@ -1229,7 +1233,7 @@ class Framework(cmd.Cmd):
     def help_delete(self):
         print(getattr(self, 'do_delete').__doc__)
         print('')
-        print('Usage: delete <table> [rowid(s)]')
+        print('Usage: delete <table> [<rowid(s)>]')
         print('')
         print('optional arguments:')
         print('%srowid(s) => \',\' delimited values or \'-\' delimited ranges representing rowids' % (self.spacer))

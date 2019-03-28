@@ -522,10 +522,10 @@ class Recon(framework.Framework):
         else:
             self.error('Invalid modules path.')
 
-    def do_modules(self, params):
-        '''Manages modules'''
+    def do_marketplace(self, params):
+        '''Interfaces with the module marketplace'''
         if not params:
-            self.help_modules()
+            self.help_marketplace()
             return
         params = params.split()
         arg = params.pop(0).lower()
@@ -562,7 +562,7 @@ class Recon(framework.Framework):
                 else:
                     self.error('Invalid module path.')
             else:
-                print('Usage: modules info [<path>|<prefix>|all]')
+                print('Usage: marketplace info <<path>|<prefix>|all>')
         elif arg == 'install':
             if self._index:
                 if len(params) == 1:
@@ -574,7 +574,7 @@ class Recon(framework.Framework):
                     else:
                         self.error('Invalid module path.')
                 else:
-                    print('Usage: modules install [<path>|<prefix>|all]')
+                    print('Usage: marketplace install <<path>|<prefix>|all>')
             else:
                 self.error('Module installation disabled.')
         elif arg == 'remove':
@@ -587,9 +587,9 @@ class Recon(framework.Framework):
                 else:
                     self.error('Invalid module path.')
             else:
-                print('Usage: modules remove [<path>|<prefix>|all]')
+                print('Usage: marketplace remove <<path>|<prefix>|all>')
         else:
-            self.help_modules()
+            self.help_marketplace()
 
     def do_reload(self, params):
         '''Reloads all modules'''
@@ -610,7 +610,7 @@ class Recon(framework.Framework):
                 if not self._init_workspace(params[0]):
                     self.output('Unable to initialize \'%s\' workspace.' % (params[0]))
             else:
-                print('Usage: workspace [add|select] <name>')
+                print('Usage: workspace <add|select> <name>')
         elif arg == 'delete':
             if len(params) == 1:
                 if not self.delete_workspace(params[0]):
@@ -650,7 +650,7 @@ class Recon(framework.Framework):
                 else:
                     self.error('No snapshot named \'%s\'.' % (params[0]))
             else:
-                print('Usage: snapshots [load] <name>')
+                print('Usage: snapshots load <name>')
         elif arg == 'delete':
             if len(params) == 1:
                 if params[0] in self._get_snapshots():
@@ -659,7 +659,7 @@ class Recon(framework.Framework):
                 else:
                     self.error('No snapshot named \'%s\'.' % (params[0]))
             else:
-                print('Usage: snapshots [delete] <name>')
+                print('Usage: snapshots delete <name>')
         else:
             self.help_snapshots()
 
@@ -723,22 +723,22 @@ class Recon(framework.Framework):
         print('Usage: index <directory> <module|all> <index>')
         print('')
 
-    def help_modules(self):
-        print(getattr(self, 'do_modules').__doc__)
+    def help_marketplace(self):
+        print(getattr(self, 'do_marketplace').__doc__)
         print('')
-        print('Usage: modules [list|info|install|remove]')
+        print('Usage: marketplace <list|info|install|remove> [...]')
         print('')
 
     def help_workspaces(self):
         print(getattr(self, 'do_workspaces').__doc__)
         print('')
-        print('Usage: workspaces [list|add|select|delete]')
+        print('Usage: workspaces <list|add|select|delete> [...]')
         print('')
 
     def help_snapshots(self):
         print(getattr(self, 'do_snapshots').__doc__)
         print('')
-        print('Usage: snapshots [list|take|load|delete]')
+        print('Usage: snapshots <list|take|load|delete> [...]')
         print('')
 
     #==================================================
@@ -751,7 +751,7 @@ class Recon(framework.Framework):
             return [x for x in self._loaded_modules if x.startswith(args[2])]
         return []
 
-    def complete_modules(self, text, line, *ignored):
+    def complete_marketplace(self, text, line, *ignored):
         args = line.split()
         options = ['list', 'info', 'install', 'remove']
         if 1 < len(args) < 4:
