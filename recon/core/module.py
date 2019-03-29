@@ -244,9 +244,9 @@ class BaseModule(framework.Framework):
         conn.close()
         # process the received data
         if 'error_description' in data:
-            self.error(urllib.unquote_plus(re.search('error_description=([^\s&]*)', data).group(1)))
+            self.error(urllib.unquote_plus(re.search(r'error_description=([^\s&]*)', data).group(1)))
             return None
-        authorization_code = re.search('code=([^\s&]*)', data).group(1)
+        authorization_code = re.search(r'code=([^\s&]*)', data).group(1)
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': client_id, 'client_secret': client_secret}
         resp = self.request(access_url, method='POST', payload=payload)
         if 'error' in resp.json:

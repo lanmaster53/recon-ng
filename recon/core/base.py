@@ -567,7 +567,7 @@ class Recon(framework.Framework):
                 else:
                     self.error('Invalid module path.')
             else:
-                print('Usage: marketplace info <<path>|<prefix>|all>')
+                print('\nUsage: marketplace info <<path>|<prefix>|all>\n')
         elif arg == 'install':
             if len(params) == 1:
                 modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
@@ -578,7 +578,7 @@ class Recon(framework.Framework):
                 else:
                     self.error('Invalid module path.')
             else:
-                print('Usage: marketplace install <<path>|<prefix>|all>')
+                print('\nUsage: marketplace install <<path>|<prefix>|all>\n')
         elif arg == 'remove':
             if len(params) == 1:
                 modules = [m for m in self._module_index if m['status'] in ('installed', 'disabled') and (params[0] in m['path'] or params[0] == 'all')]
@@ -589,7 +589,7 @@ class Recon(framework.Framework):
                 else:
                     self.error('Invalid module path.')
             else:
-                print('Usage: marketplace remove <<path>|<prefix>|all>')
+                print('\nUsage: marketplace remove <<path>|<prefix>|all>\n')
         else:
             self.help_marketplace()
 
@@ -612,13 +612,13 @@ class Recon(framework.Framework):
                 if not self._init_workspace(params[0]):
                     self.output('Unable to initialize \'%s\' workspace.' % (params[0]))
             else:
-                print('Usage: workspace <add|select> <name>')
+                print('\nUsage: workspace <add|select> <name>\n')
         elif arg == 'delete':
             if len(params) == 1:
                 if not self.delete_workspace(params[0]):
                     self.output('Unable to delete \'%s\' workspace.' % (params[0]))
             else:
-                print('Usage: workspace delete <name>')
+                print('\nUsage: workspace delete <name>\n')
         else:
             self.help_workspaces()
 
@@ -652,7 +652,7 @@ class Recon(framework.Framework):
                 else:
                     self.error('No snapshot named \'%s\'.' % (params[0]))
             else:
-                print('Usage: snapshots load <name>')
+                print('\nUsage: snapshots load <name>\n')
         elif arg == 'delete':
             if len(params) == 1:
                 if params[0] in self._get_snapshots():
@@ -661,7 +661,7 @@ class Recon(framework.Framework):
                 else:
                     self.error('No snapshot named \'%s\'.' % (params[0]))
             else:
-                print('Usage: snapshots delete <name>')
+                print('\nUsage: snapshots delete <name>\n')
         else:
             self.help_snapshots()
 
@@ -721,26 +721,22 @@ class Recon(framework.Framework):
 
     def help_index(self):
         print(getattr(self, 'do_index').__doc__)
-        print('')
-        print('Usage: index <directory> <module|all> <index>')
+        print('\nUsage: index <directory> <module|all> <index>\n')
         print('')
 
     def help_marketplace(self):
         print(getattr(self, 'do_marketplace').__doc__)
-        print('')
-        print('Usage: marketplace <list|info|install|remove> [...]')
+        print('\nUsage: marketplace <list|info|install|remove> [...]\n')
         print('')
 
     def help_workspaces(self):
         print(getattr(self, 'do_workspaces').__doc__)
-        print('')
-        print('Usage: workspaces <list|add|select|delete> [...]')
+        print('\nUsage: workspaces <list|add|select|delete> [...]\n')
         print('')
 
     def help_snapshots(self):
         print(getattr(self, 'do_snapshots').__doc__)
-        print('')
-        print('Usage: snapshots <list|take|load|delete> [...]')
+        print('\nUsage: snapshots <list|take|load|delete> [...]\n')
         print('')
 
     #==================================================

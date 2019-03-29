@@ -198,16 +198,16 @@ class Framework(cmd.Cmd):
 
     def is_hash(self, hashstr):
         hashdict = [
-            {'pattern': '^[a-fA-F0-9]{32}$', 'type': 'MD5'},
-            {'pattern': '^[a-fA-F0-9]{16}$', 'type': 'MySQL'},
-            {'pattern': '^\*[a-fA-F0-9]{40}$', 'type': 'MySQL5'},
-            {'pattern': '^[a-fA-F0-9]{40}$', 'type': 'SHA1'},
-            {'pattern': '^[a-fA-F0-9]{56}$', 'type': 'SHA224'},
-            {'pattern': '^[a-fA-F0-9]{64}$', 'type': 'SHA256'},
-            {'pattern': '^[a-fA-F0-9]{96}$', 'type': 'SHA384'},
-            {'pattern': '^[a-fA-F0-9]{128}$', 'type': 'SHA512'},
-            {'pattern': '^\$[PH]{1}\$.{31}$', 'type': 'phpass'},
-            {'pattern': '^\$2[ya]?\$.{56}$', 'type': 'bcrypt'},
+            {'pattern': r'^[a-fA-F0-9]{32}$', 'type': 'MD5'},
+            {'pattern': r'^[a-fA-F0-9]{16}$', 'type': 'MySQL'},
+            {'pattern': r'^\*[a-fA-F0-9]{40}$', 'type': 'MySQL5'},
+            {'pattern': r'^[a-fA-F0-9]{40}$', 'type': 'SHA1'},
+            {'pattern': r'^[a-fA-F0-9]{56}$', 'type': 'SHA224'},
+            {'pattern': r'^[a-fA-F0-9]{64}$', 'type': 'SHA256'},
+            {'pattern': r'^[a-fA-F0-9]{96}$', 'type': 'SHA384'},
+            {'pattern': r'^[a-fA-F0-9]{128}$', 'type': 'SHA512'},
+            {'pattern': r'^\$[PH]{1}\$.{31}$', 'type': 'phpass'},
+            {'pattern': r'^\$2[ya]?\$.{56}$', 'type': 'bcrypt'},
         ]
         for hashitem in hashdict:
             if re.match(hashitem['pattern'], hashstr):
@@ -346,11 +346,11 @@ class Framework(cmd.Cmd):
     # DATABASE METHODS
     #==================================================
 
-    def query(self, query, values=()):
+    def query(self, *args, **kwargs):
         path = os.path.join(self.workspace, 'data.db')
-        return self._query(path, query, values)
+        return self._query(path, *args, **kwargs)
 
-    def _query(self, path, query, values=()):
+    def _query(self, path, query, values=(), include_header=False):
         '''Queries the database and returns the results as a list.'''
         self.debug('DATABASE => %s' % (path))
         self.debug('QUERY => %s' % (query))
@@ -365,7 +365,10 @@ class Framework(cmd.Cmd):
                     cur.execute(query)
                 # a rowcount of -1 typically refers to a select statement
                 if cur.rowcount == -1:
-                    rows = cur.fetchall()
+                    rows = []
+                    if include_header:
+                        rows.append(tuple([x[0] for x in cur.description]))
+                    rows.extend(cur.fetchall())
                     results = rows
                 # a rowcount of 1 == success and 0 == failure
                 else:
@@ -378,6 +381,12 @@ class Framework(cmd.Cmd):
 
     def get_tables(self):
         return [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
+
+    def _is_table_name(self, s):
+        for table_name in self.get_tables():
+            if table_name == s:
+                return s
+        return False
 
     #==================================================
     # ADD METHODS
@@ -710,7 +719,7 @@ class Framework(cmd.Cmd):
             return self._query_keys('INSERT INTO keys VALUES (?, ?)', (name, value))
         return result
 
-    def delete_key(self, name):
+    def remove_key(self, name):
         #return self._query_keys('UPDATE keys SET value=NULL WHERE name=?', (name,))
         return self._query_keys('DELETE FROM keys WHERE name=?', (name,))
 
@@ -880,39 +889,14 @@ class Framework(cmd.Cmd):
                     self.output('Key \'%s\' added.' % (params[0]))
             else:
                 print('\nUsage: keys add <name> <value>\n')
-        elif arg == 'delete':
+        elif arg == 'remove':
             if len(params) == 1:
-                if self.delete_key(params[0]):
+                if self.remove_key(params[0]):
                     self.output('Key \'%s\' deleted.' % (params[0]))
             else:
-                print('\nUsage: keys delete <name>\n')
+                print('\nUsage: keys remove <name>\n')
         else:
             self.help_keys()
-
-    def do_query(self, params):
-        '''Queries the database'''
-        if not params:
-            self.help_query()
-            return
-        with sqlite3.connect(os.path.join(self.workspace, 'data.db')) as conn:
-            conn.text_factory = bytes
-            with closing(conn.cursor()) as cur:
-                self.debug('QUERY => %s' % (params))
-                try: cur.execute(params)
-                except sqlite3.OperationalError as e:
-                    self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-                    return
-                if cur.rowcount == -1 and cur.description:
-                    tdata = cur.fetchall()
-                    if not tdata:
-                        self.output('No data returned.')
-                    else:
-                        header = tuple([x[0] for x in cur.description])
-                        self.table(tdata, header=header)
-                        self.output('%d rows returned' % (len(tdata)))
-                else:
-                    conn.commit()
-                    self.output('%d rows affected.' % (cur.rowcount))
 
     def do_show(self, params):
         '''Shows various framework items'''
@@ -930,92 +914,116 @@ class Framework(cmd.Cmd):
             else:
                 func()
         elif _params in self.get_tables():
-            self.do_query('SELECT ROWID, * FROM "%s"' % (_params))
+            self.do_db('query SELECT ROWID, * FROM "%s"' % (_params))
         else:
             self.help_show()
 
-    def do_add(self, params):
-        '''Adds records to the database'''
-        table = ''
-        # search params for table names
-        for table_name in self.get_tables():
-            if params.startswith(table_name):
-                params = params[len(table_name)+1:]
-                table = table_name
-                break
-        if table:
-            # validate add_* method for table
-            if not hasattr(self, 'add_' + table):
-                self.error('Cannot add records to dynamicly created tables.')
-                return
-            columns = [x for x in self.get_columns(table) if x[0] != 'module']
-            # sanitize column names to avoid conflicts with builtins in add_* method
-            sanitize_column = lambda x: '_'+x if x in ['hash', 'type'] else x
-            record = {}
-            # build record from parameters
-            if params:
-                # parse params into values by delim
-                values = params.split('~')
-                # validate parsed value input
-                if len(columns) == len(values):
-                    # assign each value to a column
-                    for i in range(0,len(columns)):
-                        record[sanitize_column(columns[i][0])] = values[i]
-                else:
-                    self.error('Columns and values length mismatch.')
-                    return
-            # build record from interactive input
-            else:
-                for column in columns:
-                    try:
-                        # prompt user for data
-                        value = raw_input('%s (%s): ' % column)
-                        record[sanitize_column(column[0])] = value
-                    except KeyboardInterrupt:
-                        print('')
+    def do_db(self, params):
+        '''Interfaces with the workspace's database'''
+        if not params:
+            self.help_db()
+            return
+        params = params.split()
+        arg = params.pop(0).lower()
+        if arg == 'insert':
+            if len(params) >= 1:
+                table = self._is_table_name(params.pop(0))
+                params = ' '.join(params)
+                if table:
+                    # validate add_* method for table
+                    if not hasattr(self, 'add_' + table):
+                        self.error('Cannot add records to dynamicly created tables.')
                         return
-                    finally:
-                        # ensure proper output for resource scripts
-                        if Framework._script:
-                            print('%s' % (value))
-            # add record to the database
-            func = getattr(self, 'add_' + table)
-            record['mute'] = True
-            func(**record)
-        else:
-            self.help_add()
-
-    def do_delete(self, params):
-        '''Deletes records from the database'''
-        table = ''
-        # search params for table names
-        for table_name in self.get_tables():
-            if params.startswith(table_name):
-                params = params[len(table_name)+1:]
-                table = table_name
-                break
-        if table:
-            # get rowid from parameters
-            if params:
-                rowids = self._parse_rowids(params)
-            # get rowid from interactive input
+                    columns = [x for x in self.get_columns(table) if x[0] != 'module']
+                    # sanitize column names to avoid conflicts with builtins in add_* method
+                    sanitize_column = lambda x: '_'+x if x in ['hash', 'type'] else x
+                    record = {}
+                    # build record from parameters
+                    if params:
+                        # parse params into values by delim
+                        values = params.split('~')
+                        # validate parsed value input
+                        if len(columns) == len(values):
+                            # assign each value to a column
+                            for i in range(0,len(columns)):
+                                record[sanitize_column(columns[i][0])] = values[i]
+                        else:
+                            self.error('Columns and values length mismatch.')
+                            return
+                    # build record from interactive input
+                    else:
+                        for column in columns:
+                            try:
+                                # prompt user for data
+                                value = raw_input('%s (%s): ' % column)
+                                record[sanitize_column(column[0])] = value
+                            except KeyboardInterrupt:
+                                print('')
+                                return
+                            finally:
+                                # ensure proper output for resource scripts
+                                if Framework._script:
+                                    print('%s' % (value))
+                    # add record to the database
+                    func = getattr(self, 'add_' + table)
+                    count = func(mute=True, **record)
+                    self.output('%d rows affected.' % (count))
+                else:
+                    self.output('Invalid table name.')
             else:
+                print('\nUsage: db insert <table> [<values>]\n')
+                print('values => \'~\' delimited string representing column values (exclude rowid, module)\n')
+        elif arg == 'delete':
+            if len(params) >= 1:
+                table = self._is_table_name(params.pop(0))
+                params = ' '.join(params)
+                if table:
+                    # get rowid from parameters
+                    if params:
+                        rowids = self._parse_rowids(params)
+                    # get rowid from interactive input
+                    else:
+                        try:
+                            # prompt user for data
+                            params = raw_input('rowid(s) (INT): ')
+                            rowids = self._parse_rowids(params)
+                        except KeyboardInterrupt:
+                            print('')
+                            return
+                        finally:
+                            # ensure proper output for resource scripts
+                            if Framework._script:
+                                print('%s' % (params))
+                    # delete record(s) from the database
+                    for rowid in rowids:
+                        count = self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
+                        self.output('%d rows affected.' % (count))
+                else:
+                    self.output('Invalid table name.')
+            else:
+                print('\nUsage: db delete <table> [<rowid(s)>]\n')
+                print('rowid(s) => \',\' delimited values or \'-\' delimited ranges representing rowids\n')
+        elif arg == 'query':
+            if len(params) >= 1:
+                query = ' '.join(params)
                 try:
-                    # prompt user for data
-                    params = raw_input('rowid(s) (INT): ')
-                    rowids = self._parse_rowids(params)
-                except KeyboardInterrupt:
-                    print('')
+                    results = self.query(query, include_header=True)
+                except sqlite3.OperationalError as e:
+                    self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
                     return
-                finally:
-                    # ensure proper output for resource scripts
-                    if Framework._script:
-                        print('%s' % (params))
-            # delete record(s) from the database
-            for rowid in rowids:
-                self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
+                if type(results) == list:
+                    header = results.pop(0)
+                    if not results:
+                        self.output('No data returned.')
+                    else:
+                        self.table(results, header=header)
+                        self.output('%d rows returned' % (len(results)))
+                else:
+                    self.output('%d rows affected.' % (results))
+            else:
+                print('\nUsage: db query <sql>\n')
         else:
-            self.help_delete()
+            self.help_db()
 
     def do_search(self, params):
         '''Searches installed modules'''
@@ -1046,7 +1054,7 @@ class Framework(cmd.Cmd):
                         Framework._record = filename
                         self.output('Recording commands to \'%s\'.' % (Framework._record))
                 else:
-                    print('Usage: record start <filename>')
+                    print('\nUsage: record start <filename>\n')
             else: self.output('Recording is already started.')
         elif arg == 'stop':
             if Framework._record:
@@ -1075,7 +1083,7 @@ class Framework(cmd.Cmd):
                         Framework._spool = codecs.open(filename, 'ab', encoding='utf-8')
                         self.output('Spooling output to \'%s\'.' % (Framework._spool.name))
                 else:
-                    print('Usage: spool start <filename>')
+                    print('\nUsage: spool start <filename>\n')
             else: self.output('Spooling is already started.')
         elif arg == 'stop':
             if Framework._spool:
@@ -1147,97 +1155,52 @@ class Framework(cmd.Cmd):
 
     def help_keys(self):
         print(getattr(self, 'do_keys').__doc__)
-        print('')
-        print('Usage: keys <list|add|delete> [...]')
-        print('')
+        print('\nUsage: keys <list|add|remove> [...]\n')
 
     def help_load(self):
         print(getattr(self, 'do_load').__doc__)
-        print('')
-        print('Usage: <load|use> <module>')
-        print('')
+        print('\nUsage: <load|use> <module>\n')
     help_use = help_load
 
     def help_record(self):
         print(getattr(self, 'do_record').__doc__)
-        print('')
-        print('Usage: record <start|stop|status> [...]')
-        print('')
+        print('\nUsage: record <start|stop|status> [...]\n')
 
     def help_spool(self):
         print(getattr(self, 'do_spool').__doc__)
-        print('')
-        print('Usage: spool <start|stop|status> [...]')
-        print('')
+        print('\nUsage: spool <start|stop|status> [...]\n')
 
     def help_resource(self):
         print(getattr(self, 'do_resource').__doc__)
-        print('')
-        print('Usage: resource <filename>')
-        print('')
+        print('\nUsage: resource <filename>\n')
 
-    def help_query(self):
-        print(getattr(self, 'do_query').__doc__)
-        print('')
-        print('Usage: query <sql>')
-        print('')
-        print('SQL examples:')
-        print('%s%s' % (self.spacer, 'SELECT columns|* FROM table_name'))
-        print('%s%s' % (self.spacer, 'SELECT columns|* FROM table_name WHERE some_column=some_value'))
-        print('%s%s' % (self.spacer, 'DELETE FROM table_name WHERE some_column=some_value'))
-        print('%s%s' % (self.spacer, 'INSERT INTO table_name (column1, column2,...) VALUES (value1, value2,...)'))
-        print('%s%s' % (self.spacer, 'UPDATE table_name SET column1=value1, column2=value2,... WHERE some_column=some_value'))
-        print('')
+    def help_db(self):
+        print(getattr(self, 'do_db').__doc__)
+        print('\nUsage: db <insert|delete|query> [...]\n')
 
     def help_search(self):
         print(getattr(self, 'do_search').__doc__)
-        print('')
-        print('Usage: search <string>')
-        print('')
+        print('\nUsage: search <string>\n')
 
     def help_set(self):
         print(getattr(self, 'do_set').__doc__)
-        print('')
-        print('Usage: set <option> <value>')
+        print('\nUsage: set <option> <value>')
         self.show_options()
 
     def help_unset(self):
         print(getattr(self, 'do_unset').__doc__)
-        print('')
-        print('Usage: unset <option>')
+        print('\nUsage: unset <option>')
         self.show_options()
 
     def help_shell(self):
         print(getattr(self, 'do_shell').__doc__)
-        print('')
-        print('Usage: [shell|!] <command>')
-        print('...or just type a command at the prompt.')
-        print('')
+        print('\nUsage: [shell|!] <command>\n')
+        print('...or just type a command at the prompt.\n')
 
     def help_show(self):
         options = sorted(self._get_show_names() + self.get_tables())
         print(getattr(self, 'do_show').__doc__)
-        print('')
-        print('Usage: show <%s>' % ('|'.join(options)))
-        print('')
-
-    def help_add(self):
-        print(getattr(self, 'do_add').__doc__)
-        print('')
-        print('Usage: add <table> [<values>]')
-        print('')
-        print('optional arguments:')
-        print('%svalues => \'~\' delimited string representing column values (exclude rowid, module)' % (self.spacer))
-        print('')
-
-    def help_delete(self):
-        print(getattr(self, 'do_delete').__doc__)
-        print('')
-        print('Usage: delete <table> [<rowid(s)>]')
-        print('')
-        print('optional arguments:')
-        print('%srowid(s) => \',\' delimited values or \'-\' delimited ranges representing rowids' % (self.spacer))
-        print('')
+        print('\nUsage: show <%s>\n' % ('|'.join(options)))
 
     #==================================================
     # COMPLETE METHODS
@@ -1245,7 +1208,7 @@ class Framework(cmd.Cmd):
 
     def complete_keys(self, text, line, *ignored):
         args = line.split()
-        options = ['list', 'add', 'delete']
+        options = ['list', 'add', 'remove']
         if 1 < len(args) < 4:
             if args[1].lower() in options[1:]:
                 return [x[0] for x in self._query_keys('SELECT name FROM keys') if x[0].startswith(text)]
@@ -1273,7 +1236,12 @@ class Framework(cmd.Cmd):
         options = sorted(self._get_show_names() + self.get_tables())
         return [x for x in options if x.startswith(text)]
 
-    def complete_add(self, text, *ignored):
-        tables = sorted(self.get_tables())
-        return [x for x in tables if x.startswith(text)]
-    complete_delete = complete_add
+    def complete_db(self, text, line, *ignored):
+        args = line.split()
+        options = ['insert', 'delete', 'query']
+        if 1 < len(args) < 4:
+            if args[1].lower() in options[:2]:
+                return [x for x in sorted(self.get_tables()) if x.startswith(text)]
+            if args[1].lower() in options[2:]:
+                return []
+        return [x for x in options if x.startswith(text)]
