@@ -995,9 +995,10 @@ class Framework(cmd.Cmd):
                             if Framework._script:
                                 print('%s' % (params))
                     # delete record(s) from the database
+                    count = 0
                     for rowid in rowids:
-                        count = self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
-                        self.output('%d rows affected.' % (count))
+                        count += self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
+                    self.output('%d rows affected.' % (count))
                 else:
                     self.output('Invalid table name.')
             else:
