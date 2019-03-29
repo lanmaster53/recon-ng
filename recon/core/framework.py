@@ -402,7 +402,7 @@ class Framework(cmd.Cmd):
                 display('%s: %s' % (key.title(), data[key]))
             display(self.ruler*50)
 
-    def add_domains(self, domain=None, mute=False):
+    def insert_domains(self, domain=None, mute=False):
         '''Adds a domain to the database and returns the affected row count.'''
         data = dict(
             domain = domain
@@ -411,7 +411,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[domain] %s', data.keys())
         return rowcount
 
-    def add_companies(self, company=None, description=None, mute=False):
+    def insert_companies(self, company=None, description=None, mute=False):
         '''Adds a company to the database and returns the affected row count.'''
         data = dict(
             company = company,
@@ -421,7 +421,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[company] %s - %s', data.keys())
         return rowcount
 
-    def add_netblocks(self, netblock=None, mute=False):
+    def insert_netblocks(self, netblock=None, mute=False):
         '''Adds a netblock to the database and returns the affected row count.'''
         data = dict(
             netblock = netblock
@@ -430,7 +430,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[netblock] %s', data.keys())
         return rowcount
 
-    def add_locations(self, latitude=None, longitude=None, street_address=None, mute=False):
+    def insert_locations(self, latitude=None, longitude=None, street_address=None, mute=False):
         '''Adds a location to the database and returns the affected row count.'''
         data = dict(
             latitude = latitude,
@@ -441,7 +441,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[location] %s, %s - %s', data.keys())
         return rowcount
 
-    def add_vulnerabilities(self, host=None, reference=None, example=None, publish_date=None, category=None, status=None, mute=False):
+    def insert_vulnerabilities(self, host=None, reference=None, example=None, publish_date=None, category=None, status=None, mute=False):
         '''Adds a vulnerability to the database and returns the affected row count.'''
         data = dict(
             host = host,
@@ -455,7 +455,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount)
         return rowcount
 
-    def add_ports(self, ip_address=None, host=None, port=None, protocol=None, mute=False):
+    def insert_ports(self, ip_address=None, host=None, port=None, protocol=None, mute=False):
         '''Adds a port to the database and returns the affected row count.'''
         data = dict(
             ip_address = ip_address,
@@ -467,7 +467,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[port] %s (%s/%s) - %s', ('ip_address', 'port', 'protocol', 'host'))
         return rowcount
 
-    def add_hosts(self, host=None, ip_address=None, region=None, country=None, latitude=None, longitude=None, mute=False):
+    def insert_hosts(self, host=None, ip_address=None, region=None, country=None, latitude=None, longitude=None, mute=False):
         '''Adds a host to the database and returns the affected row count.'''
         data = dict(
             host = host,
@@ -481,7 +481,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[host] %s (%s)', ('host', 'ip_address'))
         return rowcount
 
-    def add_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None, mute=False):
+    def insert_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None, mute=False):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
             first_name = first_name,
@@ -496,7 +496,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[contact] %s %s (%s) - %s', ('first_name', 'last_name', 'email', 'title'))
         return rowcount
 
-    def add_credentials(self, username=None, password=None, _hash=None, _type=None, leak=None, mute=False):
+    def insert_credentials(self, username=None, password=None, _hash=None, _type=None, leak=None, mute=False):
         '''Adds a credential to the database and returns the affected row count.'''
         data = dict (
             username = username,
@@ -513,12 +513,12 @@ class Framework(cmd.Cmd):
                 data['password'] = None
         # add email usernames to contacts
         if username is not None and '@' in username:
-            self.add_contacts(first_name=None, last_name=None, title=None, email=username)
+            self.insert_contacts(first_name=None, last_name=None, title=None, email=username)
         rowcount = self.insert('credentials', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[credential] %s: %s', ('username', 'password'))
         return rowcount
 
-    def add_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, password_type=None, targets=None, media_refs=None, mute=False):
+    def insert_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, password_type=None, targets=None, media_refs=None, mute=False):
         '''Adds a leak to the database and returns the affected row count.'''
         data = dict(
             leak_id = leak_id,
@@ -543,7 +543,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount)
         return rowcount
 
-    def add_pushpins(self, source=None, screen_name=None, profile_name=None, profile_url=None, media_url=None, thumb_url=None, message=None, latitude=None, longitude=None, time=None, mute=False):
+    def insert_pushpins(self, source=None, screen_name=None, profile_name=None, profile_url=None, media_url=None, thumb_url=None, message=None, latitude=None, longitude=None, time=None, mute=False):
         '''Adds a pushpin to the database and returns the affected row count.'''
         data = dict(
             source = source,
@@ -561,7 +561,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount)
         return rowcount
 
-    def add_profiles(self, username=None, resource=None, url=None, category=None, notes=None, mute=False):
+    def insert_profiles(self, username=None, resource=None, url=None, category=None, notes=None, mute=False):
         '''Adds a profile to the database and returns the affected row count.'''
         data = dict(
             username = username,
@@ -574,7 +574,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[profile] %s - %s (%s)', ('username', 'resource', 'url'))
         return rowcount
 
-    def add_repositories(self, name=None, owner=None, description=None, resource=None, category=None, url=None, mute=False):
+    def insert_repositories(self, name=None, owner=None, description=None, resource=None, category=None, url=None, mute=False):
         '''Adds a repository to the database and returns the affected row count.'''
         data = dict(
             name = name,
@@ -930,12 +930,12 @@ class Framework(cmd.Cmd):
                 table = self._is_table_name(params.pop(0))
                 params = ' '.join(params)
                 if table:
-                    # validate add_* method for table
-                    if not hasattr(self, 'add_' + table):
+                    # validate insert_* method for table
+                    if not hasattr(self, 'insert_' + table):
                         self.error('Cannot add records to dynamicly created tables.')
                         return
                     columns = [x for x in self.get_columns(table) if x[0] != 'module']
-                    # sanitize column names to avoid conflicts with builtins in add_* method
+                    # sanitize column names to avoid conflicts with builtins in insert_* method
                     sanitize_column = lambda x: '_'+x if x in ['hash', 'type'] else x
                     record = {}
                     # build record from parameters
@@ -965,7 +965,7 @@ class Framework(cmd.Cmd):
                                 if Framework._script:
                                     print('%s' % (value))
                     # add record to the database
-                    func = getattr(self, 'add_' + table)
+                    func = getattr(self, 'insert_' + table)
                     count = func(mute=True, **record)
                     self.output('%d rows affected.' % (count))
                 else:
