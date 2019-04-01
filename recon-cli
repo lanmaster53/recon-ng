@@ -34,21 +34,21 @@ def recon_cli(args):
     # set given global options
     for option in args.goptions:
         param = ' '.join(option.split('='))
-        x.do_set(param)
+        x._do_options_set(param)
     # if requested, show global options and exit
     if args.gshow:
-        x.do_show('options')
+        x._do_options_list('')
         return
     # if requested, show modules and exit
     if args.show_modules:
-        x.do_show('modules')
+        x._do_modules_list('')
         return
     # exit if module not specified
     if not args.module:
         output('No module provided.')
         return
     # load the module
-    y = x.do_load(args.module)
+    y = x._do_modules_load(args.module)
     # exit if module not successfully loaded
     if not y: return
     print('MODULE => %s' % (args.module))
@@ -59,10 +59,10 @@ def recon_cli(args):
     # set given module options
     for option in args.options:
         param = ' '.join(option.split('='))
-        y.do_set(param)
+        y._do_options_set(param)
     # if requested, show module options and exit
     if args.show:
-        y.do_show('options')
+        y._do_options_list('')
         return
     if args.run:
         # run the module
