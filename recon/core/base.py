@@ -168,6 +168,8 @@ class Recon(framework.Framework):
     #==================================================
 
     def _init_workspace(self, workspace):
+        if not workspace:
+            return
         path = os.path.join(self.spaces_path, workspace)
         self.workspace = framework.Framework.workspace = path
         if not os.path.exists(path):
@@ -473,21 +475,16 @@ class Recon(framework.Framework):
             self.alert('No modules enabled/installed.')
         print('')
 
-    def show_workspaces(self):
-        self.do_workspaces('list')
-
     #==================================================
     # COMMAND METHODS
     #==================================================
 
     def do_index(self, params):
-        '''Creates module index (dev only)'''
-        params = params.split()
-        if not params or len(params) < 2:
+        '''Creates a module index (dev only)'''
+        mod_dir, mod_path = self._parse_params(params)
+        if not mod_dir and mod_path:
             self.help_index()
             return
-        mod_dir = params.pop(0)
-        mod_path = params.pop(0)
         if os.path.exists(mod_dir):
             self._load_modules(mod_dir)
             yaml_objs = []
@@ -532,69 +529,77 @@ class Recon(framework.Framework):
         if not params:
             self.help_marketplace()
             return
-        params = params.split()
-        arg = params.pop(0).lower()
-        if arg == 'list':
-            pattern = ' '.join(params)
-            results = []
-            if pattern:
-                self.output('Searching module index for \'%s\'...'%(pattern))
-                results = self._search_module_index(pattern)
-            modules = [m for m in self._module_index if not params or m in results]
-            if modules:
-                rows = []
-                for module in sorted(modules, key=lambda m: m['path']):
-                    row = []
-                    for key in ('path', 'version', 'status', 'last_updated'):
-                        row.append(module[key])
-                    row.append('' if not module['dependencies'] else '*')
-                    rows.append(row)
-                header = ('Path', 'Version', 'Status', 'Updated', '*')
-                self.table(rows, header=header)
-                self.alert('* = Has dependencies. See info for details.\n')
-            else:
-                self.error('No modules found.')
-        elif arg == 'info':
-            if len(params) == 1:
-                modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
-                if modules:
-                    for module in modules:
-                        rows = []
-                        for key in ('path', 'name', 'author', 'version', 'last_updated', 'description', 'required_keys', 'dependencies', 'files', 'status'):
-                            row = (key, module[key])
-                            rows.append(row)
-                        self.table(rows)
-                else:
-                    self.error('Invalid module path.')
-            else:
-                print('\nUsage: marketplace info <<path>|<prefix>|all>\n')
-        elif arg == 'install':
-            if len(params) == 1:
-                modules = [m for m in self._module_index if params[0] in m['path'] or params[0] == 'all']
-                if modules:
-                    for module in modules:
-                        self._install_module(module['path'])
-                    self.do_reload('')
-                else:
-                    self.error('Invalid module path.')
-            else:
-                print('\nUsage: marketplace install <<path>|<prefix>|all>\n')
-        elif arg == 'remove':
-            if len(params) == 1:
-                modules = [m for m in self._module_index if m['status'] in ('installed', 'disabled') and (params[0] in m['path'] or params[0] == 'all')]
-                if modules:
-                    for module in modules:
-                        self._remove_module(module['path'])
-                    self.do_reload('')
-                else:
-                    self.error('Invalid module path.')
-            else:
-                print('\nUsage: marketplace remove <<path>|<prefix>|all>\n')
+        arg, params = self._parse_params(params)
+        if arg in ['list', 'info', 'install', 'remove']:
+            return getattr(self, '_do_marketplace_'+arg)(params)
         else:
             self.help_marketplace()
 
+    def _do_marketplace_list(self, params):
+        '''Lists all available modules in the marketplace'''
+        modules = [m for m in self._module_index]
+        if params:
+            self.output('Searching module index for \'%s\'...'%(params))
+            modules = self._search_module_index(params)
+        if modules:
+            rows = []
+            for module in sorted(modules, key=lambda m: m['path']):
+                row = []
+                for key in ('path', 'version', 'status', 'last_updated'):
+                    row.append(module[key])
+                row.append('' if not module['dependencies'] else '*')
+                rows.append(row)
+            header = ('Path', 'Version', 'Status', 'Updated', '*')
+            self.table(rows, header=header)
+            self.alert('* = Has dependencies. See info for details.\n')
+        else:
+            self.error('No modules found.')
+            self._help_marketplace_list()
+
+    def _do_marketplace_info(self, params):
+        '''Shows detailed information about available modules'''
+        if not params:
+            self._help_marketplace_info()
+            return
+        modules = [m for m in self._module_index if params in m['path'] or params == 'all']
+        if modules:
+            for module in modules:
+                rows = []
+                for key in ('path', 'name', 'author', 'version', 'last_updated', 'description', 'required_keys', 'dependencies', 'files', 'status'):
+                    row = (key, module[key])
+                    rows.append(row)
+                self.table(rows)
+        else:
+            self.error('Invalid module path.')
+
+    def _do_marketplace_install(self, params):
+        '''Installs modules from the marketplace'''
+        if not params:
+            self._help_marketplace_install()
+            return
+        modules = [m for m in self._module_index if params in m['path'] or params == 'all']
+        if modules:
+            for module in modules:
+                self._install_module(module['path'])
+            self.do_reload('')
+        else:
+            self.error('Invalid module path.')
+
+    def _do_marketplace_remove(self, params):
+        '''Removes marketplace modules from the framework'''
+        if not params:
+            self._help_marketplace_remove()
+            return
+        modules = [m for m in self._module_index if m['status'] in ('installed', 'disabled') and (params in m['path'] or params == 'all')]
+        if modules:
+            for module in modules:
+                self._remove_module(module['path'])
+            self.do_reload('')
+        else:
+            self.error('Invalid module path.')
+
     def do_reload(self, params):
-        '''Reloads all modules'''
+        '''Reloads installed modules'''
         self.output('Reloading...')
         self._load_modules()
 
@@ -603,77 +608,101 @@ class Recon(framework.Framework):
         if not params:
             self.help_workspaces()
             return
-        params = params.split()
-        arg = params.pop(0).lower()
-        if arg == 'list':
-            self.table([[x] for x in self._get_workspaces()], header=['Workspaces'])
-        elif arg in ['add', 'select']:
-            if len(params) == 1:
-                if not self._init_workspace(params[0]):
-                    self.output('Unable to initialize \'%s\' workspace.' % (params[0]))
-            else:
-                print('\nUsage: workspace <add|select> <name>\n')
-        elif arg == 'delete':
-            if len(params) == 1:
-                if not self.delete_workspace(params[0]):
-                    self.output('Unable to delete \'%s\' workspace.' % (params[0]))
-            else:
-                print('\nUsage: workspace delete <name>\n')
+        arg, params = self._parse_params(params)
+        if arg in ['list', 'create', 'select', 'delete']:
+            return getattr(self, '_do_workspaces_'+arg)(params)
         else:
             self.help_workspaces()
+
+    def _do_workspaces_list(self, params):
+        '''Lists all existing workspaces'''
+        self.table([[x] for x in self._get_workspaces()], header=['Workspaces'])
+
+    def _do_workspaces_create(self, params):
+        '''Creates a new workspace'''
+        if not params:
+            self._help_workspaces_create()
+            return
+        if not self._init_workspace(params):
+            self.output('Unable to create \'%s\' workspace.' % (params))
+
+    def _do_workspaces_select(self, params):
+        '''Selects an existing workspace'''
+        if not params:
+            self._help_workspaces_select()
+            return
+        if not self._init_workspace(params):
+            self.output('Unable to initialize \'%s\' workspace.' % (params))
+
+    def _do_workspaces_delete(self, params):
+        '''Deletes an existing workspace'''
+        if not params:
+            self._help_workspaces_delete()
+            return
+        if not self.delete_workspace(params):
+            self.output('Unable to delete \'%s\' workspace.' % (params))
 
     def do_snapshots(self, params):
         '''Manages workspace snapshots'''
         if not params:
             self.help_snapshots()
             return
-        params = params.split()
-        arg = params.pop(0).lower()
-        if arg == 'list':
-            snapshots = self._get_snapshots()
-            if snapshots:
-                self.table([[x] for x in snapshots], header=['Snapshots'])
-            else:
-                self.output('This workspace has no snapshots.')
-        elif arg == 'take':
-            snapshot = 'snapshot_%s.db' % (datetime.strftime(datetime.now(), '%Y%m%d%H%M%S'))
-            src = os.path.join(self.workspace, 'data.db')
-            dst = os.path.join(self.workspace, snapshot)
-            shutil.copyfile(src, dst)
-            self.output('Snapshot created: %s' % (snapshot))
-        elif arg == 'load':
-            if len(params) == 1:
-                # warn about overwriting current state
-                if params[0] in self._get_snapshots():
-                    src = os.path.join(self.workspace, params[0])
-                    dst = os.path.join(self.workspace, 'data.db')
-                    shutil.copyfile(src, dst)
-                    self.output('Snapshot loaded: %s' % (params[0]))
-                else:
-                    self.error('No snapshot named \'%s\'.' % (params[0]))
-            else:
-                print('\nUsage: snapshots load <name>\n')
-        elif arg == 'delete':
-            if len(params) == 1:
-                if params[0] in self._get_snapshots():
-                    os.remove(os.path.join(self.workspace, params[0]))
-                    self.output('Snapshot removed: %s' % (params[0]))
-                else:
-                    self.error('No snapshot named \'%s\'.' % (params[0]))
-            else:
-                print('\nUsage: snapshots delete <name>\n')
+        arg, params = self._parse_params(params)
+        if arg in ['list', 'take', 'load', 'delete']:
+            return getattr(self, '_do_snapshots_'+arg)(params)
         else:
             self.help_snapshots()
 
-    def do_load(self, params):
-        '''Loads specified module'''
+    def _do_snapshots_list(self, params):
+        '''Lists all existing database snapshots'''
+        snapshots = self._get_snapshots()
+        if snapshots:
+            self.table([[x] for x in snapshots], header=['Snapshots'])
+        else:
+            self.output('This workspace has no snapshots.')
+
+    def _do_snapshots_take(self, params):
+        '''Takes a snapshot of the current database'''
+        snapshot = 'snapshot_%s.db' % (datetime.strftime(datetime.now(), '%Y%m%d%H%M%S'))
+        src = os.path.join(self.workspace, 'data.db')
+        dst = os.path.join(self.workspace, snapshot)
+        shutil.copyfile(src, dst)
+        self.output('Snapshot created: %s' % (snapshot))
+
+    def _do_snapshots_load(self, params):
+        '''Loads an existing database snapshot'''
+        if not params:
+            self._help_snapshots_load()
+            return
+        if params in self._get_snapshots():
+            src = os.path.join(self.workspace, params)
+            dst = os.path.join(self.workspace, 'data.db')
+            shutil.copyfile(src, dst)
+            self.output('Snapshot loaded: %s' % (params))
+        else:
+            self.error('No snapshot named \'%s\'.' % (params))
+
+    def _do_snapshots_delete(self, params):
+        '''Deletes an existing snapshot'''
+        if not params:
+            self._help_snapshots_delete()
+            return
+        if params in self._get_snapshots():
+            os.remove(os.path.join(self.workspace, params))
+            self.output('Snapshot removed: %s' % (params))
+        else:
+            self.error('No snapshot named \'%s\'.' % (params))
+
+    def _do_modules_load(self, params):
+        '''Loads a module'''
+        # validate global options before loading the module
         try:
             self._validate_options()
         except framework.FrameworkException as e:
             self.error(e.message)
             return
         if not params:
-            self.help_load()
+            self._help_modules_load()
             return
         # finds any modules that contain params
         modules = [params] if params in self._loaded_modules else [x for x in self._loaded_modules if params in x]
@@ -683,7 +712,7 @@ class Recon(framework.Framework):
                 self.error('Invalid module name.')
             else:
                 self.output('Multiple modules match \'%s\'.' % params)
-                self.show_modules(modules)
+                self._list_modules(modules)
             return
         # load the module
         mod_dispname = modules[0]
@@ -713,7 +742,6 @@ class Recon(framework.Framework):
                     continue
                 # shuffle category counts?
             break
-    do_use = do_load
 
     #==================================================
     # HELP METHODS
@@ -722,22 +750,54 @@ class Recon(framework.Framework):
     def help_index(self):
         print(getattr(self, 'do_index').__doc__)
         print('\nUsage: index <directory> <module|all> <index>\n')
-        print('')
 
     def help_marketplace(self):
         print(getattr(self, 'do_marketplace').__doc__)
         print('\nUsage: marketplace <list|info|install|remove> [...]\n')
-        print('')
+
+    def _help_marketplace_list(self):
+        print(getattr(self, '_do_marketplace_list').__doc__)
+        print('\nUsage: marketplace list [<regex>]\n')
+
+    def _help_marketplace_info(self):
+        print(getattr(self, '_do_marketplace_info').__doc__)
+        print('\nUsage: marketplace info <<path>|<prefix>|all>\n')
+
+    def _help_marketplace_install(self):
+        print(getattr(self, '_do_marketplace_install').__doc__)
+        print('\nUsage: marketplace install <<path>|<prefix>|all>\n')
+
+    def _help_marketplace_remove(self):
+        print(getattr(self, '_do_marketplace_remove').__doc__)
+        print('\nUsage: marketplace remove <<path>|<prefix>|all>\n')
 
     def help_workspaces(self):
         print(getattr(self, 'do_workspaces').__doc__)
-        print('\nUsage: workspaces <list|add|select|delete> [...]\n')
-        print('')
+        print('\nUsage: workspaces <list|create|select|delete> [...]\n')
+
+    def _help_workspaces_create(self):
+        print(getattr(self, '_do_workspaces_create').__doc__)
+        print('\nUsage: workspace create <name>\n')
+
+    def _help_workspaces_select(self):
+        print(getattr(self, '_do_workspaces_select').__doc__)
+        print('\nUsage: workspace select <name>\n')
+
+    def _help_workspaces_delete(self):
+        print(getattr(self, '_do_workspaces_delete').__doc__)
+        print('\nUsage: workspace delete <name>\n')
 
     def help_snapshots(self):
         print(getattr(self, 'do_snapshots').__doc__)
         print('\nUsage: snapshots <list|take|load|delete> [...]\n')
-        print('')
+
+    def _help_snapshots_load(self):
+        print(getattr(self, '_do_snapshots_load').__doc__)
+        print('\nUsage: snapshots load <name>\n')
+
+    def _help_snapshots_delete(self):
+        print(getattr(self, '_do_snapshots_delete').__doc__)
+        print('\nUsage: snapshots delete <name>\n')
 
     #==================================================
     # COMPLETE METHODS
@@ -750,36 +810,51 @@ class Recon(framework.Framework):
         return []
 
     def complete_marketplace(self, text, line, *ignored):
-        args = line.split()
-        options = ['list', 'info', 'install', 'remove']
-        if 1 < len(args) < 4:
-            if args[1].lower() in options[-1:]:
-                return [x['path'] for x in self._module_index if x['status'] == 'installed' and x['path'].startswith(text)]
-            if args[1].lower() in options[1:-1]:
-                return [x['path'] for x in self._module_index if x['path'].startswith(text)]
-            if args[1].lower() in options[:1]:
-                return []
-        return [x for x in options if x.startswith(text)]
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = ['list', 'info', 'install', 'remove']
+        if arg in subs:
+            return getattr(self, '_complete_marketplace_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_marketplace_list(self, text, *ignored):
+        return []
+
+    def _complete_marketplace_info(self, text, *ignored):
+        return [x['path'] for x in self._module_index if x['path'].startswith(text)]
+    _complete_marketplace_install = _complete_marketplace_info
+
+    def _complete_marketplace_remove(self, text, *ignored):
+        return [x['path'] for x in self._module_index if x['status'] == 'installed' and x['path'].startswith(text)]
 
     def complete_workspaces(self, text, line, *ignored):
-        args = line.split()
-        options = ['list', 'add', 'select', 'delete']
-        if 1 < len(args) < 4:
-            if args[1].lower() in options[2:]:
-                return [x for x in self._get_workspaces() if x.startswith(text)]
-            if args[1].lower() in options[:2]:
-                return []
-        return [x for x in options if x.startswith(text)]
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = ['list', 'create', 'select', 'delete']
+        if arg in subs:
+            return getattr(self, '_complete_workspaces_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_workspaces_list(self, text, *ignored):
+        return []
+    _complete_workspaces_create = _complete_workspaces_list
+
+    def _complete_workspaces_select(self, text, *ignored):
+        return [x for x in self._get_workspaces() if x.startswith(text)]
+    _complete_workspaces_delete = _complete_workspaces_select
 
     def complete_snapshots(self, text, line, *ignored):
-        args = line.split()
-        options = ['list', 'take', 'load', 'delete']
-        if 1 < len(args) < 4:
-            if args[1].lower() in options[2:]:
-                return [x for x in self._get_snapshots() if x.startswith(text)]
-            if args[1].lower() in options[:2]:
-                return []
-        return [x for x in options if x.startswith(text)]
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = ['list', 'take', 'load', 'delete']
+        if arg in subs:
+            return getattr(self, '_complete_snapshots_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_snapshots_list(self, text, *ignored):
+        return []
+    _complete_snapshots_take = _complete_snapshots_list
+
+    def _complete_snapshots_load(self, text, *ignored):
+        return [x for x in self._get_snapshots() if x.startswith(text)]
+    _complete_snapshots_delete = _complete_snapshots_load
 
 #=================================================
 # SUPPORT CLASSES

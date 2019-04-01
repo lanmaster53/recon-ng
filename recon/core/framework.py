@@ -151,8 +151,7 @@ class Framework(cmd.Cmd):
             sys.stdin = sys.__stdin__
             Framework._script = 0
             Framework._load = 0
-            print('')
-            return 1
+            return
         if cmd is None:
             return self.default(line)
         self.lastcmd = line
@@ -382,14 +381,8 @@ class Framework(cmd.Cmd):
     def get_tables(self):
         return [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
 
-    def _is_table_name(self, s):
-        for table_name in self.get_tables():
-            if table_name == s:
-                return s
-        return False
-
     #==================================================
-    # ADD METHODS
+    # INSERT METHODS
     #==================================================
 
     def _display(self, data, rowcount, pattern=None, keys=None):
@@ -602,7 +595,8 @@ class Framework(cmd.Cmd):
         # make sure that module is not seen as a unique column
         unique_columns = [x for x in unique_columns if x in columns and x != 'module']
         # exit if there is nothing left to insert
-        if not columns: return 0
+        if not columns:
+            return 0
         # convert all bytes (str) to unicode for external processing
         for column in columns:
             data[column] = self.to_unicode(data[column])
@@ -656,6 +650,30 @@ class Framework(cmd.Cmd):
                 if self.options.required[option] is True and not self.options[option]:
                     raise FrameworkException('Value required for the \'%s\' option.' % (option.upper()))
         return
+
+    def _list_options(self, options=None):
+        '''Lists options'''
+        if options is None:
+            options = self.options
+        if options:
+            pattern = '%s%%s  %%s  %%s  %%s' % (self.spacer)
+            key_len = len(max(options, key=len))
+            if key_len < 4: key_len = 4
+            val_len = len(max([self.to_unicode_str(options[x]) for x in options], key=len))
+            if val_len < 13: val_len = 13
+            print('')
+            print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Required', 'Description'))
+            print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*8, self.ruler*11))
+            for key in sorted(options):
+                value = options[key] if options[key] != None else ''
+                reqd = 'no' if options.required[key] is False else 'yes'
+                desc = options.description[key]
+                print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), self.to_unicode_str(reqd).ljust(8), desc))
+            print('')
+        else:
+            print('')
+            print('%sNo options available for this module.' % (self.spacer))
+            print('')
 
     def _load_config(self):
         config_path = os.path.join(self.workspace, 'config.dat')
@@ -739,6 +757,9 @@ class Framework(cmd.Cmd):
         if tdata:
             self.table(tdata, header=['Name', 'Value'])
 
+    def _get_key_names(self):
+        return [x[0] for x in self._query_keys('SELECT name FROM keys')]
+
     #==================================================
     # REQUEST METHODS
     #==================================================
@@ -753,22 +774,11 @@ class Framework(cmd.Cmd):
         return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth, content=content)
 
     #==================================================
-    # SHOW METHODS
+    # MODULES METHODS
     #==================================================
 
-    def show_modules(self, param):
-        # process parameter according to type
-        if type(param) is list:
-            modules = param
-        elif param:
-            modules = [x for x in Framework._loaded_modules if x.startswith(param)]
-            if not modules:
-                self.error('Invalid module category.')
-                return
-        else:
-            modules = Framework._loaded_modules
+    def _list_modules(self, modules):
         if modules:
-            # display the modules
             key_len = len(max(modules, key=len)) + len(self.spacer)
             last_category = ''
             for module in sorted(modules):
@@ -783,6 +793,10 @@ class Framework(cmd.Cmd):
             print('')
             self.alert('No modules enabled/installed.')
         print('')
+
+    #==================================================
+    # SHOW METHODS
+    #==================================================
 
     def show_dashboard(self):
         rows = self.query('SELECT * FROM dashboard ORDER BY 1')
@@ -809,33 +823,6 @@ class Framework(cmd.Cmd):
             columns = self.get_columns(table)
             self.table(columns, title=table)
 
-    def show_options(self, options=None):
-        '''Lists options'''
-        if options is None:
-            options = self.options
-        if options:
-            pattern = '%s%%s  %%s  %%s  %%s' % (self.spacer)
-            key_len = len(max(options, key=len))
-            if key_len < 4: key_len = 4
-            val_len = len(max([self.to_unicode_str(options[x]) for x in options], key=len))
-            if val_len < 13: val_len = 13
-            print('')
-            print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Required', 'Description'))
-            print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*8, self.ruler*11))
-            for key in sorted(options):
-                value = options[key] if options[key] != None else ''
-                reqd = 'no' if options.required[key] is False else 'yes'
-                desc = options.description[key]
-                print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), self.to_unicode_str(reqd).ljust(8), desc))
-            print('')
-        else:
-            print('')
-            print('%sNo options available for this module.' % (self.spacer))
-            print('')
-
-    def show_keys(self):
-        self.do_keys('list')
-
     def _get_show_names(self):
         # Any method beginning with "show_" will be parsed
         # and added as a subcommand for the show command.
@@ -846,75 +833,156 @@ class Framework(cmd.Cmd):
     # COMMAND METHODS
     #==================================================
 
+    def _parse_params(self, params):
+        params = params.split()
+        arg = ''
+        if params:
+            arg = params.pop(0).lower()
+        params = ' '.join(params)
+        return arg, params
+
     def do_exit(self, params):
         '''Exits the framework'''
         self._exit = 1
         return True
 
-    # alias for exit
     def do_back(self, params):
         '''Exits the current context'''
         return True
 
-    def do_set(self, params):
-        '''Sets current context options'''
-        options = params.split()
-        if len(options) < 2:
-            self.help_set()
+    def do_options(self, params):
+        '''Manages the current context options'''
+        if not params:
+            self.help_options()
             return
-        name = options[0].lower()
-        if name in self.options:
-            value = ' '.join(options[1:])
-            self.options[name] = value
-            print('%s => %s' % (name.upper(), value))
-            self._save_config(name)
-        else: self.error('Invalid option.')
+        arg, params = self._parse_params(params)
+        if arg in ['list', 'set', 'unset']:
+            return getattr(self, '_do_options_'+arg)(params)
+        else:
+            self.help_options()
 
-    def do_unset(self, params):
-        '''Unsets current context options'''
-        self.do_set('%s %s' % (params, 'None'))
+    def _do_options_list(self, params):
+        '''Shows the current context options'''
+        self._list_options()
+
+    def _do_options_set(self, params):
+        '''Sets a current context option'''
+        option, value = self._parse_params(params)
+        if not option and value:
+            self._help_options_set()
+            return
+        if option in self.options:
+            self.options[option] = value
+            print('%s => %s' % (option.upper(), value))
+            self._save_config(option)
+        else:
+            self.error('Invalid option name.')
+
+    def _do_options_unset(self, params):
+        '''Unsets a current context option'''
+        option, value = self._parse_params(params)
+        if not option:
+            self._help_options_unset()
+            return
+        if option in self.options:
+            self._do_options_set(' '.join([option, 'None']))
+        else:
+            self.error('Invalid option name.')
 
     def do_keys(self, params):
         '''Manages framework API keys'''
         if not params:
             self.help_keys()
             return
-        params = params.split()
-        arg = params.pop(0).lower()
-        if arg == 'list':
-            self._list_keys()
-        elif arg == 'add':
-            if len(params) == 2:
-                if self.add_key(params[0], params[1]):
-                    self.output('Key \'%s\' added.' % (params[0]))
-            else:
-                print('\nUsage: keys add <name> <value>\n')
-        elif arg == 'remove':
-            if len(params) == 1:
-                if self.remove_key(params[0]):
-                    self.output('Key \'%s\' deleted.' % (params[0]))
-            else:
-                print('\nUsage: keys remove <name>\n')
+        arg, params = self._parse_params(params)
+        if arg in ['list', 'add', 'remove']:
+            return getattr(self, '_do_keys_'+arg)(params)
         else:
             self.help_keys()
+
+    def _do_keys_list(self, params):
+        '''Lists framework API keys'''
+        self._list_keys()
+
+    def _do_keys_add(self, params):
+        '''Adds/Updates a framework API key'''
+        key, value = self._parse_params(params)
+        if not key and value:
+            self._help_keys_add()
+            return
+        if self.add_key(key, value):
+            self.output('Key \'%s\' added.' % (key))
+
+    def _do_keys_remove(self, params):
+        '''Removes a framework API key'''
+        key, value = self._parse_params(params)
+        if not key:
+            self._help_keys_remove()
+            return
+        if self.get_key(key):
+            if self.remove_key(key):
+                self.output('Key \'%s\' deleted.' % (key))
+        else:
+            self.error('Invalid key name.')
+
+    def do_modules(self, params):
+        '''Interfaces with installed modules'''
+        if not params:
+            self.help_modules()
+            return
+        arg, params = self._parse_params(params)
+        if arg in ['list', 'load']:
+            return getattr(self, '_do_modules_'+arg)(params)
+        else:
+            self.help_modules()
+
+    def _do_modules_list(self, params):
+        '''Lists installed modules'''
+        modules = [x for x in Framework._loaded_modules]
+        if params:
+            self.output('Searching installed modules for \'%s\'...'%(params))
+            modules = [x for x in Framework._loaded_modules if params in x]
+        if modules:
+            self._list_modules(modules)
+        else:
+            self.error('No modules found.')
+            self._help_modules_list()
+
+    def _do_modules_load(self, params):
+        '''Loads a module'''
+        if not params:
+            self._help_modules_load()
+            return
+        # finds any modules that contain params
+        modules = [params] if params in Framework._loaded_modules else [x for x in Framework._loaded_modules if params in x]
+        # notify the user if none or multiple modules are found
+        if len(modules) != 1:
+            if not modules:
+                self.error('Invalid module name.')
+            else:
+                self.output('Multiple modules match \'%s\'.' % params)
+                self._list_modules(modules)
+            return
+        import StringIO
+        # compensation for stdin being used for scripting and loading
+        if Framework._script:
+            end_string = sys.stdin.read()
+        else:
+            end_string = 'EOF'
+            Framework._load = 1
+        sys.stdin = StringIO.StringIO('modules load %s\n%s' % (modules[0], end_string))
+        return True
 
     def do_show(self, params):
         '''Shows various framework items'''
         if not params:
             self.help_show()
             return
-        _params = params
-        params = params.lower().split()
-        arg = params[0]
-        params = ' '.join(params[1:])
+        arg, params = self._parse_params(params)
         if arg in self._get_show_names():
-            func = getattr(self, 'show_' + arg)
-            if arg == 'modules':
-                func(params)
-            else:
-                func()
-        elif _params in self.get_tables():
-            self.do_db('query SELECT ROWID, * FROM "%s"' % (_params))
+            getattr(self, 'show_' + arg)()
+        elif arg in self.get_tables():
+            self.do_db('query SELECT ROWID, * FROM "%s"' % (arg))
         else:
             self.help_show()
 
@@ -923,182 +991,194 @@ class Framework(cmd.Cmd):
         if not params:
             self.help_db()
             return
-        params = params.split()
-        arg = params.pop(0).lower()
-        if arg == 'insert':
-            if len(params) >= 1:
-                table = self._is_table_name(params.pop(0))
-                params = ' '.join(params)
-                if table:
-                    # validate insert_* method for table
-                    if not hasattr(self, 'insert_' + table):
-                        self.error('Cannot add records to dynamicly created tables.')
-                        return
-                    columns = [x for x in self.get_columns(table) if x[0] != 'module']
-                    # sanitize column names to avoid conflicts with builtins in insert_* method
-                    sanitize_column = lambda x: '_'+x if x in ['hash', 'type'] else x
-                    record = {}
-                    # build record from parameters
-                    if params:
-                        # parse params into values by delim
-                        values = params.split('~')
-                        # validate parsed value input
-                        if len(columns) == len(values):
-                            # assign each value to a column
-                            for i in range(0,len(columns)):
-                                record[sanitize_column(columns[i][0])] = values[i]
-                        else:
-                            self.error('Columns and values length mismatch.')
-                            return
-                    # build record from interactive input
-                    else:
-                        for column in columns:
-                            try:
-                                # prompt user for data
-                                value = raw_input('%s (%s): ' % column)
-                                record[sanitize_column(column[0])] = value
-                            except KeyboardInterrupt:
-                                print('')
-                                return
-                            finally:
-                                # ensure proper output for resource scripts
-                                if Framework._script:
-                                    print('%s' % (value))
-                    # add record to the database
-                    func = getattr(self, 'insert_' + table)
-                    count = func(mute=True, **record)
-                    self.output('%d rows affected.' % (count))
-                else:
-                    self.output('Invalid table name.')
-            else:
-                print('\nUsage: db insert <table> [<values>]\n')
-                print('values => \'~\' delimited string representing column values (exclude rowid, module)\n')
-        elif arg == 'delete':
-            if len(params) >= 1:
-                table = self._is_table_name(params.pop(0))
-                params = ' '.join(params)
-                if table:
-                    # get rowid from parameters
-                    if params:
-                        rowids = self._parse_rowids(params)
-                    # get rowid from interactive input
-                    else:
-                        try:
-                            # prompt user for data
-                            params = raw_input('rowid(s) (INT): ')
-                            rowids = self._parse_rowids(params)
-                        except KeyboardInterrupt:
-                            print('')
-                            return
-                        finally:
-                            # ensure proper output for resource scripts
-                            if Framework._script:
-                                print('%s' % (params))
-                    # delete record(s) from the database
-                    count = 0
-                    for rowid in rowids:
-                        count += self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
-                    self.output('%d rows affected.' % (count))
-                else:
-                    self.output('Invalid table name.')
-            else:
-                print('\nUsage: db delete <table> [<rowid(s)>]\n')
-                print('rowid(s) => \',\' delimited values or \'-\' delimited ranges representing rowids\n')
-        elif arg == 'query':
-            if len(params) >= 1:
-                query = ' '.join(params)
-                try:
-                    results = self.query(query, include_header=True)
-                except sqlite3.OperationalError as e:
-                    self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
-                    return
-                if type(results) == list:
-                    header = results.pop(0)
-                    if not results:
-                        self.output('No data returned.')
-                    else:
-                        self.table(results, header=header)
-                        self.output('%d rows returned' % (len(results)))
-                else:
-                    self.output('%d rows affected.' % (results))
-            else:
-                print('\nUsage: db query <sql>\n')
+        arg, params = self._parse_params(params)
+        if arg in ['insert', 'delete', 'query']:
+            return getattr(self, '_do_db_'+arg)(params)
         else:
             self.help_db()
 
-    def do_search(self, params):
-        '''Searches installed modules'''
-        if not params:
-            self.help_search()
+    def _do_db_insert(self, params):
+        '''Inserts a row into the database'''
+        table, params = self._parse_params(params)
+        if not table:
+            self._help_db_insert()
             return
-        text = params.split()[0]
-        self.output('Searching for \'%s\'...' % (text))
-        modules = [x for x in Framework._loaded_modules if text in x]
-        if not modules:
-            self.error('No modules found containing \'%s\'.' % (text))
+        if table in self.get_tables():
+            # validate insert_* method for table
+            if not hasattr(self, 'insert_' + table):
+                self.error('Cannot add records to dynamically created tables.')
+                return
+            columns = [x for x in self.get_columns(table) if x[0] != 'module']
+            # sanitize column names to avoid conflicts with builtins in insert_* method
+            sanitize_column = lambda x: '_'+x if x in ['hash', 'type'] else x
+            record = {}
+            # build record from parameters
+            if params:
+                # parse params into values by delim
+                values = params.split('~')
+                # validate parsed value input
+                if len(columns) == len(values):
+                    # assign each value to a column
+                    for i in range(0,len(columns)):
+                        record[sanitize_column(columns[i][0])] = values[i]
+                else:
+                    self.error('Columns and values length mismatch.')
+                    return
+            # build record from interactive input
+            else:
+                for column in columns:
+                    try:
+                        # prompt user for data
+                        value = raw_input('%s (%s): ' % column)
+                        record[sanitize_column(column[0])] = value
+                    except KeyboardInterrupt:
+                        print('')
+                        return
+                    finally:
+                        # ensure proper output for resource scripts
+                        if Framework._script:
+                            print('%s' % (value))
+            # add record to the database
+            func = getattr(self, 'insert_' + table)
+            count = func(mute=True, **record)
+            self.output('%d rows affected.' % (count))
         else:
-            self.show_modules(modules)
+            self.output('Invalid table name.')
+
+    def _do_db_delete(self, params):
+        '''Deletes a row from the database'''
+        table, params = self._parse_params(params)
+        if not table:
+            self._help_db_delete()
+            return
+        if table in self.get_tables():
+            # get rowid from parameters
+            if params:
+                rowids = self._parse_rowids(params)
+            # get rowid from interactive input
+            else:
+                try:
+                    # prompt user for data
+                    params = raw_input('rowid(s) (INT): ')
+                    rowids = self._parse_rowids(params)
+                except KeyboardInterrupt:
+                    print('')
+                    return
+                finally:
+                    # ensure proper output for resource scripts
+                    if Framework._script:
+                        print('%s' % (params))
+            # delete record(s) from the database
+            count = 0
+            for rowid in rowids:
+                count += self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
+            self.output('%d rows affected.' % (count))
+        else:
+            self.output('Invalid table name.')
+
+    def _do_db_query(self, params):
+        '''Queries the database with custom SQL'''
+        if not params:
+            self._help_db_query()
+            return
+        try:
+            results = self.query(params, include_header=True)
+        except sqlite3.OperationalError as e:
+            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            return
+        if type(results) == list:
+            header = results.pop(0)
+            if not results:
+                self.output('No data returned.')
+            else:
+                self.table(results, header=header)
+                self.output('%d rows returned' % (len(results)))
+        else:
+            self.output('%d rows affected.' % (results))
 
     def do_record(self, params):
         '''Records commands to a resource file'''
         if not params:
             self.help_record()
             return
-        arg = params.lower()
-        if arg.split()[0] == 'start':
-            if not Framework._record:
-                if len(arg.split()) > 1:
-                    filename = ' '.join(arg.split()[1:])
-                    if not self._is_writeable(filename):
-                        self.output('Cannot record commands to \'%s\'.' % (filename))
-                    else:
-                        Framework._record = filename
-                        self.output('Recording commands to \'%s\'.' % (Framework._record))
-                else:
-                    print('\nUsage: record start <filename>\n')
-            else: self.output('Recording is already started.')
-        elif arg == 'stop':
-            if Framework._record:
-                self.output('Recording stopped. Commands saved to \'%s\'.' % (Framework._record))
-                Framework._record = None
-            else: self.output('Recording is already stopped.')
-        elif arg == 'status':
-            status = 'started' if Framework._record else 'stopped'
-            self.output('Command recording is %s.' % (status))
+        arg, params = self._parse_params(params)
+        if arg in ['start', 'stop', 'status']:
+            return getattr(self, '_do_record_'+arg)(params)
         else:
             self.help_record()
+
+    def _do_record_start(self, params):
+        '''Starts command recording'''
+        if not Framework._record:
+            filename, params = self._parse_params(params)
+            if not filename:
+                self._help_record_start()
+                return
+            if not self._is_writeable(filename):
+                self.output('Cannot record commands to \'%s\'.' % (filename))
+            else:
+                Framework._record = filename
+                self.output('Recording commands to \'%s\'.' % (Framework._record))
+        else:
+            self.output('Recording is already started.')
+
+    def _do_record_stop(self, params):
+        '''Stops command recording'''
+        if Framework._record:
+            self.output('Recording stopped. Commands saved to \'%s\'.' % (Framework._record))
+            Framework._record = None
+        else:
+            self.output('Recording is already stopped.')
+
+    def _do_record_status(self, params):
+        '''Provides the status of command recording'''
+        status = 'started' if Framework._record else 'stopped'
+        self.output('Command recording is %s.' % (status))
 
     def do_spool(self, params):
         '''Spools output to a file'''
         if not params:
             self.help_spool()
             return
-        arg = params.lower()
-        if arg.split()[0] == 'start':
-            if not Framework._spool:
-                if len(arg.split()) > 1:
-                    filename = ' '.join(arg.split()[1:])
-                    if not self._is_writeable(filename):
-                        self.output('Cannot spool output to \'%s\'.' % (filename))
-                    else:
-                        Framework._spool = codecs.open(filename, 'ab', encoding='utf-8')
-                        self.output('Spooling output to \'%s\'.' % (Framework._spool.name))
-                else:
-                    print('\nUsage: spool start <filename>\n')
-            else: self.output('Spooling is already started.')
-        elif arg == 'stop':
-            if Framework._spool:
-                self.output('Spooling stopped. Output saved to \'%s\'.' % (Framework._spool.name))
-                Framework._spool = None
-            else: self.output('Spooling is already stopped.')
-        elif arg == 'status':
-            status = 'started' if Framework._spool else 'stopped'
-            self.output('Output spooling is %s.' % (status))
+        arg, params = self._parse_params(params)
+        if arg in ['start', 'stop', 'status']:
+            return getattr(self, '_do_spool_'+arg)(params)
         else:
             self.help_spool()
 
+    def _do_spool_start(self, params):
+        '''Starts output spooling'''
+        if not Framework._spool:
+            filename, params = self._parse_params(params)
+            if not filename:
+                self._help_spool_start()
+                return
+            if not self._is_writeable(filename):
+                self.output('Cannot spool output to \'%s\'.' % (filename))
+            else:
+                Framework._spool = codecs.open(filename, 'ab', encoding='utf-8')
+                self.output('Spooling output to \'%s\'.' % (Framework._spool.name))
+        else:
+            self.output('Spooling is already started.')
+
+    def _do_spool_stop(self, params):
+        '''Stops output spooling'''
+        if Framework._spool:
+            self.output('Spooling stopped. Output saved to \'%s\'.' % (Framework._spool.name))
+            Framework._spool = None
+        else:
+            self.output('Spooling is already stopped.')
+
+    def _do_spool_status(self, params):
+        '''Provides the status of output spooling'''
+        status = 'started' if Framework._spool else 'stopped'
+        self.output('Output spooling is %s.' % (status))
+
     def do_shell(self, params):
         '''Executes shell commands'''
+        if not params:
+            self.help_shell()
+            return
         proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         self.output('Command: %s' % (params))
         stdout = proc.stdout.read()
@@ -1119,32 +1199,6 @@ class Framework(cmd.Cmd):
         else:
             self.error('Script file \'%s\' not found.' % (params))
 
-    def do_load(self, params):
-        '''Loads selected module'''
-        if not params:
-            self.help_load()
-            return
-        # finds any modules that contain params
-        modules = [params] if params in Framework._loaded_modules else [x for x in Framework._loaded_modules if params in x]
-        # notify the user if none or multiple modules are found
-        if len(modules) != 1:
-            if not modules:
-                self.error('Invalid module name.')
-            else:
-                self.output('Multiple modules match \'%s\'.' % params)
-                self.show_modules(modules)
-            return
-        import StringIO
-        # compensation for stdin being used for scripting and loading
-        if Framework._script:
-            end_string = sys.stdin.read()
-        else:
-            end_string = 'EOF'
-            Framework._load = 1
-        sys.stdin = StringIO.StringIO('load %s\n%s' % (modules[0], end_string))
-        return True
-    do_use = do_load
-
     def do_pdb(self, params):
         '''Starts a Python Debugger session (dev only)'''
         import pdb
@@ -1154,95 +1208,153 @@ class Framework(cmd.Cmd):
     # HELP METHODS
     #==================================================
 
+    def help_options(self):
+        print(getattr(self, 'do_options').__doc__)
+        print('\nUsage: options <list|set|unset> [...]\n')
+
+    def _help_options_set(self):
+        print(getattr(self, '_do_options_set').__doc__)
+        print('\nUsage: set <option> <value>\n')
+
+    def _help_options_unset(self):
+        print(getattr(self, '_do_options_unset').__doc__)
+        print('\nUsage: unset <option>\n')
+
     def help_keys(self):
         print(getattr(self, 'do_keys').__doc__)
         print('\nUsage: keys <list|add|remove> [...]\n')
 
-    def help_load(self):
-        print(getattr(self, 'do_load').__doc__)
-        print('\nUsage: <load|use> <module>\n')
-    help_use = help_load
+    def _help_keys_add(self):
+        print(getattr(self, '_do_keys_add').__doc__)
+        print('\nUsage: keys add <name> <value>\n')
 
-    def help_record(self):
-        print(getattr(self, 'do_record').__doc__)
-        print('\nUsage: record <start|stop|status> [...]\n')
+    def _help_keys_remove(self):
+        print(getattr(self, '_do_keys_remove').__doc__)
+        print('\nUsage: keys remove <name>\n')
 
-    def help_spool(self):
-        print(getattr(self, 'do_spool').__doc__)
-        print('\nUsage: spool <start|stop|status> [...]\n')
+    def help_modules(self):
+        print(getattr(self, 'do_modules').__doc__)
+        print('\nUsage: modules <list|load> [...]\n')
 
-    def help_resource(self):
-        print(getattr(self, 'do_resource').__doc__)
-        print('\nUsage: resource <filename>\n')
+    def _help_modules_list(self):
+        print(getattr(self, '_do_modules_list').__doc__)
+        print('\nUsage: modules list [<string>]\n')
 
-    def help_db(self):
-        print(getattr(self, 'do_db').__doc__)
-        print('\nUsage: db <insert|delete|query> [...]\n')
-
-    def help_search(self):
-        print(getattr(self, 'do_search').__doc__)
-        print('\nUsage: search <string>\n')
-
-    def help_set(self):
-        print(getattr(self, 'do_set').__doc__)
-        print('\nUsage: set <option> <value>')
-        self.show_options()
-
-    def help_unset(self):
-        print(getattr(self, 'do_unset').__doc__)
-        print('\nUsage: unset <option>')
-        self.show_options()
-
-    def help_shell(self):
-        print(getattr(self, 'do_shell').__doc__)
-        print('\nUsage: [shell|!] <command>\n')
-        print('...or just type a command at the prompt.\n')
+    def _help_modules_load(self):
+        print(getattr(self, '_do_modules_load').__doc__)
+        print('\nUsage: modules load <path>\n')
 
     def help_show(self):
         options = sorted(self._get_show_names() + self.get_tables())
         print(getattr(self, 'do_show').__doc__)
         print('\nUsage: show <%s>\n' % ('|'.join(options)))
 
+    def help_db(self):
+        print(getattr(self, 'do_db').__doc__)
+        print('\nUsage: db <insert|delete|query> [...]\n')
+
+    def _help_db_insert(self):
+        print(getattr(self, '_do_db_insert').__doc__)
+        print('\nUsage: db insert <table> [<values>]\n')
+        print('values => \'~\' delimited string representing column values (exclude rowid, module)\n')
+
+    def _help_db_delete(self):
+        print(getattr(self, '_do_db_delete').__doc__)
+        print('\nUsage: db delete <table> [<rowid(s)>]\n')
+        print('rowid(s) => \',\' delimited values or \'-\' delimited ranges representing rowids\n')
+
+    def _help_db_query(self):
+        print(getattr(self, '_do_db_query').__doc__)
+        print('\nUsage: db query <sql>\n')
+
+    def help_record(self):
+        print(getattr(self, 'do_record').__doc__)
+        print('\nUsage: record <start|stop|status> [...]\n')
+
+    def _help_record_start(self):
+        print(getattr(self, '_do_record_start').__doc__)
+        print('\nUsage: record start <filename>\n')
+
+    def help_spool(self):
+        print(getattr(self, 'do_spool').__doc__)
+        print('\nUsage: spool <start|stop|status> [...]\n')
+
+    def _help_spool_start(self):
+        print(getattr(self, '_do_spool_start').__doc__)
+        print('\nUsage: spool start <filename>\n')
+
+    def help_shell(self):
+        print(getattr(self, 'do_shell').__doc__)
+        print('\nUsage: [shell|!] <command>\n')
+        print('...or just type a command at the prompt.\n')
+
+    def help_resource(self):
+        print(getattr(self, 'do_resource').__doc__)
+        print('\nUsage: resource <filename>\n')
+
     #==================================================
     # COMPLETE METHODS
     #==================================================
 
-    def complete_keys(self, text, line, *ignored):
-        args = line.split()
-        options = ['list', 'add', 'remove']
-        if 1 < len(args) < 4:
-            if args[1].lower() in options[1:]:
-                return [x[0] for x in self._query_keys('SELECT name FROM keys') if x[0].startswith(text)]
-            if args[1].lower() in options[:1]:
-                return []
-        return [x for x in options if x.startswith(text)]
+    def complete_options(self, text, line, *ignored):
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = ['list', 'set', 'unset']
+        if arg in subs:
+            return getattr(self, '_complete_options_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
 
-    def complete_load(self, text, *ignored):
-        return [x for x in Framework._loaded_modules if x.startswith(text)]
-    complete_use = complete_load
+    def _complete_options_list(self, text, *ignored):
+        return []
 
-    def complete_record(self, text, *ignored):
-        return [x for x in ['start', 'stop', 'status'] if x.startswith(text)]
-    complete_spool = complete_record
-
-    def complete_set(self, text, *ignored):
+    def _complete_options_set(self, text, *ignored):
         return [x.upper() for x in self.options if x.upper().startswith(text.upper())]
-    complete_unset = complete_set
+    _complete_options_unset = _complete_options_set
+
+    def complete_keys(self, text, line, *ignored):
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = ['list', 'add', 'remove']
+        if arg in subs:
+            return getattr(self, '_complete_keys_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_keys_list(self, text, *ignored):
+        return []
+
+    def _complete_keys_add(self, text, *ignored):
+        return [x for x in self._get_key_names if x.startswith(text)]
+    _complete_keys_remove = _complete_keys_add
+
+    def complete_modules(self, text, line, *ignored):
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = ['list', 'load']
+        if arg in subs:
+            return getattr(self, '_complete_modules_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_modules_list(self, text, *ignored):
+        return []
+
+    def _complete_modules_load(self, text, *ignored):
+        return [x for x in Framework._loaded_modules if x.startswith(text)]
 
     def complete_show(self, text, line, *ignored):
-        args = line.split()
-        if len(args) > 1 and args[1].lower() == 'modules':
-            if len(args) > 2: return [x for x in Framework._loaded_modules if x.startswith(args[2])]
-            else: return [x for x in Framework._loaded_modules]
         options = sorted(self._get_show_names() + self.get_tables())
         return [x for x in options if x.startswith(text)]
 
     def complete_db(self, text, line, *ignored):
-        args = line.split()
-        options = ['insert', 'delete', 'query']
-        if 1 < len(args) < 4:
-            if args[1].lower() in options[:2]:
-                return [x for x in sorted(self.get_tables()) if x.startswith(text)]
-            if args[1].lower() in options[2:]:
-                return []
-        return [x for x in options if x.startswith(text)]
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = ['insert', 'delete', 'query']
+        if arg in subs:
+            return getattr(self, '_complete_db_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_db_insert(self, text, *ignored):
+        return [x for x in sorted(self.get_tables()) if x.startswith(text)]
+    _complete_db_delete = _complete_db_insert
+
+    def _complete_db_query(self, text, *ignored):
+        return []
+
+    def complete_record(self, text, *ignored):
+        return [x for x in ['start', 'stop', 'status'] if x.startswith(text)]
+    complete_spool = complete_record

@@ -518,7 +518,7 @@ class BaseModule(framework.Framework):
         print('')
         # options
         print('Options:', end='')
-        self.show_options()
+        self._list_options()
         # sources
         if hasattr(self, '_default_source'):
             print('Source Options:')
@@ -538,12 +538,24 @@ class BaseModule(framework.Framework):
                 print('%s%s' % (self.spacer, textwrap.fill(prefix+comment, 100, subsequent_indent=self.spacer)))
             print('')
 
-    def show_globals(self):
-        self.show_options(self._global_options)
-
     #==================================================
     # COMMAND METHODS
     #==================================================
+
+    def do_goptions(self, params):
+        '''Manages the global context options'''
+        if not params:
+            self.help_goptions()
+            return
+        arg, params = self._parse_params(params)
+        if arg in ['list']:
+            return getattr(self, '_do_goptions_'+arg)(params)
+        else:
+            self.help_goptions()
+
+    def _do_goptions_list(self, params):
+        '''Shows the global context options'''
+        self._list_options(self._global_options)
 
     def do_reload(self, params):
         '''Reloads the current module'''
@@ -582,6 +594,32 @@ class BaseModule(framework.Framework):
                 self._summary_counts = {}
             # update the dashboard
             self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self._modulename})
+
+    #==================================================
+    # HELP METHODS
+    #==================================================
+
+    def help_goptions(self):
+        print(getattr(self, 'do_options').__doc__)
+        print('\nUsage: options list\n')
+
+    #==================================================
+    # COMPLETE METHODS
+    #==================================================
+
+    def complete_goptions(self, text, line, *ignored):
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = ['list']
+        if arg in subs:
+            return getattr(self, '_complete_goptions_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_goptions_list(self, text, *ignored):
+        return []
+
+    #==================================================
+    # HOOK METHODS
+    #==================================================
 
     def module_pre(self):
         pass
