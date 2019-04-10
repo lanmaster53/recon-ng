@@ -1,11 +1,11 @@
 from flask import jsonify, render_template, request, session
 from recon.core.web import app
 from recon.core.web.utils import get_workspaces, get_tables, get_columns, query
-from recon.core.web.exports import csvify, xmlify, listify, xlsxify, proxify
+from recon.core.web.exports import _jsonify, csvify, xmlify, listify, xlsxify, proxify
 from recon.core.web.reports import pushpin, xlsx
 
 EXPORTS = {
-    'json': jsonify,
+    'json': _jsonify,
     'xml': xmlify,
     'csv': csvify,
     'list': listify,
@@ -44,7 +44,7 @@ def api_workspace(workspace, report=''):
         'records': sorted(records, key=lambda r: r['count'], reverse=True),
         'modules': sorted(modules, key=lambda m: m['runs'], reverse=True),
     }
-    return jsonify(tables=tables, summary=summary, reports=REPORTS.keys())
+    return jsonify(tables=tables, summary=summary, reports=list(REPORTS.keys()))
 
 @app.route('/api/workspaces/<string:workspace>/tables/<string:table>')
 @app.route('/api/workspaces/<string:workspace>/tables/<string:table>.<string:format>')
@@ -57,5 +57,6 @@ def api_table(workspace, table, format=''):
         rows = query('SELECT * FROM {}'.format(table))
     # dynamically determine and call export function
     if format and format in EXPORTS:
-        return EXPORTS[format](rows=[dict(r) for r in rows])
-    return jsonify(rows=[dict(r) for r in rows], columns=get_columns(table), exports=EXPORTS.keys())
+        # any required serialization is handled at the exporter level
+        return EXPORTS[format](rows=rows)
+    return jsonify(rows=[dict(r) for r in rows], columns=get_columns(table), exports=list(EXPORTS.keys()))

@@ -1,11 +1,15 @@
 from dicttoxml import dicttoxml
-from flask import Response, send_file
+from flask import Response, jsonify, send_file
+from io import StringIO
 from io import BytesIO
-from recon.core.web.utils import add_worksheet, debug, is_url, StringIO
-from recon.utils import requests
+from recon.core.web.utils import add_worksheet, debug, is_url
 import os
+import requests
 import unicodecsv as csv
 import xlsxwriter
+
+def _jsonify(rows):
+    return jsonify(rows=[dict(r) for r in rows])
 
 def csvify(rows):
     '''Expects a list of dictionaries and returns a CSV response.'''
@@ -22,7 +26,7 @@ def csvify(rows):
 
 def xmlify(rows):
     '''Expects a list of dictionaries and returns a XML response.'''
-    xml = dicttoxml(rows)
+    xml = dicttoxml([dict(r) for r in rows])
     return Response(xml, mimetype='text/xml')
 
 def listify(rows):
@@ -36,17 +40,17 @@ def listify(rows):
             columns[column].append(row[column])
     s = StringIO()
     for column in columns:
-        s.write(u'# '+column+os.linesep)
+        s.write('# '+column+os.linesep)
         for value in columns[column]:
-            if type(value) != unicode:
-                value = unicode(value)
+            if type(value) != str:
+                value = str(value)
             s.write(value+os.linesep)
     list_str = s.getvalue()
     return Response(list_str, mimetype='text/plain')
 
 def xlsxify(rows):
     '''Expects a list of dictionaries and returns an xlsx response.'''
-    sfp = StringIO()
+    sfp = BytesIO()
     with xlsxwriter.Workbook(sfp) as workbook:
         # create a single worksheet for the provided rows
         add_worksheet(workbook, 'worksheet', rows)
@@ -61,20 +65,28 @@ def proxify(rows):
         # don't bother setting up if there's nothing to process
         if not rows:
             yield 'Nothing to send to proxy.'
-        # build the request object
-        req = requests.Request(
-            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36',
-            proxy='127.0.0.1:8080',
-            redirect=False,
-        )
+        # disable TLS validation warning
+        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+        # set static request options
+        kwargs = {
+            'headers': {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36',
+            },
+            'proxies': {
+                'http': 'http://127.0.0.1:8080',
+                'https': 'http://127.0.0.1:8080',
+            },
+            'allow_redirects': False,
+            'verify': False,
+        }
         # process the rows
-        for row in rows:
+        for row in [dict(r) for r in rows]:
             for key in row:
-                url = unicode(row[key])
-                msg = 'URL: '+url+os.linesep+'Status: '
+                url = row[key]
+                msg = 'URL: %s%sStatus: ' % (url, os.linesep)
                 if is_url(url):
                     try:
-                        resp = req.send(url)
+                        resp = requests.request('GET', url, **kwargs)
                         msg += 'HTTP {}: Successfully proxied.'.format(resp.status_code)
                     except Exception as e:
                         msg += str(e)
