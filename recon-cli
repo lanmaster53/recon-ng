@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import argparse
 import sys
@@ -69,7 +69,7 @@ def recon_cli(args):
         y.do_run(None)
 
 description = '%%(prog)s - %s' % (base.__author__)
-parser = argparse.ArgumentParser(description=description, version=base.__version__)
+parser = argparse.ArgumentParser(description=description)
 parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
 parser.add_argument('-C', help='runs a command at the global context', metavar='command', dest='global_commands' ,default=[], action='append')
 parser.add_argument('-c', help='runs a command at the module context (pre-run)', metavar='command', dest='module_commands' ,default=[], action='append')
@@ -84,5 +84,6 @@ parser.add_argument('--no-version', help='disable version check', dest='check', 
 parser.add_argument('--no-analytics', help='disable analytics reporting', dest='analytics', default=True, action='store_false')
 parser.add_argument('--no-marketplace', help='disable remote module management', dest='marketplace', default=True, action='store_false')
 parser.add_argument('--stealth', help='disable all passive requests (--no-*)', dest='stealth', default=False, action='store_true')
+parser.add_argument('--version', help='displays the current version', action='version', version=base.__version__)
 args = parser.parse_args()
 recon_cli(args)

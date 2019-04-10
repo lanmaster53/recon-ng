@@ -1,4 +1,3 @@
-from __future__ import print_function
 from contextlib import closing
 import cmd
 import codecs
@@ -7,14 +6,13 @@ import json
 import os
 import random
 import re
+import requests
 import socket
 import sqlite3
 import string
 import subprocess
 import sys
 import traceback
-# framework libs
-from recon.utils.requests import Request
 
 #=================================================
 # SUPPORT CLASSES
@@ -55,7 +53,7 @@ class Options(dict):
     def _autoconvert(self, value):
         if value in (None, True, False):
             return value
-        elif (isinstance(value, basestring)) and value.lower() in ('none', "''", '""'):
+        elif (isinstance(value, str)) and value.lower() in ('none', "''", '""'):
             return None
         orig = value
         for fn in (self._boolify, int, float):
@@ -134,7 +132,7 @@ class Framework(cmd.Cmd):
             print('%s' % (line))
         if Framework._record:
             recorder = codecs.open(Framework._record, 'ab', encoding='utf-8')
-            recorder.write(('%s\n' % (line)).encode('utf-8'))
+            recorder.write('%s\n' % (line))
             recorder.flush()
             recorder.close()
         if Framework._spool:
@@ -170,9 +168,9 @@ class Framework(cmd.Cmd):
     # make help menu more attractive
     def print_topics(self, header, cmds, cmdlen, maxcol):
         if cmds:
-            self.stdout.write("%s\n"%str(header))
+            self.stdout.write("%s\n" % header)
             if self.ruler:
-                self.stdout.write("%s\n"%str(self.ruler * len(header)))
+                self.stdout.write("%s\n" % (self.ruler * len(header)))
             for cmd in cmds:
                 self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
             self.stdout.write("\n")
@@ -182,17 +180,16 @@ class Framework(cmd.Cmd):
     #==================================================
 
     def to_unicode_str(self, obj, encoding='utf-8'):
-        # checks if obj is a string and converts if not
-        if not isinstance(obj, basestring):
+        # converts non-stringish types to unicode
+        if type(obj) not in (str, bytes):
             obj = str(obj)
         obj = self.to_unicode(obj, encoding)
         return obj
 
     def to_unicode(self, obj, encoding='utf-8'):
-        # checks if obj is a unicode string and converts if not
-        if isinstance(obj, basestring):
-            if not isinstance(obj, unicode):
-                obj = unicode(obj, encoding)
+        # converts bytes to unicode
+        if isinstance(obj, bytes):
+            obj = obj.decode(encoding)
         return obj
 
     def is_hash(self, hashstr):
@@ -262,15 +259,15 @@ class Framework(cmd.Cmd):
         if not re.search('[.,;!?]$', line):
             line += '.'
         line = line[:1].upper() + line[1:]
-        print('%s[!] %s%s' % (Colors.R, self.to_unicode(line), Colors.N))
+        print('%s[!] %s%s' % (Colors.R, line, Colors.N))
 
     def output(self, line):
         '''Formats and presents normal output.'''
-        print('%s[*]%s %s' % (Colors.B, Colors.N, self.to_unicode(line)))
+        print('%s[*]%s %s' % (Colors.B, Colors.N, line))
 
     def alert(self, line):
         '''Formats and presents important output.'''
-        print('%s[*]%s %s' % (Colors.G, Colors.N, self.to_unicode(line)))
+        print('%s[*]%s %s' % (Colors.G, Colors.N, line))
 
     def verbose(self, line):
         '''Formats and presents output if in verbose mode.'''
@@ -284,7 +281,7 @@ class Framework(cmd.Cmd):
 
     def heading(self, line, level=1):
         '''Formats and presents styled header text'''
-        line = self.to_unicode(line)
+        line = line
         print('')
         if level == 0:
             print(self.ruler*len(line))
@@ -354,8 +351,6 @@ class Framework(cmd.Cmd):
         self.debug('DATABASE => %s' % (path))
         self.debug('QUERY => %s' % (query))
         with sqlite3.connect(path) as conn:
-            # coerce all text to bytes (str) for internal processing
-            conn.text_factory = bytes
             with closing(conn.cursor()) as cur:
                 if values:
                     self.debug('VALUES => %s' % (repr(values)))
@@ -589,7 +584,7 @@ class Framework(cmd.Cmd):
         unique_columns - a list of column names that should be used to determine if the
                          information being inserted is unique'''
         # set module to the calling module unless the do_add command was used
-        data['module'] = 'user_defined' if 'do_add' in [x[3] for x in inspect.stack()] else self._modulename.split('/')[-1]
+        data['module'] = 'user_defined' if '_do_db_insert' in [x[3] for x in inspect.stack()] else self._modulename.split('/')[-1]
         # sanitize the inputs to remove NoneTypes, blank strings, and zeros
         columns = [x for x in data.keys() if data[x]]
         # make sure that module is not seen as a unique column
@@ -597,18 +592,18 @@ class Framework(cmd.Cmd):
         # exit if there is nothing left to insert
         if not columns:
             return 0
-        # convert all bytes (str) to unicode for external processing
+        # convert any type to unicode (str) for external processing
         for column in columns:
-            data[column] = self.to_unicode(data[column])
+            data[column] = self.to_unicode_str(data[column])
 
         if not unique_columns:
-            query = u'INSERT INTO "%s" ("%s") VALUES (%s)' % (
+            query = 'INSERT INTO "%s" ("%s") VALUES (%s)' % (
                 table,
                 '", "'.join(columns),
                 ', '.join('?'*len(columns))
             )
         else:
-            query = u'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
+            query = 'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
                 table,
                 '", "'.join(columns),
                 ', '.join('?'*len(columns)),
@@ -764,14 +759,32 @@ class Framework(cmd.Cmd):
     # REQUEST METHODS
     #==================================================
 
-    def request(self, url, method='GET', timeout=None, payload=None, headers=None, cookiejar=None, auth=None, content='', redirect=True, agent=None):
-        request = Request()
-        request.user_agent = agent or self._global_options['user-agent']
-        request.debug = True if self._global_options['verbosity'] >= 2 else False
-        request.proxy = self._global_options['proxy']
-        request.timeout = timeout or self._global_options['timeout']
-        request.redirect = redirect
-        return request.send(url, method=method, payload=payload, headers=headers, cookiejar=cookiejar, auth=auth, content=content)
+    def request(self, url, method='GET', timeout=None, payload={}, headers={}, agent=None, cookiejar={}, auth=(), content='', redirect=True):
+        # temporary patch so requesting still works until everything is updated
+        params = {}
+        data = {}
+        if method in ('GET', 'HEAD'):
+            params = payload
+        else:
+            data = payload
+        # disable TLS validation warning
+        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+        # process socket timeout
+        timeout = timeout or self._global_options['timeout']
+        # process user-agent header
+        headers['User-Agent'] = agent or self._global_options['user-agent']
+        # process payload
+        if content.upper() == 'JSON':
+            headers['Content-Type'] = 'application/json'
+            payload = json.dumps(payload)
+        # process proxy
+        proxy = self._global_options['proxy']
+        proxies = {}
+        if proxy:
+            proxies['http'] = 'http://'+proxy
+            proxies['https'] = 'http://'+proxy
+        #debug = True if self._global_options['verbosity'] >= 2 else False
+        return requests.request(method, url, params=params, data=data, headers=headers, cookies=cookiejar, auth=auth, proxies=proxies, allow_redirects=redirect, timeout=timeout, verify=False)
 
     #==================================================
     # MODULES METHODS
@@ -907,7 +920,7 @@ class Framework(cmd.Cmd):
     def _do_keys_add(self, params):
         '''Adds/Updates a framework API key'''
         key, value = self._parse_params(params)
-        if not key and value:
+        if not (key and value):
             self._help_keys_add()
             return
         if self.add_key(key, value):
@@ -963,14 +976,14 @@ class Framework(cmd.Cmd):
                 self.output('Multiple modules match \'%s\'.' % params)
                 self._list_modules(modules)
             return
-        import StringIO
+        import io
         # compensation for stdin being used for scripting and loading
         if Framework._script:
             end_string = sys.stdin.read()
         else:
             end_string = 'EOF'
             Framework._load = 1
-        sys.stdin = StringIO.StringIO('modules load %s\n%s' % (modules[0], end_string))
+        sys.stdin = io.StringIO('modules load %s\n%s' % (modules[0], end_string))
         return True
 
     def do_show(self, params):
@@ -1029,7 +1042,7 @@ class Framework(cmd.Cmd):
                 for column in columns:
                     try:
                         # prompt user for data
-                        value = raw_input('%s (%s): ' % column)
+                        value = input('%s (%s): ' % column)
                         record[sanitize_column(column[0])] = value
                     except KeyboardInterrupt:
                         print('')
@@ -1059,7 +1072,7 @@ class Framework(cmd.Cmd):
             else:
                 try:
                     # prompt user for data
-                    params = raw_input('rowid(s) (INT): ')
+                    params = input('rowid(s) (INT): ')
                     rowids = self._parse_rowids(params)
                 except KeyboardInterrupt:
                     print('')
@@ -1084,7 +1097,7 @@ class Framework(cmd.Cmd):
         try:
             results = self.query(params, include_header=True)
         except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e.message))
+            self.error('Invalid query. %s %s' % (type(e).__name__, e))
             return
         if type(results) == list:
             header = results.pop(0)
@@ -1183,8 +1196,8 @@ class Framework(cmd.Cmd):
         self.output('Command: %s' % (params))
         stdout = proc.stdout.read()
         stderr = proc.stderr.read()
-        if stdout: print('%s%s%s' % (Colors.O, stdout, Colors.N), end='')
-        if stderr: print('%s%s%s' % (Colors.R, stderr, Colors.N), end='')
+        if stdout: print('%s%s%s' % (Colors.O, self.to_unicode(stdout), Colors.N), end='')
+        if stderr: print('%s%s%s' % (Colors.R, self.to_unicode(stderr), Colors.N), end='')
 
     def do_resource(self, params):
         '''Executes commands from a resource file'''
@@ -1321,7 +1334,7 @@ class Framework(cmd.Cmd):
         return []
 
     def _complete_keys_add(self, text, *ignored):
-        return [x for x in self._get_key_names if x.startswith(text)]
+        return [x for x in self._get_key_names() if x.startswith(text)]
     _complete_keys_remove = _complete_keys_add
 
     def complete_modules(self, text, line, *ignored):

@@ -1,9 +1,7 @@
-from __future__ import print_function
-
 __author__    = 'Tim Tomes (@lanmaster53)'
 
 from datetime import datetime
-from urlparse import urljoin
+from urllib.parse import urljoin
 import errno
 import imp
 import json
@@ -13,14 +11,14 @@ import re
 import shutil
 import sys
 import yaml
-import __builtin__
+import builtins
 
 # import framework libs
 from recon.core import framework
 from recon.core.constants import BANNER
 
 # set the __version__ variable based on the VERSION file
-execfile(os.path.join(sys.path[0], 'VERSION'))
+exec(open(os.path.join(sys.path[0], 'VERSION')).read())
 
 # using stdout to spool causes tab complete issues
 # therefore, override print function
@@ -36,11 +34,11 @@ def spool_print(*args, **kwargs):
         if 'console' in kwargs and kwargs['console'] is False:
             return
         # new print function must still use the old print function via the backup
-        __builtin__._print(*args, **kwargs)
+        builtins._print(*args, **kwargs)
 # make a builtin backup of the original print function
-__builtin__._print = print
+builtins._print = print
 # override the builtin print function with the new print function
-__builtin__.print = spool_print
+builtins.print = spool_print
 
 #=================================================
 # BASE CLASS
@@ -106,7 +104,7 @@ class Recon(framework.Framework):
             remote = 0
             local = 0
             try:
-                remote = re.search(pattern, self.request('https://raw.githubusercontent.com/lanmaster53/recon-ng/master/VERSION').raw).group(1)
+                remote = re.search(pattern, self.request('https://raw.githubusercontent.com/lanmaster53/recon-ng/master/VERSION').text).group(1)
                 local = re.search(pattern, open('VERSION').read()).group(1)
             except:
                 self.error('Version check failed.')
@@ -127,10 +125,10 @@ class Recon(framework.Framework):
                     # create the cid and file
                     import uuid
                     with open(cid_path, 'w') as fp:
-                        fp.write(str(uuid.uuid4()))
+                        fp.write(self.to_unicode_str(uuid.uuid4()))
                 with open(cid_path) as fp:
                     cid = fp.read().strip()
-                data = {
+                params = {
                         'v': 1,
                         'tid': 'UA-52269615-2',
                         'cid': cid,
@@ -139,7 +137,7 @@ class Recon(framework.Framework):
                         'av': __version__,
                         'cd': cd
                         }
-                self.request('http://www.google-analytics.com/collect', payload=data)
+                self.request('https://www.google-analytics.com/collect', payload=params)
             except:
                 self.debug('Analytics failed.')
                 self.print_exception()
@@ -323,7 +321,7 @@ class Recon(framework.Framework):
                 self.error('Unable to synchronize module index.')
                 self.print_exception()
                 return
-            content = resp.raw
+            content = resp.text
             path = os.path.join(self.home_path, 'modules.yml')
             self._write_local_file(path, content)
         else:
@@ -378,7 +376,7 @@ class Recon(framework.Framework):
                 self.error('Module installation aborted.')
                 raise
             abs_path = os.path.join(self.data_path, filename)
-            downloads[abs_path] = resp.raw
+            downloads[abs_path] = resp.text
         # download the module
         rel_path = '.'.join([path, 'py'])
         try:
@@ -387,9 +385,9 @@ class Recon(framework.Framework):
             self.error('Module installation failed: %s' % (path))
             raise
         abs_path = os.path.join(self.mod_path, rel_path)
-        downloads[abs_path] = resp.raw
+        downloads[abs_path] = resp.text
         # install the module
-        for abs_path, content in downloads.iteritems():
+        for abs_path, content in downloads.items():
             self._write_local_file(abs_path, content)
         self.output('Module installed: %s' % (path))
 
@@ -406,12 +404,11 @@ class Recon(framework.Framework):
                 os.remove(abs_path)
         self.output('Module removed: %s' % (path))
 
-    def _load_modules(self, module_dir=None):
+    def _load_modules(self):
         self._loaded_category = {}
         self._loaded_modules = framework.Framework._loaded_modules = {}
         # crawl the module directory and build the module tree
-        path = module_dir if module_dir else self.mod_path
-        for dirpath, dirnames, filenames in os.walk(path):
+        for dirpath, dirnames, filenames in os.walk(self.mod_path):
             # remove hidden files and directories
             filenames = [f for f in filenames if not f[0] == '.']
             dirnames[:] = [d for d in dirnames if not d[0] == '.']
@@ -437,10 +434,11 @@ class Recon(framework.Framework):
             # add the module to the framework's loaded modules
             self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
             self._categorize_module(mod_category, mod_dispname)
-            return
+            # return indication of success to support module reload
+            return True
         except ImportError as e:
             # notify the user of missing dependencies
-            self.error('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_dispname, e.message[16:]))
+            self.error('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_dispname, self.to_unicode_str(e)[16:]))
         except:
             # notify the user of errors
             self.print_exception()
@@ -465,7 +463,7 @@ class Recon(framework.Framework):
         print('')
         counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
         if counts:
-            count_len = len(max([str(x[0]) for x in counts], key=len))
+            count_len = len(max([self.to_unicode_str(x[0]) for x in counts], key=len))
             for count in sorted(counts, reverse=True):
                 cnt = '[%d]' % (count[0])
                 print('%s%s %s modules%s' % (framework.Colors.B, cnt.ljust(count_len+2), count[1].title(), framework.Colors.N))
@@ -481,14 +479,22 @@ class Recon(framework.Framework):
 
     def do_index(self, params):
         '''Creates a module index (dev only)'''
-        mod_dir, mod_path = self._parse_params(params)
+        mod_dir, params = self._parse_params(params)
+        mod_path, file_name = self._parse_params(params)
         if not mod_dir and mod_path:
             self.help_index()
             return
         if os.path.exists(mod_dir):
-            self._load_modules(mod_dir)
+            self.output('Loading provided module set...')
+            # backup original module path
+            mod_path_bak = self.mod_path
+            # temporarily overwrite module path for indexing
+            self.mod_path = framework.Framework.mod_path = mod_dir
+            # load temporary modules
+            self._load_modules()
+            self.output('Building index markup...')
             yaml_objs = []
-            modules = [m for m in self._loaded_modules.iteritems() if mod_path in m[0] or mod_path == 'all']
+            modules = [m for m in self._loaded_modules.items() if mod_path in m[0] or mod_path == 'all']
             for path, module in modules:
                 yaml_obj = {}
                 # not in meta
@@ -511,13 +517,16 @@ class Recon(framework.Framework):
                 markup = yaml.safe_dump(yaml_objs)
                 print(markup)
                 # write to file if index name provided
-                if params:
-                    file_path = os.path.join(mod_dir, params.pop(0))
-                    with open(file_path, 'w') as outfile:
+                if file_name:
+                    with open(file_name, 'w') as outfile:
                         outfile.write(markup)
                     self.output('Module index created.')
             else:
                 self.output('No modules found.')
+            # restore original module path and modules
+            self.output('Restoring original module set...')
+            self.mod_path = framework.Framework.mod_path = mod_path_bak
+            self._load_modules()
         else:
             self.error('Invalid modules path.')
 
@@ -699,7 +708,7 @@ class Recon(framework.Framework):
         try:
             self._validate_options()
         except framework.FrameworkException as e:
-            self.error(e.message)
+            self.error(e)
             return
         if not params:
             self._help_modules_load()

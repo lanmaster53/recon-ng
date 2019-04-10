@@ -3,6 +3,7 @@ pyyaml
 dnspython
 lxml
 mechanize
+requests
 # web
 flask
 dicttoxml

@@ -1,8 +1,7 @@
-from __future__ import print_function
-import cookielib
 import hashlib
 import hmac
-import HTMLParser
+import html.parser
+import http.cookiejar
 import os
 import re
 import socket
@@ -11,8 +10,8 @@ import struct
 import sys
 import textwrap
 import time
-import urllib
-import urlparse
+import urllib.parse
+import webbrowser
 import yaml
 # framework libs
 from recon.core import framework
@@ -23,7 +22,7 @@ from recon.core import framework
 
 class BaseModule(framework.Framework):
 
-    def __init__(self, params, query=None):
+    def __init__(self, params):
         framework.Framework.__init__(self, params)
         self.options = framework.Options()
         # update the meta dictionary by merging the class variable with any frontmatter
@@ -96,7 +95,7 @@ class BaseModule(framework.Framework):
 
     def html_unescape(self, s):
         '''Unescapes HTML markup and returns an unescaped string.'''
-        h = HTMLParser.HTMLParser()
+        h = html.parser.HTMLParser()
         return h.unescape(s)
         #p = htmllib.HTMLParser(None)
         #p.save_bgn()
@@ -198,7 +197,7 @@ class BaseModule(framework.Framework):
             query = ' '.join(params.split()[1:]) if prefix == 'query' else query
             try: results = self.query(query)
             except sqlite3.OperationalError as e:
-                raise framework.FrameworkException('Invalid source query. %s %s' % (type(e).__name__, e.message))
+                raise framework.FrameworkException('Invalid source query. %s %s' % (type(e).__name__, e))
             if not results:
                 sources = []
             elif len(results[0]) > 1:
@@ -223,15 +222,12 @@ class BaseModule(framework.Framework):
         token = self.get_key(token_name)
         if token:
             return token
-        import urllib
-        import webbrowser
-        import socket
         client_id = self.get_key(resource+'_api')
         client_secret = self.get_key(resource+'_secret')
         port = 31337
         redirect_uri = 'http://localhost:%d' % (port)
         payload = {'response_type': 'code', 'client_id': client_id, 'scope': scope, 'state': self.get_random_str(40), 'redirect_uri': redirect_uri}
-        authorize_url = '%s?%s' % (authorize_url, urllib.urlencode(payload))
+        authorize_url = '%s?%s' % (authorize_url, urllib.parse.urlencode(payload))
         w = webbrowser.get()
         w.open(authorize_url)
         # open a socket to receive the access token callback
@@ -244,7 +240,7 @@ class BaseModule(framework.Framework):
         conn.close()
         # process the received data
         if 'error_description' in data:
-            self.error(urllib.unquote_plus(re.search(r'error_description=([^\s&]*)', data).group(1)))
+            self.error(urllib.parse.unquote_plus(re.search(r'error_description=([^\s&]*)', data).group(1)))
             return None
         authorization_code = re.search(r'code=([^\s&]*)', data).group(1)
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': client_id, 'client_secret': client_secret}
@@ -279,7 +275,8 @@ class BaseModule(framework.Framework):
         payload['ts'] = timestamp
         payload['key'] = key
         msg = '%s%s%s%s' % (key, timestamp, method, secret)
-        hm = hmac.new(secret.encode('utf-8'), msg, hashlib.sha1)
+        encoding = sys.getdefaultencoding()
+        hm = hmac.new(bytes(secret, encoding), bytes(msg, encoding), hashlib.sha1)
         payload['hmac'] = hm.hexdigest()
         return payload
 
@@ -326,7 +323,7 @@ class BaseModule(framework.Framework):
                     raise framework.FrameworkException(jsonobj[item])
             results += jsonobj['statuses']
             if 'next_results' in jsonobj['search_metadata']:
-                max_id = urlparse.parse_qs(jsonobj['search_metadata']['next_results'][1:])['max_id'][0]
+                max_id = urllib.parse.parse_qs(jsonobj['search_metadata']['next_results'][1:])['max_id'][0]
                 payload['max_id'] = max_id
                 continue
             break
@@ -459,7 +456,7 @@ class BaseModule(framework.Framework):
     #==================================================
 
     def make_cookie(self, name, value, domain, path='/'):
-        return cookielib.Cookie(
+        return http.cookiejar.Cookie(
             version=0, 
             name=name, 
             value=value,
@@ -498,7 +495,7 @@ class BaseModule(framework.Framework):
         abs_path = os.path.join(self.mod_path, rel_path)
         with open(abs_path) as f:
             content = f.readlines()
-            nums = [str(x) for x in range(1, len(content)+1)]
+            nums = [self.to_unicode_str(x) for x in range(1, len(content)+1)]
             num_len = len(max(nums, key=len))
             for num in nums:
                 print('%s|%s' % (num.rjust(num_len), content[int(num)-1]), end='')
