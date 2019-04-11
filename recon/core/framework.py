@@ -110,7 +110,6 @@ class Framework(cmd.Cmd):
         self.nohelp = '%s[!] No help on %%s%s' % (Colors.R, Colors.N)
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
-        self.rpc_cache = []
         self._exit = 0
 
     #==================================================
@@ -620,12 +619,6 @@ class Framework(cmd.Cmd):
             self._summary_counts[table] = [0,0]
         self._summary_counts[table][0] += rowcount
         self._summary_counts[table][1] += 1
-
-        # build RPC response
-        for key in data.keys():
-            if not data[key]:
-                del data[key]
-        self.rpc_cache.append(data)
 
         return rowcount
 
