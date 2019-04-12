@@ -29,7 +29,7 @@ _print_lock = Lock()
 def spool_print(*args, **kwargs):
     with _print_lock:
         if framework.Framework._spool:
-            framework.Framework._spool.write('%s\n' % (args[0]))
+            framework.Framework._spool.write(f"{args[0]}{os.linesep}")
             framework.Framework._spool.flush()
         if 'console' in kwargs and kwargs['console'] is False:
             return
@@ -86,7 +86,7 @@ class Recon(framework.Framework):
         self.register_option('proxy', None, False, 'proxy server (address:port)')
         self.register_option('threads', 10, True, 'number of threads (where applicable)')
         self.register_option('timeout', 10, True, 'socket timeout (seconds)')
-        self.register_option('user-agent', 'Recon-ng/v%s' % (__version__.split('.')[0]), True, 'user-agent string')
+        self.register_option('user-agent', f"Recon-ng/v{__version__.split('.')[0]}", True, 'user-agent string')
         self.register_option('verbosity', 1, True, 'verbosity level (0 = minimal, 1 = verbose, 2 = debug)')
 
     def _init_home(self):
@@ -112,8 +112,8 @@ class Recon(framework.Framework):
             if remote != local:
                 self.alert('Your version of Recon-ng does not match the latest release.')
                 self.alert('Please consider updating before further use.')
-                self.output('Remote version:  %s' % (remote))
-                self.output('Local version:   %s' % (local))
+                self.output(f"Remote version:  {remote}")
+                self.output(f"Local version:   {local}")
         else:
             self.alert('Version check disabled.')
 
@@ -230,18 +230,18 @@ class Recon(framework.Framework):
         if db_version(self) == 0:
             # add mname column to contacts table
             tmp = self.get_random_str(20)
-            self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
+            self.query(f"ALTER TABLE contacts RENAME TO {tmp}")
             self.query('CREATE TABLE contacts (fname TEXT, mname TEXT, lname TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
-            self.query('INSERT INTO contacts (fname, lname, email, title, region, country) SELECT fname, lname, email, title, region, country FROM %s' % (tmp))
-            self.query('DROP TABLE %s' % (tmp))
+            self.query(f"INSERT INTO contacts (fname, lname, email, title, region, country) SELECT fname, lname, email, title, region, country FROM {tmp}")
+            self.query(f"DROP TABLE {tmp}")
             self.query('PRAGMA user_version = 1')
         if db_version(self) == 1:
             # rename name columns
             tmp = self.get_random_str(20)
-            self.query('ALTER TABLE contacts RENAME TO %s' % (tmp))
+            self.query(f"ALTER TABLE contacts RENAME TO {tmp}")
             self.query('CREATE TABLE contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT)')
-            self.query('INSERT INTO contacts (first_name, middle_name, last_name, email, title, region, country) SELECT fname, mname, lname, email, title, region, country FROM %s' % (tmp))
-            self.query('DROP TABLE %s' % (tmp))
+            self.query(f"INSERT INTO contacts (first_name, middle_name, last_name, email, title, region, country) SELECT fname, mname, lname, email, title, region, country FROM {tmp}")
+            self.query(f"DROP TABLE {tmp}")
             # rename pushpin table
             self.query('ALTER TABLE pushpin RENAME TO pushpins')
             # add new tables
@@ -270,7 +270,7 @@ class Recon(framework.Framework):
             # add module column to all tables
             for table in ['domains', 'companies', 'netblocks', 'locations', 'vulnerabilities', 'ports', 'hosts', 'contacts', 'credentials', 'leaks', 'pushpins']:
                 if 'module' not in [x[0] for x in self.get_columns(table)]:
-                    self.query('ALTER TABLE %s ADD COLUMN module TEXT' % (table))
+                    self.query(f"ALTER TABLE {table} ADD COLUMN module TEXT")
             self.query('PRAGMA user_version = 5')
         if db_version(self) == 5:
             # add profile table
@@ -293,7 +293,7 @@ class Recon(framework.Framework):
     def _request_file_from_repo(self, path):
         resp = self.request(urljoin(self.repo_url, path))
         if resp.status_code != 200:
-            raise framework.FrameworkException('Invalid response from module repository (%d).' % resp.status_code)
+            raise framework.FrameworkException(f"Invalid response from module repository ({resp.status_code}).")
         return resp
 
     def _write_local_file(self, path, content):
@@ -372,7 +372,7 @@ class Recon(framework.Framework):
             try:
                 resp = self._request_file_from_repo('/'.join(['data', filename]))
             except:
-                self.error('Supporting file download for %s failed: (%s)' % (path, filename))
+                self.error(f"Supporting file download for {path} failed: ({filename})")
                 self.error('Module installation aborted.')
                 raise
             abs_path = os.path.join(self.data_path, filename)
@@ -382,14 +382,14 @@ class Recon(framework.Framework):
         try:
             resp = self._request_file_from_repo('/'.join(['modules', rel_path]))
         except:
-            self.error('Module installation failed: %s' % (path))
+            self.error(f"Module installation failed: {path}")
             raise
         abs_path = os.path.join(self.mod_path, rel_path)
         downloads[abs_path] = resp.text
         # install the module
         for abs_path, content in downloads.items():
             self._write_local_file(abs_path, content)
-        self.output('Module installed: %s' % (path))
+        self.output(f"Module installed: {path}")
 
     def _remove_module(self, path):
         # remove the module
@@ -402,7 +402,7 @@ class Recon(framework.Framework):
             abs_path = os.path.join(self.data_path, filename)
             if os.path.exists(abs_path):
                 os.remove(abs_path)
-        self.output('Module removed: %s' % (path))
+        self.output(f"Module removed: {path}")
 
     def _load_modules(self):
         self._loaded_category = {}
@@ -438,11 +438,11 @@ class Recon(framework.Framework):
             return True
         except ImportError as e:
             # notify the user of missing dependencies
-            self.error('Module \'%s\' disabled. Dependency required: \'%s\'' % (mod_dispname, self.to_unicode_str(e)[16:]))
+            self.error(f"Module '{mod_dispname}' disabled. Dependency required: '{self.to_unicode_str(e)[16:]}'")
         except:
             # notify the user of errors
             self.print_exception()
-            self.error('Module \'%s\' disabled.' % (mod_dispname))
+            self.error(f"Module '{mod_dispname}' disabled.")
         # remove the module from the framework's loaded modules
         self._loaded_modules.pop(mod_dispname, None)
         self._categorize_module('disabled', mod_dispname)
@@ -457,18 +457,18 @@ class Recon(framework.Framework):
     #==================================================
 
     def show_banner(self):
-        banner_len = len(max(BANNER.split('\n'), key=len))
+        banner_len = len(max(BANNER.split(os.linesep), key=len))
         print(BANNER)
-        print('{0:^{1}}'.format('%s[%s v%s, %s]%s' % (framework.Colors.O, self._name, __version__, __author__, framework.Colors.N), banner_len+8)) # +8 compensates for the color bytes
+        print('{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8))
         print('')
         counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
         if counts:
             count_len = len(max([self.to_unicode_str(x[0]) for x in counts], key=len))
             for count in sorted(counts, reverse=True):
-                cnt = '[%d]' % (count[0])
-                print('%s%s %s modules%s' % (framework.Colors.B, cnt.ljust(count_len+2), count[1].title(), framework.Colors.N))
+                cnt = f"[{count[0]}]"
+                print(f"{framework.Colors.B}{cnt.ljust(count_len+2)} {count[1].title()} modules{framework.Colors.N}")
                 # create dynamic easter egg command based on counts
-                setattr(self, 'do_%d' % count[0], self._menu_egg)
+                setattr(self, f"do_{count[0]}", self._menu_egg)
         else:
             self.alert('No modules enabled/installed.')
         print('')
@@ -548,7 +548,7 @@ class Recon(framework.Framework):
         '''Lists all available modules in the marketplace'''
         modules = [m for m in self._module_index]
         if params:
-            self.output('Searching module index for \'%s\'...'%(params))
+            self.output(f"Searching module index for '{params}'...")
             modules = self._search_module_index(params)
         if modules:
             rows = []
@@ -560,7 +560,7 @@ class Recon(framework.Framework):
                 rows.append(row)
             header = ('Path', 'Version', 'Status', 'Updated', '*')
             self.table(rows, header=header)
-            self.alert('* = Has dependencies. See info for details.\n')
+            self.alert(f"* = Has dependencies. See info for details.{os.linesep}")
         else:
             self.error('No modules found.')
             self._help_marketplace_list()
@@ -633,7 +633,7 @@ class Recon(framework.Framework):
             self._help_workspaces_create()
             return
         if not self._init_workspace(params):
-            self.output('Unable to create \'%s\' workspace.' % (params))
+            self.output(f"Unable to create '{params}' workspace.")
 
     def _do_workspaces_select(self, params):
         '''Selects an existing workspace'''
@@ -641,7 +641,7 @@ class Recon(framework.Framework):
             self._help_workspaces_select()
             return
         if not self._init_workspace(params):
-            self.output('Unable to initialize \'%s\' workspace.' % (params))
+            self.output(f"Unable to initialize '{params}' workspace.")
 
     def _do_workspaces_delete(self, params):
         '''Deletes an existing workspace'''
@@ -649,7 +649,7 @@ class Recon(framework.Framework):
             self._help_workspaces_delete()
             return
         if not self.delete_workspace(params):
-            self.output('Unable to delete \'%s\' workspace.' % (params))
+            self.output(f"Unable to delete '{params}' workspace.")
 
     def do_snapshots(self, params):
         '''Manages workspace snapshots'''
@@ -672,11 +672,12 @@ class Recon(framework.Framework):
 
     def _do_snapshots_take(self, params):
         '''Takes a snapshot of the current database'''
-        snapshot = 'snapshot_%s.db' % (datetime.strftime(datetime.now(), '%Y%m%d%H%M%S'))
+        ts = datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')
+        snapshot = f"snapshot_{ts}.db"
         src = os.path.join(self.workspace, 'data.db')
         dst = os.path.join(self.workspace, snapshot)
         shutil.copyfile(src, dst)
-        self.output('Snapshot created: %s' % (snapshot))
+        self.output(f"Snapshot created: {snapshot}")
 
     def _do_snapshots_load(self, params):
         '''Loads an existing database snapshot'''
@@ -687,9 +688,9 @@ class Recon(framework.Framework):
             src = os.path.join(self.workspace, params)
             dst = os.path.join(self.workspace, 'data.db')
             shutil.copyfile(src, dst)
-            self.output('Snapshot loaded: %s' % (params))
+            self.output(f"Snapshot loaded: {params}")
         else:
-            self.error('No snapshot named \'%s\'.' % (params))
+            self.error(f"No snapshot named '{params}'.")
 
     def _do_snapshots_delete(self, params):
         '''Deletes an existing snapshot'''
@@ -698,9 +699,9 @@ class Recon(framework.Framework):
             return
         if params in self._get_snapshots():
             os.remove(os.path.join(self.workspace, params))
-            self.output('Snapshot removed: %s' % (params))
+            self.output(f"Snapshot removed: {params}")
         else:
-            self.error('No snapshot named \'%s\'.' % (params))
+            self.error(f"No snapshot named '{params}'.")
 
     def _do_modules_load(self, params):
         '''Loads a module'''
@@ -720,7 +721,7 @@ class Recon(framework.Framework):
             if not modules:
                 self.error('Invalid module name.')
             else:
-                self.output('Multiple modules match \'%s\'.' % params)
+                self.output(f"Multiple modules match '{params}'.")
                 self._list_modules(modules)
             return
         # load the module
@@ -758,55 +759,55 @@ class Recon(framework.Framework):
 
     def help_index(self):
         print(getattr(self, 'do_index').__doc__)
-        print('\nUsage: index <directory> <module|all> <index>\n')
+        print(f"{os.linesep}Usage: index <directory> <module|all> <index>{os.linesep}")
 
     def help_marketplace(self):
         print(getattr(self, 'do_marketplace').__doc__)
-        print('\nUsage: marketplace <list|info|install|remove> [...]\n')
+        print(f"{os.linesep}Usage: marketplace <list|info|install|remove> [...]{os.linesep}")
 
     def _help_marketplace_list(self):
         print(getattr(self, '_do_marketplace_list').__doc__)
-        print('\nUsage: marketplace list [<regex>]\n')
+        print(f"{os.linesep}Usage: marketplace list [<regex>]{os.linesep}")
 
     def _help_marketplace_info(self):
         print(getattr(self, '_do_marketplace_info').__doc__)
-        print('\nUsage: marketplace info <<path>|<prefix>|all>\n')
+        print(f"{os.linesep}Usage: marketplace info <<path>|<prefix>|all>{os.linesep}")
 
     def _help_marketplace_install(self):
         print(getattr(self, '_do_marketplace_install').__doc__)
-        print('\nUsage: marketplace install <<path>|<prefix>|all>\n')
+        print(f"{os.linesep}Usage: marketplace install <<path>|<prefix>|all>{os.linesep}")
 
     def _help_marketplace_remove(self):
         print(getattr(self, '_do_marketplace_remove').__doc__)
-        print('\nUsage: marketplace remove <<path>|<prefix>|all>\n')
+        print(f"{os.linesep}Usage: marketplace remove <<path>|<prefix>|all>{os.linesep}")
 
     def help_workspaces(self):
         print(getattr(self, 'do_workspaces').__doc__)
-        print('\nUsage: workspaces <list|create|select|delete> [...]\n')
+        print(f"{os.linesep}Usage: workspaces <list|create|select|delete> [...]{os.linesep}")
 
     def _help_workspaces_create(self):
         print(getattr(self, '_do_workspaces_create').__doc__)
-        print('\nUsage: workspace create <name>\n')
+        print(f"{os.linesep}Usage: workspace create <name>{os.linesep}")
 
     def _help_workspaces_select(self):
         print(getattr(self, '_do_workspaces_select').__doc__)
-        print('\nUsage: workspace select <name>\n')
+        print(f"{os.linesep}Usage: workspace select <name>{os.linesep}")
 
     def _help_workspaces_delete(self):
         print(getattr(self, '_do_workspaces_delete').__doc__)
-        print('\nUsage: workspace delete <name>\n')
+        print(f"{os.linesep}Usage: workspace delete <name>{os.linesep}")
 
     def help_snapshots(self):
         print(getattr(self, 'do_snapshots').__doc__)
-        print('\nUsage: snapshots <list|take|load|delete> [...]\n')
+        print(f"{os.linesep}Usage: snapshots <list|take|load|delete> [...]{os.linesep}")
 
     def _help_snapshots_load(self):
         print(getattr(self, '_do_snapshots_load').__doc__)
-        print('\nUsage: snapshots load <name>\n')
+        print(f"{os.linesep}Usage: snapshots load <name>{os.linesep}")
 
     def _help_snapshots_delete(self):
         print(getattr(self, '_do_snapshots_delete').__doc__)
-        print('\nUsage: snapshots delete <name>\n')
+        print(f"{os.linesep}Usage: snapshots delete <name>{os.linesep}")
 
     #==================================================
     # COMPLETE METHODS

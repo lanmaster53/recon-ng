@@ -13,7 +13,7 @@ def recon_ui(args):
     try:
         import readline
     except ImportError:
-        print('%s[!] Module \'readline\' not available. Tab complete disabled.%s' % (Colors.R, Colors.N))
+        print(f"{Colors.R}[!] Module 'readline' not available. Tab complete disabled.{Colors.N}")
     else:
         import rlcompleter
         if 'libedit' in readline.__doc__:
@@ -43,7 +43,7 @@ def recon_ui(args):
     except KeyboardInterrupt:
         print('')
 
-description = '%%(prog)s - %s' % (base.__author__)
+description = f"%(prog)s - {base.__author__}"
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
 parser.add_argument('-r', help='load commands from a resource file', metavar='filename', dest='script_file', action='store')

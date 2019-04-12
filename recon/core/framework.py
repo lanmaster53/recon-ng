@@ -107,7 +107,7 @@ class Framework(cmd.Cmd):
         self.ruler = '-'
         self.spacer = '  '
         self.time_format = '%Y-%m-%d %H:%M:%S'
-        self.nohelp = '%s[!] No help on %%s%s' % (Colors.R, Colors.N)
+        self.nohelp = f"{Colors.R}[!] No help on %s{Colors.N}"
         self.do_help.__func__.__doc__ = '''Displays this menu'''
         self.doc_header = 'Commands (type [help|?] <topic>):'
         self._exit = 0
@@ -128,14 +128,14 @@ class Framework(cmd.Cmd):
         if Framework._load:
             print('\r', end='')
         if Framework._script:
-            print('%s' % (line))
+            print(f"{line}")
         if Framework._record:
             recorder = codecs.open(Framework._record, 'ab', encoding='utf-8')
-            recorder.write('%s\n' % (line))
+            recorder.write(f"{line}{os.linesep}")
             recorder.flush()
             recorder.close()
         if Framework._spool:
-            Framework._spool.write('%s%s\n' % (self.prompt, line))
+            Framework._spool.write(f"{self.prompt}{line}{os.linesep}")
             Framework._spool.flush()
         return line
 
@@ -167,12 +167,12 @@ class Framework(cmd.Cmd):
     # make help menu more attractive
     def print_topics(self, header, cmds, cmdlen, maxcol):
         if cmds:
-            self.stdout.write("%s\n" % header)
+            self.stdout.write(f"{header}{os.linesep}")
             if self.ruler:
-                self.stdout.write("%s\n" % (self.ruler * len(header)))
+                self.stdout.write(f"{self.ruler * len(header)}{os.linesep}")
             for cmd in cmds:
-                self.stdout.write("%s %s\n" % (cmd.ljust(15), getattr(self, 'do_' + cmd).__doc__))
-            self.stdout.write("\n")
+                self.stdout.write(f"{cmd.ljust(15)} {getattr(self, 'do_' + cmd).__doc__}{os.linesep}")
+            self.stdout.write(os.linesep)
 
     #==================================================
     # SUPPORT METHODS
@@ -249,24 +249,24 @@ class Framework(cmd.Cmd):
             line = ' '.join([x for x in [message, line] if x])
             self.error(line)
         elif self._global_options['verbosity'] == 2:
-            print('%s%s' % (Colors.R, '-'*60))
+            print(f"{Colors.R}{'-'*60}")
             traceback.print_exc()
-            print('%s%s' % ('-'*60, Colors.N))
+            print(f"{'-'*60}{Colors.N}")
 
     def error(self, line):
         '''Formats and presents errors.'''
         if not re.search('[.,;!?]$', line):
             line += '.'
         line = line[:1].upper() + line[1:]
-        print('%s[!] %s%s' % (Colors.R, line, Colors.N))
+        print(f"{Colors.R}[!] {line}{Colors.N}")
 
     def output(self, line):
         '''Formats and presents normal output.'''
-        print('%s[*]%s %s' % (Colors.B, Colors.N, line))
+        print(f"{Colors.B}[*]{Colors.N} {line}")
 
     def alert(self, line):
         '''Formats and presents important output.'''
-        print('%s[*]%s %s' % (Colors.G, Colors.N, line))
+        print(f"{Colors.G}[*]{Colors.N} {line}")
 
     def verbose(self, line):
         '''Formats and presents output if in verbose mode.'''
@@ -287,8 +287,8 @@ class Framework(cmd.Cmd):
             print(line.upper())
             print(self.ruler*len(line))
         if level == 1:
-            print('%s%s' % (self.spacer, line.title()))
-            print('%s%s' % (self.spacer, self.ruler*len(line)))
+            print(f"{self.spacer}{line.title()}")
+            print(f"{self.spacer}{self.ruler*len(line)}")
 
     def table(self, data, header=[], title=''):
         '''Accepts a list of rows and outputs a table.'''
@@ -314,16 +314,16 @@ class Framework(cmd.Cmd):
                 lens[x] += 1
         # build ascii table
         if len(tdata) > 0:
-            separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
+            separator_str = f"{self.spacer}+-{'%s---'*(cols-1)}%s-+"
             separator_sub = tuple(['-'*x for x in lens])
             separator = separator_str % separator_sub
-            data_str = '%s| %s%%s |' % (self.spacer, '%s | '*(cols-1))
+            data_str = f"{self.spacer}| {'%s | '*(cols-1)}%s |"
             # top of ascii table
             print('')
             print(separator)
             # ascii table data
             if title:
-                print('%s| %s |' % (self.spacer, title.center(tdata_len)))
+                print(f"{self.spacer}| {title.center(tdata_len)} |")
                 print(separator)
             if header:
                 rdata = tdata.pop(0)
@@ -347,12 +347,12 @@ class Framework(cmd.Cmd):
 
     def _query(self, path, query, values=(), include_header=False):
         '''Queries the database and returns the results as a list.'''
-        self.debug('DATABASE => %s' % (path))
-        self.debug('QUERY => %s' % (query))
+        self.debug(f"DATABASE => {path}")
+        self.debug(f"QUERY => {query}")
         with sqlite3.connect(path) as conn:
             with closing(conn.cursor()) as cur:
                 if values:
-                    self.debug('VALUES => %s' % (repr(values)))
+                    self.debug(f"VALUES => {repr(values)}")
                     cur.execute(query, values)
                 else:
                     cur.execute(query)
@@ -370,7 +370,7 @@ class Framework(cmd.Cmd):
                 return results
 
     def get_columns(self, table):
-        return [(x[1],x[2]) for x in self.query('PRAGMA table_info(\'%s\')' % (table))]
+        return [(x[1], x[2]) for x in self.query(f"PRAGMA table_info('{table}')")]
 
     def get_tables(self):
         return [x[0] for x in self.query('SELECT name FROM sqlite_master WHERE type=\'table\'') if x[0] not in ['dashboard']]
@@ -386,7 +386,7 @@ class Framework(cmd.Cmd):
             display(pattern % values)
         else:
             for key in sorted(data.keys()):
-                display('%s: %s' % (key.title(), data[key]))
+                display(f"{key.title()}: {data[key]}")
             display(self.ruler*50)
 
     def insert_domains(self, domain=None, mute=False):
@@ -595,23 +595,17 @@ class Framework(cmd.Cmd):
         for column in columns:
             data[column] = self.to_unicode_str(data[column])
 
+        # build the insert query
+        columns_str = '`, `'.join(columns)
+        placeholder_str = ', '.join('?'*len(columns))
+        unique_columns_str = ' and '.join([f"`{column}`=?" for column in unique_columns])
         if not unique_columns:
-            query = 'INSERT INTO "%s" ("%s") VALUES (%s)' % (
-                table,
-                '", "'.join(columns),
-                ', '.join('?'*len(columns))
-            )
+            query = f"INSERT INTO `{table}` (`{columns_str}`) VALUES ({placeholder_str})"
         else:
-            query = 'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
-                table,
-                '", "'.join(columns),
-                ', '.join('?'*len(columns)),
-                table,
-                ' and '.join(['"%s"=?' % (column) for column in unique_columns])
-            )
-
+            query = f"INSERT INTO `{table}` (`{columns_str}`) SELECT {placeholder_str} WHERE NOT EXISTS(SELECT * FROM `{table}` WHERE {unique_columns_str})"
         values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
 
+        # query the database
         rowcount = self.query(query, values)
 
         # increment summary tracker
@@ -636,7 +630,7 @@ class Framework(cmd.Cmd):
             # if value type is bool or int, then we know the options is set
             if not type(self.options[option]) in [bool, int]:
                 if self.options.required[option] is True and not self.options[option]:
-                    raise FrameworkException('Value required for the \'%s\' option.' % (option.upper()))
+                    raise FrameworkException(f"Value required for the '{option.upper()}' option.")
         return
 
     def _list_options(self, options=None):
@@ -644,7 +638,7 @@ class Framework(cmd.Cmd):
         if options is None:
             options = self.options
         if options:
-            pattern = '%s%%s  %%s  %%s  %%s' % (self.spacer)
+            pattern = f"{self.spacer}%s  %s  %s  %s"
             key_len = len(max(options, key=len))
             if key_len < 4: key_len = 4
             val_len = len(max([self.to_unicode_str(options[x]) for x in options], key=len))
@@ -660,7 +654,7 @@ class Framework(cmd.Cmd):
             print('')
         else:
             print('')
-            print('%sNo options available for this module.' % (self.spacer))
+            print(f"{self.spacer}No options available for this module.")
             print('')
 
     def _load_config(self):
@@ -794,7 +788,7 @@ class Framework(cmd.Cmd):
                     last_category = category
                     self.heading(last_category)
                 # print module
-                print('%s%s' % (self.spacer*2, module))
+                print(f"{self.spacer*2}{module}")
         else:
             print('')
             self.alert('No modules enabled/installed.')
@@ -816,7 +810,7 @@ class Framework(cmd.Cmd):
             tables = self.get_tables()
             tdata = []
             for table in tables:
-                count = self.query('SELECT COUNT(*) FROM "%s"' % (table))[0][0]
+                count = self.query(f"SELECT COUNT(*) FROM `{table}`")[0][0]
                 tdata.append([table.title(), count])
             self.table(tdata, header=['Category', 'Quantity'], title='Results Summary')
         else:
@@ -879,7 +873,7 @@ class Framework(cmd.Cmd):
             return
         if option in self.options:
             self.options[option] = value
-            print('%s => %s' % (option.upper(), value))
+            print(f"{option.upper()} => {value}")
             self._save_config(option)
         else:
             self.error('Invalid option name.')
@@ -917,7 +911,7 @@ class Framework(cmd.Cmd):
             self._help_keys_add()
             return
         if self.add_key(key, value):
-            self.output('Key \'%s\' added.' % (key))
+            self.output(f"Key '{key}' added.")
 
     def _do_keys_remove(self, params):
         '''Removes a framework API key'''
@@ -927,7 +921,7 @@ class Framework(cmd.Cmd):
             return
         if self.get_key(key):
             if self.remove_key(key):
-                self.output('Key \'%s\' deleted.' % (key))
+                self.output(f"Key '{key}' deleted.")
         else:
             self.error('Invalid key name.')
 
@@ -946,7 +940,7 @@ class Framework(cmd.Cmd):
         '''Lists installed modules'''
         modules = [x for x in Framework._loaded_modules]
         if params:
-            self.output('Searching installed modules for \'%s\'...'%(params))
+            self.output(f"Searching installed modules for '{params}'...")
             modules = [x for x in Framework._loaded_modules if params in x]
         if modules:
             self._list_modules(modules)
@@ -966,7 +960,7 @@ class Framework(cmd.Cmd):
             if not modules:
                 self.error('Invalid module name.')
             else:
-                self.output('Multiple modules match \'%s\'.' % params)
+                self.output(f"Multiple modules match '{params}'.")
                 self._list_modules(modules)
             return
         import io
@@ -976,7 +970,7 @@ class Framework(cmd.Cmd):
         else:
             end_string = 'EOF'
             Framework._load = 1
-        sys.stdin = io.StringIO('modules load %s\n%s' % (modules[0], end_string))
+        sys.stdin = io.StringIO(f"modules load {modules[0]}{os.linesep}{end_string}")
         return True
 
     def do_show(self, params):
@@ -988,7 +982,7 @@ class Framework(cmd.Cmd):
         if arg in self._get_show_names():
             getattr(self, 'show_' + arg)()
         elif arg in self.get_tables():
-            self.do_db('query SELECT ROWID, * FROM "%s"' % (arg))
+            self.do_db(f"query SELECT ROWID, * FROM `{arg}`")
         else:
             self.help_show()
 
@@ -1035,7 +1029,7 @@ class Framework(cmd.Cmd):
                 for column in columns:
                     try:
                         # prompt user for data
-                        value = input('%s (%s): ' % column)
+                        value = input(f"{column[0]} ({column[1]}): ")
                         record[sanitize_column(column[0])] = value
                     except KeyboardInterrupt:
                         print('')
@@ -1043,11 +1037,11 @@ class Framework(cmd.Cmd):
                     finally:
                         # ensure proper output for resource scripts
                         if Framework._script:
-                            print('%s' % (value))
+                            print(f"{value}")
             # add record to the database
             func = getattr(self, 'insert_' + table)
             count = func(mute=True, **record)
-            self.output('%d rows affected.' % (count))
+            self.output(f"{count} rows affected.")
         else:
             self.output('Invalid table name.')
 
@@ -1073,12 +1067,12 @@ class Framework(cmd.Cmd):
                 finally:
                     # ensure proper output for resource scripts
                     if Framework._script:
-                        print('%s' % (params))
+                        print(f"{params}")
             # delete record(s) from the database
             count = 0
             for rowid in rowids:
-                count += self.query('DELETE FROM %s WHERE ROWID IS ?' % (table), (rowid,))
-            self.output('%d rows affected.' % (count))
+                count += self.query(f"DELETE FROM `{table}` WHERE ROWID IS ?", (rowid,))
+            self.output(f"{count} rows affected.")
         else:
             self.output('Invalid table name.')
 
@@ -1090,7 +1084,7 @@ class Framework(cmd.Cmd):
         try:
             results = self.query(params, include_header=True)
         except sqlite3.OperationalError as e:
-            self.error('Invalid query. %s %s' % (type(e).__name__, e))
+            self.error(f"Invalid query. {type(e).__name__} {e}")
             return
         if type(results) == list:
             header = results.pop(0)
@@ -1098,9 +1092,9 @@ class Framework(cmd.Cmd):
                 self.output('No data returned.')
             else:
                 self.table(results, header=header)
-                self.output('%d rows returned' % (len(results)))
+                self.output(f"{len(results)} rows returned")
         else:
-            self.output('%d rows affected.' % (results))
+            self.output(f"{results} rows affected.")
 
     def do_record(self, params):
         '''Records commands to a resource file'''
@@ -1121,17 +1115,17 @@ class Framework(cmd.Cmd):
                 self._help_record_start()
                 return
             if not self._is_writeable(filename):
-                self.output('Cannot record commands to \'%s\'.' % (filename))
+                self.output(f"Cannot record commands to '{filename}'.")
             else:
                 Framework._record = filename
-                self.output('Recording commands to \'%s\'.' % (Framework._record))
+                self.output(f"Recording commands to '{Framework._record}'.")
         else:
             self.output('Recording is already started.')
 
     def _do_record_stop(self, params):
         '''Stops command recording'''
         if Framework._record:
-            self.output('Recording stopped. Commands saved to \'%s\'.' % (Framework._record))
+            self.output(f"Recording stopped. Commands saved to '{Framework._record}'.")
             Framework._record = None
         else:
             self.output('Recording is already stopped.')
@@ -1139,7 +1133,7 @@ class Framework(cmd.Cmd):
     def _do_record_status(self, params):
         '''Provides the status of command recording'''
         status = 'started' if Framework._record else 'stopped'
-        self.output('Command recording is %s.' % (status))
+        self.output(f"Command recording is {status}.")
 
     def do_spool(self, params):
         '''Spools output to a file'''
@@ -1160,17 +1154,17 @@ class Framework(cmd.Cmd):
                 self._help_spool_start()
                 return
             if not self._is_writeable(filename):
-                self.output('Cannot spool output to \'%s\'.' % (filename))
+                self.output(f"Cannot spool output to '{filename}'.")
             else:
                 Framework._spool = codecs.open(filename, 'ab', encoding='utf-8')
-                self.output('Spooling output to \'%s\'.' % (Framework._spool.name))
+                self.output(f"Spooling output to '{Framework._spool.name}'.")
         else:
             self.output('Spooling is already started.')
 
     def _do_spool_stop(self, params):
         '''Stops output spooling'''
         if Framework._spool:
-            self.output('Spooling stopped. Output saved to \'%s\'.' % (Framework._spool.name))
+            self.output(f"Spooling stopped. Output saved to '{Framework._spool.name}'.")
             Framework._spool = None
         else:
             self.output('Spooling is already stopped.')
@@ -1178,7 +1172,7 @@ class Framework(cmd.Cmd):
     def _do_spool_status(self, params):
         '''Provides the status of output spooling'''
         status = 'started' if Framework._spool else 'stopped'
-        self.output('Output spooling is %s.' % (status))
+        self.output(f"Output spooling is {status}.")
 
     def do_shell(self, params):
         '''Executes shell commands'''
@@ -1186,11 +1180,11 @@ class Framework(cmd.Cmd):
             self.help_shell()
             return
         proc = subprocess.Popen(params, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        self.output('Command: %s' % (params))
+        self.output(f"Command: {params}")
         stdout = proc.stdout.read()
         stderr = proc.stderr.read()
-        if stdout: print('%s%s%s' % (Colors.O, self.to_unicode(stdout), Colors.N), end='')
-        if stderr: print('%s%s%s' % (Colors.R, self.to_unicode(stderr), Colors.N), end='')
+        if stdout:print(f"{Colors.O}{self.to_unicode(stdout)}{Colors.N}", end='')
+        if stderr:print(f"{Colors.R}{self.to_unicode(stderr)}{Colors.N}", end='')
 
     def do_resource(self, params):
         '''Executes commands from a resource file'''
@@ -1203,7 +1197,7 @@ class Framework(cmd.Cmd):
             sys.stdin = open(params)
             Framework._script = 1
         else:
-            self.error('Script file \'%s\' not found.' % (params))
+            self.error(f"Script file '{params}' not found.")
 
     def do_pdb(self, params):
         '''Starts a Python Debugger session (dev only)'''
@@ -1216,87 +1210,87 @@ class Framework(cmd.Cmd):
 
     def help_options(self):
         print(getattr(self, 'do_options').__doc__)
-        print('\nUsage: options <list|set|unset> [...]\n')
+        print(f"{os.linesep}Usage: options <list|set|unset> [...]{os.linesep}")
 
     def _help_options_set(self):
         print(getattr(self, '_do_options_set').__doc__)
-        print('\nUsage: set <option> <value>\n')
+        print(f"{os.linesep}Usage: set <option> <value>{os.linesep}")
 
     def _help_options_unset(self):
         print(getattr(self, '_do_options_unset').__doc__)
-        print('\nUsage: unset <option>\n')
+        print(f"{os.linesep}Usage: unset <option>{os.linesep}")
 
     def help_keys(self):
         print(getattr(self, 'do_keys').__doc__)
-        print('\nUsage: keys <list|add|remove> [...]\n')
+        print(f"{os.linesep}Usage: keys <list|add|remove> [...]{os.linesep}")
 
     def _help_keys_add(self):
         print(getattr(self, '_do_keys_add').__doc__)
-        print('\nUsage: keys add <name> <value>\n')
+        print(f"{os.linesep}Usage: keys add <name> <value>{os.linesep}")
 
     def _help_keys_remove(self):
         print(getattr(self, '_do_keys_remove').__doc__)
-        print('\nUsage: keys remove <name>\n')
+        print(f"{os.linesep}Usage: keys remove <name>{os.linesep}")
 
     def help_modules(self):
         print(getattr(self, 'do_modules').__doc__)
-        print('\nUsage: modules <list|load> [...]\n')
+        print(f"{os.linesep}Usage: modules <list|load> [...]{os.linesep}")
 
     def _help_modules_list(self):
         print(getattr(self, '_do_modules_list').__doc__)
-        print('\nUsage: modules list [<string>]\n')
+        print(f"{os.linesep}Usage: modules list [<string>]{os.linesep}")
 
     def _help_modules_load(self):
         print(getattr(self, '_do_modules_load').__doc__)
-        print('\nUsage: modules load <path>\n')
+        print(f"{os.linesep}Usage: modules load <path>{os.linesep}")
 
     def help_show(self):
         options = sorted(self._get_show_names() + self.get_tables())
         print(getattr(self, 'do_show').__doc__)
-        print('\nUsage: show <%s>\n' % ('|'.join(options)))
+        print(f"{os.linesep}Usage: show <{'|'.join(options)}>{os.linesep}")
 
     def help_db(self):
         print(getattr(self, 'do_db').__doc__)
-        print('\nUsage: db <insert|delete|query> [...]\n')
+        print(f"{os.linesep}Usage: db <insert|delete|query> [...]{os.linesep}")
 
     def _help_db_insert(self):
         print(getattr(self, '_do_db_insert').__doc__)
-        print('\nUsage: db insert <table> [<values>]\n')
-        print('values => \'~\' delimited string representing column values (exclude rowid, module)\n')
+        print(f"{os.linesep}Usage: db insert <table> [<values>]{os.linesep}")
+        print(f"values => '~' delimited string representing column values (exclude rowid, module){os.linesep}")
 
     def _help_db_delete(self):
         print(getattr(self, '_do_db_delete').__doc__)
-        print('\nUsage: db delete <table> [<rowid(s)>]\n')
-        print('rowid(s) => \',\' delimited values or \'-\' delimited ranges representing rowids\n')
+        print(f"{os.linesep}Usage: db delete <table> [<rowid(s)>]{os.linesep}")
+        print(f"rowid(s) => ',' delimited values or '-' delimited ranges representing rowids{os.linesep}")
 
     def _help_db_query(self):
         print(getattr(self, '_do_db_query').__doc__)
-        print('\nUsage: db query <sql>\n')
+        print(f"{os.linesep}Usage: db query <sql>{os.linesep}")
 
     def help_record(self):
         print(getattr(self, 'do_record').__doc__)
-        print('\nUsage: record <start|stop|status> [...]\n')
+        print(f"{os.linesep}Usage: record <start|stop|status> [...]{os.linesep}")
 
     def _help_record_start(self):
         print(getattr(self, '_do_record_start').__doc__)
-        print('\nUsage: record start <filename>\n')
+        print(f"{os.linesep}Usage: record start <filename>{os.linesep}")
 
     def help_spool(self):
         print(getattr(self, 'do_spool').__doc__)
-        print('\nUsage: spool <start|stop|status> [...]\n')
+        print(f"{os.linesep}Usage: spool <start|stop|status> [...]{os.linesep}")
 
     def _help_spool_start(self):
         print(getattr(self, '_do_spool_start').__doc__)
-        print('\nUsage: spool start <filename>\n')
+        print(f"{os.linesep}Usage: spool start <filename>{os.linesep}")
 
     def help_shell(self):
         print(getattr(self, 'do_shell').__doc__)
-        print('\nUsage: [shell|!] <command>\n')
-        print('...or just type a command at the prompt.\n')
+        print(f"{os.linesep}Usage: [shell|!] <command>{os.linesep}")
+        print(f"...or just type a command at the prompt.{os.linesep}")
 
     def help_resource(self):
         print(getattr(self, 'do_resource').__doc__)
-        print('\nUsage: resource <filename>\n')
+        print(f"{os.linesep}Usage: resource <filename>{os.linesep}")
 
     #==================================================
     # COMPLETE METHODS

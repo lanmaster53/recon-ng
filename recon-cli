@@ -8,7 +8,7 @@ from recon.core import base
 from recon.core.framework import Colors
 
 def output(string):
-    print('%s[*]%s %s' % (Colors.B, Colors.N, string))
+    print(f"{Colors.B}[*]{Colors.N} {string}")
 
 def recon_cli(args):
     # process toggle flag arguments
@@ -26,10 +26,10 @@ def recon_cli(args):
     # set given workspace
     if args.workspace:
         x._init_workspace(args.workspace)
-        print('WORKSPACE => %s' % (args.workspace))
+        print(f"WORKSPACE => {args.workspace}")
     # run given global commands
     for command in args.global_commands:
-        print('GLOBAL COMMAND => %s' % (command))
+        print(f"GLOBAL COMMAND => {command}")
         x.onecmd(command)
     # set given global options
     for option in args.goptions:
@@ -51,10 +51,10 @@ def recon_cli(args):
     y = x._do_modules_load(args.module)
     # exit if module not successfully loaded
     if not y: return
-    print('MODULE => %s' % (args.module))
+    print(f"MODULE => {args.module}")
     # run given module commands
     for command in args.module_commands:
-        print('MODULE COMMAND => %s' % (command))
+        print(f"MODULE COMMAND => {command}")
         y.onecmd(command)
     # set given module options
     for option in args.options:
@@ -68,7 +68,7 @@ def recon_cli(args):
         # run the module
         y.do_run(None)
 
-description = '%%(prog)s - %s' % (base.__author__)
+description = f"%(prog)s - {base.__author__}"
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
 parser.add_argument('-C', help='runs a command at the global context', metavar='command', dest='global_commands' ,default=[], action='append')

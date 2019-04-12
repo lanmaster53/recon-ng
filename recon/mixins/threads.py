@@ -8,7 +8,7 @@ class ThreadingMixin(object):
         ''' Wrapper for the worker method defined in the module. Handles calling the actual worker, cleanly exiting upon
         interrupt, and passing exceptions back to the main process.'''
         thread_name = threading.current_thread().name
-        self.debug('THREAD => %s started.' % thread_name)
+        self.debug(f"THREAD => {thread_name} started.")
         while not self.stopped.is_set():
             try:
                 # use the get_nowait() method for retrieving a queued item to
@@ -21,10 +21,10 @@ class ThreadingMixin(object):
                 self.module_thread(obj, *args)
             except:
                 # handle exceptions local to the thread
-                self.print_exception('(thread=%s, object=%s)' % (thread_name, repr(obj)))
+                self.print_exception(f"(thread={thread_name}, object={repr(obj)})")
             finally:
                 self.q.task_done()
-        self.debug('THREAD => %s exited.' % thread_name)
+        self.debug(f"THREAD => {thread_name} exited.")
 
     # sometimes a keyboardinterrupt causes a race condition between when the self.q.task_done() call above and the
     # self.q.empty() call below, causing all the threads to hang. introducing the time.sleep(.7) call below reduces

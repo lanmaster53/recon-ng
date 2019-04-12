@@ -6,7 +6,7 @@ import re
 
 def debug(s):
     if app.config['DEBUG']:
-        for line in s.split('\n'):
+        for line in s.split(os.linsesep):
             print('[DEBUG] '+line)
 
 def get_workspaces():

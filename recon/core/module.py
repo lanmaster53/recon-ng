@@ -51,7 +51,7 @@ class BaseModule(framework.Framework):
                 # to load.
                 self.keys[key] = self.get_key(key)
                 if not self.keys.get(key):
-                    self.error('\'%s\' key not set. %s module will likely fail at runtime. See \'keys add\'.' % (key, self._modulename.split('/')[-1]))
+                    self.error(f"'{key}' key not set. {self._modulename.split('/')[-1]} module will likely fail at runtime. See 'keys add'.")
         self._reload = 0
 
     #==================================================
@@ -88,7 +88,7 @@ class BaseModule(framework.Framework):
                 if key_data.get(key):
                     self.add_key(key, key_data.get(key))
             except:
-                self.error('Corrupt key file. Manual migration of \'%s\' required.' % (key))
+                self.error(f"Corrupt key file. Manual migration of '{key}' required.")
 
     def ascii_sanitize(self, s):
         return ''.join([char for char in s if ord(char) in [10,13] + range(32, 126)])
@@ -197,7 +197,7 @@ class BaseModule(framework.Framework):
             query = ' '.join(params.split()[1:]) if prefix == 'query' else query
             try: results = self.query(query)
             except sqlite3.OperationalError as e:
-                raise framework.FrameworkException('Invalid source query. %s %s' % (type(e).__name__, e))
+                raise framework.FrameworkException(f"Invalid source query. {type(e).__name__} {e}")
             if not results:
                 sources = []
             elif len(results[0]) > 1:
@@ -225,9 +225,9 @@ class BaseModule(framework.Framework):
         client_id = self.get_key(resource+'_api')
         client_secret = self.get_key(resource+'_secret')
         port = 31337
-        redirect_uri = 'http://localhost:%d' % (port)
+        redirect_uri = f"http://localhost:{port}"
         payload = {'response_type': 'code', 'client_id': client_id, 'scope': scope, 'state': self.get_random_str(40), 'redirect_uri': redirect_uri}
-        authorize_url = '%s?%s' % (authorize_url, urllib.parse.urlencode(payload))
+        authorize_url = f"{authorize_url}?{urllib.parse.urlencode(payload)}"
         w = webbrowser.get()
         w.open(authorize_url)
         # open a socket to receive the access token callback
@@ -265,7 +265,7 @@ class BaseModule(framework.Framework):
         payload = {'grant_type': 'client_credentials'}
         resp = self.request(url, method='POST', auth=auth, headers=headers, payload=payload)
         if 'errors' in resp.json:
-            raise framework.FrameworkException('%s, %s' % (resp.json['errors'][0]['message'], resp.json['errors'][0]['label']))
+            raise framework.FrameworkException(f"{resp.json['errors'][0]['message']}, {resp.json['errors'][0]['label']}")
         access_token = resp.json['access_token']
         self.add_key(token_name, access_token)
         return access_token
@@ -274,7 +274,7 @@ class BaseModule(framework.Framework):
         timestamp = int(time.time())
         payload['ts'] = timestamp
         payload['key'] = key
-        msg = '%s%s%s%s' % (key, timestamp, method, secret)
+        msg = f"{key}{timestamp}{method}{secret}"
         encoding = sys.getdefaultencoding()
         hm = hmac.new(bytes(secret, encoding), bytes(msg, encoding), hashlib.sha1)
         payload['hmac'] = hm.hexdigest()
@@ -296,7 +296,7 @@ class BaseModule(framework.Framework):
         # make the request
         resp = self.request(url, payload=payload)
         if resp.status_code != 200:
-            self.error('Error retrieving leak data.\n%s' % (resp.text))
+            self.error(f"Error retrieving leak data.{os.linesep}{resp.text}")
             return
         leak = resp.json['leaks'][0]
         # normalize the leak for storage
@@ -309,7 +309,7 @@ class BaseModule(framework.Framework):
         return normalized_leak
 
     def search_twitter_api(self, payload, limit=False):
-        headers = {'Authorization': 'Bearer %s' % (self.get_twitter_oauth_token())}
+        headers = {'Authorization': f"Bearer {self.get_twitter_oauth_token()}"}
         url = 'https://api.twitter.com/1.1/search/tweets.json'
         results = []
         while True:
@@ -336,12 +336,12 @@ class BaseModule(framework.Framework):
         results = []
         cnt = 0
         page = 1
-        self.verbose('Searching Shodan API for: %s' % (query))
+        self.verbose(f"Searching Shodan API for: {query}")
         while True:
             time.sleep(1)
             resp = self.request(url, payload=payload)
             if resp.json == None:
-                raise framework.FrameworkException('Invalid JSON response.\n%s' % (resp.text))
+                raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
             if 'error' in resp.json:
                 raise framework.FrameworkException(resp.json['error'])
             if not resp.json['matches']:
@@ -363,14 +363,14 @@ class BaseModule(framework.Framework):
         headers = {'Ocp-Apim-Subscription-Key': self.get_key('bing_api')}
         results = []
         cnt = 0
-        self.verbose('Searching Bing API for: %s' % (query))
+        self.verbose(f"Searching Bing API for: {query}")
         while True:
             resp = self.request(url, payload=payload, headers=headers)
             if resp.json == None:
-                raise framework.FrameworkException('Invalid JSON response.\n%s' % (resp.text))
+                raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
             #elif 'error' in resp.json:
             elif resp.status_code == 401:
-                raise framework.FrameworkException('%s: %s' % (resp.json['statusCode'], resp.json['message']))
+                raise framework.FrameworkException(f"{resp.json['statusCode']}: {resp.json['message']}")
             # add new results, or if there's no more, return what we have...
             if 'webPages' in resp.json:
                 results.extend(resp.json['webPages']['value'])
@@ -395,11 +395,11 @@ class BaseModule(framework.Framework):
         payload = {'alt': 'json', 'prettyPrint': 'false', 'key': api_key, 'cx': cse_id, 'q': query}
         results = []
         cnt = 0
-        self.verbose('Searching Google API for: %s' % (query))
+        self.verbose(f"Searching Google API for: {query}")
         while True:
             resp = self.request(url, payload=payload)
             if resp.json == None:
-                raise framework.FrameworkException('Invalid JSON response.\n%s' % (resp.text))
+                raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
             # add new results
             if 'items' in resp.json:
                 results.extend(resp.json['items'])
@@ -414,7 +414,7 @@ class BaseModule(framework.Framework):
         return results
 
     def search_github_api(self, query):
-        self.verbose('Searching Github for: %s' % (query))
+        self.verbose(f"Searching Github for: {query}")
         results = self.query_github_api(endpoint='/search/code', payload={'q': query})
         # reduce the nested lists of search results and return
         results = [result['items'] for result in results]
@@ -423,7 +423,7 @@ class BaseModule(framework.Framework):
     def query_github_api(self, endpoint, payload={}, options={}):
         opts = {'max_pages': None}
         opts.update(options)
-        headers = {'Authorization': 'token %s' % (self.get_key('github_api'))}
+        headers = {'Authorization': f"token {self.get_key('github_api')}"}
         base_url = 'https://api.github.com'
         url = base_url + endpoint
         results = []
@@ -437,7 +437,7 @@ class BaseModule(framework.Framework):
             if resp.status_code != 200:
                 # skip 404s returned for no results
                 if resp.status_code != 404:
-                    self.error('Message from Github: %s' % (resp.json['message']))
+                    self.error(f"Message from Github: {resp.json()['message']}")
                 break
             # some APIs return lists, and others a single dictionary
             method = 'extend'
@@ -498,20 +498,20 @@ class BaseModule(framework.Framework):
             nums = [self.to_unicode_str(x) for x in range(1, len(content)+1)]
             num_len = len(max(nums, key=len))
             for num in nums:
-                print('%s|%s' % (num.rjust(num_len), content[int(num)-1]), end='')
+                print(f"{num.rjust(num_len)}|{content[int(num)-1]}", end='')
 
     def show_info(self):
         print('')
         # meta info
         for item in ['name', 'author', 'version']:
-            print('%s: %s' % (item.title().rjust(10), self.meta[item]))
+            print(f"{item.title().rjust(10)}: {self.meta[item]}")
         # required keys
         if self.meta.get('required_keys'):
-            print('%s: %s' % ('keys'.title().rjust(10), ', '.join(self.meta.get('required_keys'))))
+            print(f"{'keys'.title().rjust(10)}: {', '.join(self.meta.get('required_keys'))}")
         print('')
         # description
         print('Description:')
-        print('%s%s' % (self.spacer, textwrap.fill(self.meta['description'], 100, subsequent_indent=self.spacer)))
+        print(f"{self.spacer}{textwrap.fill(self.meta['description'], 100, subsequent_indent=self.spacer)}")
         print('')
         # options
         print('Options:', end='')
@@ -519,10 +519,10 @@ class BaseModule(framework.Framework):
         # sources
         if hasattr(self, '_default_source'):
             print('Source Options:')
-            print('%s%s%s' % (self.spacer, 'default'.ljust(15), self._default_source))
-            print('%s%sstring representing a single input' % (self.spacer, '<string>'.ljust(15)))
-            print('%s%spath to a file containing a list of inputs' % (self.spacer, '<path>'.ljust(15)))
-            print('%s%sdatabase query returning one column of inputs' % (self.spacer, 'query <sql>'.ljust(15)))
+            print(f"{self.spacer}{'default'.ljust(15)}{self._default_source}")
+            print(f"{self.spacer}{'<string>'.ljust(15)}string representing a single input")
+            print(f"{self.spacer}{'<path>'.ljust(15)}path to a file containing a list of inputs")
+            print(f"{self.spacer}{'query <sql>'.ljust(15)}database query returning one column of inputs")
             print('')
         # comments
         if self.meta.get('comments'):
@@ -532,7 +532,7 @@ class BaseModule(framework.Framework):
                 if comment.startswith('\t'):
                     prefix = self.spacer+'- '
                     comment = comment[1:]
-                print('%s%s' % (self.spacer, textwrap.fill(prefix+comment, 100, subsequent_indent=self.spacer)))
+                print(f"{self.spacer}{textwrap.fill(prefix+comment, 100, subsequent_indent=self.spacer)}")
             print('')
 
     #==================================================
@@ -587,10 +587,10 @@ class BaseModule(framework.Framework):
                         method = getattr(self, 'alert')
                     else:
                         method = getattr(self, 'output')
-                    method('%d total (%d new) %s found.' % (cnt, new, table))
+                    method(f"{cnt} total ({new} new) {table} found.")
                 self._summary_counts = {}
             # update the dashboard
-            self.query('INSERT OR REPLACE INTO dashboard (module, runs) VALUES (\'%(x)s\', COALESCE((SELECT runs FROM dashboard WHERE module=\'%(x)s\')+1, 1))' % {'x': self._modulename})
+            self.query(f"INSERT OR REPLACE INTO dashboard (module, runs) VALUES ('{self._modulename}', COALESCE((SELECT runs FROM dashboard WHERE module='{self._modulename}')+1, 1))")
 
     #==================================================
     # HELP METHODS
@@ -598,7 +598,7 @@ class BaseModule(framework.Framework):
 
     def help_goptions(self):
         print(getattr(self, 'do_options').__doc__)
-        print('\nUsage: options list\n')
+        print(f"{os.linesep}Usage: options list{os.linesep}")
 
     #==================================================
     # COMPLETE METHODS

@@ -83,7 +83,7 @@ def proxify(rows):
         for row in [dict(r) for r in rows]:
             for key in row:
                 url = row[key]
-                msg = 'URL: %s%sStatus: ' % (url, os.linesep)
+                msg = f"URL: {url}{os.linesep}Status: "
                 if is_url(url):
                     try:
                         resp = requests.request('GET', url, **kwargs)
