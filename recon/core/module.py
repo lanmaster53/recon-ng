@@ -113,38 +113,8 @@ class BaseModule(framework.Framework):
         return ''.join(escapes.get(c,c) for c in s)
 
     def cidr_to_list(self, string):
-        # references:
-        # http://boubakr92.wordpress.com/2012/12/20/convert-cidr-into-ip-range-with-python/
-        # http://stackoverflow.com/questions/8338655/how-to-get-list-of-ip-addresses
-        # parse address and cidr
-        (addrString, cidrString) = string.split('/')
-        # split address into octets and convert cidr to int
-        addr = addrString.split('.')
-        cidr = int(cidrString)
-        # initialize the netmask and calculate based on cidr mask
-        mask = [0, 0, 0, 0]
-        for i in range(cidr):
-            mask[i/8] = mask[i/8] + (1 << (7 - i % 8))
-        # initialize net and binary and netmask with addr to get network
-        net = []
-        for i in range(4):
-            net.append(int(addr[i]) & mask[i])
-        # duplicate net into broad array, gather host bits, and generate broadcast
-        broad = list(net)
-        brange = 32 - cidr
-        for i in range(brange):
-            broad[3 - i/8] = broad[3 - i/8] + (1 << (i % 8))
-        # print information, mapping integer lists to strings for easy printing
-        #mask = '.'.join(map(str, mask))
-        net = '.'.join(map(str, net))
-        broad = '.'.join(map(str, broad))
-        ips = []
-        f = struct.unpack('!I',socket.inet_pton(socket.AF_INET,net))[0]
-        l = struct.unpack('!I',socket.inet_pton(socket.AF_INET,broad))[0]
-        while f <= l:
-            ips.append(socket.inet_ntop(socket.AF_INET,struct.pack('!I',f)))
-            f = f + 1
-        return ips
+        import ipaddress
+        return [str(ip) for ip in ipaddress.ip_network(string)]
 
     def parse_name(self, name):
         elements = [self.html_unescape(x) for x in name.strip().split()]
