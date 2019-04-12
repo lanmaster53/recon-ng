@@ -215,10 +215,10 @@ class BaseModule(framework.Framework):
         authorization_code = re.search(r'code=([^\s&]*)', data).group(1)
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': client_id, 'client_secret': client_secret}
         resp = self.request(access_url, method='POST', payload=payload)
-        if 'error' in resp.json:
-            self.error(resp.json['error_description'])
+        if 'error' in resp.json():
+            self.error(resp.json()['error_description'])
             return None
-        access_token = resp.json['access_token']
+        access_token = resp.json()['access_token']
         self.add_key(token_name, access_token)
         return access_token
 
@@ -234,9 +234,9 @@ class BaseModule(framework.Framework):
         headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
         payload = {'grant_type': 'client_credentials'}
         resp = self.request(url, method='POST', auth=auth, headers=headers, payload=payload)
-        if 'errors' in resp.json:
-            raise framework.FrameworkException(f"{resp.json['errors'][0]['message']}, {resp.json['errors'][0]['label']}")
-        access_token = resp.json['access_token']
+        if 'errors' in resp.json():
+            raise framework.FrameworkException(f"{resp.json()['errors'][0]['message']}, {resp.json()['errors'][0]['label']}")
+        access_token = resp.json()['access_token']
         self.add_key(token_name, access_token)
         return access_token
 
@@ -268,7 +268,7 @@ class BaseModule(framework.Framework):
         if resp.status_code != 200:
             self.error(f"Error retrieving leak data.{os.linesep}{resp.text}")
             return
-        leak = resp.json['leaks'][0]
+        leak = resp.json()['leaks'][0]
         # normalize the leak for storage
         normalized_leak = {}
         for item in leak:
@@ -287,7 +287,7 @@ class BaseModule(framework.Framework):
             if limit:
                 # app auth rate limit for search/tweets is 450/15min
                 time.sleep(2)
-            jsonobj = resp.json
+            jsonobj = resp.json()
             for item in ['error', 'errors']:
                 if item in jsonobj:
                     raise framework.FrameworkException(jsonobj[item])
@@ -310,14 +310,14 @@ class BaseModule(framework.Framework):
         while True:
             time.sleep(1)
             resp = self.request(url, payload=payload)
-            if resp.json == None:
+            if resp.json() == None:
                 raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
-            if 'error' in resp.json:
-                raise framework.FrameworkException(resp.json['error'])
-            if not resp.json['matches']:
+            if 'error' in resp.json():
+                raise framework.FrameworkException(resp.json()['error'])
+            if not resp.json()['matches']:
                 break
             # add new results
-            results.extend(resp.json['matches'])
+            results.extend(resp.json()['matches'])
             # increment and check the limit
             cnt += 1
             if limit == cnt:
@@ -336,14 +336,14 @@ class BaseModule(framework.Framework):
         self.verbose(f"Searching Bing API for: {query}")
         while True:
             resp = self.request(url, payload=payload, headers=headers)
-            if resp.json == None:
+            if resp.json() == None:
                 raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
-            #elif 'error' in resp.json:
+            #elif 'error' in resp.json():
             elif resp.status_code == 401:
-                raise framework.FrameworkException(f"{resp.json['statusCode']}: {resp.json['message']}")
+                raise framework.FrameworkException(f"{resp.json()['statusCode']}: {resp.json()['message']}")
             # add new results, or if there's no more, return what we have...
-            if 'webPages' in resp.json:
-                results.extend(resp.json['webPages']['value'])
+            if 'webPages' in resp.json():
+                results.extend(resp.json()['webPages']['value'])
             else:
                 return results
             # increment and check the limit
@@ -352,7 +352,7 @@ class BaseModule(framework.Framework):
                 break
             # check for more pages
             # https://msdn.microsoft.com/en-us/library/dn760787.aspx
-            if payload['offset'] > (resp.json['webPages']['totalEstimatedMatches'] - payload['count']):
+            if payload['offset'] > (resp.json()['webPages']['totalEstimatedMatches'] - payload['count']):
                 break
             # set the payload for the next request
             payload['offset'] += payload['count']
@@ -368,19 +368,19 @@ class BaseModule(framework.Framework):
         self.verbose(f"Searching Google API for: {query}")
         while True:
             resp = self.request(url, payload=payload)
-            if resp.json == None:
+            if resp.json() == None:
                 raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
             # add new results
-            if 'items' in resp.json:
-                results.extend(resp.json['items'])
+            if 'items' in resp.json():
+                results.extend(resp.json()['items'])
             # increment and check the limit
             cnt += 1
             if limit == cnt:
                 break
             # check for more pages
-            if not 'nextPage' in resp.json['queries']:
+            if not 'nextPage' in resp.json()['queries']:
                 break
-            payload['start'] = resp.json['queries']['nextPage'][0]['startIndex']
+            payload['start'] = resp.json()['queries']['nextPage'][0]['startIndex']
         return results
 
     def search_github_api(self, query):
@@ -411,9 +411,9 @@ class BaseModule(framework.Framework):
                 break
             # some APIs return lists, and others a single dictionary
             method = 'extend'
-            if type(resp.json) == dict:
+            if type(resp.json()) == dict:
                 method = 'append'
-            getattr(results, method)(resp.json)
+            getattr(results, method)(resp.json())
             # paginate
             if 'link' in resp.headers and 'rel="next"' in resp.headers['link'] and (opts['max_pages'] is None or page < opts['max_pages']):
                 page += 1
