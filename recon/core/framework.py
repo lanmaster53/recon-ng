@@ -816,13 +816,6 @@ class Framework(cmd.Cmd):
         else:
             self.output('This workspace has no record of activity.')
 
-    def show_schema(self):
-        '''Displays the database schema'''
-        tables = self.get_tables()
-        for table in tables:
-            columns = self.get_columns(table)
-            self.table(columns, title=table)
-
     def _get_show_names(self):
         # Any method beginning with "show_" will be parsed
         # and added as a subcommand for the show command.
@@ -992,7 +985,7 @@ class Framework(cmd.Cmd):
             self.help_db()
             return
         arg, params = self._parse_params(params)
-        if arg in ['insert', 'delete', 'query']:
+        if arg in ['insert', 'delete', 'query', 'schema']:
             return getattr(self, '_do_db_'+arg)(params)
         else:
             self.help_db()
@@ -1095,6 +1088,13 @@ class Framework(cmd.Cmd):
                 self.output(f"{len(results)} rows returned")
         else:
             self.output(f"{results} rows affected.")
+
+    def _do_db_schema(self, params):
+        '''Displays the database schema'''
+        tables = self.get_tables()
+        for table in tables:
+            columns = self.get_columns(table)
+            self.table(columns, title=table)
 
     def do_record(self, params):
         '''Records commands to a resource file'''
@@ -1251,7 +1251,7 @@ class Framework(cmd.Cmd):
 
     def help_db(self):
         print(getattr(self, 'do_db').__doc__)
-        print(f"{os.linesep}Usage: db <insert|delete|query> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: db <insert|delete|query|schema> [...]{os.linesep}")
 
     def _help_db_insert(self):
         print(getattr(self, '_do_db_insert').__doc__)
@@ -1343,7 +1343,7 @@ class Framework(cmd.Cmd):
 
     def complete_db(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['insert', 'delete', 'query']
+        subs = ['insert', 'delete', 'query', 'schema']
         if arg in subs:
             return getattr(self, '_complete_db_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
@@ -1354,6 +1354,7 @@ class Framework(cmd.Cmd):
 
     def _complete_db_query(self, text, *ignored):
         return []
+    _complete_db_schema = _complete_db_query
 
     def complete_record(self, text, *ignored):
         return [x for x in ['start', 'stop', 'status'] if x.startswith(text)]
