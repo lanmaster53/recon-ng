@@ -479,56 +479,41 @@ class Recon(framework.Framework):
 
     def do_index(self, params):
         '''Creates a module index (dev only)'''
-        mod_dir, params = self._parse_params(params)
         mod_path, file_name = self._parse_params(params)
-        if not mod_dir and mod_path:
+        if not mod_path:
             self.help_index()
             return
-        if os.path.exists(mod_dir):
-            self.output('Loading provided module set...')
-            # backup original module path
-            mod_path_bak = self.mod_path
-            # temporarily overwrite module path for indexing
-            self.mod_path = framework.Framework.mod_path = mod_dir
-            # load temporary modules
-            self._load_modules()
-            self.output('Building index markup...')
-            yaml_objs = []
-            modules = [m for m in self._loaded_modules.items() if mod_path in m[0] or mod_path == 'all']
-            for path, module in modules:
-                yaml_obj = {}
-                # not in meta
-                yaml_obj['path'] = path
-                yaml_obj['last_updated'] = datetime.strftime(datetime.now(), '%Y-%m-%d')
-                # meta required
-                yaml_obj['author'] = module.meta.get('author')
-                yaml_obj['name'] = module.meta.get('name')
-                yaml_obj['description'] = module.meta.get('description')
-                yaml_obj['version'] = module.meta.get('version', '1.0')
-                # meta optional
-                #yaml_obj['comments'] = module.meta.get('comments', [])
-                yaml_obj['dependencies'] = module.meta.get('dependencies', [])
-                yaml_obj['files'] = module.meta.get('files', [])
-                #yaml_obj['options'] = module.meta.get('options', [])
-                #yaml_obj['query'] = module.meta.get('query', '')
-                yaml_obj['required_keys'] = module.meta.get('required_keys', [])
-                yaml_objs.append(yaml_obj)
-            if yaml_objs:
-                markup = yaml.safe_dump(yaml_objs)
-                print(markup)
-                # write to file if index name provided
-                if file_name:
-                    with open(file_name, 'w') as outfile:
-                        outfile.write(markup)
-                    self.output('Module index created.')
-            else:
-                self.output('No modules found.')
-            # restore original module path and modules
-            self.output('Restoring original module set...')
-            self.mod_path = framework.Framework.mod_path = mod_path_bak
-            self._load_modules()
+        self.output('Building index markup...')
+        yaml_objs = []
+        modules = [m for m in self._loaded_modules.items() if mod_path in m[0] or mod_path == 'all']
+        for path, module in modules:
+            yaml_obj = {}
+            # not in meta
+            yaml_obj['path'] = path
+            yaml_obj['last_updated'] = datetime.strftime(datetime.now(), '%Y-%m-%d')
+            # meta required
+            yaml_obj['author'] = module.meta.get('author')
+            yaml_obj['name'] = module.meta.get('name')
+            yaml_obj['description'] = module.meta.get('description')
+            yaml_obj['version'] = module.meta.get('version', '1.0')
+            # meta optional
+            #yaml_obj['comments'] = module.meta.get('comments', [])
+            yaml_obj['dependencies'] = module.meta.get('dependencies', [])
+            yaml_obj['files'] = module.meta.get('files', [])
+            #yaml_obj['options'] = module.meta.get('options', [])
+            #yaml_obj['query'] = module.meta.get('query', '')
+            yaml_obj['required_keys'] = module.meta.get('required_keys', [])
+            yaml_objs.append(yaml_obj)
+        if yaml_objs:
+            markup = yaml.safe_dump(yaml_objs)
+            print(markup)
+            # write to file if index name provided
+            if file_name:
+                with open(file_name, 'w') as outfile:
+                    outfile.write(markup)
+                self.output('Module index created.')
         else:
-            self.error('Invalid modules path.')
+            self.output('No modules found.')
 
     def do_marketplace(self, params):
         '''Interfaces with the module marketplace'''
@@ -759,7 +744,7 @@ class Recon(framework.Framework):
 
     def help_index(self):
         print(getattr(self, 'do_index').__doc__)
-        print(f"{os.linesep}Usage: index <directory> <module|all> <index>{os.linesep}")
+        print(f"{os.linesep}Usage: index <module|all> <index>{os.linesep}")
 
     def help_marketplace(self):
         print(getattr(self, 'do_marketplace').__doc__)
@@ -814,9 +799,8 @@ class Recon(framework.Framework):
     #==================================================
 
     def complete_index(self, text, line, *ignored):
-        args = line.split()
-        if len(args) == 3:
-            return [x for x in self._loaded_modules if x.startswith(args[2])]
+        if len(line.split(' ')) == 2:
+            return [x for x in self._loaded_modules if x.startswith(text)]
         return []
 
     def complete_marketplace(self, text, line, *ignored):
