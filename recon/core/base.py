@@ -541,11 +541,13 @@ class Recon(framework.Framework):
                 row = []
                 for key in ('path', 'version', 'status', 'last_updated'):
                     row.append(module[key])
-                row.append('' if not module['dependencies'] else '*')
+                row.append('*' if module['dependencies'] else '')
+                row.append('*' if module['required_keys'] else '')
                 rows.append(row)
-            header = ('Path', 'Version', 'Status', 'Updated', '*')
+            header = ('Path', 'Version', 'Status', 'Updated', 'D', 'K')
             self.table(rows, header=header)
-            self.alert(f"* = Has dependencies. See info for details.{os.linesep}")
+            print(f"{self.spacer}D = Has dependencies. See info for details.")
+            print(f"{self.spacer}K = Requires credentials. See info for details.{os.linesep}")
         else:
             self.error('No modules found.')
             self._help_marketplace_list()
