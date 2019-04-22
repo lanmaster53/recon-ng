@@ -117,7 +117,7 @@ class Framework(cmd.Cmd):
     #==================================================
 
     def default(self, line):
-        self.do_shell(line)
+        self.error(f'Invalid command: {line}')
 
     def emptyline(self):
         # disables running of last command when no command is given
