@@ -607,11 +607,6 @@ class Recon(framework.Framework):
         else:
             self.error('Invalid module path.')
 
-    def do_reload(self, params):
-        '''Reloads installed modules'''
-        self.output('Reloading...')
-        self._load_modules()
-
     def do_workspaces(self, params):
         '''Manages workspaces'''
         if not params:
@@ -744,7 +739,7 @@ class Recon(framework.Framework):
             if y._exit == 1:
                 return True
             if y._reload == 1:
-                self.output('Reloading...')
+                self.output('Reloading module...')
                 # reload the module in memory
                 is_loaded = self._load_module(os.path.dirname(mod_loadpath), os.path.basename(mod_loadpath))
                 if is_loaded:
@@ -752,6 +747,11 @@ class Recon(framework.Framework):
                     continue
                 # shuffle category counts?
             break
+
+    def _do_modules_reload(self, params):
+        '''Reloads installed modules'''
+        self.output('Reloading modules...')
+        self._load_modules()
 
     #==================================================
     # HELP METHODS

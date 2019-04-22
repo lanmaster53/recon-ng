@@ -524,7 +524,7 @@ class BaseModule(framework.Framework):
         '''Shows the global context options'''
         self._list_options(self._global_options)
 
-    def do_reload(self, params):
+    def _do_modules_reload(self, params):
         '''Reloads the current module'''
         self._reload = 1
         return True

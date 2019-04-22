@@ -924,7 +924,7 @@ class Framework(cmd.Cmd):
             self.help_modules()
             return
         arg, params = self._parse_params(params)
-        if arg in ['list', 'load']:
+        if arg in ['list', 'load', 'reload']:
             return getattr(self, '_do_modules_'+arg)(params)
         else:
             self.help_modules()
@@ -1234,7 +1234,7 @@ class Framework(cmd.Cmd):
 
     def help_modules(self):
         print(getattr(self, 'do_modules').__doc__)
-        print(f"{os.linesep}Usage: modules <list|load> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: modules <list|load|reload> [...]{os.linesep}")
 
     def _help_modules_list(self):
         print(getattr(self, '_do_modules_list').__doc__)
@@ -1326,13 +1326,14 @@ class Framework(cmd.Cmd):
 
     def complete_modules(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['list', 'load']
+        subs = ['list', 'load', 'reload']
         if arg in subs:
             return getattr(self, '_complete_modules_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
 
     def _complete_modules_list(self, text, *ignored):
         return []
+    _complete_modules_reload = _complete_modules_list
 
     def _complete_modules_load(self, text, *ignored):
         return [x for x in Framework._loaded_modules if x.startswith(text)]
