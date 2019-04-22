@@ -1286,7 +1286,6 @@ class Framework(cmd.Cmd):
     def help_shell(self):
         print(getattr(self, 'do_shell').__doc__)
         print(f"{os.linesep}Usage: [shell|!] <command>{os.linesep}")
-        print(f"...or just type a command at the prompt.{os.linesep}")
 
     def help_resource(self):
         print(getattr(self, 'do_resource').__doc__)
