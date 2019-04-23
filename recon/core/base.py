@@ -577,7 +577,7 @@ class Recon(framework.Framework):
         if modules:
             for module in modules:
                 self._install_module(module['path'])
-            self.do_reload('')
+            self._do_modules_reload('')
         else:
             self.error('Invalid module path.')
 
@@ -590,7 +590,7 @@ class Recon(framework.Framework):
         if modules:
             for module in modules:
                 self._remove_module(module['path'])
-            self.do_reload('')
+            self._do_modules_reload('')
         else:
             self.error('Invalid module path.')
 
