@@ -883,7 +883,7 @@ class Framework(cmd.Cmd):
             self.error('Invalid option name.')
 
     def do_keys(self, params):
-        '''Manages framework API keys'''
+        '''Manages third party resource credentials'''
         if not params:
             self.help_keys()
             return
@@ -894,11 +894,11 @@ class Framework(cmd.Cmd):
             self.help_keys()
 
     def _do_keys_list(self, params):
-        '''Lists framework API keys'''
+        '''Lists third party resource credentials'''
         self._list_keys()
 
     def _do_keys_add(self, params):
-        '''Adds/Updates a framework API key'''
+        '''Adds/Updates a third party resource credential'''
         key, value = self._parse_params(params)
         if not (key and value):
             self._help_keys_add()
@@ -907,7 +907,7 @@ class Framework(cmd.Cmd):
             self.output(f"Key '{key}' added.")
 
     def _do_keys_remove(self, params):
-        '''Removes a framework API key'''
+        '''Removes a third party resource credential'''
         key, value = self._parse_params(params)
         if not key:
             self._help_keys_remove()

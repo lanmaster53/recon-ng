@@ -547,7 +547,7 @@ class Recon(framework.Framework):
             header = ('Path', 'Version', 'Status', 'Updated', 'D', 'K')
             self.table(rows, header=header)
             print(f"{self.spacer}D = Has dependencies. See info for details.")
-            print(f"{self.spacer}K = Requires credentials. See info for details.{os.linesep}")
+            print(f"{self.spacer}K = Requires keys. See info for details.{os.linesep}")
         else:
             self.error('No modules found.')
             self._help_marketplace_list()
