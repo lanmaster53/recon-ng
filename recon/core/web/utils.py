@@ -22,7 +22,7 @@ def get_tables():
     return sorted(tables, key=lambda t: t['name'])
 
 def get_columns(table):
-    return [x[1] for x in query('PRAGMA table_info(\'{}\')'.format(table))]
+    return [x[1] for x in query(f"PRAGMA table_info('{table}')")]
 
 def connect_db():
     '''Connects to the specific database.'''
@@ -48,7 +48,7 @@ def close_db(error):
 def query(query, values=()):
     '''Queries the database and returns the results as a list.'''
     db = get_db()
-    debug('Query: {}'.format(query))
+    debug(f"Query: {query}")
     if values:
         cur = db.execute(query, values)
     else:

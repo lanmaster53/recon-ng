@@ -10,7 +10,7 @@ def xlsx():
     with xlsxwriter.Workbook(sfp) as workbook:
         # create a worksheet for each table in the current workspace
         for table in [t['name'] for t in get_tables()]:
-            rows = query('SELECT * FROM {}'.format(table))
+            rows = query(f"SELECT * FROM {table}")
             add_worksheet(workbook, table, rows)
     sfp.seek(0)
     return send_file(sfp, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

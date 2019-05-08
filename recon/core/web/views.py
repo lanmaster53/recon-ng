@@ -38,7 +38,7 @@ def api_workspace(workspace, report=''):
     records = []
     for table in tables:
         name = table['name']
-        count = query('SELECT COUNT(*) AS \'COUNT\' FROM {}'.format(name))
+        count = query(f"SELECT COUNT(*) AS 'COUNT' FROM {name}")
         records.append({'name': name, 'count':count[0]['COUNT']})
     summary = {
         'records': sorted(records, key=lambda r: r['count'], reverse=True),
@@ -52,9 +52,9 @@ def api_table(workspace, table, format=''):
     # filter rows for columns if needed
     columns = request.values.get('columns')
     if columns:
-        rows = query('SELECT {} FROM {}'.format(columns, table))
+        rows = query(f"SELECT {columns} FROM {table}")
     else:
-        rows = query('SELECT * FROM {}'.format(table))
+        rows = query(f"SELECT * FROM {table}")
     # dynamically determine and call export function
     if format and format in EXPORTS:
         # any required serialization is handled at the exporter level

@@ -87,7 +87,7 @@ def proxify(rows):
                 if is_url(url):
                     try:
                         resp = requests.request('GET', url, **kwargs)
-                        msg += 'HTTP {}: Successfully proxied.'.format(resp.status_code)
+                        msg += f"HTTP {resp.status_code}: Successfully proxied."
                     except Exception as e:
                         msg += str(e)
                 else:

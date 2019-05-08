@@ -51,8 +51,8 @@ class Recon(framework.Framework):
     def __init__(self, check=True, analytics=True, marketplace=True):
         framework.Framework.__init__(self, 'base')
         self._name = 'recon-ng'
-        self._prompt_template = '%s[%s] > '
-        self._base_prompt = self._prompt_template % ('', self._name)
+        self._prompt_template = '{}[{}] > '
+        self._base_prompt = self._prompt_template.format('', self._name)
         # set toggle flags
         self._check = check
         self._analytics = analytics
@@ -176,7 +176,7 @@ class Recon(framework.Framework):
         else:
             self._migrate_db()
         # set workspace prompt
-        self.prompt = self._prompt_template % (self._base_prompt[:-3], self.workspace.split('/')[-1])
+        self.prompt = self._prompt_template.format(self._base_prompt[:-3], self.workspace.split('/')[-1])
         # load workspace configuration
         self._load_config()
         # reload modules after config to populate options
@@ -408,7 +408,7 @@ class Recon(framework.Framework):
         self._loaded_category = {}
         self._loaded_modules = framework.Framework._loaded_modules = {}
         # crawl the module directory and build the module tree
-        for dirpath, dirnames, filenames in os.walk(self.mod_path):
+        for dirpath, dirnames, filenames in os.walk(self.mod_path, followlinks=True):
             # remove hidden files and directories
             filenames = [f for f in filenames if not f[0] == '.']
             dirnames[:] = [d for d in dirnames if not d[0] == '.']
@@ -718,7 +718,7 @@ class Recon(framework.Framework):
             if self._mode == Mode.CLI:
                 return y
             # begin a command loop
-            y.prompt = self._prompt_template % (self.prompt[:-3], mod_dispname.split('/')[-1])
+            y.prompt = self._prompt_template.format(self.prompt[:-3], mod_dispname.split('/')[-1])
             try:
                 y.cmdloop()
             except KeyboardInterrupt:
