@@ -138,10 +138,10 @@ class Recon(framework.Framework):
                         'cd': cd
                         }
                 self.request('https://www.google-analytics.com/collect', payload=params)
-            except:
-                self.debug('Analytics failed.')
-                self.print_exception()
-                raise
+            except Exception as e:
+                self.debug(f"Analytics failed ({type(e).__name__}).")
+                #self.print_exception()
+                return
         else:
             self.debug('Analytics disabled.')
 
