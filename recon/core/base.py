@@ -73,7 +73,7 @@ class Recon(framework.Framework):
         self._init_workspace(workspace)
         self._check_version()
         if self._mode == Mode.CONSOLE:
-            self.show_banner()
+            self._print_banner()
             self.cmdloop()
 
     #==================================================
@@ -106,9 +106,9 @@ class Recon(framework.Framework):
             try:
                 remote = re.search(pattern, self.request('https://raw.githubusercontent.com/lanmaster53/recon-ng/master/VERSION').text).group(1)
                 local = re.search(pattern, open('VERSION').read()).group(1)
-            except:
-                self.error('Version check failed.')
-                self.print_exception()
+            except Exception as e:
+                self.error(f"Version check failed ({type(e).__name__}).")
+                #self.print_exception()
             if remote != local:
                 self.alert('Your version of Recon-ng does not match the latest release.')
                 self.alert('Please consider updating before further use.')
@@ -116,6 +116,23 @@ class Recon(framework.Framework):
                 self.output(f"Local version:   {local}")
         else:
             self.alert('Version check disabled.')
+
+    def _print_banner(self):
+        banner_len = len(max(BANNER.split(os.linesep), key=len))
+        print(BANNER)
+        print('{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8))
+        print('')
+        counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
+        if counts:
+            count_len = len(max([self.to_unicode_str(x[0]) for x in counts], key=len))
+            for count in sorted(counts, reverse=True):
+                cnt = f"[{count[0]}]"
+                print(f"{framework.Colors.B}{cnt.ljust(count_len+2)} {count[1].title()} modules{framework.Colors.N}")
+                # create dynamic easter egg command based on counts
+                setattr(self, f"do_{count[0]}", self._menu_egg)
+        else:
+            self.alert('No modules enabled/installed.')
+        print('')
 
     def _send_analytics(self, cd):
         if self._analytics:
@@ -317,9 +334,9 @@ class Recon(framework.Framework):
             self.debug('Fetching index file...')
             try:
                 resp = self._request_file_from_repo('modules.yml')
-            except:
-                self.error('Unable to synchronize module index.')
-                self.print_exception()
+            except Exception as e:
+                self.error(f"Unable to synchronize module index. ({type(e).__name__})")
+                #self.print_exception()
                 return
             content = resp.text
             path = os.path.join(self.home_path, 'modules.yml')
@@ -451,27 +468,6 @@ class Recon(framework.Framework):
         if not category in self._loaded_category:
             self._loaded_category[category] = []
         self._loaded_category[category].append(module)
-
-    #==================================================
-    # SHOW METHODS
-    #==================================================
-
-    def show_banner(self):
-        banner_len = len(max(BANNER.split(os.linesep), key=len))
-        print(BANNER)
-        print('{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8))
-        print('')
-        counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
-        if counts:
-            count_len = len(max([self.to_unicode_str(x[0]) for x in counts], key=len))
-            for count in sorted(counts, reverse=True):
-                cnt = f"[{count[0]}]"
-                print(f"{framework.Colors.B}{cnt.ljust(count_len+2)} {count[1].title()} modules{framework.Colors.N}")
-                # create dynamic easter egg command based on counts
-                setattr(self, f"do_{count[0]}", self._menu_egg)
-        else:
-            self.alert('No modules enabled/installed.')
-        print('')
 
     #==================================================
     # COMMAND METHODS

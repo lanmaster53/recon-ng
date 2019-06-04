@@ -798,24 +798,6 @@ class Framework(cmd.Cmd):
     # SHOW METHODS
     #==================================================
 
-    def show_dashboard(self):
-        rows = self.query('SELECT * FROM dashboard ORDER BY 1')
-        if rows:
-            # display activity table
-            tdata = []
-            for row in rows:
-                tdata.append(row)
-            self.table(tdata, header=['Module', 'Runs'], title='Activity Summary')
-            # display summary results table
-            tables = self.get_tables()
-            tdata = []
-            for table in tables:
-                count = self.query(f"SELECT COUNT(*) FROM `{table}`")[0][0]
-                tdata.append([table.title(), count])
-            self.table(tdata, header=['Category', 'Quantity'], title='Results Summary')
-        else:
-            self.output('This workspace has no record of activity.')
-
     def _get_show_names(self):
         # Any method beginning with "show_" will be parsed
         # and added as a subcommand for the show command.
@@ -1198,6 +1180,25 @@ class Framework(cmd.Cmd):
             Framework._script = 1
         else:
             self.error(f"Script file '{params}' not found.")
+
+    def do_dashboard(self, params):
+        '''Displays a summary of activity'''
+        rows = self.query('SELECT * FROM dashboard ORDER BY 1')
+        if rows:
+            # display activity table
+            tdata = []
+            for row in rows:
+                tdata.append(row)
+            self.table(tdata, header=['Module', 'Runs'], title='Activity Summary')
+            # display summary results table
+            tables = self.get_tables()
+            tdata = []
+            for table in tables:
+                count = self.query(f"SELECT COUNT(*) FROM `{table}`")[0][0]
+                tdata.append([table.title(), count])
+            self.table(tdata, header=['Category', 'Quantity'], title='Results Summary')
+        else:
+            self.output('This workspace has no record of activity.')
 
     def do_pdb(self, params):
         '''Starts a Python Debugger session (dev only)'''
