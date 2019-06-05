@@ -900,18 +900,18 @@ class Framework(cmd.Cmd):
         else:
             self.error('Invalid key name.')
 
-    def do_modules(self, params):
+    def do_module(self, params):
         '''Interfaces with installed modules'''
         if not params:
-            self.help_modules()
+            self.help_module()
             return
         arg, params = self._parse_params(params)
         if arg in ['list', 'load', 'reload']:
-            return getattr(self, '_do_modules_'+arg)(params)
+            return getattr(self, '_do_module_'+arg)(params)
         else:
-            self.help_modules()
+            self.help_module()
 
-    def _do_modules_list(self, params):
+    def _do_module_list(self, params):
         '''Lists installed modules'''
         modules = [x for x in Framework._loaded_modules]
         if params:
@@ -921,12 +921,12 @@ class Framework(cmd.Cmd):
             self._list_modules(modules)
         else:
             self.error('No modules found.')
-            self._help_modules_list()
+            self._help_module_list()
 
-    def _do_modules_load(self, params):
+    def _do_module_load(self, params):
         raise NotImplementedError
 
-    def _do_modules_reload(self, params):
+    def _do_module_reload(self, params):
         raise NotImplementedError
 
     def do_show(self, params):
@@ -1214,17 +1214,17 @@ class Framework(cmd.Cmd):
         print(getattr(self, '_do_keys_remove').__doc__)
         print(f"{os.linesep}Usage: keys remove <name>{os.linesep}")
 
-    def help_modules(self):
-        print(getattr(self, 'do_modules').__doc__)
-        print(f"{os.linesep}Usage: modules <list|load|reload> [...]{os.linesep}")
+    def help_module(self):
+        print(getattr(self, 'do_module').__doc__)
+        print(f"{os.linesep}Usage: module <list|load|reload> [...]{os.linesep}")
 
-    def _help_modules_list(self):
-        print(getattr(self, '_do_modules_list').__doc__)
-        print(f"{os.linesep}Usage: modules list [<string>]{os.linesep}")
+    def _help_module_list(self):
+        print(getattr(self, '_do_module_list').__doc__)
+        print(f"{os.linesep}Usage: module list [<string>]{os.linesep}")
 
-    def _help_modules_load(self):
-        print(getattr(self, '_do_modules_load').__doc__)
-        print(f"{os.linesep}Usage: modules load <path>{os.linesep}")
+    def _help_module_load(self):
+        print(getattr(self, '_do_module_load').__doc__)
+        print(f"{os.linesep}Usage: module load <path>{os.linesep}")
 
     def help_show(self):
         options = sorted(self._get_show_names() + self.get_tables())
@@ -1305,18 +1305,18 @@ class Framework(cmd.Cmd):
         return [x for x in self._get_key_names() if x.startswith(text)]
     _complete_keys_remove = _complete_keys_add
 
-    def complete_modules(self, text, line, *ignored):
+    def complete_module(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
         subs = ['list', 'load', 'reload']
         if arg in subs:
-            return getattr(self, '_complete_modules_'+arg)(text, params)
+            return getattr(self, '_complete_module_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
 
-    def _complete_modules_list(self, text, *ignored):
+    def _complete_module_list(self, text, *ignored):
         return []
-    _complete_modules_reload = _complete_modules_list
+    _complete_module_reload = _complete_module_list
 
-    def _complete_modules_load(self, text, *ignored):
+    def _complete_module_load(self, text, *ignored):
         return [x for x in Framework._loaded_modules if x.startswith(text)]
 
     def complete_show(self, text, line, *ignored):

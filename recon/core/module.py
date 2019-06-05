@@ -525,10 +525,10 @@ class BaseModule(framework.Framework):
         '''Shows the global context options'''
         self._list_options(self._global_options)
 
-    def _do_modules_load(self, params):
+    def _do_module_load(self, params):
         '''Loads a module'''
         if not params:
-            self._help_modules_load()
+            self._help_module_load()
             return
         # finds any modules that contain params
         modules = [params] if params in framework.Framework._loaded_modules else [x for x in framework.Framework._loaded_modules if params in x]
@@ -549,7 +549,7 @@ class BaseModule(framework.Framework):
         sys.stdin = io.StringIO(f"modules load {modules[0]}{os.linesep}{end_string}")
         return True
 
-    def _do_modules_reload(self, params):
+    def _do_module_reload(self, params):
         '''Reloads the current module'''
         self._reload = 1
         return True

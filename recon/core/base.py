@@ -573,7 +573,7 @@ class Recon(framework.Framework):
         if modules:
             for module in modules:
                 self._install_module(module['path'])
-            self._do_modules_reload('')
+            self._do_module_reload('')
         else:
             self.error('Invalid module path.')
 
@@ -586,7 +586,7 @@ class Recon(framework.Framework):
         if modules:
             for module in modules:
                 self._remove_module(module['path'])
-            self._do_modules_reload('')
+            self._do_module_reload('')
         else:
             self.error('Invalid module path.')
 
@@ -681,7 +681,7 @@ class Recon(framework.Framework):
         else:
             self.error(f"No snapshot named '{params}'.")
 
-    def _do_modules_load(self, params):
+    def _do_module_load(self, params):
         '''Loads a module'''
         # validate global options before loading the module
         try:
@@ -690,7 +690,7 @@ class Recon(framework.Framework):
             self.error(e)
             return
         if not params:
-            self._help_modules_load()
+            self._help_module_load()
             return
         # finds any modules that contain params
         modules = [params] if params in self._loaded_modules else [x for x in self._loaded_modules if params in x]
@@ -731,7 +731,7 @@ class Recon(framework.Framework):
                 # shuffle category counts?
             break
 
-    def _do_modules_reload(self, params):
+    def _do_module_reload(self, params):
         '''Reloads installed modules'''
         self.output('Reloading modules...')
         self._load_modules()
