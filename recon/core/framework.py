@@ -924,29 +924,10 @@ class Framework(cmd.Cmd):
             self._help_modules_list()
 
     def _do_modules_load(self, params):
-        '''Loads a module'''
-        if not params:
-            self._help_modules_load()
-            return
-        # finds any modules that contain params
-        modules = [params] if params in Framework._loaded_modules else [x for x in Framework._loaded_modules if params in x]
-        # notify the user if none or multiple modules are found
-        if len(modules) != 1:
-            if not modules:
-                self.error('Invalid module name.')
-            else:
-                self.output(f"Multiple modules match '{params}'.")
-                self._list_modules(modules)
-            return
-        import io
-        # compensation for stdin being used for scripting and loading
-        if Framework._script:
-            end_string = sys.stdin.read()
-        else:
-            end_string = 'EOF'
-            Framework._load = 1
-        sys.stdin = io.StringIO(f"modules load {modules[0]}{os.linesep}{end_string}")
-        return True
+        raise NotImplementedError
+
+    def _do_modules_reload(self, params):
+        raise NotImplementedError
 
     def do_show(self, params):
         '''Shows various framework items'''
