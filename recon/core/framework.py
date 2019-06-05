@@ -777,6 +777,13 @@ class Framework(cmd.Cmd):
     # MODULES METHODS
     #==================================================
 
+    def _match_modules(self, params):
+        # return an exact match
+        if params in Framework._loaded_modules:
+            return [params]
+        # use the provided name as a keyword search and return the results
+        return [x for x in Framework._loaded_modules if params in x]
+
     def _list_modules(self, modules):
         if modules:
             key_len = len(max(modules, key=len)) + len(self.spacer)
@@ -906,22 +913,22 @@ class Framework(cmd.Cmd):
             self.help_module()
             return
         arg, params = self._parse_params(params)
-        if arg in ['list', 'load', 'reload']:
+        if arg in ['search', 'load', 'reload']:
             return getattr(self, '_do_module_'+arg)(params)
         else:
             self.help_module()
 
-    def _do_module_list(self, params):
-        '''Lists installed modules'''
+    def _do_module_search(self, params):
+        '''Searches installed modules'''
         modules = [x for x in Framework._loaded_modules]
         if params:
             self.output(f"Searching installed modules for '{params}'...")
-            modules = [x for x in Framework._loaded_modules if params in x]
+            modules = [x for x in Framework._loaded_modules if re.search(params, x)]
         if modules:
             self._list_modules(modules)
         else:
             self.error('No modules found.')
-            self._help_module_list()
+            self._help_module_search()
 
     def _do_module_load(self, params):
         raise NotImplementedError
@@ -1216,11 +1223,11 @@ class Framework(cmd.Cmd):
 
     def help_module(self):
         print(getattr(self, 'do_module').__doc__)
-        print(f"{os.linesep}Usage: module <list|load|reload> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: module <search|load|reload> [...]{os.linesep}")
 
-    def _help_module_list(self):
-        print(getattr(self, '_do_module_list').__doc__)
-        print(f"{os.linesep}Usage: module list [<string>]{os.linesep}")
+    def _help_module_search(self):
+        print(getattr(self, '_do_module_search').__doc__)
+        print(f"{os.linesep}Usage: module search [<regex>]{os.linesep}")
 
     def _help_module_load(self):
         print(getattr(self, '_do_module_load').__doc__)
@@ -1307,14 +1314,14 @@ class Framework(cmd.Cmd):
 
     def complete_module(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['list', 'load', 'reload']
+        subs = ['search', 'load', 'reload']
         if arg in subs:
             return getattr(self, '_complete_module_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
 
-    def _complete_module_list(self, text, *ignored):
+    def _complete_module_search(self, text, *ignored):
         return []
-    _complete_module_reload = _complete_module_list
+    _complete_module_reload = _complete_module_search
 
     def _complete_module_load(self, text, *ignored):
         return [x for x in Framework._loaded_modules if x.startswith(text)]

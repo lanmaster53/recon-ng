@@ -41,7 +41,7 @@ def recon_cli(args):
         return
     # if requested, show modules and exit
     if args.show_modules:
-        x._do_module_list('')
+        x._do_module_search('')
         return
     # exit if module not specified
     if not args.module:

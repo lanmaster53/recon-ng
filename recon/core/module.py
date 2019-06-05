@@ -531,7 +531,7 @@ class BaseModule(framework.Framework):
             self._help_module_load()
             return
         # finds any modules that contain params
-        modules = [params] if params in framework.Framework._loaded_modules else [x for x in framework.Framework._loaded_modules if params in x]
+        modules = self._match_modules(params)
         # notify the user if none or multiple modules are found
         if len(modules) != 1:
             if not modules:

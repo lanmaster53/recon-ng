@@ -520,13 +520,13 @@ class Recon(framework.Framework):
             self.help_marketplace()
             return
         arg, params = self._parse_params(params)
-        if arg in ['list', 'info', 'install', 'remove']:
+        if arg in ['search', 'info', 'install', 'remove']:
             return getattr(self, '_do_marketplace_'+arg)(params)
         else:
             self.help_marketplace()
 
-    def _do_marketplace_list(self, params):
-        '''Lists all available modules in the marketplace'''
+    def _do_marketplace_search(self, params):
+        '''Searches marketplace modules'''
         modules = [m for m in self._module_index]
         if params:
             self.output(f"Searching module index for '{params}'...")
@@ -546,7 +546,7 @@ class Recon(framework.Framework):
             print(f"{self.spacer}K = Requires keys. See info for details.{os.linesep}")
         else:
             self.error('No modules found.')
-            self._help_marketplace_list()
+            self._help_marketplace_search()
 
     def _do_marketplace_info(self, params):
         '''Shows detailed information about available modules'''
@@ -602,7 +602,7 @@ class Recon(framework.Framework):
             self.help_workspaces()
 
     def _do_workspaces_list(self, params):
-        '''Lists all existing workspaces'''
+        '''Lists existing workspaces'''
         self.table([[x] for x in self._get_workspaces()], header=['Workspaces'])
 
     def _do_workspaces_create(self, params):
@@ -641,7 +641,7 @@ class Recon(framework.Framework):
             self.help_snapshots()
 
     def _do_snapshots_list(self, params):
-        '''Lists all existing database snapshots'''
+        '''Lists existing database snapshots'''
         snapshots = self._get_snapshots()
         if snapshots:
             self.table([[x] for x in snapshots], header=['Snapshots'])
@@ -693,7 +693,7 @@ class Recon(framework.Framework):
             self._help_module_load()
             return
         # finds any modules that contain params
-        modules = [params] if params in self._loaded_modules else [x for x in self._loaded_modules if params in x]
+        modules = self._match_modules(params)
         # notify the user if none or multiple modules are found
         if len(modules) != 1:
             if not modules:
@@ -746,11 +746,11 @@ class Recon(framework.Framework):
 
     def help_marketplace(self):
         print(getattr(self, 'do_marketplace').__doc__)
-        print(f"{os.linesep}Usage: marketplace <list|info|install|remove> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: marketplace <search|info|install|remove> [...]{os.linesep}")
 
-    def _help_marketplace_list(self):
-        print(getattr(self, '_do_marketplace_list').__doc__)
-        print(f"{os.linesep}Usage: marketplace list [<regex>]{os.linesep}")
+    def _help_marketplace_search(self):
+        print(getattr(self, '_do_marketplace_search').__doc__)
+        print(f"{os.linesep}Usage: marketplace search [<regex>]{os.linesep}")
 
     def _help_marketplace_info(self):
         print(getattr(self, '_do_marketplace_info').__doc__)
@@ -803,12 +803,12 @@ class Recon(framework.Framework):
 
     def complete_marketplace(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['list', 'info', 'install', 'remove']
+        subs = ['search', 'info', 'install', 'remove']
         if arg in subs:
             return getattr(self, '_complete_marketplace_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
 
-    def _complete_marketplace_list(self, text, *ignored):
+    def _complete_marketplace_search(self, text, *ignored):
         return []
 
     def _complete_marketplace_info(self, text, *ignored):
