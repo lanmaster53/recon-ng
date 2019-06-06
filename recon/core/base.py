@@ -520,7 +520,7 @@ class Recon(framework.Framework):
             self.help_marketplace()
             return
         arg, params = self._parse_params(params)
-        if arg in ['search', 'info', 'install', 'remove']:
+        if arg in self._parse_subcommands('marketplace'):
             return getattr(self, '_do_marketplace_'+arg)(params)
         else:
             self.help_marketplace()
@@ -596,7 +596,7 @@ class Recon(framework.Framework):
             self.help_workspaces()
             return
         arg, params = self._parse_params(params)
-        if arg in ['list', 'create', 'select', 'delete']:
+        if arg in self._parse_subcommands('workspaces'):
             return getattr(self, '_do_workspaces_'+arg)(params)
         else:
             self.help_workspaces()
@@ -635,7 +635,7 @@ class Recon(framework.Framework):
             self.help_snapshots()
             return
         arg, params = self._parse_params(params)
-        if arg in ['list', 'take', 'load', 'delete']:
+        if arg in self._parse_subcommands('snapshots'):
             return getattr(self, '_do_snapshots_'+arg)(params)
         else:
             self.help_snapshots()
@@ -746,7 +746,7 @@ class Recon(framework.Framework):
 
     def help_marketplace(self):
         print(getattr(self, 'do_marketplace').__doc__)
-        print(f"{os.linesep}Usage: marketplace <search|info|install|remove> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: marketplace <{'|'.join(self._parse_subcommands('marketplace'))}> [...]{os.linesep}")
 
     def _help_marketplace_search(self):
         print(getattr(self, '_do_marketplace_search').__doc__)
@@ -766,7 +766,7 @@ class Recon(framework.Framework):
 
     def help_workspaces(self):
         print(getattr(self, 'do_workspaces').__doc__)
-        print(f"{os.linesep}Usage: workspaces <list|create|select|delete> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: workspaces <{'|'.join(self._parse_subcommands('workspaces'))}> [...]{os.linesep}")
 
     def _help_workspaces_create(self):
         print(getattr(self, '_do_workspaces_create').__doc__)
@@ -782,7 +782,7 @@ class Recon(framework.Framework):
 
     def help_snapshots(self):
         print(getattr(self, 'do_snapshots').__doc__)
-        print(f"{os.linesep}Usage: snapshots <list|take|load|delete> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: snapshots <{'|'.join(self._parse_subcommands('snapshots'))}> [...]{os.linesep}")
 
     def _help_snapshots_load(self):
         print(getattr(self, '_do_snapshots_load').__doc__)
@@ -791,6 +791,10 @@ class Recon(framework.Framework):
     def _help_snapshots_delete(self):
         print(getattr(self, '_do_snapshots_delete').__doc__)
         print(f"{os.linesep}Usage: snapshots delete <name>{os.linesep}")
+
+    def _help_module_load(self):
+        print(getattr(self, '_do_module_load').__doc__)
+        print(f"{os.linesep}Usage: module load <path>{os.linesep}")
 
     #==================================================
     # COMPLETE METHODS
@@ -803,7 +807,7 @@ class Recon(framework.Framework):
 
     def complete_marketplace(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['search', 'info', 'install', 'remove']
+        subs = self._parse_subcommands('marketplace')
         if arg in subs:
             return getattr(self, '_complete_marketplace_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
@@ -820,7 +824,7 @@ class Recon(framework.Framework):
 
     def complete_workspaces(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['list', 'create', 'select', 'delete']
+        subs = self._parse_subcommands('workspaces')
         if arg in subs:
             return getattr(self, '_complete_workspaces_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
@@ -835,7 +839,7 @@ class Recon(framework.Framework):
 
     def complete_snapshots(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['list', 'take', 'load', 'delete']
+        subs = self._parse_subcommands('snapshots')
         if arg in subs:
             return getattr(self, '_complete_snapshots_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
@@ -847,6 +851,12 @@ class Recon(framework.Framework):
     def _complete_snapshots_load(self, text, *ignored):
         return [x for x in self._get_snapshots() if x.startswith(text)]
     _complete_snapshots_delete = _complete_snapshots_load
+
+    def _complete_module_load(self, text, *ignored):
+        return [x for x in Framework._loaded_modules if x.startswith(text)]
+
+    def _complete_module_reload(self, text, *ignored):
+        return []
 
 #=================================================
 # SUPPORT CLASSES

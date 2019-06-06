@@ -815,6 +815,14 @@ class Framework(cmd.Cmd):
     # COMMAND METHODS
     #==================================================
 
+    def _parse_subcommands(self, command):
+        subcommands = []
+        for method in dir(self):
+            if callable(getattr(self, method)):
+                if f"_do_{command}" in method:
+                    subcommands.append(method.split('_')[-1])
+        return subcommands
+
     def _parse_params(self, params):
         params = params.split()
         arg = ''
@@ -838,7 +846,7 @@ class Framework(cmd.Cmd):
             self.help_options()
             return
         arg, params = self._parse_params(params)
-        if arg in ['list', 'set', 'unset']:
+        if arg in self._parse_subcommands(options):
             return getattr(self, '_do_options_'+arg)(params)
         else:
             self.help_options()
@@ -877,7 +885,7 @@ class Framework(cmd.Cmd):
             self.help_keys()
             return
         arg, params = self._parse_params(params)
-        if arg in ['list', 'add', 'remove']:
+        if arg in self._parse_subcommands('keys'):
             return getattr(self, '_do_keys_'+arg)(params)
         else:
             self.help_keys()
@@ -913,7 +921,7 @@ class Framework(cmd.Cmd):
             self.help_module()
             return
         arg, params = self._parse_params(params)
-        if arg in ['search', 'load', 'reload']:
+        if arg in self._parse_subcommands('module'):
             return getattr(self, '_do_module_'+arg)(params)
         else:
             self.help_module()
@@ -929,12 +937,6 @@ class Framework(cmd.Cmd):
         else:
             self.error('No modules found.')
             self._help_module_search()
-
-    def _do_module_load(self, params):
-        raise NotImplementedError
-
-    def _do_module_reload(self, params):
-        raise NotImplementedError
 
     def do_show(self, params):
         '''Shows various framework items'''
@@ -955,7 +957,7 @@ class Framework(cmd.Cmd):
             self.help_db()
             return
         arg, params = self._parse_params(params)
-        if arg in ['insert', 'delete', 'query', 'schema']:
+        if arg in self._parse_subcommands('db'):
             return getattr(self, '_do_db_'+arg)(params)
         else:
             self.help_db()
@@ -1072,7 +1074,7 @@ class Framework(cmd.Cmd):
             self.help_record()
             return
         arg, params = self._parse_params(params)
-        if arg in ['start', 'stop', 'status']:
+        if arg in self._parse_subcommands('record'):
             return getattr(self, '_do_record_'+arg)(params)
         else:
             self.help_record()
@@ -1111,7 +1113,7 @@ class Framework(cmd.Cmd):
             self.help_spool()
             return
         arg, params = self._parse_params(params)
-        if arg in ['start', 'stop', 'status']:
+        if arg in self._parse_subcommands('spool'):
             return getattr(self, '_do_spool_'+arg)(params)
         else:
             self.help_spool()
@@ -1199,7 +1201,7 @@ class Framework(cmd.Cmd):
 
     def help_options(self):
         print(getattr(self, 'do_options').__doc__)
-        print(f"{os.linesep}Usage: options <list|set|unset> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: options <{'|'.join(self._parse_subcommands('options'))}> [...]{os.linesep}")
 
     def _help_options_set(self):
         print(getattr(self, '_do_options_set').__doc__)
@@ -1211,7 +1213,7 @@ class Framework(cmd.Cmd):
 
     def help_keys(self):
         print(getattr(self, 'do_keys').__doc__)
-        print(f"{os.linesep}Usage: keys <list|add|remove> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: keys <{'|'.join(self._parse_subcommands('keys'))}> [...]{os.linesep}")
 
     def _help_keys_add(self):
         print(getattr(self, '_do_keys_add').__doc__)
@@ -1223,15 +1225,11 @@ class Framework(cmd.Cmd):
 
     def help_module(self):
         print(getattr(self, 'do_module').__doc__)
-        print(f"{os.linesep}Usage: module <search|load|reload> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: module <{'|'.join(self._parse_subcommands('module'))}> [...]{os.linesep}")
 
     def _help_module_search(self):
         print(getattr(self, '_do_module_search').__doc__)
         print(f"{os.linesep}Usage: module search [<regex>]{os.linesep}")
-
-    def _help_module_load(self):
-        print(getattr(self, '_do_module_load').__doc__)
-        print(f"{os.linesep}Usage: module load <path>{os.linesep}")
 
     def help_show(self):
         options = sorted(self._get_show_names() + self.get_tables())
@@ -1240,7 +1238,7 @@ class Framework(cmd.Cmd):
 
     def help_db(self):
         print(getattr(self, 'do_db').__doc__)
-        print(f"{os.linesep}Usage: db <insert|delete|query|schema> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: db <{'|'.join(self._parse_subcommands('db'))}> [...]{os.linesep}")
 
     def _help_db_insert(self):
         print(getattr(self, '_do_db_insert').__doc__)
@@ -1258,7 +1256,7 @@ class Framework(cmd.Cmd):
 
     def help_record(self):
         print(getattr(self, 'do_record').__doc__)
-        print(f"{os.linesep}Usage: record <start|stop|status> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: record <{'|'.join(self._parse_subcommands('record'))}> [...]{os.linesep}")
 
     def _help_record_start(self):
         print(getattr(self, '_do_record_start').__doc__)
@@ -1266,7 +1264,7 @@ class Framework(cmd.Cmd):
 
     def help_spool(self):
         print(getattr(self, 'do_spool').__doc__)
-        print(f"{os.linesep}Usage: spool <start|stop|status> [...]{os.linesep}")
+        print(f"{os.linesep}Usage: spool <{'|'.join(self._parse_subcommands('spool'))}> [...]{os.linesep}")
 
     def _help_spool_start(self):
         print(getattr(self, '_do_spool_start').__doc__)
@@ -1286,7 +1284,7 @@ class Framework(cmd.Cmd):
 
     def complete_options(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['list', 'set', 'unset']
+        subs = self._parse_subcommands('options')
         if arg in subs:
             return getattr(self, '_complete_options_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
@@ -1300,7 +1298,7 @@ class Framework(cmd.Cmd):
 
     def complete_keys(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['list', 'add', 'remove']
+        subs = self._parse_subcommands('keys')
         if arg in subs:
             return getattr(self, '_complete_keys_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
@@ -1314,17 +1312,13 @@ class Framework(cmd.Cmd):
 
     def complete_module(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['search', 'load', 'reload']
+        subs = self._parse_subcommands('module')
         if arg in subs:
             return getattr(self, '_complete_module_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
 
     def _complete_module_search(self, text, *ignored):
         return []
-    _complete_module_reload = _complete_module_search
-
-    def _complete_module_load(self, text, *ignored):
-        return [x for x in Framework._loaded_modules if x.startswith(text)]
 
     def complete_show(self, text, line, *ignored):
         options = sorted(self._get_show_names() + self.get_tables())
@@ -1332,7 +1326,7 @@ class Framework(cmd.Cmd):
 
     def complete_db(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['insert', 'delete', 'query', 'schema']
+        subs = self._parse_subcommands('db')
         if arg in subs:
             return getattr(self, '_complete_db_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
@@ -1346,5 +1340,5 @@ class Framework(cmd.Cmd):
     _complete_db_schema = _complete_db_query
 
     def complete_record(self, text, *ignored):
-        return [x for x in ['start', 'stop', 'status'] if x.startswith(text)]
+        return [x for x in self._parse_subcommands('record') if x.startswith(text)]
     complete_spool = complete_record

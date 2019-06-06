@@ -447,66 +447,6 @@ class BaseModule(framework.Framework):
         )
 
     #==================================================
-    # SHOW METHODS
-    #==================================================
-
-    def show_inputs(self):
-        if hasattr(self, '_default_source'):
-            try:
-                self._validate_options()
-                inputs = self._get_source(self.options['source'], self._default_source)
-                self.table([[x] for x in inputs], header=['Module Inputs'])
-            except Exception as e:
-                self.output(e.__str__())
-        else:
-            self.output('Source option not available for this module.')
-
-    def show_source(self):
-        rel_path = '.'.join([self._modulename, 'py'])
-        abs_path = os.path.join(self.mod_path, rel_path)
-        with open(abs_path) as f:
-            content = f.readlines()
-            nums = [self.to_unicode_str(x) for x in range(1, len(content)+1)]
-            num_len = len(max(nums, key=len))
-            for num in nums:
-                print(f"{num.rjust(num_len)}|{content[int(num)-1]}", end='')
-
-    def show_info(self):
-        print('')
-        # meta info
-        for item in ['name', 'author', 'version']:
-            print(f"{item.title().rjust(10)}: {self.meta[item]}")
-        # required keys
-        if self.meta.get('required_keys'):
-            print(f"{'keys'.title().rjust(10)}: {', '.join(self.meta.get('required_keys'))}")
-        print('')
-        # description
-        print('Description:')
-        print(f"{self.spacer}{textwrap.fill(self.meta['description'], 100, subsequent_indent=self.spacer)}")
-        print('')
-        # options
-        print('Options:', end='')
-        self._list_options()
-        # sources
-        if hasattr(self, '_default_source'):
-            print('Source Options:')
-            print(f"{self.spacer}{'default'.ljust(15)}{self._default_source}")
-            print(f"{self.spacer}{'<string>'.ljust(15)}string representing a single input")
-            print(f"{self.spacer}{'<path>'.ljust(15)}path to a file containing a list of inputs")
-            print(f"{self.spacer}{'query <sql>'.ljust(15)}database query returning one column of inputs")
-            print('')
-        # comments
-        if self.meta.get('comments'):
-            print('Comments:')
-            for comment in self.meta['comments']:
-                prefix = '* '
-                if comment.startswith('\t'):
-                    prefix = self.spacer+'- '
-                    comment = comment[1:]
-                print(f"{self.spacer}{textwrap.fill(prefix+comment, 100, subsequent_indent=self.spacer)}")
-            print('')
-
-    #==================================================
     # COMMAND METHODS
     #==================================================
 
@@ -516,7 +456,7 @@ class BaseModule(framework.Framework):
             self.help_goptions()
             return
         arg, params = self._parse_params(params)
-        if arg in ['list']:
+        if arg in self._parse_subcommands('goptions'):
             return getattr(self, '_do_goptions_'+arg)(params)
         else:
             self.help_goptions()
@@ -553,6 +493,54 @@ class BaseModule(framework.Framework):
         '''Reloads the current module'''
         self._reload = 1
         return True
+
+    def _do_module_info(self, params):
+        '''Shows the current module details'''
+        print('')
+        # meta info
+        for item in ['name', 'author', 'version']:
+            print(f"{item.title().rjust(10)}: {self.meta[item]}")
+        # required keys
+        if self.meta.get('required_keys'):
+            print(f"{'keys'.title().rjust(10)}: {', '.join(self.meta.get('required_keys'))}")
+        print('')
+        # description
+        print('Description:')
+        print(f"{self.spacer}{textwrap.fill(self.meta['description'], 100, subsequent_indent=self.spacer)}")
+        print('')
+        # options
+        print('Options:', end='')
+        self._list_options()
+        # sources
+        if hasattr(self, '_default_source'):
+            print('Source Options:')
+            print(f"{self.spacer}{'default'.ljust(15)}{self._default_source}")
+            print(f"{self.spacer}{'<string>'.ljust(15)}string representing a single input")
+            print(f"{self.spacer}{'<path>'.ljust(15)}path to a file containing a list of inputs")
+            print(f"{self.spacer}{'query <sql>'.ljust(15)}database query returning one column of inputs")
+            print('')
+        # comments
+        if self.meta.get('comments'):
+            print('Comments:')
+            for comment in self.meta['comments']:
+                prefix = '* '
+                if comment.startswith('\t'):
+                    prefix = self.spacer+'- '
+                    comment = comment[1:]
+                print(f"{self.spacer}{textwrap.fill(prefix+comment, 100, subsequent_indent=self.spacer)}")
+            print('')
+
+    def _do_module_inputs(self, params):
+        '''Shows the current inputs based on the source option'''
+        if hasattr(self, '_default_source'):
+            try:
+                self._validate_options()
+                inputs = self._get_source(self.options['source'], self._default_source)
+                self.table([[x] for x in inputs], header=['Module Inputs'])
+            except Exception as e:
+                self.output(e.__str__())
+        else:
+            self.output('Source option not available for this module.')
 
     def do_run(self, params):
         '''Runs the module'''
@@ -595,19 +583,27 @@ class BaseModule(framework.Framework):
         print(getattr(self, 'do_options').__doc__)
         print(f"{os.linesep}Usage: options list{os.linesep}")
 
+    def _help_module_load(self):
+        print(getattr(self, '_do_module_load').__doc__)
+        print(f"{os.linesep}Usage: module load <path>{os.linesep}")
+
     #==================================================
     # COMPLETE METHODS
     #==================================================
 
     def complete_goptions(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = ['list']
+        subs = self._parse_subcommands('goptions')
         if arg in subs:
             return getattr(self, '_complete_goptions_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
 
     def _complete_goptions_list(self, text, *ignored):
         return []
+
+    def _complete_module_reload(self, text, *ignored):
+        return []
+    _complete_module_info = _complete_module_inputs = _complete_module_reload
 
     #==================================================
     # HOOK METHODS
