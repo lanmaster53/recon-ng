@@ -41,14 +41,14 @@ def recon_cli(args):
         return
     # if requested, show modules and exit
     if args.show_modules:
-        x._do_module_search('')
+        x._do_modules_search('')
         return
     # exit if module not specified
     if not args.module:
         output('No module provided.')
         return
     # load the module
-    y = x._do_module_load(args.module)
+    y = x._do_modules_load(args.module)
     # exit if module not successfully loaded
     if not y: return
     print(f"MODULE => {args.module}")

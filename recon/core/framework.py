@@ -818,9 +818,8 @@ class Framework(cmd.Cmd):
     def _parse_subcommands(self, command):
         subcommands = []
         for method in dir(self):
-            if callable(getattr(self, method)):
-                if f"_do_{command}" in method:
-                    subcommands.append(method.split('_')[-1])
+            if f"_do_{command}_" in method:
+                subcommands.append(method.split('_')[-1])
         return subcommands
 
     def _parse_params(self, params):
@@ -915,18 +914,18 @@ class Framework(cmd.Cmd):
         else:
             self.error('Invalid key name.')
 
-    def do_module(self, params):
+    def do_modules(self, params):
         '''Interfaces with installed modules'''
         if not params:
-            self.help_module()
+            self.help_modules()
             return
         arg, params = self._parse_params(params)
-        if arg in self._parse_subcommands('module'):
-            return getattr(self, '_do_module_'+arg)(params)
+        if arg in self._parse_subcommands('modules'):
+            return getattr(self, '_do_modules_'+arg)(params)
         else:
-            self.help_module()
+            self.help_modules()
 
-    def _do_module_search(self, params):
+    def _do_modules_search(self, params):
         '''Searches installed modules'''
         modules = [x for x in Framework._loaded_modules]
         if params:
@@ -936,7 +935,7 @@ class Framework(cmd.Cmd):
             self._list_modules(modules)
         else:
             self.error('No modules found.')
-            self._help_module_search()
+            self._help_modules_search()
 
     def do_show(self, params):
         '''Shows various framework items'''
@@ -1223,13 +1222,13 @@ class Framework(cmd.Cmd):
         print(getattr(self, '_do_keys_remove').__doc__)
         print(f"{os.linesep}Usage: keys remove <name>{os.linesep}")
 
-    def help_module(self):
-        print(getattr(self, 'do_module').__doc__)
-        print(f"{os.linesep}Usage: module <{'|'.join(self._parse_subcommands('module'))}> [...]{os.linesep}")
+    def help_modules(self):
+        print(getattr(self, 'do_modules').__doc__)
+        print(f"{os.linesep}Usage: modules <{'|'.join(self._parse_subcommands('modules'))}> [...]{os.linesep}")
 
-    def _help_module_search(self):
-        print(getattr(self, '_do_module_search').__doc__)
-        print(f"{os.linesep}Usage: module search [<regex>]{os.linesep}")
+    def _help_modules_search(self):
+        print(getattr(self, '_do_modules_search').__doc__)
+        print(f"{os.linesep}Usage: modules search [<regex>]{os.linesep}")
 
     def help_show(self):
         options = sorted(self._get_show_names() + self.get_tables())
@@ -1310,14 +1309,14 @@ class Framework(cmd.Cmd):
         return [x for x in self._get_key_names() if x.startswith(text)]
     _complete_keys_remove = _complete_keys_add
 
-    def complete_module(self, text, line, *ignored):
+    def complete_modules(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = self._parse_subcommands('module')
+        subs = self._parse_subcommands('modules')
         if arg in subs:
-            return getattr(self, '_complete_module_'+arg)(text, params)
+            return getattr(self, '_complete_modules_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
 
-    def _complete_module_search(self, text, *ignored):
+    def _complete_modules_search(self, text, *ignored):
         return []
 
     def complete_show(self, text, line, *ignored):

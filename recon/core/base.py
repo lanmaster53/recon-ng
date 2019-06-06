@@ -573,7 +573,7 @@ class Recon(framework.Framework):
         if modules:
             for module in modules:
                 self._install_module(module['path'])
-            self._do_module_reload('')
+            self._do_modules_reload('')
         else:
             self.error('Invalid module path.')
 
@@ -586,7 +586,7 @@ class Recon(framework.Framework):
         if modules:
             for module in modules:
                 self._remove_module(module['path'])
-            self._do_module_reload('')
+            self._do_modules_reload('')
         else:
             self.error('Invalid module path.')
 
@@ -681,7 +681,7 @@ class Recon(framework.Framework):
         else:
             self.error(f"No snapshot named '{params}'.")
 
-    def _do_module_load(self, params):
+    def _do_modules_load(self, params):
         '''Loads a module'''
         # validate global options before loading the module
         try:
@@ -690,7 +690,7 @@ class Recon(framework.Framework):
             self.error(e)
             return
         if not params:
-            self._help_module_load()
+            self._help_modules_load()
             return
         # finds any modules that contain params
         modules = self._match_modules(params)
@@ -731,7 +731,7 @@ class Recon(framework.Framework):
                 # shuffle category counts?
             break
 
-    def _do_module_reload(self, params):
+    def _do_modules_reload(self, params):
         '''Reloads installed modules'''
         self.output('Reloading modules...')
         self._load_modules()
@@ -792,9 +792,9 @@ class Recon(framework.Framework):
         print(getattr(self, '_do_snapshots_delete').__doc__)
         print(f"{os.linesep}Usage: snapshots delete <name>{os.linesep}")
 
-    def _help_module_load(self):
-        print(getattr(self, '_do_module_load').__doc__)
-        print(f"{os.linesep}Usage: module load <path>{os.linesep}")
+    def _help_modules_load(self):
+        print(getattr(self, '_do_modules_load').__doc__)
+        print(f"{os.linesep}Usage: modules load <path>{os.linesep}")
 
     #==================================================
     # COMPLETE METHODS
@@ -852,10 +852,10 @@ class Recon(framework.Framework):
         return [x for x in self._get_snapshots() if x.startswith(text)]
     _complete_snapshots_delete = _complete_snapshots_load
 
-    def _complete_module_load(self, text, *ignored):
+    def _complete_modules_load(self, text, *ignored):
         return [x for x in Framework._loaded_modules if x.startswith(text)]
 
-    def _complete_module_reload(self, text, *ignored):
+    def _complete_modules_reload(self, text, *ignored):
         return []
 
 #=================================================
