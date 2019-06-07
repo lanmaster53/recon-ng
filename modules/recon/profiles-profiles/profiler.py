@@ -1,6 +1,6 @@
 from recon.core.module import BaseModule
 from recon.mixins.threads import ThreadingMixin
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 class Module(BaseModule, ThreadingMixin):
 
@@ -28,7 +28,7 @@ class Module(BaseModule, ThreadingMixin):
         d = dict(site)
         if d['valid'] == True:
             self.verbose('Checking: %s' % d['name'])
-            url = d['check_uri'].replace('{account}', urllib.quote(user))
+            url = d['check_uri'].replace('{account}', urllib.parse.quote(user))
             resp = self.request(url, redirect=False)
             if resp.status_code == int(d['account_existence_code']):
                 self.debug('Codes matched %s %s' % (resp.status_code, d['account_existence_code']))

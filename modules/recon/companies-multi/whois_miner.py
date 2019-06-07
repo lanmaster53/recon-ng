@@ -1,7 +1,7 @@
 from recon.core.module import BaseModule
 from recon.utils import netblock
-from urlparse import urlparse
-import urllib
+from urllib.parse import urlparse
+import urllib.request, urllib.parse, urllib.error
 
 class Module(BaseModule):
 
@@ -22,7 +22,7 @@ class Module(BaseModule):
         headers = {'Accept': 'application/json'}
         for search in searches:
             for rtype in ('org', 'customer'):
-                url = 'http://whois.arin.net/rest/%ss;name=%s' % (rtype, urllib.quote(search))
+                url = 'http://whois.arin.net/rest/%ss;name=%s' % (rtype, urllib.parse.quote(search))
                 entities = self._request(url, headers, rtype+'s', rtype+'Ref')
                 for entity in entities:
                     self.heading(entity['@name'], level=0)

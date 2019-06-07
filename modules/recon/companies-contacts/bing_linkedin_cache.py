@@ -59,7 +59,7 @@ class Module(BaseModule):
         if fname is None or 'LinkedIn' in fullname or 'profiles' in name.lower() or re.search('^\d+$',fname): 
             # if 'name' has these, it's not a person.
             pass
-        elif u'\u2013' in snippet:
+        elif '\u2013' in snippet:
             # unicode hyphen between dates here usually means no longer at company.
             # Not always, but nothing available seems more consistent than that.
             pass

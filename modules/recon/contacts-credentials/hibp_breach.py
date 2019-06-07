@@ -1,6 +1,6 @@
 from recon.core.module import BaseModule
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 class Module(BaseModule):
 
@@ -19,7 +19,7 @@ class Module(BaseModule):
         base_url = 'https://haveibeenpwned.com/api/v2/%s/%s'
         endpoint = 'breachedaccount'
         for account in accounts:
-            resp = self.request(base_url % (endpoint, urllib.quote(account)))
+            resp = self.request(base_url % (endpoint, urllib.parse.quote(account)))
             rcode = resp.status_code
             if rcode == 404:
                 self.verbose('%s => Not Found.' % (account))

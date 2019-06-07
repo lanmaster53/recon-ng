@@ -34,5 +34,5 @@ class Module(BaseModule, ResolverMixin):
                             'host': self.to_unicode(host),
                             'ip_address': self.to_unicode(answers[i].address)
                         }
-                        self.insert('hosts', data, data.keys())
+                        self.insert('hosts', data, list(data.keys()))
                     self.output('%s => %s' % (host, answers[i].address))

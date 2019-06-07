@@ -1,6 +1,6 @@
 from recon.core.module import BaseModule
 from recon.mixins.threads import ThreadingMixin
-from cookielib import CookieJar
+from http.cookiejar import CookieJar
 from lxml.html import fromstring
 
 class Module(BaseModule, ThreadingMixin):
@@ -29,7 +29,7 @@ class Module(BaseModule, ThreadingMixin):
             self.error('Inconsistent number of sites and labels.')
             return
         # merge names and labels into a list of tuples
-        sites = zip(names, labels)
+        sites = list(zip(names, labels))
         # extract token from the reponse
         token = ''.join([x.value for x in resp.cookiejar if x.name=='token'])
         # reset url for site requests

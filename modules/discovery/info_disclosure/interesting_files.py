@@ -1,7 +1,7 @@
 from recon.core.module import BaseModule
 import warnings
 import gzip
-from StringIO import StringIO
+from io import StringIO
 
 class Module(BaseModule):
 

@@ -1,8 +1,8 @@
 import json
 import socket
 import ssl
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 
 # create a global ssl context that ignores certificate validation
 if hasattr(ssl, '_create_unverified_context'): 
@@ -10,8 +10,8 @@ if hasattr(ssl, '_create_unverified_context'):
 
 def encode_payload(in_dict):
     out_dict = {}
-    for k, v in in_dict.iteritems():
-        if isinstance(v, unicode):
+    for k, v in in_dict.items():
+        if isinstance(v, str):
             v = v.encode('utf8')
         elif isinstance(v, str):
             # must be encoded in UTF-8
@@ -23,7 +23,7 @@ class Request(object):
 
     def __init__(self, **kwargs):
         '''Initializes control parameters as class attributes.'''
-        self.user_agent = "Python-urllib/%s" % (urllib2.__version__) if 'user_agent' not in kwargs else kwargs['user_agent']
+        self.user_agent = "Python-urllib/%s" % urllib.request.__version__ if 'user_agent' not in kwargs else kwargs['user_agent']
         self.debug = False if 'debug' not in kwargs else kwargs['debug']
         self.proxy = None if 'proxy' not in kwargs else kwargs['proxy']
         self.timeout = None if 'timeout' not in kwargs else kwargs['timeout']
@@ -46,7 +46,7 @@ class Request(object):
             headers['Content-Type'] = 'application/json'
             payload = json.dumps(payload)
         else:
-            payload = urllib.urlencode(encode_payload(payload))
+            payload = urllib.parse.urlencode(encode_payload(payload))
         # process basic authentication
         if len(auth) == 2:
             authorization = ('%s:%s' % (auth[0], auth[1])).encode('base64').replace('\n', '')
@@ -57,43 +57,43 @@ class Request(object):
         
         # set handlers
         # declare handlers list according to debug setting
-        handlers = [urllib2.HTTPHandler(debuglevel=1), urllib2.HTTPSHandler(debuglevel=1)] if self.debug else []
+        handlers = [urllib.request.HTTPHandler(debuglevel=1), urllib.request.HTTPSHandler(debuglevel=1)] if self.debug else []
         # process cookiejar handler
         if cookiejar != None:
-            handlers.append(urllib2.HTTPCookieProcessor(cookiejar))
+            handlers.append(urllib.request.HTTPCookieProcessor(cookiejar))
         # process redirect and add handler
         if self.redirect == False:
             handlers.append(NoRedirectHandler)
         # process proxies and add handler
         if self.proxy:
             proxies = {'http': self.proxy, 'https': self.proxy}
-            handlers.append(urllib2.ProxyHandler(proxies))
+            handlers.append(urllib.request.ProxyHandler(proxies))
 
         # install opener
-        opener = urllib2.build_opener(*handlers)
-        urllib2.install_opener(opener)
+        opener = urllib.request.build_opener(*handlers)
+        urllib.request.install_opener(opener)
 
         # process method and make request
         if method == 'GET':
             if payload: url = '%s?%s' % (url, payload)
-            req = urllib2.Request(url, headers=headers)
+            req = urllib.request.Request(url, headers=headers)
         elif method == 'POST':
-            req = urllib2.Request(url, data=payload, headers=headers)
+            req = urllib.request.Request(url, data=payload, headers=headers)
         elif method == 'HEAD':
             if payload: url = '%s?%s' % (url, payload)
-            req = urllib2.Request(url, headers=headers)
+            req = urllib.request.Request(url, headers=headers)
             req.get_method = lambda : 'HEAD'
         else:
             raise RequestException('Request method \'%s\' is not a supported method.' % (method))
         try:
-            resp = urllib2.urlopen(req)
-        except urllib2.HTTPError as e:
+            resp = urllib.request.urlopen(req)
+        except urllib.error.HTTPError as e:
             resp = e
 
         # build and return response object
         return ResponseObject(resp, cookiejar)
 
-class NoRedirectHandler(urllib2.HTTPRedirectHandler):
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
 
     def http_error_302(self, req, fp, code, msg, headers):
         pass
@@ -101,7 +101,7 @@ class NoRedirectHandler(urllib2.HTTPRedirectHandler):
     http_error_301 = http_error_303 = http_error_307 = http_error_302
 
 import gzip
-import StringIO
+import io
 import xml.etree.ElementTree
 
 class ResponseObject(object):
@@ -112,17 +112,17 @@ class ResponseObject(object):
         # set inherited properties
         self.url = resp.geturl()
         self.status_code = resp.getcode()
-        self.headers = resp.headers.dict
+        self.headers = resp.headers
         # detect and set encoding property
-        self.encoding = resp.headers.getparam('charset')
-        self.content_type = resp.headers.getheader('content-type')
+        self.encoding = resp.headers.get_content_charset()
+        self.content_type = resp.headers['content-type']
         self.cookiejar = cookiejar
         # deflate payload if needed
-        if resp.headers.getheader('content-encoding') == 'gzip':
+        if resp.headers['content-encoding'] == 'gzip':
             self.deflate()
 
     def deflate(self):
-        with gzip.GzipFile(fileobj=StringIO.StringIO(self.raw)) as gz:
+        with gzip.GzipFile(fileobj=io.StringIO(self.raw)) as gz:
             self.raw = gz.read()
 
     @property
@@ -130,7 +130,7 @@ class ResponseObject(object):
         try:
             return self.raw.decode(self.encoding)
         except (UnicodeDecodeError, TypeError):
-            return ''.join([char for char in self.raw if ord(char) in [9,10,13] + range(32, 126)])
+            return ''.join([char for char in self.raw if ord(char) in [9,10,13] + list(range(32, 126))])
 
     @property
     def json(self):
@@ -142,7 +142,7 @@ class ResponseObject(object):
     @property
     def xml(self):
         try:
-            return xml.etree.ElementTree.parse(StringIO.StringIO(self.text))
+            return xml.etree.ElementTree.parse(io.StringIO(self.text))
         except xml.etree.ElementTree.ParseError:
             return None
 

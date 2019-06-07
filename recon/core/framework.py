@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from contextlib import closing
 import cmd
 import codecs
@@ -55,7 +55,7 @@ class Options(dict):
     def _autoconvert(self, value):
         if value in (None, True, False):
             return value
-        elif (isinstance(value, basestring)) and value.lower() in ('none', "''", '""'):
+        elif (isinstance(value, str)) and value.lower() in ('none', "''", '""'):
             return None
         orig = value
         for fn in (self._boolify, int, float):
@@ -179,16 +179,16 @@ class Framework(cmd.Cmd):
 
     def to_unicode_str(self, obj, encoding='utf-8'):
         # checks if obj is a string and converts if not
-        if not isinstance(obj, basestring):
+        if not isinstance(obj, str):
             obj = str(obj)
         obj = self.to_unicode(obj, encoding)
         return obj
 
     def to_unicode(self, obj, encoding='utf-8'):
         # checks if obj is a unicode string and converts if not
-        if isinstance(obj, basestring):
-            if not isinstance(obj, unicode):
-                obj = unicode(obj, encoding)
+        if isinstance(obj, str):
+            if not isinstance(obj, str):
+                obj = str(obj, encoding)
         return obj
 
     def is_hash(self, hashstr):
@@ -228,7 +228,7 @@ class Framework(cmd.Cmd):
                 if '-' in rowid:
                     start = int(rowid.split('-')[0].strip())
                     end = int(rowid.split('-')[-1].strip())
-                    xploded += range(start, end+1)
+                    xploded += list(range(start, end+1))
                 else:
                     xploded.append(int(rowid))
             except ValueError:
@@ -389,8 +389,8 @@ class Framework(cmd.Cmd):
         data = dict(
             domain = domain
         )
-        rowcount = self.insert('domains', data.copy(), data.keys())
-        if not mute: self._display(data, rowcount, '[domain] %s', data.keys())
+        rowcount = self.insert('domains', data.copy(), list(data.keys()))
+        if not mute: self._display(data, rowcount, '[domain] %s', list(data.keys()))
         return rowcount
 
     def add_companies(self, company=None, description=None, mute=False):
@@ -400,7 +400,7 @@ class Framework(cmd.Cmd):
             description = description
         )
         rowcount = self.insert('companies', data.copy(), ('company',))
-        if not mute: self._display(data, rowcount, '[company] %s - %s', data.keys())
+        if not mute: self._display(data, rowcount, '[company] %s - %s', list(data.keys()))
         return rowcount
 
     def add_netblocks(self, netblock=None, mute=False):
@@ -408,8 +408,8 @@ class Framework(cmd.Cmd):
         data = dict(
             netblock = netblock
         )
-        rowcount = self.insert('netblocks', data.copy(), data.keys())
-        if not mute: self._display(data, rowcount, '[netblock] %s', data.keys())
+        rowcount = self.insert('netblocks', data.copy(), list(data.keys()))
+        if not mute: self._display(data, rowcount, '[netblock] %s', list(data.keys()))
         return rowcount
 
     def add_locations(self, latitude=None, longitude=None, street_address=None, mute=False):
@@ -419,8 +419,8 @@ class Framework(cmd.Cmd):
             longitude = longitude,
             street_address = street_address
         )
-        rowcount = self.insert('locations', data.copy(), data.keys())
-        if not mute: self._display(data, rowcount, '[location] %s, %s - %s', data.keys())
+        rowcount = self.insert('locations', data.copy(), list(data.keys()))
+        if not mute: self._display(data, rowcount, '[location] %s, %s - %s', list(data.keys()))
         return rowcount
 
     def add_vulnerabilities(self, host=None, reference=None, example=None, publish_date=None, category=None, status=None, mute=False):
@@ -433,7 +433,7 @@ class Framework(cmd.Cmd):
             category = category,
             status = status
         )
-        rowcount = self.insert('vulnerabilities', data.copy(), data.keys())
+        rowcount = self.insert('vulnerabilities', data.copy(), list(data.keys()))
         if not mute: self._display(data, rowcount)
         return rowcount
 
@@ -496,7 +496,7 @@ class Framework(cmd.Cmd):
         # add email usernames to contacts
         if username is not None and '@' in username:
             self.add_contacts(first_name=None, last_name=None, title=None, email=username)
-        rowcount = self.insert('credentials', data.copy(), data.keys())
+        rowcount = self.insert('credentials', data.copy(), list(data.keys()))
         if not mute: self._display(data, rowcount, '[credential] %s: %s', ('username', 'password'))
         return rowcount
 
@@ -521,7 +521,7 @@ class Framework(cmd.Cmd):
             targets = targets,
             media_refs = media_refs
         )
-        rowcount = self.insert('leaks', data.copy(), data.keys())
+        rowcount = self.insert('leaks', data.copy(), list(data.keys()))
         if not mute: self._display(data, rowcount)
         return rowcount
 
@@ -539,7 +539,7 @@ class Framework(cmd.Cmd):
             longitude = longitude,
             time = time.strftime(self.time_format)
         )
-        rowcount = self.insert('pushpins', data.copy(), data.keys())
+        rowcount = self.insert('pushpins', data.copy(), list(data.keys()))
         if not mute: self._display(data, rowcount)
         return rowcount
 
@@ -566,7 +566,7 @@ class Framework(cmd.Cmd):
             category = category,
             url = url
         )
-        rowcount = self.insert('repositories', data.copy(), data.keys())
+        rowcount = self.insert('repositories', data.copy(), list(data.keys()))
         if not mute: self._display(data, rowcount, '[repository] %s - %s', ('name', 'description'))
         return rowcount
 
@@ -580,7 +580,7 @@ class Framework(cmd.Cmd):
         # set module to the calling module unless the do_add command was used
         data['module'] = 'user_defined' if 'do_add' in [x[3] for x in inspect.stack()] else self._modulename.split('/')[-1]
         # sanitize the inputs to remove NoneTypes, blank strings, and zeros
-        columns = [x for x in data.keys() if data[x]]
+        columns = [x for x in list(data.keys()) if data[x]]
         # make sure that module is not seen as a unique column
         unique_columns = [x for x in unique_columns if x in columns and x != 'module']
         # exit if there is nothing left to insert
@@ -590,13 +590,13 @@ class Framework(cmd.Cmd):
             data[column] = self.to_unicode(data[column])
 
         if not unique_columns:
-            query = u'INSERT INTO "%s" ("%s") VALUES (%s)' % (
+            query = 'INSERT INTO "%s" ("%s") VALUES (%s)' % (
                 table,
                 '", "'.join(columns),
                 ', '.join('?'*len(columns))
             )
         else:
-            query = u'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
+            query = 'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
                 table,
                 '", "'.join(columns),
                 ', '.join('?'*len(columns)),
@@ -615,7 +615,7 @@ class Framework(cmd.Cmd):
         self._summary_counts[table][1] += 1
 
         # build RPC response
-        for key in data.keys():
+        for key in list(data.keys()):
             if not data[key]:
                 del data[key]
         self.rpc_cache.append(data)
@@ -954,7 +954,7 @@ class Framework(cmd.Cmd):
                 for column in columns:
                     try:
                         # prompt user for data
-                        value = raw_input('%s (%s): ' % column)
+                        value = input('%s (%s): ' % column)
                         record[sanitize_column(column[0])] = value
                     except KeyboardInterrupt:
                         print('')
@@ -987,7 +987,7 @@ class Framework(cmd.Cmd):
             else:
                 try:
                     # prompt user for data
-                    params = raw_input('rowid(s) (INT): ')
+                    params = input('rowid(s) (INT): ')
                     rowids = self._parse_rowids(params)
                 except KeyboardInterrupt:
                     print('')
@@ -1106,14 +1106,14 @@ class Framework(cmd.Cmd):
                 self.output('Multiple modules match \'%s\'.' % params)
                 self.show_modules(modules)
             return
-        import StringIO
+        import io
         # compensation for stdin being used for scripting and loading
         if Framework._script:
             end_string = sys.stdin.read()
         else:
             end_string = 'EOF'
             Framework._load = 1
-        sys.stdin = StringIO.StringIO('load %s\n%s' % (modules[0], end_string))
+        sys.stdin = io.StringIO('load %s\n%s' % (modules[0], end_string))
         return True
     do_use = do_load
 

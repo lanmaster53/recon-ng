@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 __author__    = 'Tim Tomes (@LaNMaSteR53)'
 __email__     = 'tjt1980[at]gmail.com'
@@ -11,13 +11,13 @@ import random
 import re
 import shutil
 import sys
-import __builtin__
+import builtins
 
 # import framework libs
 from recon.core import framework
 
 # set the __version__ variable based on the VERSION file
-execfile(os.path.join(sys.path[0], 'VERSION'))
+exec(compile(open(os.path.join(sys.path[0], 'VERSION')).read(), os.path.join(sys.path[0], 'VERSION'), 'exec'))
 
 # using stdout to spool causes tab complete issues
 # therefore, override print function
@@ -33,11 +33,11 @@ def spool_print(*args, **kwargs):
         if 'console' in kwargs and kwargs['console'] is False:
             return
         # new print function must still use the old print function via the backup
-        __builtin__._print(*args, **kwargs)
+        builtins._print(*args, **kwargs)
 # make a builtin backup of the original print function
-__builtin__._print = print
+builtins._print = print
 # override the builtin print function with the new print function
-__builtin__.print = spool_print
+builtins.print = spool_print
 
 #=================================================
 # BASE CLASS

@@ -23,7 +23,7 @@ class Module(BaseModule):
         'comments': (
             'Pattern can be either a regex or a pattern.',
             'The available patterns are:',
-            '\t' + ', '.join(patterns.keys()),
+            '\t' + ', '.join(list(patterns.keys())),
             'A regex must capture the values using these named capture groups:',
             '\t(?P<first_name>) (?P<middle_name>) (?P<last_name>)',
             'A regex syntax cheatsheet and troubleshooter can be found here:',
@@ -53,7 +53,7 @@ class Module(BaseModule):
             rowid = contact[0]
             email = contact[4]
             names = ('first_name', 'middle_name', 'last_name')
-            contact = dict(zip(names, contact[1:4]))
+            contact = dict(list(zip(names, contact[1:4])))
             contact_changed = False
             
             username = email.split('@')[0]

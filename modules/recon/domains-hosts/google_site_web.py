@@ -1,6 +1,6 @@
 from recon.core.module import BaseModule
 from recon.mixins.search import GoogleWebMixin
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import re
 
 class Module(BaseModule, GoogleWebMixin):

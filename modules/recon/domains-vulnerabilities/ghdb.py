@@ -3,7 +3,7 @@ from recon.mixins.search import GoogleWebMixin
 from itertools import groupby
 import json
 import os
-import urlparse
+import urllib.parse
 
 def _optionize(s):
     return 'ghdb_%s' % (s.replace(' ', '_').lower())
@@ -43,7 +43,7 @@ class Module(BaseModule, GoogleWebMixin):
             base_query = 'site:%s' % (domain)
             for dork in dorks:
                 # build query based on alternate list
-                if isinstance(dork, basestring):
+                if isinstance(dork, str):
                     query = ' '.join((base_query, dork))
                     self._search(query)
                 # build query based on ghdb entry
@@ -52,8 +52,8 @@ class Module(BaseModule, GoogleWebMixin):
                         continue
                     if self.options[_optionize(dork['category'])]:
                         # parse the query string to extract the dork syntax
-                        parsed = urlparse.urlparse(dork['querystring'])
-                        params = urlparse.parse_qs(parsed.query)
+                        parsed = urllib.parse.urlparse(dork['querystring'])
+                        params = urllib.parse.parse_qs(parsed.query)
                         # unparsable url
                         if 'q' not in params:
                             continue
@@ -62,7 +62,7 @@ class Module(BaseModule, GoogleWebMixin):
 
     def _search(self, query):
         for result in self.search_google_web(query):
-            host = urlparse.urlparse(result).netloc
+            host = urllib.parse.urlparse(result).netloc
             data = {
                 'host': host,
                 'reference': query,

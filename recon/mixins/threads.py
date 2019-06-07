@@ -1,4 +1,4 @@
-from Queue import Queue, Empty
+from queue import Queue, Empty
 import threading
 import time
 

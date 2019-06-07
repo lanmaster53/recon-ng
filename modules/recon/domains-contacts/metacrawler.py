@@ -28,7 +28,7 @@ class Module(BaseModule, GoogleWebMixin):
             'ooxml': ['docx', 'xlsx', 'pptx'],
             'pdf': ['pdf'],
         }
-        search = 'site:%s ' + ' OR '.join(['filetype:%s' % (ext) for ext in list(itertools.chain.from_iterable(exts.values()))])
+        search = 'site:%s ' + ' OR '.join(['filetype:%s' % (ext) for ext in list(itertools.chain.from_iterable(list(exts.values())))])
         for domain in domains:
             self.heading(domain, level=0)
             results = self.search_google_web(search % domain)

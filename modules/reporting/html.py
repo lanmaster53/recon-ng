@@ -27,7 +27,7 @@ class Module(BaseModule):
         if not rows: return ''
         row_content = ''
         for row in rows:
-            values = [self.to_unicode_str(x) if x != None else u'' for x in row]
+            values = [self.to_unicode_str(x) if x != None else '' for x in row]
             if table == 'credentials' and values[1] and self.options['sanitize']:
                 values[1] = '<omitted>'
             row_content += '<tr><td>%s</td></tr>\n' % ('</td><td>'.join([self.html_escape(x) for x in values]))

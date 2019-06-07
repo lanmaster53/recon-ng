@@ -13,7 +13,7 @@ def csvify(rows):
         csv_str = ''
     else:
         s = BytesIO()
-        keys = rows[0].keys()
+        keys = list(rows[0].keys())
         dw = csv.DictWriter(s, keys)
         dw.writeheader()
         dw.writerows([dict(r) for r in rows])
@@ -30,16 +30,16 @@ def listify(rows):
     values from all of the provided columns.'''
     columns = {}
     for row in rows:
-        for column in row.keys():
+        for column in list(row.keys()):
             if column not in columns:
                 columns[column] = []
             columns[column].append(row[column])
     s = StringIO()
     for column in columns:
-        s.write(u'# '+column+os.linesep)
+        s.write('# '+column+os.linesep)
         for value in columns[column]:
-            if type(value) != unicode:
-                value = unicode(value)
+            if type(value) != str:
+                value = str(value)
             s.write(value+os.linesep)
     list_str = s.getvalue()
     return Response(list_str, mimetype='text/plain')
@@ -70,7 +70,7 @@ def proxify(rows):
         # process the rows
         for row in rows:
             for key in row:
-                url = unicode(row[key])
+                url = str(row[key])
                 msg = 'URL: '+url+os.linesep+'Status: '
                 if is_url(url):
                     try:

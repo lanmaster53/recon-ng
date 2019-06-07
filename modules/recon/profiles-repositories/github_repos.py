@@ -1,5 +1,5 @@
 from recon.core.module import BaseModule
-from urllib import quote_plus
+from urllib.parse import quote_plus
 
 class Module(BaseModule):
     meta = {
@@ -28,7 +28,7 @@ class Module(BaseModule):
             # enumerate gists
             gists = self.query_github_api('/users/%s/gists' % (quote_plus(user)))
             for gist in gists:
-                files = gist['files'].values()
+                files = list(gist['files'].values())
                 for _file in files:
                     data = {
                         'name': _file['filename'],

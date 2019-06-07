@@ -134,7 +134,7 @@ class Ranges:
 	def __eq__(self, other):
 		if len(other._l) != len(self._l):
 			return 0
-		for i in xrange(0, len(self._l)):
+		for i in range(0, len(self._l)):
 			if self._l[i] != other._l[i]:
 				return 0
 		return 1

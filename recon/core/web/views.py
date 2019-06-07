@@ -44,7 +44,7 @@ def api_workspace(workspace, report=''):
         'records': sorted(records, key=lambda r: r['count'], reverse=True),
         'modules': sorted(modules, key=lambda m: m['runs'], reverse=True),
     }
-    return jsonify(tables=tables, summary=summary, reports=REPORTS.keys())
+    return jsonify(tables=tables, summary=summary, reports=list(REPORTS.keys()))
 
 @app.route('/api/workspaces/<string:workspace>/tables/<string:table>')
 @app.route('/api/workspaces/<string:workspace>/tables/<string:table>.<string:format>')
@@ -58,4 +58,4 @@ def api_table(workspace, table, format=''):
     # dynamically determine and call export function
     if format and format in EXPORTS:
         return EXPORTS[format](rows=[dict(r) for r in rows])
-    return jsonify(rows=[dict(r) for r in rows], columns=get_columns(table), exports=EXPORTS.keys())
+    return jsonify(rows=[dict(r) for r in rows], columns=get_columns(table), exports=list(EXPORTS.keys()))

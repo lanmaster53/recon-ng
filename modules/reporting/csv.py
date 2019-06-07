@@ -28,6 +28,8 @@ class Module(BaseModule):
             cnt = 0
             rows = self.query('SELECT * FROM "%s" ORDER BY 1' % (table))
             for row in rows:
+                
+                print(row)
                 row = [x if x else '' for x in row]
                 if any(row):
                     cnt += 1
@@ -36,6 +38,6 @@ class Module(BaseModule):
                     for cell in row:
                         if cell and cell[0] in badcharacters:
                             cell = ' '+cell
-                        sanitized_row.append(cell.encode("utf-8"))
+                        sanitized_row.append(cell)
                     csvwriter.writerow(sanitized_row)
         self.output('%d records added to \'%s\'.' % (cnt, filename))

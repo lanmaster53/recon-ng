@@ -70,10 +70,10 @@ class Module(BaseModule):
         for row in self.__values[(1 if has_header else 0):]:
             # creates a dictionary where the keys are the column names and the values are the column values from row
             data = dict(
-                zip(
+                list(zip(
                     used_column_names,
-                    map(row.__getitem__, used_column_indices)
-                )
+                    list(map(row.__getitem__, used_column_indices))
+                ))
             )
             # e.g. data = {'fname':'John', 'lname':'Doe', 'title':'CEO'}
             self.verbose('Inserting %s' % ' '.join([data[col] for col in used_column_names]))
@@ -139,7 +139,7 @@ class Module(BaseModule):
             for row in csvreader:
                 # append all lines as-is case-wise
                 # unicode(str, errors='ignore') causes all invalid characters to be stripped out
-                values.append([unicode(value.strip(), errors='ignore') for value in row])
+                values.append([str(value.strip(), errors='ignore') for value in row])
                 # ensure the number of columns in each row is the same as the previous row
                 if len(values) > 1:
                     assert len(values[-1]) == len(values[-2])
@@ -148,7 +148,7 @@ class Module(BaseModule):
 
     def __register_options(self):
         # remove any old csv-file options
-        options = self.options.keys()
+        options = list(self.options.keys())
         for option in options:
             if option.startswith('csv_'):
                 del self.options[option]

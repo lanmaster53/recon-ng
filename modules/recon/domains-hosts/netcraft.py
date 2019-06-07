@@ -1,7 +1,7 @@
 from recon.core.module import BaseModule
 from recon.utils.requests import encode_payload
-from cookielib import CookieJar
-import urllib
+from http.cookiejar import CookieJar
+import urllib.request, urllib.parse, urllib.error
 import re
 import hashlib
 import time
@@ -27,7 +27,7 @@ class Module(BaseModule):
         for cookie in cookiejar:
             if cookie.name == 'netcraft_js_verification_challenge':
                 challenge = cookie.value
-                response = hashlib.sha1(urllib.unquote(challenge)).hexdigest()
+                response = hashlib.sha1(urllib.parse.unquote(challenge)).hexdigest()
                 cookiejar.set_cookie(self.make_cookie('netcraft_js_verification_response', '%s' % response, '.netcraft.com'))
                 break
         for domain in domains:

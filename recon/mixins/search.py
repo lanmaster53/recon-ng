@@ -1,9 +1,9 @@
 from lxml.html import fromstring
-from cookielib import CookieJar
+from http.cookiejar import CookieJar
 import os
 import re
 import tempfile
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import webbrowser
 
 class GoogleWebMixin(object):
@@ -36,7 +36,7 @@ class GoogleWebMixin(object):
             regmatch = re.compile('^/url\?q=[^/]')
             for link in links:
                 if regmatch.match(link) != None and 'http://webcache.googleusercontent.com' not in link:
-                    results.append(urllib.unquote_plus(link[7:link.find('&')]))
+                    results.append(urllib.parse.unquote_plus(link[7:link.find('&')]))
             # check limit
             if limit == page:
                 break

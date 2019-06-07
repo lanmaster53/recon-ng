@@ -6,10 +6,10 @@
 # bit clear and high has it set).
 import string
 
-import ranges
+from . import ranges
 
 # mask off 32 bits.
-B32M = 0xffffffffL
+B32M = 0xffffffff
 
 def m32(n):
 	"""Mask a number to 32 bits."""
@@ -17,10 +17,11 @@ def m32(n):
 
 def lenmask(len):
 	"""Return the mask for a given network length"""
-	return m32(-(1L<<(32-len)))
+	return m32(-(1<<(32-len)))
 
-def cidrrange((addr, len)):
+def cidrrange(xxx_todo_changeme):
 	"""Given an IP address and a network size, return the low and high addresses in it."""
+	(addr, len) = xxx_todo_changeme
 	m = lenmask(len)
 	# the low end is addr & mask (to make sure no funny business is going
 	# on)
@@ -31,19 +32,19 @@ def cidrrange((addr, len)):
 
 def strtoip(ipstr):
 	"""convert an IP address in string form to numeric."""
-	res = 0L
+	res = 0
 	count = 0
 	n = string.split(ipstr, '.')
 	for i in n:
-		res = res << 8L
+		res = res << 8
 		ot = string.atoi(i)
 		if ot < 0 or ot > 255:
-			raise ValueError, "invalid IP octet"
+			raise ValueError("invalid IP octet")
 		res = res + ot
 		count = count + 1
 	# could be incomplete (short); make it complete.
 	while count < 4:
-		res = res << 8L
+		res = res << 8
 		count = count + 1
 	return res
 def strtocidr(ips):
@@ -58,7 +59,7 @@ def strtocidr(ips):
 	else:
 		ip = strtoip(ips)
 	if rng < 0 or rng > 32:
-		raise ValueError, "CIDR length out of range"
+		raise ValueError("CIDR length out of range")
 	return (ip, rng)
 def cidrtostr(ip, len):
 	if len == 32:
@@ -105,7 +106,7 @@ def lhcidrs(lip, hip):
 				break
 			lb = lb - 1
 		if lb < 0:
-			raise ArithmeticError, "something horribly wrong"
+			raise ArithmeticError("something horribly wrong")
 		r.append((lip, (32-lb)))
 		lip = ht+1
 	return r
@@ -119,7 +120,7 @@ class IpAddrRanges(ranges.Ranges):
 		ranges.Ranges.__init__(self)
 	# debugging routine to dump raw contents in comprehensible form.
        	def _dump(self):
-		return map(lambda x: (iptostr(x[0]), iptostr(x[1])), self._l)
+		return [(iptostr(x[0]), iptostr(x[1])) for x in self._l]
 	def addcidr(self, ipstr):
 		"""Add CIDR IP address range to the set."""
 		(low, high) = cidrrange(strtocidr(ipstr))
@@ -141,7 +142,7 @@ class IpAddrRanges(ranges.Ranges):
 		l = []
 		for i in self._l:
 			l = l + lhcidrs(i[0], i[1])
-		return map(lambda x: cidrtostr(x[0], x[1]), l)
+		return [cidrtostr(x[0], x[1]) for x in l]
 	def addstr(self, str):
 		"""Add a string representing an IP address or CIDR range to us."""
 		pos = string.find(str, '-')

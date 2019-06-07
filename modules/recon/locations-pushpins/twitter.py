@@ -1,6 +1,6 @@
 from recon.core.module import BaseModule
 from datetime import datetime
-from urlparse import parse_qs
+from urllib.parse import parse_qs
 
 class Module(BaseModule):
 

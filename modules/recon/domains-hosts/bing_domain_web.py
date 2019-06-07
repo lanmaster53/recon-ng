@@ -1,6 +1,6 @@
 from recon.core.module import BaseModule
-from cookielib import CookieJar
-import urllib
+from http.cookiejar import CookieJar
+import urllib.request, urllib.parse, urllib.error
 import re
 import time
 import random
@@ -36,7 +36,7 @@ class Module(BaseModule):
                 for sub in subs:
                     query += ' -domain:%s.%s' % (sub, domain)
                 full_query = base_query + query
-                url = '%s?first=%d&q=%s' % (base_url, (page*nr), urllib.quote_plus(full_query))
+                url = '%s?first=%d&q=%s' % (base_url, (page*nr), urllib.parse.quote_plus(full_query))
                 # bing errors out at > 2059 characters not including the protocol
                 if len(url) > 2066: url = url[:2066]
                 self.verbose('URL: %s' % (url))

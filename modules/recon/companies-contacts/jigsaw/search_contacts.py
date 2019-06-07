@@ -1,6 +1,6 @@
 from recon.core.module import BaseModule
 from recon.utils.requests import encode_payload
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import time
 
 class Module(BaseModule):
@@ -63,7 +63,7 @@ class Module(BaseModule):
         id_len = len(max([str(x[0]) for x in all_companies], key=len))
         for company in all_companies:
             self.output('[%s] %s - %s (%s contacts)' % (str(company[0]).ljust(id_len), company[1], company[3], company[2]))
-        company_id = raw_input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
+        company_id = input('Enter Company ID from list [%s - %s]: ' % (all_companies[0][1], all_companies[0][0]))
         if not company_id: company_id = all_companies[0][0]
         return company_id
 

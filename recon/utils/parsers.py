@@ -1,7 +1,7 @@
 from PyPDF2 import PdfFileReader
 from PyPDF2.utils import PdfReadError
-from StringIO import StringIO
-from urlparse import urlparse
+from io import StringIO
+from urllib.parse import urlparse
 import lxml.etree
 import olefile
 import os
@@ -52,6 +52,6 @@ def pdf_parser(s):
     meta = pdf.getDocumentInfo()
     #print(str(meta))
     result = {}
-    for key in meta.keys():
+    for key in list(meta.keys()):
         result[key[1:]] = meta.get(key)
     return result
