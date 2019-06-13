@@ -763,7 +763,7 @@ class Framework(cmd.Cmd):
         # process payload
         if content.upper() == 'JSON':
             headers['Content-Type'] = 'application/json'
-            payload = json.dumps(payload)
+            data = json.dumps(payload)
         # process proxy
         proxy = self._global_options['proxy']
         proxies = {}
