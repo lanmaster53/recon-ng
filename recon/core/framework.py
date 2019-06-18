@@ -747,11 +747,14 @@ class Framework(cmd.Cmd):
     #==================================================
 
     def request(self, url, method='GET', timeout=None, payload={}, headers={}, agent=None, cookiejar={}, auth=(), content='', redirect=True):
-        # temporary patch so requesting still works until everything is updated
-        params = {}
-        data = {}
-        if method in ('GET', 'HEAD'):
+        params = None
+        data = None
+        _json = None
+        # process payload based on method and content type
+        if method.upper() in ('GET', 'HEAD'):
             params = payload
+        elif content.upper() == 'JSON':
+            _json = payload
         else:
             data = payload
         # disable TLS validation warning
@@ -760,11 +763,6 @@ class Framework(cmd.Cmd):
         timeout = timeout or self._global_options['timeout']
         # process user-agent header
         headers['User-Agent'] = agent or self._global_options['user-agent']
-        # process payload for different content types
-        # UPDATE: https://2.python-requests.org//en/master/user/quickstart/#more-complicated-post-requests
-        if content.upper() == 'JSON':
-            headers['Content-Type'] = 'application/json'
-            data = json.dumps(payload)
         # process proxy
         proxy = self._global_options['proxy']
         proxies = {}
@@ -772,7 +770,7 @@ class Framework(cmd.Cmd):
             proxies['http'] = 'http://'+proxy
             proxies['https'] = 'http://'+proxy
         #debug = True if self._global_options['verbosity'] >= 2 else False
-        return requests.request(method, url, params=params, data=data, headers=headers, cookies=cookiejar, auth=auth, proxies=proxies, allow_redirects=redirect, timeout=timeout, verify=False)
+        return requests.request(method, url, params=params, data=data, json=_json, headers=headers, cookies=cookiejar, auth=auth, proxies=proxies, allow_redirects=redirect, timeout=timeout, verify=False)
 
     #==================================================
     # MODULES METHODS
