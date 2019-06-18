@@ -760,10 +760,11 @@ class Framework(cmd.Cmd):
         timeout = timeout or self._global_options['timeout']
         # process user-agent header
         headers['User-Agent'] = agent or self._global_options['user-agent']
-        # process payload
+        # process payload for different content types
+        # UPDATE: https://2.python-requests.org//en/master/user/quickstart/#more-complicated-post-requests
         if content.upper() == 'JSON':
             headers['Content-Type'] = 'application/json'
-            payload = json.dumps(payload)
+            data = json.dumps(payload)
         # process proxy
         proxy = self._global_options['proxy']
         proxies = {}
@@ -845,7 +846,7 @@ class Framework(cmd.Cmd):
             self.help_options()
             return
         arg, params = self._parse_params(params)
-        if arg in self._parse_subcommands(options):
+        if arg in self._parse_subcommands('options'):
             return getattr(self, '_do_options_'+arg)(params)
         else:
             self.help_options()
