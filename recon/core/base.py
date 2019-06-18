@@ -525,6 +525,11 @@ class Recon(framework.Framework):
         else:
             self.help_marketplace()
 
+    def _do_marketplace_refresh(self, params):
+        '''Refreshes the marketplace index'''
+        self._fetch_module_index()
+        self._update_module_index()
+
     def _do_marketplace_search(self, params):
         '''Searches marketplace modules'''
         modules = [m for m in self._module_index]
@@ -812,8 +817,9 @@ class Recon(framework.Framework):
             return getattr(self, '_complete_marketplace_'+arg)(text, params)
         return [sub for sub in subs if sub.startswith(text)]
 
-    def _complete_marketplace_search(self, text, *ignored):
+    def _complete_marketplace_refresh(self, text, *ignored):
         return []
+    _complete_marketplace_search = _complete_marketplace_refresh
 
     def _complete_marketplace_info(self, text, *ignored):
         return [x['path'] for x in self._module_index if x['path'].startswith(text)]
