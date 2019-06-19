@@ -822,7 +822,7 @@ class Framework(cmd.Cmd):
         params = params.split()
         arg = ''
         if params:
-            arg = params.pop(0).lower()
+            arg = params.pop(0)
         params = ' '.join(params)
         return arg, params
 
@@ -1063,23 +1063,23 @@ class Framework(cmd.Cmd):
             columns = self.get_columns(table)
             self.table(columns, title=table)
 
-    def do_record(self, params):
-        '''Records commands to a resource file'''
+    def do_script(self, params):
+        '''Records and executes command scripts'''
         if not params:
-            self.help_record()
+            self.help_script()
             return
         arg, params = self._parse_params(params)
-        if arg in self._parse_subcommands('record'):
-            return getattr(self, '_do_record_'+arg)(params)
+        if arg in self._parse_subcommands('script'):
+            return getattr(self, '_do_script_'+arg)(params)
         else:
-            self.help_record()
+            self.help_script()
 
-    def _do_record_start(self, params):
-        '''Starts command recording'''
+    def _do_script_record(self, params):
+        '''Records commands in a script file'''
         if not Framework._record:
             filename, params = self._parse_params(params)
             if not filename:
-                self._help_record_start()
+                self._help_script_record()
                 return
             if not self._is_writeable(filename):
                 self.output(f"Cannot record commands to '{filename}'.")
@@ -1089,7 +1089,7 @@ class Framework(cmd.Cmd):
         else:
             self.output('Recording is already started.')
 
-    def _do_record_stop(self, params):
+    def _do_script_stop(self, params):
         '''Stops command recording'''
         if Framework._record:
             self.output(f"Recording stopped. Commands saved to '{Framework._record}'.")
@@ -1097,10 +1097,23 @@ class Framework(cmd.Cmd):
         else:
             self.output('Recording is already stopped.')
 
-    def _do_record_status(self, params):
+    def _do_script_status(self, params):
         '''Provides the status of command recording'''
         status = 'started' if Framework._record else 'stopped'
         self.output(f"Command recording is {status}.")
+
+    def _do_script_execute(self, params):
+        '''Executes commands from a script file'''
+        if not params:
+            self._help_script_execute()
+            return
+        if os.path.exists(params):
+            # works even when called before Recon.start due
+            # to stdin waiting for the iteractive prompt
+            sys.stdin = open(params)
+            Framework._script = 1
+        else:
+            self.error(f"Script file '{params}' not found.")
 
     def do_spool(self, params):
         '''Spools output to a file'''
@@ -1152,19 +1165,6 @@ class Framework(cmd.Cmd):
         stderr = proc.stderr.read()
         if stdout:print(f"{Colors.O}{self.to_unicode(stdout)}{Colors.N}", end='')
         if stderr:print(f"{Colors.R}{self.to_unicode(stderr)}{Colors.N}", end='')
-
-    def do_resource(self, params):
-        '''Executes commands from a resource file'''
-        if not params:
-            self.help_resource()
-            return
-        if os.path.exists(params):
-            # works even when called before Recon.start due
-            # to stdin waiting for the iteractive prompt
-            sys.stdin = open(params)
-            Framework._script = 1
-        else:
-            self.error(f"Script file '{params}' not found.")
 
     def do_dashboard(self, params):
         '''Displays a summary of activity'''
@@ -1249,13 +1249,17 @@ class Framework(cmd.Cmd):
         print(getattr(self, '_do_db_query').__doc__)
         print(f"{os.linesep}Usage: db query <sql>{os.linesep}")
 
-    def help_record(self):
-        print(getattr(self, 'do_record').__doc__)
-        print(f"{os.linesep}Usage: record <{'|'.join(self._parse_subcommands('record'))}> [...]{os.linesep}")
+    def help_script(self):
+        print(getattr(self, 'do_script').__doc__)
+        print(f"{os.linesep}Usage: script <{'|'.join(self._parse_subcommands('script'))}> [...]{os.linesep}")
 
-    def _help_record_start(self):
-        print(getattr(self, '_do_record_start').__doc__)
-        print(f"{os.linesep}Usage: record start <filename>{os.linesep}")
+    def _help_script_record(self):
+        print(getattr(self, '_do_script_record').__doc__)
+        print(f"{os.linesep}Usage: script record <filename>{os.linesep}")
+
+    def _help_script_execute(self):
+        print(getattr(self, '_do_script_execute').__doc__)
+        print(f"{os.linesep}Usage: script execute <filename>{os.linesep}")
 
     def help_spool(self):
         print(getattr(self, 'do_spool').__doc__)
@@ -1268,10 +1272,6 @@ class Framework(cmd.Cmd):
     def help_shell(self):
         print(getattr(self, 'do_shell').__doc__)
         print(f"{os.linesep}Usage: [shell|!] <command>{os.linesep}")
-
-    def help_resource(self):
-        print(getattr(self, 'do_resource').__doc__)
-        print(f"{os.linesep}Usage: resource <filename>{os.linesep}")
 
     #==================================================
     # COMPLETE METHODS
@@ -1334,6 +1334,24 @@ class Framework(cmd.Cmd):
         return []
     _complete_db_schema = _complete_db_query
 
-    def complete_record(self, text, *ignored):
-        return [x for x in self._parse_subcommands('record') if x.startswith(text)]
-    complete_spool = complete_record
+    def complete_script(self, text, line, *ignored):
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = self._parse_subcommands('script')
+        if arg in subs:
+            return getattr(self, '_complete_script_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_script_record(self, text, *ignored):
+        return []
+    _complete_script_execute = _complete_script_status = _complete_script_stop = _complete_script_record
+
+    def complete_spool(self, text, line, *ignored):
+        arg, params = self._parse_params(line.split(' ', 1)[1])
+        subs = self._parse_subcommands('spool')
+        if arg in subs:
+            return getattr(self, '_complete_spool_'+arg)(text, params)
+        return [sub for sub in subs if sub.startswith(text)]
+
+    def _complete_spool_start(self, text, *ignored):
+        return []
+    _complete_spool_status = _complete_spool_stop = _complete_spool_start
