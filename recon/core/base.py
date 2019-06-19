@@ -860,7 +860,7 @@ class Recon(framework.Framework):
     _complete_snapshots_delete = _complete_snapshots_load
 
     def _complete_modules_load(self, text, *ignored):
-        return [x for x in Framework._loaded_modules if x.startswith(text)]
+        return [x for x in self._loaded_modules if x.startswith(text)]
 
     def _complete_modules_reload(self, text, *ignored):
         return []

@@ -349,6 +349,9 @@ class BaseModule(framework.Framework):
     def _complete_goptions_list(self, text, *ignored):
         return []
 
+    def _complete_modules_load(self, text, *ignored):
+        return [x for x in framework.Framework._loaded_modules if x.startswith(text)]
+
     def complete_module(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
         subs = self._parse_subcommands('module')
