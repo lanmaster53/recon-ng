@@ -82,7 +82,7 @@ class Recon(framework.Framework):
 
     def _init_global_options(self):
         self.options = self._global_options
-        self.register_option('nameserver', '8.8.8.8', True, 'nameserver for DNS interrogation')
+        self.register_option('nameserver', '8.8.8.8', True, 'default nameserver for the resolver mixin')
         self.register_option('proxy', None, False, 'proxy server (address:port)')
         self.register_option('threads', 10, True, 'number of threads (where applicable)')
         self.register_option('timeout', 10, True, 'socket timeout (seconds)')

@@ -33,18 +33,27 @@ class Options(dict):
     def __init__(self, *args, **kwargs):
         self.required = {}
         self.description = {}
-
         super(Options, self).__init__(*args, **kwargs)
 
+    def __getitem__(self, name):
+        name = self.__keytransform__(name)
+        return super(Options, self).__getitem__(name)
+
     def __setitem__(self, name, value):
-        super(Options, self).__setitem__(name, self._autoconvert(value))
+        name = self.__keytransform__(name)
+        value = self._autoconvert(value)
+        super(Options, self).__setitem__(name, value)
 
     def __delitem__(self, name):
+        name = self.__keytransform__(name)
         super(Options, self).__delitem__(name)
         if name in self.required:
             del self.required[name]
         if name in self.description:
             del self.description[name]
+
+    def __keytransform__(self, key):
+        return key.upper()
 
     def _boolify(self, value):
         # designed to throw an exception if value is not a string representation of a boolean
@@ -68,6 +77,7 @@ class Options(dict):
         return value
 
     def init_option(self, name, value=None, required=False, description=''):
+        name = self.__keytransform__(name)
         self[name] = value
         self.required[name] = required
         self.description[name] = description
@@ -621,7 +631,7 @@ class Framework(cmd.Cmd):
     #==================================================
 
     def register_option(self, name, value, required, description):
-        self.options.init_option(name=name.lower(), value=value, required=required, description=description)
+        self.options.init_option(name=name, value=value, required=required, description=description)
         # needs to be optimized rather than ran on every register
         self._load_config()
 
@@ -630,7 +640,7 @@ class Framework(cmd.Cmd):
             # if value type is bool or int, then we know the options is set
             if not type(self.options[option]) in [bool, int]:
                 if self.options.required[option] is True and not self.options[option]:
-                    raise FrameworkException(f"Value required for the '{option.upper()}' option.")
+                    raise FrameworkException(f"Value required for the '{option}' option.")
         return
 
     def _list_options(self, options=None):
@@ -650,7 +660,7 @@ class Framework(cmd.Cmd):
                 value = options[key] if options[key] != None else ''
                 reqd = 'no' if options.required[key] is False else 'yes'
                 desc = options.description[key]
-                print(pattern % (key.upper().ljust(key_len), self.to_unicode_str(value).ljust(val_len), self.to_unicode_str(reqd).ljust(8), desc))
+                print(pattern % (key.ljust(key_len), self.to_unicode_str(value).ljust(val_len), self.to_unicode_str(reqd).ljust(8), desc))
             print('')
         else:
             print('')
@@ -746,12 +756,33 @@ class Framework(cmd.Cmd):
     # REQUEST METHODS
     #==================================================
 
+    def _print_prepared_request(self, prepared):
+        self.debug(f"{'='*25} REQUEST {'='*25}")
+        print(f"url:    {prepared.url}")
+        print(f"method: {prepared.method} {prepared.path_url}")
+        for k, v in prepared.headers.items():
+            print(f"header: {k}: {v}")
+        if prepared.body:
+            print(f"body: {prepared.body}")
+
+    def _print_response(self, resp):
+        self.debug(f"{'='*25} RESPONSE {'='*25}")
+        print(f"status: {resp.status_code} {resp.reason}")
+        for k, v in resp.headers.items():
+            print(f"header: {k}: {v}")
+        if resp.content:
+            print(f"body:   {resp.content}")
+
     def request(self, method, url, **kwargs):
         # process socket timeout
         kwargs['timeout'] = kwargs.get('timeout') or self._global_options['timeout']
         # process headers
         headers = kwargs.get('headers') or {}
-        headers['user-agent'] = headers.get('user-agent') or self._global_options['user-agent']
+        # set the User-Agent header
+        if 'user-agent' not in [h.lower() for h in headers]:
+            headers['user-agent'] = self._global_options['user-agent']
+        # normalize capitalization of the User-Agent header
+        headers = {k.title(): v for k, v in headers.items()}
         kwargs['headers'] = headers
         # process proxy
         proxy = self._global_options['proxy']
@@ -764,10 +795,15 @@ class Framework(cmd.Cmd):
         # disable TLS validation and warning
         kwargs['verify'] = False
         requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
-        # debugging
-        self.debug(f"{method} {url} {kwargs}")
-        #debug = True if self._global_options['verbosity'] >= 2 else False
-        return requests.request(method, url, **kwargs)
+        # send the request
+        resp = getattr(requests, method.lower())(url, **kwargs)
+        if self._global_options['verbosity'] < 2:
+            return resp
+        # display request data
+        self._print_prepared_request(resp.request)
+        # display response data
+        self._print_response(resp)
+        return resp
 
     #==================================================
     # MODULES METHODS
@@ -858,7 +894,7 @@ class Framework(cmd.Cmd):
             return
         if option in self.options:
             self.options[option] = value
-            print(f"{option.upper()} => {value}")
+            print(f"{option} => {value}")
             self._save_config(option)
         else:
             self.error('Invalid option name.')
@@ -1288,7 +1324,7 @@ class Framework(cmd.Cmd):
         return []
 
     def _complete_options_set(self, text, *ignored):
-        return [x.upper() for x in self.options if x.upper().startswith(text.upper())]
+        return [x for x in self.options if x.startswith(text.upper())]
     _complete_options_unset = _complete_options_set
 
     def complete_keys(self, text, line, *ignored):

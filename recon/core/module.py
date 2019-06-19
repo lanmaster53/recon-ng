@@ -136,7 +136,8 @@ class BaseModule(framework.Framework):
         prefix = params.split()[0].lower()
         if prefix in ['query', 'default']:
             query = ' '.join(params.split()[1:]) if prefix == 'query' else query
-            try: results = self.query(query)
+            try:
+                results = self.query(query)
             except sqlite3.OperationalError as e:
                 raise framework.FrameworkException(f"Invalid source query. {type(e).__name__} {e}")
             if not results:
