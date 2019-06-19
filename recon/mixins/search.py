@@ -18,10 +18,11 @@ class GoogleWebMixin(object):
         page = start_page
         set_page = lambda x: (x - 1) * num
         payload = {'q':query, 'start':set_page(page), 'num':num, 'complete':0}
+        headers = {'user-agent': self.user_agent}
         results = []
         self.verbose(f"Searching Google for: {query}")
         while True:
-            resp = self.request(url, payload=payload, redirect=False, cookiejar=self.cookiejar, agent=self.user_agent)
+            resp = self.request('GET', url, params=payload, headers=headers, allow_redirects=False, cookies=self.cookiejar)
             # detect and handle captchas
             # results = 200, first visit = 302, actual captcha = 503
             count = 0

@@ -215,7 +215,7 @@ class BaseModule(framework.Framework):
             return None
         authorization_code = re.search(r'code=([^\s&]*)', data).group(1)
         payload = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': redirect_uri, 'client_id': client_id, 'client_secret': client_secret}
-        resp = self.request(access_url, method='POST', payload=payload)
+        resp = self.request('POST', access_url, data=payload)
         if 'error' in resp.json():
             self.error(resp.json()['error_description'])
             return None
@@ -234,7 +234,7 @@ class BaseModule(framework.Framework):
         auth = (twitter_key, twitter_secret)
         headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
         payload = {'grant_type': 'client_credentials'}
-        resp = self.request(url, method='POST', auth=auth, headers=headers, payload=payload)
+        resp = self.request('POST', url, auth=auth, headers=headers, data=payload)
         if 'errors' in resp.json():
             raise framework.FrameworkException(f"{resp.json()['errors'][0]['message']}, {resp.json()['errors'][0]['label']}")
         access_token = resp.json()['access_token']
@@ -265,7 +265,7 @@ class BaseModule(framework.Framework):
         base_payload = {'leakId': leak_id}
         payload = self.build_pwnedlist_payload(base_payload, 'leaks.info', key, secret)
         # make the request
-        resp = self.request(url, payload=payload)
+        resp = self.request('GET', url, params=payload)
         if resp.status_code != 200:
             self.error(f"Error retrieving leak data.{os.linesep}{resp.text}")
             return
@@ -284,7 +284,7 @@ class BaseModule(framework.Framework):
         url = 'https://api.twitter.com/1.1/search/tweets.json'
         results = []
         while True:
-            resp = self.request(url, payload=payload, headers=headers)
+            resp = self.request('GET', url, params=payload, headers=headers)
             if limit:
                 # app auth rate limit for search/tweets is 450/15min
                 time.sleep(2)
@@ -310,7 +310,7 @@ class BaseModule(framework.Framework):
         self.verbose(f"Searching Shodan API for: {query}")
         while True:
             time.sleep(1)
-            resp = self.request(url, payload=payload)
+            resp = self.request('GET', url, params=payload)
             if resp.json() == None:
                 raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
             if 'error' in resp.json():
@@ -336,7 +336,7 @@ class BaseModule(framework.Framework):
         cnt = 0
         self.verbose(f"Searching Bing API for: {query}")
         while True:
-            resp = self.request(url, payload=payload, headers=headers)
+            resp = self.request('GET', url, params=payload, headers=headers)
             if resp.json() == None:
                 raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
             #elif 'error' in resp.json():
@@ -368,7 +368,7 @@ class BaseModule(framework.Framework):
         cnt = 0
         self.verbose(f"Searching Google API for: {query}")
         while True:
-            resp = self.request(url, payload=payload)
+            resp = self.request('GET', url, params=payload)
             if resp.json() == None:
                 raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
             # add new results
@@ -403,7 +403,7 @@ class BaseModule(framework.Framework):
             # Github rate limit is 30 requests per minute
             time.sleep(2) # 60s / 30r = 2s/r
             payload['page'] = page
-            resp = self.request(url=url, headers=headers, payload=payload)
+            resp = self.request('GET', url, headers=headers, params=payload)
             # check for errors
             if resp.status_code != 200:
                 # skip 404s returned for no results

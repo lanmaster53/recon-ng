@@ -104,7 +104,7 @@ class Recon(framework.Framework):
             remote = 0
             local = 0
             try:
-                remote = re.search(pattern, self.request('https://raw.githubusercontent.com/lanmaster53/recon-ng/master/VERSION').text).group(1)
+                remote = re.search(pattern, self.request('GET', 'https://raw.githubusercontent.com/lanmaster53/recon-ng/master/VERSION').text).group(1)
                 local = re.search(pattern, open('VERSION').read()).group(1)
             except Exception as e:
                 self.error(f"Version check failed ({type(e).__name__}).")
@@ -154,7 +154,7 @@ class Recon(framework.Framework):
                         'av': __version__,
                         'cd': cd
                         }
-                self.request('https://www.google-analytics.com/collect', payload=params)
+                self.request('GET', 'https://www.google-analytics.com/collect', params=params)
             except Exception as e:
                 self.debug(f"Analytics failed ({type(e).__name__}).")
                 #self.print_exception()
@@ -308,7 +308,7 @@ class Recon(framework.Framework):
     #==================================================
 
     def _request_file_from_repo(self, path):
-        resp = self.request(urljoin(self.repo_url, path))
+        resp = self.request('GET', urljoin(self.repo_url, path))
         if resp.status_code != 200:
             raise framework.FrameworkException(f"Invalid response from module repository ({resp.status_code}).")
         return resp
@@ -529,6 +529,7 @@ class Recon(framework.Framework):
         '''Refreshes the marketplace index'''
         self._fetch_module_index()
         self._update_module_index()
+        self.output('Marketplace index refreshed.')
 
     def _do_marketplace_search(self, params):
         '''Searches marketplace modules'''

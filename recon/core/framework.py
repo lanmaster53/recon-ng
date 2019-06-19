@@ -746,31 +746,28 @@ class Framework(cmd.Cmd):
     # REQUEST METHODS
     #==================================================
 
-    def request(self, url, method='GET', timeout=None, payload={}, headers={}, agent=None, cookiejar={}, auth=(), content='', redirect=True):
-        params = None
-        data = None
-        _json = None
-        # process payload based on method and content type
-        if method.upper() in ('GET', 'HEAD'):
-            params = payload
-        elif content.upper() == 'JSON':
-            _json = payload
-        else:
-            data = payload
-        # disable TLS validation warning
-        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+    def request(self, method, url, **kwargs):
         # process socket timeout
-        timeout = timeout or self._global_options['timeout']
-        # process user-agent header
-        headers['User-Agent'] = agent or self._global_options['user-agent']
+        kwargs['timeout'] = kwargs.get('timeout') or self._global_options['timeout']
+        # process headers
+        headers = kwargs.get('headers') or {}
+        headers['user-agent'] = headers.get('user-agent') or self._global_options['user-agent']
+        kwargs['headers'] = headers
         # process proxy
         proxy = self._global_options['proxy']
-        proxies = {}
         if proxy:
-            proxies['http'] = 'http://'+proxy
-            proxies['https'] = 'http://'+proxy
+            proxies = {
+                'http': f"http://{proxy}",
+                'https': f"http://{proxy}",
+            }
+            kwargs['proxies'] = proxies
+        # disable TLS validation and warning
+        kwargs['verify'] = False
+        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+        # debugging
+        self.debug(f"{method} {url} {kwargs}")
         #debug = True if self._global_options['verbosity'] >= 2 else False
-        return requests.request(method, url, params=params, data=data, json=_json, headers=headers, cookies=cookiejar, auth=auth, proxies=proxies, allow_redirects=redirect, timeout=timeout, verify=False)
+        return requests.request(method, url, **kwargs)
 
     #==================================================
     # MODULES METHODS
