@@ -1,10 +1,12 @@
 from lxml.html import fromstring
 from http.cookiejar import CookieJar
+from recon.core import framework
 import os
 import re
-import tempfile
+import time
 import urllib.parse
 import webbrowser
+
 
 class GoogleWebMixin(object):
 
@@ -46,4 +48,97 @@ class GoogleWebMixin(object):
             # check for more pages
             if '>Next</' not in resp.text:
                 break
+        return results
+
+
+class GoogleAPIMixin(object):
+
+    def search_google_api(self, query, limit=0):
+        api_key = self.get_key('google_api')
+        cse_id = self.get_key('google_cse')
+        url = 'https://www.googleapis.com/customsearch/v1'
+        payload = {'alt': 'json', 'prettyPrint': 'false', 'key': api_key, 'cx': cse_id, 'q': query}
+        results = []
+        cnt = 0
+        self.verbose(f"Searching Google API for: {query}")
+        while True:
+            resp = self.request('GET', url, params=payload)
+            if resp.json() == None:
+                raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
+            # add new results
+            if 'items' in resp.json():
+                results.extend(resp.json()['items'])
+            # increment and check the limit
+            cnt += 1
+            if limit == cnt:
+                break
+            # check for more pages
+            if not 'nextPage' in resp.json()['queries']:
+                break
+            payload['start'] = resp.json()['queries']['nextPage'][0]['startIndex']
+        return results
+
+
+class BingAPIMixin(object):
+
+    def search_bing_api(self, query, limit=0):
+        url = 'https://api.cognitive.microsoft.com/bing/v7.0/search'
+        payload = {'q': query, 'count': 50, 'offset': 0, 'responseFilter': 'WebPages'}
+        headers = {'Ocp-Apim-Subscription-Key': self.get_key('bing_api')}
+        results = []
+        cnt = 0
+        self.verbose(f"Searching Bing API for: {query}")
+        while True:
+            resp = self.request('GET', url, params=payload, headers=headers)
+            if resp.json() == None:
+                raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
+            #elif 'error' in resp.json():
+            elif resp.status_code == 401:
+                raise framework.FrameworkException(f"{resp.json()['statusCode']}: {resp.json()['message']}")
+            # add new results, or if there's no more, return what we have...
+            if 'webPages' in resp.json():
+                results.extend(resp.json()['webPages']['value'])
+            else:
+                return results
+            # increment and check the limit
+            cnt += 1
+            if limit == cnt:
+                break
+            # check for more pages
+            # https://msdn.microsoft.com/en-us/library/dn760787.aspx
+            if payload['offset'] > (resp.json()['webPages']['totalEstimatedMatches'] - payload['count']):
+                break
+            # set the payload for the next request
+            payload['offset'] += payload['count']
+        return results
+
+
+class ShodanAPIMixin(object):
+
+    def search_shodan_api(self, query, limit=0):
+        api_key = self.get_key('shodan_api')
+        url = 'https://api.shodan.io/shodan/host/search'
+        payload = {'query': query, 'key': api_key}
+        results = []
+        cnt = 0
+        page = 1
+        self.verbose(f"Searching Shodan API for: {query}")
+        while True:
+            time.sleep(1)
+            resp = self.request('GET', url, params=payload)
+            if resp.json() == None:
+                raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
+            if 'error' in resp.json():
+                raise framework.FrameworkException(resp.json()['error'])
+            if not resp.json()['matches']:
+                break
+            # add new results
+            results.extend(resp.json()['matches'])
+            # increment and check the limit
+            cnt += 1
+            if limit == cnt:
+                break
+            # next page
+            page += 1
+            payload['page'] = page
         return results
