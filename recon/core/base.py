@@ -798,10 +798,6 @@ class Recon(framework.Framework):
         print(getattr(self, '_do_snapshots_delete').__doc__)
         print(f"{os.linesep}Usage: snapshots delete <name>{os.linesep}")
 
-    def _help_modules_load(self):
-        print(getattr(self, '_do_modules_load').__doc__)
-        print(f"{os.linesep}Usage: modules load <path>{os.linesep}")
-
     #==================================================
     # COMPLETE METHODS
     #==================================================
@@ -858,9 +854,6 @@ class Recon(framework.Framework):
     def _complete_snapshots_load(self, text, *ignored):
         return [x for x in self._get_snapshots() if x.startswith(text)]
     _complete_snapshots_delete = _complete_snapshots_load
-
-    def _complete_modules_load(self, text, *ignored):
-        return [x for x in self._loaded_modules if x.startswith(text)]
 
     def _complete_modules_reload(self, text, *ignored):
         return []

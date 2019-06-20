@@ -969,6 +969,10 @@ class Framework(cmd.Cmd):
             self.error('No modules found.')
             self._help_modules_search()
 
+    def _do_modules_load(self, params):
+        '''Searches installed modules'''
+        raise NotImplementedError
+
     def do_show(self, params):
         '''Shows various framework items'''
         if not params:
@@ -1262,6 +1266,10 @@ class Framework(cmd.Cmd):
         print(getattr(self, '_do_modules_search').__doc__)
         print(f"{os.linesep}Usage: modules search [<regex>]{os.linesep}")
 
+    def _help_modules_load(self):
+        print(getattr(self, '_do_modules_load').__doc__)
+        print(f"{os.linesep}Usage: modules load <path>{os.linesep}")
+
     def help_show(self):
         options = sorted(self._get_show_names() + self.get_tables())
         print(getattr(self, 'do_show').__doc__)
@@ -1350,6 +1358,9 @@ class Framework(cmd.Cmd):
 
     def _complete_modules_search(self, text, *ignored):
         return []
+
+    def _complete_modules_load(self, text, *ignored):
+        return [x for x in Framework._loaded_modules if x.startswith(text)]
 
     def complete_show(self, text, line, *ignored):
         options = sorted(self._get_show_names() + self.get_tables())

@@ -327,10 +327,6 @@ class BaseModule(framework.Framework):
         print(getattr(self, 'do_options').__doc__)
         print(f"{os.linesep}Usage: options list{os.linesep}")
 
-    def _help_modules_load(self):
-        print(getattr(self, '_do_modules_load').__doc__)
-        print(f"{os.linesep}Usage: modules load <path>{os.linesep}")
-
     def help_module(self):
         print(getattr(self, 'do_module').__doc__)
         print(f"{os.linesep}Usage: module <{'|'.join(self._parse_subcommands('module'))}>{os.linesep}")
@@ -348,9 +344,6 @@ class BaseModule(framework.Framework):
 
     def _complete_goptions_list(self, text, *ignored):
         return []
-
-    def _complete_modules_load(self, text, *ignored):
-        return [x for x in framework.Framework._loaded_modules if x.startswith(text)]
 
     def complete_module(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
