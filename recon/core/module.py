@@ -222,23 +222,12 @@ class BaseModule(framework.Framework):
         sys.stdin = io.StringIO(f"modules load {modules[0]}{os.linesep}{end_string}")
         return True
 
-    def do_module(self, params):
-        '''Interfaces with the loaded module'''
-        if not params:
-            self.help_module()
-            return
-        arg, params = self._parse_params(params)
-        if arg in self._parse_subcommands('module'):
-            return getattr(self, '_do_module_'+arg)(params)
-        else:
-            self.help_module()
-
-    def _do_module_reload(self, params):
+    def do_reload(self, params):
         '''Reloads the loaded module'''
         self._reload = 1
         return True
 
-    def _do_module_info(self, params):
+    def do_info(self, params):
         '''Shows details about the loaded module'''
         print('')
         # meta info
@@ -274,7 +263,7 @@ class BaseModule(framework.Framework):
                 print(f"{self.spacer}{textwrap.fill(prefix+comment, 100, subsequent_indent=self.spacer)}")
             print('')
 
-    def _do_module_input(self, params):
+    def do_input(self, params):
         '''Shows inputs based on the source option'''
         if hasattr(self, '_default_source'):
             try:
@@ -286,7 +275,7 @@ class BaseModule(framework.Framework):
         else:
             self.output('Source option not available for this module.')
 
-    def _do_module_run(self, params):
+    def do_run(self, params):
         '''Runs the loaded module'''
         try:
             self._summary_counts = {}
@@ -325,11 +314,7 @@ class BaseModule(framework.Framework):
 
     def help_goptions(self):
         print(getattr(self, 'do_options').__doc__)
-        print(f"{os.linesep}Usage: options list{os.linesep}")
-
-    def help_module(self):
-        print(getattr(self, 'do_module').__doc__)
-        print(f"{os.linesep}Usage: module <{'|'.join(self._parse_subcommands('module'))}>{os.linesep}")
+        print(f"{os.linesep}Usage: goptions <list>{os.linesep}")
 
     #==================================================
     # COMPLETE METHODS
@@ -345,16 +330,9 @@ class BaseModule(framework.Framework):
     def _complete_goptions_list(self, text, *ignored):
         return []
 
-    def complete_module(self, text, line, *ignored):
-        arg, params = self._parse_params(line.split(' ', 1)[1])
-        subs = self._parse_subcommands('module')
-        if arg in subs:
-            return getattr(self, '_complete_module_'+arg)(text, params)
-        return [sub for sub in subs if sub.startswith(text)]
-
-    def _complete_module_reload(self, text, *ignored):
+    def complete_reload(self, text, *ignored):
         return []
-    _complete_module_info = _complete_module_input = _complete_module_run = _complete_module_reload
+    complete_info = complete_input = complete_run = complete_reload
 
     #==================================================
     # HOOK METHODS
