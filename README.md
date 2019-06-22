@@ -10,7 +10,9 @@ Recon-ng is a completely modular framework and makes it easy for even the newest
 
 [![Black Hills Information Security](https://www.blackhillsinfosec.com/wp-content/uploads/2016/03/BHIS-logo-web.png)](http://www.blackhillsinfosec.com)
 
-Consulting | Research | Development | Training
+<br>
+
+[![Practical Security Services](https://www.lanmaster53.com/static/images/pages/company/banner.png)](http://www.practisec.com)
 
 ## Donations
 
