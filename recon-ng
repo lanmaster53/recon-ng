@@ -33,7 +33,7 @@ def recon_ui(args):
     x = base.Recon(**flags)
     # check for and run script session
     if args.script_file:
-        x.do_resource(args.script_file)
+        x._do_script_execute(args.script_file)
     # launch the interactive session
     options = [base.Mode.CONSOLE]
     if args.workspace:
