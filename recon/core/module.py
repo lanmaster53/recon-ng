@@ -292,6 +292,7 @@ class BaseModule(framework.Framework):
             print('')
         except Exception:
             self.print_exception()
+            self.error('Something broken? See https://github.com/lanmaster53/recon-ng/wiki/Troubleshooting#issue-reporting.')
         finally:
             # print module summary
             if self._summary_counts:
