@@ -482,7 +482,7 @@ class Recon(framework.Framework):
         self.output('Building index markup...')
         yaml_objs = []
         modules = [m for m in self._loaded_modules.items() if mod_path in m[0] or mod_path == 'all']
-        for path, module in modules:
+        for path, module in sorted(modules, key=lambda k: k[0]):
             yaml_obj = {}
             # not in meta
             yaml_obj['path'] = path
