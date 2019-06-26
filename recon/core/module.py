@@ -1,8 +1,10 @@
+from requests.exceptions import Timeout
 import html.parser
 import http.cookiejar
 import io
 import os
 import re
+import socket
 import sqlite3
 import sys
 import textwrap
@@ -290,6 +292,9 @@ class BaseModule(framework.Framework):
             self.module_post()
         except KeyboardInterrupt:
             print('')
+        except (Timeout, socket.timeout):
+            self.print_exception()
+            self.error('A request took too long to complete. If the issue persists, increase the global TIMEOUT option.')
         except Exception:
             self.print_exception()
             self.error('Something broken? See https://github.com/lanmaster53/recon-ng/wiki/Troubleshooting#issue-reporting.')
