@@ -94,7 +94,8 @@ class BingAPIMixin(object):
                 raise framework.FrameworkException(f"Invalid JSON response.{os.linesep}{resp.text}")
             #elif 'error' in resp.json():
             elif resp.status_code == 401:
-                raise framework.FrameworkException(f"{resp.json()['statusCode']}: {resp.json()['message']}")
+                error = resp.json()['error']
+                raise framework.FrameworkException(f"({error['code']}) {error['message']}")
             # add new results, or if there's no more, return what we have...
             if 'webPages' in resp.json():
                 results.extend(resp.json()['webPages']['value'])
