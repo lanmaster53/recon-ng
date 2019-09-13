@@ -48,7 +48,7 @@ class Recon(framework.Framework):
 
     repo_url = 'https://raw.githubusercontent.com/lanmaster53/recon-ng-modules/master/'
 
-    def __init__(self, check=True, analytics=True, marketplace=True):
+    def __init__(self, check=True, analytics=True, marketplace=True, quiet=False):
         framework.Framework.__init__(self, 'base')
         self._name = 'recon-ng'
         self._prompt_template = '{}[{}] > '
@@ -57,6 +57,7 @@ class Recon(framework.Framework):
         self._check = check
         self._analytics = analytics
         self._marketplace = marketplace
+        self._quiet = quiet
         # set path variables
         self.app_path = framework.Framework.app_path = sys.path[0]
         self.core_path = framework.Framework.core_path = os.path.join(self.app_path, 'core')
@@ -73,7 +74,8 @@ class Recon(framework.Framework):
         self._init_workspace(workspace)
         self._check_version()
         if self._mode == Mode.CONSOLE:
-            self._print_banner()
+            if not self._quiet:
+                self._print_banner()
             self.cmdloop()
 
     #==================================================
