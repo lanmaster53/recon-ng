@@ -26,7 +26,7 @@ class BaseModule(framework.Framework):
         # register a data source option if a default query is specified in the module
         if self.meta.get('query'):
             self._default_source = self.meta.get('query')
-            self.register_option('source', 'default', True, 'source of input (see \'show info\' for details)')
+            self.register_option('source', 'default', True, 'source of input (see \'info\' for details)')
         # register all other specified options
         if self.meta.get('options'):
             for option in self.meta.get('options'):
