@@ -18,3 +18,7 @@ _/    _/  _/_/_/_/    _/_/_/    _/_/_/    _/      _/            _/      _/    _/
                  |      |   \_ |    | |____   |   |  ____| |____ |____
                                    www.practisec.com
 '''
+
+BANNER_SMALL = r'''
+Sponsored by... BLACK HILLS at www.blackhillsinfosec.com and PRACTISEC at www.practisec.com
+'''
