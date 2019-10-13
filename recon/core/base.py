@@ -15,7 +15,7 @@ import builtins
 
 # import framework libs
 from recon.core import framework
-from recon.core.constants import BANNER
+from recon.core.constants import *
 
 # set the __version__ variable based on the VERSION file
 exec(open(os.path.join(sys.path[0], 'VERSION')).read())
@@ -48,7 +48,7 @@ class Recon(framework.Framework):
 
     repo_url = 'https://raw.githubusercontent.com/lanmaster53/recon-ng-modules/master/'
 
-    def __init__(self, check=True, analytics=True, marketplace=True, quiet=False):
+    def __init__(self, check=True, analytics=True, marketplace=True, accessible=False):
         framework.Framework.__init__(self, 'base')
         self._name = 'recon-ng'
         self._prompt_template = '{}[{}] > '
@@ -57,7 +57,7 @@ class Recon(framework.Framework):
         self._check = check
         self._analytics = analytics
         self._marketplace = marketplace
-        self._quiet = quiet
+        self._accessible = accessible
         # set path variables
         self.app_path = framework.Framework.app_path = sys.path[0]
         self.core_path = framework.Framework.core_path = os.path.join(self.app_path, 'core')
@@ -74,8 +74,7 @@ class Recon(framework.Framework):
         self._init_workspace(workspace)
         self._check_version()
         if self._mode == Mode.CONSOLE:
-            if not self._quiet:
-                self._print_banner()
+            self._print_banner()
             self.cmdloop()
 
     #==================================================
@@ -120,15 +119,23 @@ class Recon(framework.Framework):
             self.alert('Version check disabled.')
 
     def _print_banner(self):
+        banner = BANNER
+        if self._accessible:
+            banner = BANNER_SMALL
         banner_len = len(max(BANNER.split(os.linesep), key=len))
-        print(BANNER)
-        print('{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8))
+        author_info = '{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8)
+        if self._accessible:
+            author_info = '{0:^{1}}'.format(f"{framework.Colors.O}{self._name} version {__version__}, by {__author__}{framework.Colors.N}", banner_len + 8)
+        print(banner)
+        print(author_info)
         print('')
         counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
         if counts:
             count_len = len(max([self.to_unicode_str(x[0]) for x in counts], key=len))
             for count in sorted(counts, reverse=True):
                 cnt = f"[{count[0]}]"
+                if self._accessible:
+                    cnt = f"{count[0]}"
                 print(f"{framework.Colors.B}{cnt.ljust(count_len+2)} {count[1].title()} modules{framework.Colors.N}")
                 # create dynamic easter egg command based on counts
                 setattr(self, f"do_{count[0]}", self._menu_egg)
