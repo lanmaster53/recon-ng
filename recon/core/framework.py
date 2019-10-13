@@ -100,6 +100,7 @@ class Framework(cmd.Cmd):
     # framework variables
     _global_options = Options()
     _loaded_modules = {}
+    _accessible = True
     app_path = ''
     data_path = ''
     core_path = ''
