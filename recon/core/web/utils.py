@@ -17,6 +17,14 @@ def get_workspaces():
             dirnames.append(name)
     return dirnames
 
+def get_key(name):
+    db = connect_db(app.config['KEYS_DB'])
+    rows = db.execute('SELECT value FROM keys WHERE name=? AND value NOT NULL', (name,))
+    row = rows.fetchone()
+    value = row[0] if row else None
+    db.close()
+    return value
+
 def get_tables():
     tables = query('SELECT name FROM sqlite_master WHERE type=\'table\'')
     return sorted(tables, key=lambda t: t['name'])
@@ -24,9 +32,9 @@ def get_tables():
 def get_columns(table):
     return [x[1] for x in query(f"PRAGMA table_info('{table}')")]
 
-def connect_db():
+def connect_db(db_path):
     '''Connects to the specific database.'''
-    rv = sqlite3.connect(session['database'])
+    rv = sqlite3.connect(db_path)
     rv.row_factory = sqlite3.Row
     return rv
 
@@ -34,7 +42,7 @@ def get_db():
     '''Opens a new database connection if there is none yet for the
     current application context.'''
     if not hasattr(g, 'sqlite_db'):
-        g.sqlite_db = connect_db()
+        g.sqlite_db = connect_db(session['database'])
         debug('Database connection created.')
     return g.sqlite_db
 
