@@ -495,6 +495,20 @@ class Framework(cmd.Cmd):
 
     def insert_credentials(self, username=None, password=None, _hash=None, _type=None, leak=None, mute=False):
         '''Adds a credential to the database and returns the affected row count.'''
+
+        # account for hashes provided in the password field
+        if password and not _hash:
+            _type = self.is_hash(password)
+            if _type:
+                _hash = password
+                password = None
+        # handle hashes provided without a type
+        if _hash and not _type:
+            _type = self.is_hash(_hash)
+        # add email usernames to contacts
+        if username is not None and '@' in username:
+            self.insert_contacts(first_name=None, last_name=None, title=None, email=username)
+
         data = dict (
             username = username,
             password = password,
@@ -502,15 +516,6 @@ class Framework(cmd.Cmd):
             type = _type,
             leak = leak
         )
-        if password and not _hash:
-            hash_type = self.is_hash(password)
-            if hash_type:
-                data['hash'] = password
-                data['type'] = hash_type
-                data['password'] = None
-        # add email usernames to contacts
-        if username is not None and '@' in username:
-            self.insert_contacts(first_name=None, last_name=None, title=None, email=username)
         rowcount = self.insert('credentials', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[credential] %s: %s', ('username', 'password'))
         return rowcount
