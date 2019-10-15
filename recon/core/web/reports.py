@@ -1,6 +1,6 @@
 from flask import render_template, send_file
 from io import BytesIO
-from recon.core.web.utils import add_worksheet, get_tables, query
+from recon.core.web.utils import get_key, add_worksheet, get_tables, query
 import xlsxwriter
 
 def xlsx():
@@ -16,4 +16,5 @@ def xlsx():
     return send_file(sfp, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 def pushpin():
-    return render_template('pushpin.html')
+    google_api_key = get_key('google_api')
+    return render_template('pushpin.html', api_key=google_api_key)

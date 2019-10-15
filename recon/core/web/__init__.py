@@ -13,6 +13,7 @@ DEBUG = False
 SECRET_KEY = 'we keep no secrets here.'
 HOME_DIR = os.path.join(os.path.expanduser('~'), '.recon-ng')
 DATABASE = os.path.join(HOME_DIR, 'workspaces', '{}', 'data.db')
+KEYS_DB = os.path.join(HOME_DIR, 'keys.db')
 JSON_SORT_KEYS = False
 
 app = Flask(__name__)
