@@ -120,11 +120,13 @@ class Recon(framework.Framework):
 
     def _print_banner(self):
         banner = BANNER
+        banner_len = len(max(banner.split(os.linesep), key=len))
+        author = '{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8)
         if self._accessible:
             banner = BANNER_SMALL
-        banner_len = len(max(BANNER.split(os.linesep), key=len))
+            author = f"{framework.Colors.O}{self._name}, version {__version__}, by {__author__}{framework.Colors.N}"
         print(banner)
-        print('{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8))
+        print(author)
         print('')
         counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
         if counts:
