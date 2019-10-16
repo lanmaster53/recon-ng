@@ -28,6 +28,7 @@ def recon_ui(args):
         'check': args.check if not args.stealth else False,
         'analytics': args.analytics if not args.stealth else False,
         'marketplace': args.marketplace if not args.stealth else False,
+        'accessible' : args.accessible
     }
     # instantiate framework
     x = base.Recon(**flags)
@@ -51,6 +52,7 @@ parser.add_argument('--no-version', help='disable version check', dest='check', 
 parser.add_argument('--no-analytics', help='disable analytics reporting', dest='analytics', default=True, action='store_false')
 parser.add_argument('--no-marketplace', help='disable remote module management', dest='marketplace', default=True, action='store_false')
 parser.add_argument('--stealth', help='disable all passive requests (--no-*)', dest='stealth', default=False, action='store_true')
+parser.add_argument('--accessible', help='Use accessible outputs when available', dest='accessible', default=False, action='store_true')
 parser.add_argument('--version', help='displays the current version', action='version', version=base.__version__)
 args = parser.parse_args()
 recon_ui(args)

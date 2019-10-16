@@ -18,3 +18,10 @@ _/    _/  _/_/_/_/    _/_/_/    _/_/_/    _/      _/            _/      _/    _/
                  |      |   \_ |    | |____   |   |  ____| |____ |____
                                    www.practisec.com
 '''
+
+BANNER_SMALL = r'''
+RECON-NG
+Sponsored by...
+- BLACK HILLS INFORMATION SECURITY at www.blackhillsinfosec.com
+- PRACTISEC at www.practisec.com
+'''

@@ -15,7 +15,7 @@ import builtins
 
 # import framework libs
 from recon.core import framework
-from recon.core.constants import BANNER
+from recon.core.constants import BANNER, BANNER_SMALL
 
 # set the __version__ variable based on the VERSION file
 exec(open(os.path.join(sys.path[0], 'VERSION')).read())
@@ -48,7 +48,7 @@ class Recon(framework.Framework):
 
     repo_url = 'https://raw.githubusercontent.com/lanmaster53/recon-ng-modules/master/'
 
-    def __init__(self, check=True, analytics=True, marketplace=True):
+    def __init__(self, check=True, analytics=True, marketplace=True, accessible=False):
         framework.Framework.__init__(self, 'base')
         self._name = 'recon-ng'
         self._prompt_template = '{}[{}] > '
@@ -57,6 +57,7 @@ class Recon(framework.Framework):
         self._check = check
         self._analytics = analytics
         self._marketplace = marketplace
+        self._accessible = accessible
         # set path variables
         self.app_path = framework.Framework.app_path = sys.path[0]
         self.core_path = framework.Framework.core_path = os.path.join(self.app_path, 'core')
@@ -118,8 +119,11 @@ class Recon(framework.Framework):
             self.alert('Version check disabled.')
 
     def _print_banner(self):
+        banner = BANNER
+        if self._accessible:
+            banner = BANNER_SMALL
         banner_len = len(max(BANNER.split(os.linesep), key=len))
-        print(BANNER)
+        print(banner)
         print('{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8))
         print('')
         counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
