@@ -636,8 +636,11 @@ class Recon(framework.Framework):
         if not params:
             self._help_workspaces_select()
             return
-        if not self._init_workspace(params):
-            self.output(f"Unable to initialize '{params}' workspace.")
+        if params in self._get_workspaces():
+            if not self._init_workspace(params):
+                self.output(f"Unable to initialize '{params}' workspace.")
+        else:
+            self.output('Invalid workspace name.')
 
     def _do_workspaces_remove(self, params):
         '''Deletes an existing workspace'''
