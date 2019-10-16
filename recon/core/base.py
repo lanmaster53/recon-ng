@@ -15,7 +15,7 @@ import builtins
 
 # import framework libs
 from recon.core import framework
-from recon.core.constants import *
+from recon.core.constants import BANNER, BANNER_SMALL
 
 # set the __version__ variable based on the VERSION file
 exec(open(os.path.join(sys.path[0], 'VERSION')).read())
@@ -123,19 +123,14 @@ class Recon(framework.Framework):
         if self._accessible:
             banner = BANNER_SMALL
         banner_len = len(max(BANNER.split(os.linesep), key=len))
-        author_info = '{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8)
-        if self._accessible:
-            author_info = '{0:^{1}}'.format(f"{framework.Colors.O}{self._name} version {__version__}, by {__author__}{framework.Colors.N}", banner_len + 8)
         print(banner)
-        print(author_info)
+        print('{0:^{1}}'.format(f"{framework.Colors.O}[{self._name} v{__version__}, {__author__}]{framework.Colors.N}", banner_len + 8))
         print('')
         counts = [(len(self._loaded_category[x]), x) for x in self._loaded_category]
         if counts:
             count_len = len(max([self.to_unicode_str(x[0]) for x in counts], key=len))
             for count in sorted(counts, reverse=True):
                 cnt = f"[{count[0]}]"
-                if self._accessible:
-                    cnt = f"{count[0]}"
                 print(f"{framework.Colors.B}{cnt.ljust(count_len+2)} {count[1].title()} modules{framework.Colors.N}")
                 # create dynamic easter egg command based on counts
                 setattr(self, f"do_{count[0]}", self._menu_egg)
