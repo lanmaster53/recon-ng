@@ -20,5 +20,8 @@ _/    _/  _/_/_/_/    _/_/_/    _/_/_/    _/      _/            _/      _/    _/
 '''
 
 BANNER_SMALL = r'''
-Sponsored by... BLACK HILLS at www.blackhillsinfosec.com and PRACTISEC at www.practisec.com
+RECON-NG
+Sponsored by...
+- BLACK HILLS INFORMATION SECURITY at www.blackhillsinfosec.com
+- PRACTISEC at www.practisec.com
 '''
