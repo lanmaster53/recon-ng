@@ -631,10 +631,10 @@ class Recon(framework.Framework):
         if not self._init_workspace(params):
             self.output(f"Unable to create '{params}' workspace.")
 
-    def _do_workspaces_select(self, params):
-        '''Selects an existing workspace'''
+    def _do_workspaces_load(self, params):
+        '''Loads an existing workspace'''
         if not params:
-            self._help_workspaces_select()
+            self._help_workspaces_load()
             return
         if params in self._get_workspaces():
             if not self._init_workspace(params):
@@ -643,7 +643,7 @@ class Recon(framework.Framework):
             self.output('Invalid workspace name.')
 
     def _do_workspaces_remove(self, params):
-        '''Deletes an existing workspace'''
+        '''Removes an existing workspace'''
         if not params:
             self._help_workspaces_remove()
             return
@@ -692,7 +692,7 @@ class Recon(framework.Framework):
             self.error(f"No snapshot named '{params}'.")
 
     def _do_snapshots_remove(self, params):
-        '''Deletes an existing snapshot'''
+        '''Removes an existing snapshot'''
         if not params:
             self._help_snapshots_remove()
             return
@@ -793,9 +793,9 @@ class Recon(framework.Framework):
         print(getattr(self, '_do_workspaces_create').__doc__)
         print(f"{os.linesep}Usage: workspace create <name>{os.linesep}")
 
-    def _help_workspaces_select(self):
-        print(getattr(self, '_do_workspaces_select').__doc__)
-        print(f"{os.linesep}Usage: workspace select <name>{os.linesep}")
+    def _help_workspaces_load(self):
+        print(getattr(self, '_do_workspaces_load').__doc__)
+        print(f"{os.linesep}Usage: workspace load <name>{os.linesep}")
 
     def _help_workspaces_remove(self):
         print(getattr(self, '_do_workspaces_remove').__doc__)
@@ -851,9 +851,9 @@ class Recon(framework.Framework):
         return []
     _complete_workspaces_create = _complete_workspaces_list
 
-    def _complete_workspaces_select(self, text, *ignored):
+    def _complete_workspaces_load(self, text, *ignored):
         return [x for x in self._get_workspaces() if x.startswith(text)]
-    _complete_workspaces_remove = _complete_workspaces_select
+    _complete_workspaces_remove = _complete_workspaces_load
 
     def complete_snapshots(self, text, line, *ignored):
         arg, params = self._parse_params(line.split(' ', 1)[1])
