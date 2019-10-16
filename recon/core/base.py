@@ -217,12 +217,15 @@ class Recon(framework.Framework):
         return True
 
     def _get_workspaces(self):
-        dirnames = []
+        workspaces = []
         path = os.path.join(self.spaces_path)
         for name in os.listdir(path):
-            if os.path.isdir(os.path.join(path, name)):
-                dirnames.append(name)
-        return dirnames
+            dirname = os.path.join(path, name)
+            if os.path.isdir(dirname):
+                db_path = os.path.join(path, name, 'data.db')
+                modified = datetime.fromtimestamp(os.path.getmtime(db_path)).strftime('%Y-%m-%d %H:%M:%S')
+                workspaces.append((name, modified))
+        return sorted(workspaces, key=lambda tup: tup[0])
 
     def _get_snapshots(self):
         snapshots = []
@@ -615,7 +618,7 @@ class Recon(framework.Framework):
 
     def _do_workspaces_list(self, params):
         '''Lists existing workspaces'''
-        self.table([[x] for x in self._get_workspaces()], header=['Workspaces'])
+        self.table(self._get_workspaces(), header=['Workspaces', 'Modified'])
 
     def _do_workspaces_create(self, params):
         '''Creates a new workspace'''
