@@ -947,7 +947,7 @@ class Framework(cmd.Cmd):
             return
         if self.get_key(key):
             if self.remove_key(key):
-                self.output(f"Key '{key}' deleted.")
+                self.output(f"Key '{key}' removed.")
         else:
             self.error('Invalid key name.')
 
