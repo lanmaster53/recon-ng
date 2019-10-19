@@ -19,11 +19,11 @@
                     <select id="template">
                         <option id="templateOption"></option>
                     </select>
-                    <a href="{{ url_for('index') }}">[recon-ng]</a>
+                    <a href="{{ url_for('core.index') }}">[recon-ng]</a>
                     <span>[</span>
                     <select id="workspace">
                     {% for workspace in workspaces %}
-                        <option value="{{ workspace }}"{% if workspace == session.workspace %}selected{% endif %}>{{ workspace }}</option>
+                        <option value="{{ workspace }}"{% if workspace == g.workspace %}selected{% endif %}>{{ workspace }}</option>
                     {% endfor %}
                     </select>
                     <span>]</span>

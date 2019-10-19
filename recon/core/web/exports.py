@@ -1,8 +1,8 @@
 from dicttoxml import dicttoxml
-from flask import Response, jsonify, send_file
+from flask import current_app, Response, jsonify, send_file
 from io import StringIO
 from io import BytesIO
-from recon.core.web.utils import add_worksheet, debug, is_url
+from recon.core.web.utils import add_worksheet, is_url
 import os
 import requests
 import unicodecsv as csv
@@ -93,6 +93,6 @@ def proxify(rows):
                 else:
                     msg += 'Error: Failed URL validation.'
                 msg += os.linesep*2
-                debug(msg.strip())
+                current_app.logger.info(msg.strip())
                 yield msg
     return Response(generate(), mimetype='text/plain')

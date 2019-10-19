@@ -33,7 +33,7 @@ $("#reports-list").on("click", "li", function(e) {
     // get the report name
     var report = $(e.target).text();
     // build the url
-    var url = "/api/workspaces/"+workspace+"."+report;
+    var url = "/api/workspaces/"+workspace+"?report="+report;
     // open in a new tab
     window.open(url, '_blank');
     // prevent the checked state
@@ -115,7 +115,7 @@ $("#exports-list").on("click", "li", function(e) {
     // get the desired format
     var format = $(this).text();
     // build the url
-    var url = "/api/workspaces/"+workspace+"/tables/"+table+"."+format+"?columns="+checkedStr;
+    var url = "/api/workspaces/"+workspace+"/tables/"+table+"?format="+format+"&columns="+checkedStr;
     // open in a new tab to download the file
     window.open(url, '_blank');
     // prevent the checked state

@@ -11,13 +11,13 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='pushpin.css') }}">
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script type="text/javascript">
-        var workspace = "{{ session.workspace }}";
+        var workspace = "{{ g.workspace }}";
     </script>
 </head>
 <body>
     <div class="toolbar rounded shaded">
         <div class="center-content">workspace</div>
-        <div class="filter center-content"><span class="header">{{ session.workspace }}</span></div>
+        <div class="filter center-content"><span class="header">{{ g.workspace }}</span></div>
         <div class="center-content">sources</div>
         <div id="filter-source" class="filter"></div>
     </div>

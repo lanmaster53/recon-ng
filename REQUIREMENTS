@@ -6,6 +6,7 @@ mechanize
 requests
 # web
 flask
+flask-restful
 dicttoxml
 XlsxWriter
 unicodecsv
