@@ -23,7 +23,7 @@
                     <span>[</span>
                     <select id="workspace">
                     {% for workspace in workspaces %}
-                        <option value="{{ workspace }}"{% if workspace == g.workspace %}selected{% endif %}>{{ workspace }}</option>
+                        <option value="{{ workspace }}"{% if workspace == config.WORKSPACE %}selected{% endif %}>{{ workspace }}</option>
                     {% endfor %}
                     </select>
                     <span>]</span>

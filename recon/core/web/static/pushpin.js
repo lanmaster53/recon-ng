@@ -114,12 +114,10 @@ function toggle_marker(element) {
 $(document).ready(function() {
     // load the map
     load_map();
-    // build the url
-    var url = "/api/workspaces/"+workspace+"/tables/pushpins";
     // load the pushpins
     $.ajax({
         type: "GET",
-        url: url,
+        url: "/api/tables/pushpins",
         success: function(data) {
             // declare a storage array for markers
             window['markers'] = [];

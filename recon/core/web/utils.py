@@ -3,50 +3,15 @@ from sqlite3 import dbapi2 as sqlite3
 import os
 import re
 
-def get_workspaces():
-    dirnames = []
-    path = os.path.join(current_app.config['HOME_DIR'], 'workspaces')
-    for name in os.listdir(path):
-        if os.path.isdir(os.path.join(path, name)):
-            dirnames.append(name)
-    return dirnames
-
-def get_tables():
-    tables = query('SELECT name FROM sqlite_master WHERE type=\'table\'')
-    return sorted(tables, key=lambda t: t['name'])
-
-def get_columns(table):
-    return [x[1] for x in query(f"PRAGMA table_info('{table}')")]
-
-def connect_db(db_path):
-    '''Connects to the specific database.'''
-    rv = sqlite3.connect(db_path)
-    rv.row_factory = sqlite3.Row
-    return rv
-
-def get_key(name):
-    db = connect_db(current_app.config['KEYS_DB'])
-    rows = db.execute('SELECT value FROM keys WHERE name=? AND value NOT NULL', (name,))
-    row = rows.fetchone()
-    value = row[0] if row else None
-    db.close()
-    return value
-
-def query(query, values=()):
-    '''Queries the database and returns the results as a list.'''
-    current_app.logger.debug(f"Query: {query}")
-    if values:
-        cur = g.db.execute(query, values)
-    else:
-        cur = g.db.execute(query)
-    return cur.fetchall()
+def columnize(columns, rows):
+    return [{columns[i]: row[i] for i in range(0, len(columns))} for row in rows]
 
 def add_worksheet(workbook, name, rows):
     '''Helper function for building xlsx files.'''
     worksheet = workbook.add_worksheet(name)
     # build the data set
     if rows:
-        _rows = [rows[0].keys()]
+        _rows = [list(rows[0].keys())]
         for row in rows:
             _row = []
             for key in _rows[0]:

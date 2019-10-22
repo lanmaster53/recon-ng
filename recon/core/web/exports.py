@@ -1,5 +1,5 @@
 from dicttoxml import dicttoxml
-from flask import current_app, Response, jsonify, send_file
+from flask import current_app, Response, jsonify, send_file, stream_with_context
 from io import StringIO
 from io import BytesIO
 from recon.core.web.utils import add_worksheet, is_url
@@ -55,10 +55,16 @@ def xlsxify(rows):
         # create a single worksheet for the provided rows
         add_worksheet(workbook, 'worksheet', rows)
     sfp.seek(0)
-    return send_file(sfp, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    return send_file(
+        sfp,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        attachment_filename=f"export.xlsx"
+    )
 
 # http://flask.pocoo.org/docs/0.12/patterns/streaming/
 def proxify(rows):
+    @stream_with_context
     def generate():
         '''Expects a list of dictionaries containing URLs and requests them
         through a configured proxy.'''
@@ -93,6 +99,5 @@ def proxify(rows):
                 else:
                     msg += 'Error: Failed URL validation.'
                 msg += os.linesep*2
-                current_app.logger.info(msg.strip())
                 yield msg
     return Response(generate(), mimetype='text/plain')
