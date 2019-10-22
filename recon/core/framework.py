@@ -83,10 +83,15 @@ class Options(dict):
         self.description[name] = description
 
     def serialize(self):
-        data = {}
+        options = []
         for key in self:
-            data[key] = self[key]
-        return data
+            option = {}
+            option['name'] = key
+            option['value'] = self[key]
+            option['required'] = self.required[key]
+            option['description'] = self.description[key]
+            options.append(option)
+        return options
 
 #=================================================
 # FRAMEWORK CLASS
