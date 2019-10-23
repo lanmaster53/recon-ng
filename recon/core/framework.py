@@ -452,14 +452,14 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount)
         return rowcount
 
-    def insert_ports(self, ip_address=None, host=None, port=None, protocol=None, notes=None, mute=False):
+    def insert_ports(self, ip_address=None, host=None, port=None, protocol=None, banner=None, mute=False):
         '''Adds a port to the database and returns the affected row count.'''
         data = dict(
             ip_address = ip_address,
             port = port,
             host = host,
             protocol = protocol,
-            notes = notes
+            banner = banner
         )
         rowcount = self.insert('ports', data.copy(), ('ip_address', 'port', 'host'))
         if not mute: self._display(data, rowcount, '[port] %s (%s/%s) - %s', ('ip_address', 'port', 'protocol', 'host'))

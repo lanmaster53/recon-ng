@@ -237,7 +237,7 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS netblocks (netblock TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS locations (latitude TEXT, longitude TEXT, street_address TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS vulnerabilities (host TEXT, reference TEXT, example TEXT, publish_date TEXT, category TEXT, status TEXT, module TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT, notes TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT, banner TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS credentials (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT, module TEXT)')
@@ -309,8 +309,8 @@ class Recon(framework.Framework):
             self.query('UPDATE leaks SET password_type=\'unknown\'')
             self.query('PRAGMA user_version = 8')
         if db_version(self) == 8:
-            # add notes column to ports table
-            self.query('ALTER TABLE ports ADD COLUMN notes TEXT')
+            # add banner column to ports table
+            self.query('ALTER TABLE ports ADD COLUMN banner TEXT')
             self.query('PRAGMA user_version = 9')
 
     #==================================================
