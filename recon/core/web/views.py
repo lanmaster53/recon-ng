@@ -18,7 +18,9 @@ api.init_app(resources)
 class ModuleList(Resource):
 
     def get(self):
-        return list(recon._loaded_modules.keys())
+        return {
+            'modules': sorted(list(recon._loaded_modules.keys())),
+        }
 
 api.add_resource(ModuleList, '/modules/')
 
@@ -26,10 +28,33 @@ api.add_resource(ModuleList, '/modules/')
 class ModuleInst(Resource):
 
     def get(self, module):
+        '''Returns information about the provided module.'''
         module = recon._loaded_modules.get(module)
         if module is None:
             abort(404)
-        return {k: v for k, v in module.meta.items()}
+        meta = {k: v for k, v in module.meta.items()}
+        # provide options with more context
+        options = module.options.serialize()
+        if options:
+            meta['options'] = options
+        return meta
+
+    def patch(self, module):
+        '''Updates the provided module. Options are the only modifiable
+        property of a module object.'''
+        module = recon._loaded_modules.get(module)
+        if module is None:
+            abort(404)
+        options = request.json.get('options')
+        # process options
+        if options:
+            for option in options:
+                name = option.get('name')
+                value = option.get('value')
+                if name and value and name in module.options:
+                    module.options[name] = value
+                    module._save_config(name)
+        return self.get(module._modulename)
 
 api.add_resource(ModuleInst, '/modules/<path:module>')
 
@@ -37,7 +62,9 @@ api.add_resource(ModuleInst, '/modules/<path:module>')
 class WorkspaceList(Resource):
 
     def get(self):
-        return recon._get_workspaces()
+        return {
+            'workspaces': sorted(recon._get_workspaces()),
+        }
 
 api.add_resource(WorkspaceList, '/workspaces/')
 
@@ -45,15 +72,58 @@ api.add_resource(WorkspaceList, '/workspaces/')
 class WorkspaceInst(Resource):
 
     def get(self, workspace):
+        '''Returns information about the provided workspace. Only returns 
+        options for the active workspace.'''
         if workspace not in recon._get_workspaces():
             abort(404)
-        # initialize the workspace if not already
-        if current_app.config['WORKSPACE'] != workspace:
-            # put the recon object in the right workspace
-            recon._init_workspace(workspace)
-            # add the workspace name the to global object
-            current_app.config['WORKSPACE'] = workspace
-            current_app.logger.info(f"Workspace initialized: {workspace}")
+        status = 'inactive'
+        options = []
+        if workspace == current_app.config['WORKSPACE']:
+            status = 'active'
+            options = recon.options.serialize()
+        return {
+            'name': workspace,
+            'status': status,
+            'options': options,
+        }
+
+    def patch(self, workspace):
+        '''Updates the provided workspace. When activating a workspace, 
+        deactivates the currently activated workspace. Options for inactive 
+        workspaces cannot be modified.'''
+        if workspace not in recon._get_workspaces():
+            abort(404)
+        status = request.json.get('status')
+        options = request.json.get('options')
+        # process status
+        if status:
+            # ignore everything but a request to activate
+            if status == 'active':
+                # only continue if the workspace is not already active
+                if current_app.config['WORKSPACE'] != workspace:
+                    # initialize the workspace
+                    recon._init_workspace(workspace)
+                    # add the workspace name the to global object
+                    current_app.config['WORKSPACE'] = workspace
+                    current_app.logger.info(f"Workspace initialized: {workspace}")
+        # process options
+        if options:
+            # only continue if the workspace is active
+            if current_app.config['WORKSPACE'] == workspace:
+                for option in options:
+                    name = option.get('name')
+                    value = option.get('value')
+                    if name and value and name in recon.options:
+                        recon.options[name] = value
+                        recon._save_config(name)
+        return self.get(workspace)
+
+api.add_resource(WorkspaceInst, '/workspaces/<string:workspace>')
+
+
+class DashboardInst(Resource):
+
+    def get(self):
         # build the activity object
         dashboard = recon.query('SELECT * FROM dashboard', include_header=True)
         columns = dashboard.pop(0)
@@ -64,35 +134,45 @@ class WorkspaceInst(Resource):
         for table in tables:
             count = recon.query(f"SELECT COUNT(*) AS 'COUNT' FROM {table}")
             records.append({'name': table, 'count':count[0][0]})
+        # sort both lists in descending order
         records.sort(key=lambda r: r['count'], reverse=True)
         activity.sort(key=lambda m: m['runs'], reverse=True)
-        return {'records': records, 'activity': activity}
+        return {
+            'workspace': current_app.config['WORKSPACE'],
+            'records': records,
+            'activity': activity,
+        }
 
-api.add_resource(WorkspaceInst, '/workspaces/<string:workspace>')
+api.add_resource(DashboardInst, '/dashboard')
 
 
-class ReportsList(Resource):
+class ReportList(Resource):
 
     def get(self):
-        return list(REPORTS.keys())
+        return {
+            'reports': sorted(list(REPORTS.keys())),
+        }
 
-api.add_resource(ReportsList, '/reports/')
+api.add_resource(ReportList, '/reports/')
 
 
-class ReportsInst(Resource):
+class ReportInst(Resource):
 
     def get(self, report):
         if report not in REPORTS:
             abort(404)
         return REPORTS[report]()
 
-api.add_resource(ReportsInst, '/reports/<string:report>')
+api.add_resource(ReportInst, '/reports/<string:report>')
 
 
 class TableList(Resource):
 
     def get(self):
-        return recon.get_tables()
+        return {
+            'workspace': current_app.config['WORKSPACE'],
+            'tables': sorted(recon.get_tables()),
+        }
 
 api.add_resource(TableList, '/tables/')
 
@@ -115,13 +195,21 @@ class TableInst(Resource):
         if _format and _format in EXPORTS:
             # any required serialization is handled at the exporter level
             return EXPORTS[_format](rows=rows)
-        return {'columns': columns, 'rows': rows}
+        return {
+            'workspace': current_app.config['WORKSPACE'],
+            'table': table,
+            'columns': columns,
+            'rows': rows,
+        }
 
 api.add_resource(TableInst, '/tables/<string:table>')
 
-class ExportsList(Resource):
+
+class ExportList(Resource):
 
     def get(self):
-        return list(EXPORTS.keys())
+        return {
+            'exports': sorted(list(EXPORTS.keys())),
+        }
 
-api.add_resource(ExportsList, '/exports')
+api.add_resource(ExportList, '/exports')

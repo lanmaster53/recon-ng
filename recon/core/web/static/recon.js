@@ -7,17 +7,28 @@ $("#workspace").change(function(){
     $("#exports").hide();
     $("#data").hide();
     var workspace = $("#workspace option:selected").text();
-    // set the workspace and create the summary
-    $.get("/api/workspaces/"+workspace, function(data, status){
+    // set the workspace
+    $.ajax({
+        type: "PATCH",
+        url: "/api/workspaces/"+workspace,
+        data: JSON.stringify({"status": "active"}),
+        processData: false,
+        contentType: 'application/json',
+    })
+    .done(function(data, status){
+        console.log("Workspace activated: "+workspace);
+    });
+    // create the summary
+    $.get("/api/dashboard", function(data, status){
         createSummary(data);
     });
     // create the workspace
     $.get("/api/tables/", function(data, status){
-        createWorkspace(data);
+        createWorkspace(data.tables);
     });
     // create the reports options
     $.get("/api/reports/", function(data, status){
-        createReports(data);
+        createReports(data.reports);
     });
     // show the new elements on screen
     $("#reports").show();
@@ -55,7 +66,7 @@ $("#tables-list").on("click", "li", function() {
     });
     $.get("/api/exports", function(data, status) {
         // create the export menu
-        createExportMenu(data);
+        createExportMenu(data.exports);
     });
     // show the new elements on screen
     $("#summary").hide();
