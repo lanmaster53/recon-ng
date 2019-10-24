@@ -102,6 +102,7 @@ class Framework(cmd.Cmd):
     # mode flags
     _script = 0
     _load = 0
+    _mode = 0
     # framework variables
     _global_options = Options()
     _loaded_modules = {}
@@ -630,9 +631,9 @@ class Framework(cmd.Cmd):
 
         # increment summary tracker
         if table not in self._summary_counts:
-            self._summary_counts[table] = [0,0]
-        self._summary_counts[table][0] += rowcount
-        self._summary_counts[table][1] += 1
+            self._summary_counts[table] = {'count': 0, 'new': 0}
+        self._summary_counts[table]['new'] += rowcount
+        self._summary_counts[table]['count'] += 1
 
         return rowcount
 

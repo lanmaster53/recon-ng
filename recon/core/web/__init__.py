@@ -1,23 +1,26 @@
-from flask import Flask, request, abort
+from flask import Flask, request, abort, cli
 from recon.core import base
+from recon.core.constants import BANNER_WEB
+from recon.core.web.db import Tasks
+from redis import Redis
 import os
+import rq
 
-# print welcome message
-welcome = '''\
-*************************************************************************
- * Welcome to Recon-web, the analytics and reporting engine for Recon-ng!
- * This is a web-based user interface. Open the URL below in your browser to begin.
-*************************************************************************\
-'''
-print(welcome)
+# disable the development server warning banner
+cli.show_server_banner = lambda *x: None
 
-recon = base.Recon(analytics=False)
-recon.start(base.Mode.CLI)
+print(BANNER_WEB)
+
+# create an application-wide framework and tasks instance
+recon = base.Recon(check=False, analytics=False, marketplace=False)
+recon.start(base.Mode.WEB)
+tasks = Tasks(recon)
 
 # configuration
 DEBUG = False
 SECRET_KEY = 'we keep no secrets here.'
 JSON_SORT_KEYS = False
+REDIS_URL = 'redis://'
 WORKSPACE = recon.workspace.split('/')[-1]
 print((f" * Workspace initialized: {WORKSPACE}"))
 
@@ -26,6 +29,9 @@ def create_app():
     # setting the static_url_path to blank serves static files from the web root
     app = Flask(__name__, static_url_path='')
     app.config.from_object(__name__)
+
+    app.redis = Redis.from_url(app.config['REDIS_URL'])
+    app.task_queue = rq.Queue('recon-tasks', connection=app.redis)
 
     @app.after_request
     def disable_cache(response):

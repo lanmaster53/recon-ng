@@ -1,6 +1,7 @@
 __author__    = 'Tim Tomes (@lanmaster53)'
 
 from datetime import datetime
+from pathlib import Path
 from urllib.parse import urljoin
 import errno
 import imp
@@ -18,7 +19,7 @@ from recon.core import framework
 from recon.core.constants import BANNER, BANNER_SMALL
 
 # set the __version__ variable based on the VERSION file
-exec(open(os.path.join(sys.path[0], 'VERSION')).read())
+exec(open(os.path.join(Path(os.path.abspath(__file__)).parents[2], 'VERSION')).read())
 
 # using stdout to spool causes tab complete issues
 # therefore, override print function
@@ -31,7 +32,8 @@ def spool_print(*args, **kwargs):
         if framework.Framework._spool:
             framework.Framework._spool.write(f"{args[0]}{os.linesep}")
             framework.Framework._spool.flush()
-        if 'console' in kwargs and kwargs['console'] is False:
+        # disable terminal output for server jobs
+        if framework.Framework._mode == Mode.JOB:
             return
         # new print function must still use the old print function via the backup
         builtins._print(*args, **kwargs)
@@ -68,7 +70,7 @@ class Recon(framework.Framework):
 
     def start(self, mode, workspace='default'):
         # initialize framework components
-        self._mode = mode
+        self._mode = framework.Framework._mode = mode
         self._init_global_options()
         self._init_home()
         self._init_workspace(workspace)
@@ -731,8 +733,8 @@ class Recon(framework.Framework):
             # send analytics information
             mod_loadpath = os.path.abspath(sys.modules[y.__module__].__file__)
             self._send_analytics(mod_dispname)
-            # return the loaded module if in command line mode
-            if self._mode == Mode.CLI:
+            # return the loaded module if not in console mode
+            if self._mode != Mode.CONSOLE:
                 return y
             # begin a command loop
             y.prompt = self._prompt_template.format(self.prompt[:-3], mod_dispname.split('/')[-1])
@@ -881,7 +883,8 @@ class Mode(object):
    '''Contains constants that represent the state of the interpreter.'''
    CONSOLE = 0
    CLI     = 1
-   GUI     = 2
+   WEB     = 2
+   JOB     = 3
    
    def __init__(self):
        raise NotImplementedError('This class should never be instantiated.')

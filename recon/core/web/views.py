@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, render_template, request, abort
 from flask_restful import Resource, Api
-from recon.core.web import recon
+from recon.core.web import recon, tasks
 from recon.core.web.utils import columnize
 from recon.core.web.constants import EXPORTS, REPORTS
 
@@ -13,6 +13,52 @@ def index():
 resources = Blueprint('resources', __name__, url_prefix='/api')
 api = Api()
 api.init_app(resources)
+
+
+class TaskList(Resource):
+
+    def get(self):
+        return {
+            'tasks': tasks.get_tasks(),
+        }
+
+    def post(self):
+        module = request.json.get('module')
+        if not module or module not in recon._loaded_modules:
+            abort(404)
+        job = current_app.task_queue.enqueue('recon.core.tasks.run_module', current_app.config['WORKSPACE'], module)
+        tid = job.get_id()
+        status = job.get_status()
+        tasks.add_task(tid, status)
+        return {
+            'task': tid,
+        }, 201
+
+api.add_resource(TaskList, '/tasks/')
+
+
+class TaskInst(Resource):
+
+    def get(self, tid):
+        if tid not in tasks.get_ids():
+            abort(404)
+        # process requests for the rq version of the task
+        if request.args.get('live'):
+            # baseline task object
+            task = {
+                'id': tid,
+                'status': 'unknown',
+                'result': None,
+            }
+            job = current_app.task_queue.fetch_job(tid)
+            if job:
+                task['status'] = job.get_status()
+                task['result'] = job.result
+        else:
+            task = tasks.get_task(tid)
+        return task
+
+api.add_resource(TaskInst, '/tasks/<string:tid>')
 
 
 class ModuleList(Resource):
@@ -101,11 +147,12 @@ class WorkspaceInst(Resource):
             if status == 'active':
                 # only continue if the workspace is not already active
                 if current_app.config['WORKSPACE'] != workspace:
-                    # initialize the workspace
+                    # re-initialize the workspace and tasks object
                     recon._init_workspace(workspace)
+                    tasks.__init__(recon)
                     # add the workspace name the to global object
                     current_app.config['WORKSPACE'] = workspace
-                    current_app.logger.info(f"Workspace initialized: {workspace}")
+                    print((f" * Workspace initialized: {workspace}"))
         # process options
         if options:
             # only continue if the workspace is active

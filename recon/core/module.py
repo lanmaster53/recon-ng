@@ -277,24 +277,33 @@ class BaseModule(framework.Framework):
         else:
             self.output('Source option not available for this module.')
 
+    def run(self):
+        self._summary_counts = {}
+        self._validate_options()
+        pre = self.module_pre()
+        params = [pre] if pre is not None else []
+        # provide input if a default query is specified in the module
+        if hasattr(self, '_default_source'):
+            objs = self._get_source(self.options['source'], self._default_source)
+            params.insert(0, objs)
+        # update the dashboard before running the module
+        # data is added at runtime, so even if an error occurs, any new items
+        # must be accounted for by a module execution attempt
+        self.query(f"INSERT OR REPLACE INTO dashboard (module, runs) VALUES ('{self._modulename}', COALESCE((SELECT runs FROM dashboard WHERE module='{self._modulename}')+1, 1))")
+        self.module_run(*params)
+        self.module_post()
+
     def do_run(self, params):
         '''Runs the loaded module'''
         try:
-            self._summary_counts = {}
-            self._validate_options()
-            pre = self.module_pre()
-            params = [pre] if pre is not None else []
-            # provide input if a default query is specified in the module
-            if hasattr(self, '_default_source'):
-                objs = self._get_source(self.options['source'], self._default_source)
-                params.insert(0, objs)
-            self.module_run(*params)
-            self.module_post()
+            self.run()
         except KeyboardInterrupt:
             print('')
         except (Timeout, socket.timeout):
             self.print_exception()
             self.error('A request took too long to complete. If the issue persists, increase the global TIMEOUT option.')
+        except framework.FrameworkException:
+            self.print_exception()
         except Exception:
             self.print_exception()
             self.error('Something broken? See https://github.com/lanmaster53/recon-ng/wiki/Troubleshooting#issue-reporting.')
@@ -303,16 +312,13 @@ class BaseModule(framework.Framework):
             if self._summary_counts:
                 self.heading('Summary', level=0)
                 for table in self._summary_counts:
-                    new = self._summary_counts[table][0]
-                    cnt = self._summary_counts[table][1]
+                    new = self._summary_counts[table]['new']
+                    cnt = self._summary_counts[table]['count']
                     if new > 0:
                         method = getattr(self, 'alert')
                     else:
                         method = getattr(self, 'output')
                     method(f"{cnt} total ({new} new) {table} found.")
-                self._summary_counts = {}
-            # update the dashboard
-            self.query(f"INSERT OR REPLACE INTO dashboard (module, runs) VALUES ('{self._modulename}', COALESCE((SELECT runs FROM dashboard WHERE module='{self._modulename}')+1, 1))")
 
     #==================================================
     # HELP METHODS
