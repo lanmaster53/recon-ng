@@ -1,4 +1,5 @@
 from flask import Flask, request, abort, cli
+from flasgger import Swagger
 from recon.core import base
 from recon.core.constants import BANNER_WEB
 from recon.core.web.db import Tasks
@@ -21,6 +22,16 @@ DEBUG = False
 SECRET_KEY = 'we keep no secrets here.'
 JSON_SORT_KEYS = False
 REDIS_URL = 'redis://'
+SWAGGER = {
+    'title': 'Swagger',
+    'info': {
+        'title': 'Recon-API',
+        'description': 'A RESTful API for Recon-ng',
+        'version': '0.0.1',
+    },
+    'uiversion': 3,
+    'specs_route': '/api/',
+}
 WORKSPACE = recon.workspace.split('/')[-1]
 print((f" * Workspace initialized: {WORKSPACE}"))
 
@@ -29,6 +40,8 @@ def create_app():
     # setting the static_url_path to blank serves static files from the web root
     app = Flask(__name__, static_url_path='')
     app.config.from_object(__name__)
+
+    Swagger(app, template_file='definitions.yaml')
 
     app.redis = Redis.from_url(app.config['REDIS_URL'])
     app.task_queue = rq.Queue('recon-tasks', connection=app.redis)

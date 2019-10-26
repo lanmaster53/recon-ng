@@ -18,15 +18,53 @@ api.init_app(resources)
 class TaskList(Resource):
 
     def get(self):
+        '''
+        Gets all tasks for the current workspace
+        ---
+        responses:
+            200:
+                description: List of tasks
+                schema:
+                    properties:
+                        tasks:
+                            type: array
+                            items:
+                                $ref: '#/definitions/Task'
+                    required:
+                    - tasks
+        '''
         return {
             'tasks': tasks.get_tasks(),
         }
 
     def post(self):
-        module = request.json.get('module')
-        if not module or module not in recon._loaded_modules:
+        '''
+        Runs a module as a background task
+        ---
+        parameters:
+          - name: body
+            in: body
+            description: Object containing the path of the module to run
+            schema:
+                properties:
+                    path:
+                        type: string
+                required:
+                - path
+        responses:
+            201:
+                description: Object containing the ID of the created task
+                schema:
+                    properties:
+                        task:
+                            type: string
+                    required:
+                    - task
+        '''
+        path = request.json.get('path')
+        if not path or path not in recon._loaded_modules:
             abort(404)
-        job = current_app.task_queue.enqueue('recon.core.tasks.run_module', current_app.config['WORKSPACE'], module)
+        job = current_app.task_queue.enqueue('recon.core.tasks.run_module', current_app.config['WORKSPACE'], path)
         tid = job.get_id()
         status = job.get_status()
         tasks.add_task(tid, status)
@@ -40,6 +78,26 @@ api.add_resource(TaskList, '/tasks/')
 class TaskInst(Resource):
 
     def get(self, tid):
+        '''
+        Gets the specified task
+        ---
+        parameters:
+          - name: tid
+            in: path
+            description: ID of the target task
+            required: true
+            type: string
+          - name: live
+            in: query
+            description: If set, queries the Redis queue instead of the database
+            required: false
+            type: string
+        responses:
+            200:
+                description: Object containing the specified task
+                schema:
+                    $ref: '#/definitions/Task'
+        '''
         if tid not in tasks.get_ids():
             abort(404)
         # process requests for the rq version of the task
@@ -64,6 +122,21 @@ api.add_resource(TaskInst, '/tasks/<string:tid>')
 class ModuleList(Resource):
 
     def get(self):
+        '''
+        Gets all module names from the framework
+        ---
+        responses:
+            200:
+                description: List of module names
+                schema:
+                    properties:
+                        modules:
+                            type: array
+                            items:
+                                type: string
+                    required:
+                    - modules
+        '''
         return {
             'modules': sorted(list(recon._loaded_modules.keys())),
         }
@@ -74,7 +147,21 @@ api.add_resource(ModuleList, '/modules/')
 class ModuleInst(Resource):
 
     def get(self, module):
-        '''Returns information about the provided module.'''
+        '''
+        Gets information about the specified module
+        ---
+        parameters:
+          - name: module
+            in: path
+            description: Path of the target module
+            required: true
+            type: string
+        responses:
+            200:
+                description: Object containing the specified module's information
+                schema:
+                    $ref: '#/definitions/Module'
+        '''
         module = recon._loaded_modules.get(module)
         if module is None:
             abort(404)
@@ -86,8 +173,41 @@ class ModuleInst(Resource):
         return meta
 
     def patch(self, module):
-        '''Updates the provided module. Options are the only modifiable
-        property of a module object.'''
+        '''
+        Updates the specified module
+        Options are the only modifiable property of a module object.
+        ---
+        parameters:
+          - name: module
+            in: path
+            description: Name of the target module
+            required: true
+            type: string
+          - name: body
+            in: body
+            description: Object containing the options to update
+            schema:
+                properties:
+                    options:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                value:
+                                    type: string
+                            required:
+                            - name
+                            - value
+                required:
+                - options
+        responses:
+            200:
+                description: Object containing the modified module's information
+                schema:
+                    $ref: '#/definitions/Module'
+        '''
         module = recon._loaded_modules.get(module)
         if module is None:
             abort(404)
@@ -108,6 +228,21 @@ api.add_resource(ModuleInst, '/modules/<path:module>')
 class WorkspaceList(Resource):
 
     def get(self):
+        '''
+        Gets all workspace names from the framework
+        ---
+        responses:
+            200:
+                description: List of workspace names
+                schema:
+                    properties:
+                        workspaces:
+                            type: array
+                            items:
+                                type: string
+                    required:
+                    - workspaces
+        '''
         return {
             'workspaces': sorted(recon._get_workspaces()),
         }
@@ -118,8 +253,22 @@ api.add_resource(WorkspaceList, '/workspaces/')
 class WorkspaceInst(Resource):
 
     def get(self, workspace):
-        '''Returns information about the provided workspace. Only returns 
-        options for the active workspace.'''
+        '''
+        Gets information about the specified workspace
+        Only returns options for the active workspace.
+        ---
+        parameters:
+          - name: workspace
+            in: path
+            description: Name of the target workspace
+            required: true
+            type: string
+        responses:
+            200:
+                description: Object containing the specified workspace's information
+                schema:
+                    $ref: '#/definitions/Workspace'
+        '''
         if workspace not in recon._get_workspaces():
             abort(404)
         status = 'inactive'
@@ -134,9 +283,41 @@ class WorkspaceInst(Resource):
         }
 
     def patch(self, workspace):
-        '''Updates the provided workspace. When activating a workspace, 
-        deactivates the currently activated workspace. Options for inactive 
-        workspaces cannot be modified.'''
+        '''
+        Updates the specified workspace
+        Activating a workspace deactivates the currently activated workspace, and only the active workspace's options can be modified.
+        ---
+        parameters:
+          - name: workspace
+            in: path
+            description: Name of the target workspace
+            required: true
+            type: string
+          - name: body
+            in: body
+            description: Object containing the properties to update
+            schema:
+                properties:
+                    status:
+                        type: string
+                    options:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                value:
+                                    type: string
+                            required:
+                            - name
+                            - value
+        responses:
+            200:
+                description: Object containing the modified workspace's information
+                schema:
+                    $ref: '#/definitions/Workspace'
+        '''
         if workspace not in recon._get_workspaces():
             abort(404)
         status = request.json.get('status')
@@ -171,6 +352,15 @@ api.add_resource(WorkspaceInst, '/workspaces/<string:workspace>')
 class DashboardInst(Resource):
 
     def get(self):
+        '''
+        Gets summary information about the current workspace
+        ---
+        responses:
+            200:
+                description: Object containing the summary information
+                schema:
+                    $ref: '#/definitions/Dashboard'
+        '''
         # build the activity object
         dashboard = recon.query('SELECT * FROM dashboard', include_header=True)
         columns = dashboard.pop(0)
@@ -196,6 +386,21 @@ api.add_resource(DashboardInst, '/dashboard')
 class ReportList(Resource):
 
     def get(self):
+        '''
+        Gets all report types from the framework
+        ---
+        responses:
+            200:
+                description: List of report types
+                schema:
+                    properties:
+                        reports:
+                            type: array
+                            items:
+                                type: string
+                    required:
+                    - reports
+        '''
         return {
             'reports': sorted(list(REPORTS.keys())),
         }
@@ -206,6 +411,16 @@ api.add_resource(ReportList, '/reports/')
 class ReportInst(Resource):
 
     def get(self, report):
+        '''
+        Runs the specified report for the current workspace
+        ---
+        parameters:
+          - name: report
+            in: path
+            description: Name of the report type
+            required: true
+            type: string
+        '''
         if report not in REPORTS:
             abort(404)
         return REPORTS[report]()
@@ -216,6 +431,24 @@ api.add_resource(ReportInst, '/reports/<string:report>')
 class TableList(Resource):
 
     def get(self):
+        '''
+        Gets all table names for the current workspace
+        ---
+        responses:
+            200:
+                description: Object containing the list of tables names
+                schema:
+                    properties:
+                        workspace:
+                            type: string
+                        tables:
+                            type: array
+                            items:
+                                type: string
+                    required:
+                    - workspace
+                    - tables
+        '''
         return {
             'workspace': current_app.config['WORKSPACE'],
             'tables': sorted(recon.get_tables()),
@@ -227,6 +460,26 @@ api.add_resource(TableList, '/tables/')
 class TableInst(Resource):
 
     def get(self, table):
+        '''
+        Dumps the contents of the specified table
+        ---
+        parameters:
+          - name: table
+            in: path
+            description: Name of the target table
+            required: true
+            type: string
+          - name: format
+            in: query
+            description: Export type
+            required: false
+            type: string
+        responses:
+            200:
+                description: Object containing the specified table's contents
+                schema:
+                    $ref: '#/definitions/Table'
+        '''
         if table not in recon.get_tables():
             abort(404)
         # filter rows for columns if needed
@@ -255,6 +508,21 @@ api.add_resource(TableInst, '/tables/<string:table>')
 class ExportList(Resource):
 
     def get(self):
+        '''
+        Gets all export types from the framework
+        ---
+        responses:
+            200:
+                description: List of export types
+                schema:
+                    properties:
+                        exports:
+                            type: array
+                            items:
+                                type: string
+                    required:
+                    - exports
+        '''
         return {
             'exports': sorted(list(EXPORTS.keys())),
         }

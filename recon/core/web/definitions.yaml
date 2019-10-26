@@ -1,0 +1,137 @@
+---
+definitions:
+  Error:
+    properties:
+      type:
+        type: string
+      message:
+        type: string
+      traceback:
+        type: string
+    required:
+    - type
+    - message
+    - traceback
+  Result:
+    properties:
+      error:
+        $ref: '#/definitions/Error'
+      summary:
+        type: object
+    required:
+    - summary
+  Task:
+    properties:
+      id:
+        type: string
+      status:
+        type: string
+      result:
+        $ref: '#/definitions/Result'
+    required:
+    - id
+    - status
+    - result
+  Option:
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+      required:
+        type: boolean
+      description:
+        type: string
+    required:
+    - name
+    - value
+    - required
+    - description
+  Module:
+    properties:
+      name:
+        type: string
+      author:
+        type: string
+      version:
+        type: string
+      description:
+        type: string
+      required_keys:
+        type: array
+        items:
+          type: string
+      dependencies:
+        type: array
+        items:
+          type: string
+      comments:
+        type: array
+        items:
+          type: string
+      query:
+        type: string
+      options:
+        type: array
+        items:
+          $ref: '#/definitions/Option'
+      files:
+        type: array
+        items:
+          type: string
+    required:
+    - name
+    - author
+    - version
+    - description
+  Workspace:
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+      options:
+        type: array
+        items:
+          $ref: '#/definitions/Option'
+  Dashboard:
+    properties:
+      workspace:
+        type: string
+      records:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            count:
+              type: integer
+      activity:
+        type: array
+        items:
+          type: object
+          properties:
+            module:
+              type: string
+            runs:
+              type: integer
+  Table:
+    properties:
+      workspace:
+        type: string
+      table:
+        type: string
+      columns:
+        type: array
+        items:
+          type: string
+      rows:
+        type: array
+        items:
+          type: object
+    required:
+    - workspace
+    - table
+    - columns
+    - rows
