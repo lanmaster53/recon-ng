@@ -239,7 +239,7 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS netblocks (netblock TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS locations (latitude TEXT, longitude TEXT, street_address TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS vulnerabilities (host TEXT, reference TEXT, example TEXT, publish_date TEXT, category TEXT, status TEXT, module TEXT)')
-        self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT, module TEXT)')
+        self.query('CREATE TABLE IF NOT EXISTS ports (ip_address TEXT, host TEXT, port TEXT, protocol TEXT, banner TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS hosts (host TEXT, ip_address TEXT, region TEXT, country TEXT, latitude TEXT, longitude TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS contacts (first_name TEXT, middle_name TEXT, last_name TEXT, email TEXT, title TEXT, region TEXT, country TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS credentials (username TEXT, password TEXT, hash TEXT, type TEXT, leak TEXT, module TEXT)')
@@ -248,7 +248,7 @@ class Recon(framework.Framework):
         self.query('CREATE TABLE IF NOT EXISTS profiles (username TEXT, resource TEXT, url TEXT, category TEXT, notes TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS repositories (name TEXT, owner TEXT, description TEXT, resource TEXT, category TEXT, url TEXT, module TEXT)')
         self.query('CREATE TABLE IF NOT EXISTS dashboard (module TEXT PRIMARY KEY, runs INT)')
-        self.query('PRAGMA user_version = 8')
+        self.query('PRAGMA user_version = 9')
 
     def _migrate_db(self):
         db_version = lambda self: self.query('PRAGMA user_version')[0][0]
@@ -310,6 +310,10 @@ class Recon(framework.Framework):
             self.query('ALTER TABLE leaks ADD COLUMN password_type TEXT')
             self.query('UPDATE leaks SET password_type=\'unknown\'')
             self.query('PRAGMA user_version = 8')
+        if db_version(self) == 8:
+            # add banner column to ports table
+            self.query('ALTER TABLE ports ADD COLUMN banner TEXT')
+            self.query('PRAGMA user_version = 9')
 
     #==================================================
     # MODULE METHODS
