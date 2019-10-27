@@ -1,14 +1,8 @@
-from flask import Blueprint, current_app, render_template, request, abort
+from flask import Blueprint, current_app, request, abort
 from flask_restful import Resource, Api
 from recon.core.web import recon, tasks
 from recon.core.web.utils import columnize
 from recon.core.web.constants import EXPORTS, REPORTS
-
-core = Blueprint('core', __name__)
-
-@core.route('/')
-def index():
-    return render_template('index.html', workspaces=recon._get_workspaces())
 
 resources = Blueprint('resources', __name__, url_prefix='/api')
 api = Api()

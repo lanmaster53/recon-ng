@@ -1,10 +1,9 @@
-from flask import Flask, request, abort, cli
+from flask import Flask, cli, render_template
 from flasgger import Swagger
 from recon.core import base
 from recon.core.constants import BANNER_WEB
 from recon.core.web.db import Tasks
 from redis import Redis
-import os
 import rq
 
 # disable the development server warning banner
@@ -51,9 +50,11 @@ def create_app():
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return response
 
-    from recon.core.web.views import core
-    app.register_blueprint(core)
-    from recon.core.web.views import resources
+    @app.route('/')
+    def index():
+        return render_template('index.html', workspaces=recon._get_workspaces())
+
+    from recon.core.web.api import resources
     app.register_blueprint(resources)
 
     return app
