@@ -1,4 +1,5 @@
 *.pyc
+*.rdb
 *sublime*
 venv/
 scripts/

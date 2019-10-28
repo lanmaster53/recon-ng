@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+
+    web:
+        build: .
+        image: recon-ng
+        container_name: recon-ng
+        ports:
+            - '5000:5000'
+        command: ./recon-web --host 0.0.0.0
+        volumes:
+            - .:/recon-ng
+            - ~/.recon-ng:/root/.recon-ng
+        environment:
+            - REDIS_URL=redis://redis:6379/0
+        depends_on:
+            - redis
+
+    worker:
+        image: recon-ng
+        command: rq worker -u redis://redis:6379/0 recon-tasks
+        volumes:
+            - .:/recon-ng
+            - ~/.recon-ng:/root/.recon-ng
+        environment:
+            - REDIS_URL=redis://redis:6379/0
+        depends_on:
+            - redis
+
+    redis:
+        image: redis

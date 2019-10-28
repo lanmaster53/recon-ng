@@ -4,6 +4,7 @@ from recon.core import base
 from recon.core.constants import BANNER_WEB
 from recon.core.web.db import Tasks
 from redis import Redis
+import os
 import rq
 
 # disable the development server warning banner
@@ -20,7 +21,7 @@ tasks = Tasks(recon)
 DEBUG = False
 SECRET_KEY = 'we keep no secrets here.'
 JSON_SORT_KEYS = False
-REDIS_URL = 'redis://'
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://')
 SWAGGER = {
     'title': 'Swagger',
     'info': {
