@@ -1022,7 +1022,7 @@ class Framework(cmd.Cmd):
             self.help_db()
 
     def _do_db_notes(self, params):
-        '''Adds a note to a row in the database'''
+        '''Adds notes to rows in the database'''
         table, params = self._parse_params(params)
         if not table:
             self._help_db_notes()
