@@ -405,46 +405,50 @@ class Framework(cmd.Cmd):
                 display(f"{key.title()}: {data[key]}")
             display(self.ruler*50)
 
-    def insert_domains(self, domain=None, mute=False):
+    def insert_domains(self, domain=None, notes=None, mute=False):
         '''Adds a domain to the database and returns the affected row count.'''
         data = dict(
-            domain = domain
+            domain = domain,
+            notes = notes
         )
         rowcount = self.insert('domains', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[domain] %s', data.keys())
         return rowcount
 
-    def insert_companies(self, company=None, description=None, mute=False):
+    def insert_companies(self, company=None, description=None, notes=None, mute=False):
         '''Adds a company to the database and returns the affected row count.'''
         data = dict(
             company = company,
-            description = description
+            description = description,
+            notes = notes
         )
         rowcount = self.insert('companies', data.copy(), ('company',))
         if not mute: self._display(data, rowcount, '[company] %s - %s', data.keys())
         return rowcount
 
-    def insert_netblocks(self, netblock=None, mute=False):
+    def insert_netblocks(self, netblock=None, notes=None, mute=False):
         '''Adds a netblock to the database and returns the affected row count.'''
         data = dict(
-            netblock = netblock
+            netblock = netblock,
+            notes = notes
         )
         rowcount = self.insert('netblocks', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[netblock] %s', data.keys())
         return rowcount
 
-    def insert_locations(self, latitude=None, longitude=None, street_address=None, mute=False):
+    def insert_locations(self, latitude=None, longitude=None, street_address=None, notes=None, mute=False):
         '''Adds a location to the database and returns the affected row count.'''
         data = dict(
             latitude = latitude,
             longitude = longitude,
-            street_address = street_address
+            street_address = street_address,
+            notes = notes
         )
         rowcount = self.insert('locations', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[location] %s, %s - %s', data.keys())
         return rowcount
 
-    def insert_vulnerabilities(self, host=None, reference=None, example=None, publish_date=None, category=None, status=None, mute=False):
+    def insert_vulnerabilities(self, host=None, reference=None, example=None, publish_date=None, category=None, status=None, notes=None, mute=False):
         '''Adds a vulnerability to the database and returns the affected row count.'''
         data = dict(
             host = host,
@@ -452,25 +456,28 @@ class Framework(cmd.Cmd):
             example = example,
             publish_date = publish_date.strftime(self.time_format) if publish_date else None,
             category = category,
-            status = status
+            status = status,
+            notes = notes
         )
         rowcount = self.insert('vulnerabilities', data.copy(), data.keys())
         if not mute: self._display(data, rowcount)
         return rowcount
 
-    def insert_ports(self, ip_address=None, host=None, port=None, protocol=None, mute=False):
+    def insert_ports(self, ip_address=None, host=None, port=None, protocol=None, banner=None, notes=None, mute=False):
         '''Adds a port to the database and returns the affected row count.'''
         data = dict(
             ip_address = ip_address,
             port = port,
             host = host,
-            protocol = protocol
+            protocol = protocol,
+            banner = banner,
+            notes = notes
         )
         rowcount = self.insert('ports', data.copy(), ('ip_address', 'port', 'host'))
         if not mute: self._display(data, rowcount, '[port] %s (%s/%s) - %s', ('ip_address', 'port', 'protocol', 'host'))
         return rowcount
 
-    def insert_hosts(self, host=None, ip_address=None, region=None, country=None, latitude=None, longitude=None, mute=False):
+    def insert_hosts(self, host=None, ip_address=None, region=None, country=None, latitude=None, longitude=None, notes=None, mute=False):
         '''Adds a host to the database and returns the affected row count.'''
         data = dict(
             host = host,
@@ -478,13 +485,14 @@ class Framework(cmd.Cmd):
             region = region,
             country = country,
             latitude = latitude,
-            longitude = longitude
+            longitude = longitude,
+            notes = notes
         )
         rowcount = self.insert('hosts', data.copy(), ('host', 'ip_address'))
         if not mute: self._display(data, rowcount, '[host] %s (%s)', ('host', 'ip_address'))
         return rowcount
 
-    def insert_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None, mute=False):
+    def insert_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None, notes=None, mute=False):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
             first_name = first_name,
@@ -493,13 +501,14 @@ class Framework(cmd.Cmd):
             title = title,
             email = email,
             region = region,
-            country = country
+            country = country,
+            notes = notes
         )
         rowcount = self.insert('contacts', data.copy(), ('first_name', 'middle_name', 'last_name', 'title', 'email'))
         if not mute: self._display(data, rowcount, '[contact] %s %s (%s) - %s', ('first_name', 'last_name', 'email', 'title'))
         return rowcount
 
-    def insert_credentials(self, username=None, password=None, _hash=None, _type=None, leak=None, mute=False):
+    def insert_credentials(self, username=None, password=None, _hash=None, _type=None, leak=None, notes=None, mute=False):
         '''Adds a credential to the database and returns the affected row count.'''
 
         # account for hashes provided in the password field
@@ -520,13 +529,14 @@ class Framework(cmd.Cmd):
             password = password,
             hash = _hash,
             type = _type,
-            leak = leak
+            leak = leak,
+            notes = notes
         )
         rowcount = self.insert('credentials', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[credential] %s: %s', ('username', 'password'))
         return rowcount
 
-    def insert_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, password_type=None, targets=None, media_refs=None, mute=False):
+    def insert_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, password_type=None, targets=None, media_refs=None, notes=None, mute=False):
         '''Adds a leak to the database and returns the affected row count.'''
         data = dict(
             leak_id = leak_id,
@@ -545,13 +555,14 @@ class Framework(cmd.Cmd):
             password_hash = password_hash,
             password_type = password_type,
             targets = targets,
-            media_refs = media_refs
+            media_refs = media_refs,
+            notes = notes
         )
         rowcount = self.insert('leaks', data.copy(), data.keys())
         if not mute: self._display(data, rowcount)
         return rowcount
 
-    def insert_pushpins(self, source=None, screen_name=None, profile_name=None, profile_url=None, media_url=None, thumb_url=None, message=None, latitude=None, longitude=None, time=None, mute=False):
+    def insert_pushpins(self, source=None, screen_name=None, profile_name=None, profile_url=None, media_url=None, thumb_url=None, message=None, latitude=None, longitude=None, time=None, notes=None, mute=False):
         '''Adds a pushpin to the database and returns the affected row count.'''
         data = dict(
             source = source,
@@ -563,7 +574,8 @@ class Framework(cmd.Cmd):
             message = message,
             latitude = latitude,
             longitude = longitude,
-            time = time.strftime(self.time_format)
+            time = time.strftime(self.time_format),
+            notes = notes
         )
         rowcount = self.insert('pushpins', data.copy(), data.keys())
         if not mute: self._display(data, rowcount)
@@ -582,7 +594,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount, '[profile] %s - %s (%s)', ('username', 'resource', 'url'))
         return rowcount
 
-    def insert_repositories(self, name=None, owner=None, description=None, resource=None, category=None, url=None, mute=False):
+    def insert_repositories(self, name=None, owner=None, description=None, resource=None, category=None, url=None, notes=None, mute=False):
         '''Adds a repository to the database and returns the affected row count.'''
         data = dict(
             name = name,
@@ -590,7 +602,8 @@ class Framework(cmd.Cmd):
             description = description,
             resource = resource,
             category = category,
-            url = url
+            url = url,
+            notes = notes
         )
         rowcount = self.insert('repositories', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[repository] %s - %s', ('name', 'description'))
@@ -1008,6 +1021,39 @@ class Framework(cmd.Cmd):
         else:
             self.help_db()
 
+    def _do_db_notes(self, params):
+        '''Adds notes to rows in the database'''
+        table, params = self._parse_params(params)
+        if not table:
+            self._help_db_notes()
+            return
+        if table in self.get_tables():
+            # get rowid and note from parameters
+            if params:
+                arg, note = self._parse_params(params)
+                rowids = self._parse_rowids(arg)
+            # get rowid and note from interactive input
+            else:
+                try:
+                    # prompt user for data
+                    params = input('rowid(s) (INT): ')
+                    rowids = self._parse_rowids(params)
+                    note = input('note (TXT): ')
+                except KeyboardInterrupt:
+                    print('')
+                    return
+                finally:
+                    # ensure proper output for resource scripts
+                    if Framework._script:
+                        print(f"{params}")
+            # delete record(s) from the database
+            count = 0
+            for rowid in rowids:
+                count += self.query(f"UPDATE `{table}` SET notes=? WHERE ROWID IS ?", (note, rowid))
+            self.output(f"{count} rows affected.")
+        else:
+            self.output('Invalid table name.')
+
     def _do_db_insert(self, params):
         '''Inserts a row into the database'''
         table, params = self._parse_params(params)
@@ -1290,6 +1336,11 @@ class Framework(cmd.Cmd):
         print(getattr(self, 'do_db').__doc__)
         print(f"{os.linesep}Usage: db <{'|'.join(self._parse_subcommands('db'))}> [...]{os.linesep}")
 
+    def _help_db_notes(self):
+        print(getattr(self, '_do_db_notes').__doc__)
+        print(f"{os.linesep}Usage: db note <table> [<rowid(s)> <note>]{os.linesep}")
+        print(f"rowid(s) => ',' delimited values or '-' delimited ranges representing rowids{os.linesep}")
+
     def _help_db_insert(self):
         print(getattr(self, '_do_db_insert').__doc__)
         print(f"{os.linesep}Usage: db insert <table> [<values>]{os.linesep}")
@@ -1386,7 +1437,7 @@ class Framework(cmd.Cmd):
 
     def _complete_db_insert(self, text, *ignored):
         return [x for x in sorted(self.get_tables()) if x.startswith(text)]
-    _complete_db_delete = _complete_db_insert
+    _complete_db_notes = _complete_db_delete = _complete_db_insert
 
     def _complete_db_query(self, text, *ignored):
         return []
