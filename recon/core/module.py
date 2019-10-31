@@ -11,6 +11,7 @@ import textwrap
 import yaml
 # framework libs
 from recon.core import framework
+from recon.utils import validators
 
 #=================================================
 # MODULE CLASS
@@ -129,6 +130,26 @@ class BaseModule(framework.Framework):
                     domains.append(domain)
                 del elements[0]
         return domains
+
+    def _validate_input(self):
+        validator_type = self.meta.get('validator')
+        if not validator_type:
+            # passthru, no validator required
+            self.debug('No validator required.')
+            return
+        validator = None
+        validator_name = validator_type.capitalize() + 'Validator'
+        for obj in [self, validators]:
+            if hasattr(obj, validator_name):
+                validator = getattr(validators, validator_name)()
+        if not validator:
+            # passthru, no validator defined
+            self.debug('No validator defined.')
+            return
+        inputs = self._get_source(self.options['source'], self._default_source)
+        for _input in inputs:
+            validator.validate(_input)
+            self.debug('All inputs validated.')
 
     #==================================================
     # OPTIONS METHODS
@@ -278,8 +299,9 @@ class BaseModule(framework.Framework):
             self.output('Source option not available for this module.')
 
     def run(self):
-        self._summary_counts = {}
         self._validate_options()
+        self._validate_input()
+        self._summary_counts = {}
         pre = self.module_pre()
         params = [pre] if pre is not None else []
         # provide input if a default query is specified in the module
@@ -302,7 +324,7 @@ class BaseModule(framework.Framework):
         except (Timeout, socket.timeout):
             self.print_exception()
             self.error('A request took too long to complete. If the issue persists, increase the global TIMEOUT option.')
-        except framework.FrameworkException:
+        except (framework.FrameworkException, validators.ValidationException):
             self.print_exception()
         except Exception:
             self.print_exception()
