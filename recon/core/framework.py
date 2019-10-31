@@ -19,7 +19,8 @@ import traceback
 #=================================================
 
 class FrameworkException(Exception):
-    pass
+    def __init__(self, message):
+        Exception.__init__(self, message)
 
 class Colors(object):
     N = '\033[m' # native
@@ -257,8 +258,8 @@ class Framework(cmd.Cmd):
 
     def print_exception(self, line=''):
         stack_list = [x.strip() for x in traceback.format_exc().strip().splitlines()]
-        exctype = stack_list[-1].split(':')[0].strip()
-        message = ' '.join(stack_list[-1].split(':')[1:]).strip()
+        exctype = stack_list[-1].split(':', 1)[0].strip()
+        message = stack_list[-1].split(':', 1)[-1].strip()
         if self._global_options['verbosity'] == 0:
             return
         elif self._global_options['verbosity'] == 1:
