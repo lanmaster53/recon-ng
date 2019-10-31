@@ -226,7 +226,7 @@ class Framework(cmd.Cmd):
         return False
 
     def get_random_str(self, length):
-        return ''.join(random.choice(string.lowercase) for i in range(length))
+        return ''.join(random.choice(string.ascii_lowercase) for i in range(length))
 
     def _is_writeable(self, filename):
         try:
