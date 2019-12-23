@@ -1,6 +1,7 @@
 from json import dumps
 from copy import deepcopy
 from urllib.parse import urljoin
+from recon.core.framework import FrameworkException
 
 
 class IntelXMixin(object):
@@ -119,12 +120,18 @@ class IntelXMixin(object):
 
     def __perform_post_query(self, endpoint, payload={}):
         url, headers = self.__fetch_intelx_connection_info(endpoint)
-        return self.request('POST', url, headers=headers,
-                            data=dumps(payload))
+        try:
+            return self.request('POST', url, headers=headers,
+                                data=dumps(payload))
+        except Exception as e:
+            raise FrameworkException(e)
 
     def __perform_get_query(self, endpoint, payload={}):
         url, headers = self.__fetch_intelx_connection_info(endpoint)
-        return self.request('GET', url, headers=headers, params=payload)
+        try:
+            return self.request('GET', url, headers=headers, params=payload)
+        except Exception as e:
+            raise FrameworkException(e)
 
     def __fetch_intelx_connection_info(self, endpoint):
         url = urljoin(str(self.get_key("intelx_domain")), endpoint)
