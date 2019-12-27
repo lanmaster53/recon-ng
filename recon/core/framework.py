@@ -399,7 +399,11 @@ class Framework(cmd.Cmd):
         display = self.alert if rowcount else self.verbose
         if pattern and keys:
             values = tuple([data[key] or '<blank>' for key in keys])
-            display(pattern % values)
+            try:
+                display(pattern % values)
+            except TypeError:
+                self.debug(f"Bad Pattern: {pattern}, setting pattern=None")
+                self._display(data, rowcount, pattern=None, keys=keys)
         else:
             for key in sorted(data.keys()):
                 display(f"{key.title()}: {data[key]}")
@@ -409,7 +413,7 @@ class Framework(cmd.Cmd):
         '''Adds a domain to the database and returns the affected row count.'''
         data = dict(
             domain = domain,
-            notes = notes
+            notes=notes
         )
         rowcount = self.insert('domains', data.copy(), data.keys())
         if not mute: self._display(data, rowcount, '[domain] %s', data.keys())
