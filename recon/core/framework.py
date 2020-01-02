@@ -396,15 +396,11 @@ class Framework(cmd.Cmd):
     # INSERT METHODS
     #==================================================
 
-    def _display(self, data, rowcount, pattern=None, keys=None):
+    def _display(self, data, rowcount):
         display = self.alert if rowcount else self.verbose
-        if pattern and keys:
-            values = tuple([data[key] or '<blank>' for key in keys])
-            display(pattern % values)
-        else:
-            for key in sorted(data.keys()):
-                display(f"{key.title()}: {data[key]}")
-            display(self.ruler*50)
+        for key in sorted(data.keys()):
+            display(f"{key.title()}: {data[key]}")
+        display(self.ruler*50)
 
     def insert_domains(self, domain=None, notes=None, mute=False):
         '''Adds a domain to the database and returns the affected row count.'''
@@ -413,7 +409,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('domains', data.copy(), data.keys())
-        if not mute: self._display(data, rowcount, '[domain] %s', data.keys())
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_companies(self, company=None, description=None, notes=None, mute=False):
@@ -424,7 +420,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('companies', data.copy(), ('company',))
-        if not mute: self._display(data, rowcount, '[company] %s - %s', data.keys())
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_netblocks(self, netblock=None, notes=None, mute=False):
@@ -434,7 +430,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('netblocks', data.copy(), data.keys())
-        if not mute: self._display(data, rowcount, '[netblock] %s', data.keys())
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_locations(self, latitude=None, longitude=None, street_address=None, notes=None, mute=False):
@@ -446,7 +442,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('locations', data.copy(), data.keys())
-        if not mute: self._display(data, rowcount, '[location] %s, %s - %s', data.keys())
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_vulnerabilities(self, host=None, reference=None, example=None, publish_date=None, category=None, status=None, notes=None, mute=False):
@@ -475,7 +471,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('ports', data.copy(), ('ip_address', 'port', 'host'))
-        if not mute: self._display(data, rowcount, '[port] %s (%s/%s) - %s', ('ip_address', 'port', 'protocol', 'host'))
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_hosts(self, host=None, ip_address=None, region=None, country=None, latitude=None, longitude=None, notes=None, mute=False):
@@ -490,7 +486,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('hosts', data.copy(), ('host', 'ip_address'))
-        if not mute: self._display(data, rowcount, '[host] %s (%s)', ('host', 'ip_address'))
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None, notes=None, mute=False):
@@ -506,7 +502,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('contacts', data.copy(), ('first_name', 'middle_name', 'last_name', 'title', 'email'))
-        if not mute: self._display(data, rowcount, '[contact] %s %s (%s) - %s', ('first_name', 'last_name', 'email', 'title'))
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_credentials(self, username=None, password=None, _hash=None, _type=None, leak=None, notes=None, mute=False):
@@ -534,7 +530,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('credentials', data.copy(), data.keys())
-        if not mute: self._display(data, rowcount, '[credential] %s: %s', ('username', 'password'))
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_leaks(self, leak_id=None, description=None, source_refs=None, leak_type=None, title=None, import_date=None, leak_date=None, attackers=None, num_entries=None, score=None, num_domains_affected=None, attack_method=None, target_industries=None, password_hash=None, password_type=None, targets=None, media_refs=None, notes=None, mute=False):
@@ -592,7 +588,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('profiles', data.copy(), ('username', 'url'))
-        if not mute: self._display(data, rowcount, '[profile] %s - %s (%s)', ('username', 'resource', 'url'))
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert_repositories(self, name=None, owner=None, description=None, resource=None, category=None, url=None, notes=None, mute=False):
@@ -607,7 +603,7 @@ class Framework(cmd.Cmd):
             notes = notes
         )
         rowcount = self.insert('repositories', data.copy(), data.keys())
-        if not mute: self._display(data, rowcount, '[repository] %s - %s', ('name', 'description'))
+        if not mute: self._display(data, rowcount)
         return rowcount
 
     def insert(self, table, data, unique_columns=[]):
