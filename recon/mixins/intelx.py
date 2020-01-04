@@ -1,10 +1,138 @@
+from time import sleep
+from threading import RLock
 from json import dumps
 from copy import deepcopy
 from urllib.parse import urljoin
 from recon.core.framework import FrameworkException
+from recon.mixins.threads import ThreadingMixin
 
 
-class IntelXMixin(object):
+class IntelXMixin(ThreadingMixin):
+    # Cannot query faster than one request per second
+    INTELX_COOLDOWN_SECONDS = 1.0
+
+    def prepare_item(self, item):
+        """
+        Overwrite this function to prepare item for IntelX query
+        :param item:
+        :return: string representation of an item
+        """
+        return str(item)
+
+    def save_results(self, intelx_response):
+        """
+        Overwrite this function to save IntelX responses to database.
+        :param intelx_response: See IntelX API documentation.
+        """
+        raise FrameworkException(NotImplementedError())
+
+    def search_routine(self, items, post_payload={}, get_payload={},
+                       post_options={}, get_options={}):
+        """
+        Performs routine for intelligent search in sequential mode.
+        :param items:
+        :param post_payload: Payload used for POST request.
+        :param get_payload: Payload used for GET request.
+        :param post_options: Options used for POST request.
+        :param get_options: Options used for GET request.
+        """
+        self.__routine(self.search_intelx_api,
+                       self.search_result_intelx_api,
+                       self.search_terminate_intelx_api,
+                       post_payload,
+                       get_payload,
+                       post_options,
+                       get_options,
+                       items)
+
+    def phonebook_routine(self, items, post_payload={}, get_payload={},
+                          post_options={}, get_options={}):
+        """
+        Performs routine for phonebook search in sequential mode.
+        :param items:
+        :param post_payload: Payload used for POST request.
+        :param get_payload: Payload used for GET request.
+        :param post_options: Options used for POST request.
+        :param get_options: Options used for GET request.
+        """
+        self.__routine(self.phonebook_intelx_api,
+                       self.phonebook_result_intelx_api,
+                       None,
+                       post_payload,
+                       get_payload,
+                       post_options,
+                       get_options,
+                       items)
+
+    def module_thread(self, item, post_func, get_func, term_func, post_payload,
+                      get_payload, post_options, get_options, rest_api_lock,
+                      db_lock):
+        job_id = None
+        try:
+            i = self.prepare_item(item)
+            post_payload["term"] = str(i)
+            with rest_api_lock:
+                response, data = post_func(payload=post_payload,
+                                           options=post_options)
+                sleep(self.INTELX_COOLDOWN_SECONDS)
+            if response == 200:
+                job_id = str(data["id"])
+                get_payload["id"] = str(data["id"])
+                with rest_api_lock:
+                    data_response = get_func(get_payload, get_options)
+                    sleep(self.INTELX_COOLDOWN_SECONDS)
+                with db_lock:
+                    self.save_results(data_response)
+        except Exception as e:
+            if term_func is not None and job_id is not None:
+                self.error(
+                    "Aborting search for {0!s} . Please do not interrupt."
+                    .format(job_id))
+                with rest_api_lock:
+                    if term_func(job_id):
+                        self.alert("Aborted: {0!s}".format(job_id))
+                    sleep(self.INTELX_COOLDOWN_SECONDS)
+            raise FrameworkException(e)
+
+    def search_routine_threading(self, items, post_payload={}, get_payload={},
+                                 post_options={}, get_options={}):
+        """
+        Performs routine for intelligent search in parallel mode.
+        :param items:
+        :param post_payload: Payload used for POST request.
+        :param get_payload: Payload used for GET request.
+        :param post_options: Options used for POST request.
+        :param get_options: Options used for GET request.
+        """
+        self.__routine_threading(self.search_intelx_api,
+                                 self.search_result_intelx_api,
+                                 self.search_terminate_intelx_api,
+                                 post_payload,
+                                 get_payload,
+                                 post_options,
+                                 get_options,
+                                 items)
+
+    def phonebook_routine_threading(self, items, post_payload={},
+                                    get_payload={}, post_options={},
+                                    get_options={}):
+        """
+        Performs routine for phonebook search in parallel mode.
+        :param items:
+        :param post_payload: Payload used for POST request.
+        :param get_payload: Payload used for GET request.
+        :param post_options: Options used for POST request.
+        :param get_options: Options used for GET request.
+        """
+        self.__routine_threading(self.phonebook_intelx_api,
+                                 self.phonebook_result_intelx_api,
+                                 None,
+                                 post_payload,
+                                 get_payload,
+                                 post_options,
+                                 get_options,
+                                 items)
+
     def search_intelx_api(self, payload={}, options={}):
         """
         Performs a search request on intelligent endpoint
@@ -54,6 +182,7 @@ class IntelXMixin(object):
 
                 if status == 0 or status == 1:
                     result.extend(data["records"])
+                sleep(self.INTELX_COOLDOWN_SECONDS)
         return result
 
     def search_terminate_intelx_api(self, uuid):
@@ -117,6 +246,52 @@ class IntelXMixin(object):
                             "valueh": selector["selectorvalueh"]
                         })
         return result
+
+    def __routine(self, post_func, get_func, term_func, post_payload,
+                  get_payload, post_options, get_options, items):
+        jobs_uuid = []
+        try:
+            for item in items:
+                i = self.prepare_item(item)
+                post_payload["term"] = str(i)
+                response, data = post_func(payload=post_payload,
+                                           options=post_options)
+                if response == 200:
+                    jobs_uuid.append(str(data["id"]))
+                sleep(self.INTELX_COOLDOWN_SECONDS)
+            while jobs_uuid:
+                job_id = jobs_uuid[0]
+                get_payload["id"] = str(job_id)
+                data_response = get_func(get_payload, get_options)
+                self.save_results(data_response)
+                jobs_uuid.pop(0)
+                sleep(self.INTELX_COOLDOWN_SECONDS)
+        except Exception as e:
+            self.error("Aborting all pending searches! "
+                       "Please do not interrupt.")
+            if term_func is not None:
+                while jobs_uuid:
+                    job_id = jobs_uuid[0]
+                    if term_func(job_id):
+                        jobs_uuid.pop(0)
+                        self.alert("Aborted: {0!s}".format(job_id))
+                        sleep(self.INTELX_COOLDOWN_SECONDS)
+            raise FrameworkException(e)
+
+    def __routine_threading(self, post_func, get_func, term_func, post_payload,
+                            get_payload, post_options, get_options, items):
+        rest_api_lock = RLock()
+        db_lock = RLock()
+        self.thread(items,
+                    post_func,
+                    get_func,
+                    term_func,
+                    post_payload,
+                    get_payload,
+                    post_options,
+                    get_options,
+                    rest_api_lock,
+                    db_lock)
 
     def __perform_post_query(self, endpoint, payload={}):
         url, headers = self.__fetch_intelx_connection_info(endpoint)
