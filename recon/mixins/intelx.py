@@ -8,6 +8,27 @@ from recon.mixins.threads import ThreadingMixin
 
 
 class IntelXMixin(ThreadingMixin):
+    """
+    This mixin provides integration with IntelX service.
+    There are several ways of using this mixin:
+    1. Calling basic methods for querying IntelX:
+        - search_intelx_api
+        - search_result_intelx_api
+        - search_terminate_intelx_api
+        - phonebook_intelx_api
+        - phonebook_result_intelx_api
+    2. Calling routine functions (requires overwriting prepare_item() and
+       save_results() methods) in:
+        - sequential mode (search_routine and phonebook_routine)
+        - parallel mode (search_routine_threading and
+          phonebook_routine_threading)
+
+    NOTE: Parallel mode uses module_thread method from ThreadingMixin. It also
+    uses locks to ensure that:
+        - API is not called faster than INTELX_COOLDOWN_SECONDS.
+        - database writes are not going to collide with each other.
+    """
+
     # Cannot query faster than one request per second
     INTELX_COOLDOWN_SECONDS = 1.0
 
