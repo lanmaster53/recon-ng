@@ -489,7 +489,7 @@ class Framework(cmd.Cmd):
         if not mute: self._display(data, rowcount)
         return rowcount
 
-    def insert_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None, notes=None, mute=False):
+    def insert_contacts(self, first_name=None, middle_name=None, last_name=None, email=None, title=None, region=None, country=None, phone=None, notes=None, mute=False):
         '''Adds a contact to the database and returns the affected row count.'''
         data = dict(
             first_name = first_name,
@@ -499,9 +499,10 @@ class Framework(cmd.Cmd):
             email = email,
             region = region,
             country = country,
+            phone = phone,
             notes = notes
         )
-        rowcount = self.insert('contacts', data.copy(), ('first_name', 'middle_name', 'last_name', 'title', 'email'))
+        rowcount = self.insert('contacts', data.copy(), ('first_name', 'middle_name', 'last_name', 'title', 'email', 'phone'))
         if not mute: self._display(data, rowcount)
         return rowcount
 
