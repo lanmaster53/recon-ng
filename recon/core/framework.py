@@ -709,7 +709,7 @@ class Framework(cmd.Cmd):
                             # invalid key, contnue to load valid keys
                             continue
 
-    def _save_config(self, name):
+    def _save_config(self, name, module=None, options=None):
         config_path = os.path.join(self.workspace, 'config.dat')
         # create a config file if one doesn't exist
         open(config_path, 'a').close()
@@ -720,17 +720,20 @@ class Framework(cmd.Cmd):
             except ValueError:
                 # file is empty or corrupt, nothing to load
                 config_data = {}
+        # override implicit defaults if specified
+        module = module or self._modulename
+        options = options or self.options
         # create a container for the current module
-        if self._modulename not in config_data:
-            config_data[self._modulename] = {}
+        if module not in config_data:
+            config_data[module] = {}
         # set the new option value in the config
-        config_data[self._modulename][name] = self.options[name]
+        config_data[module][name] = options[name]
         # remove the option if it has been unset
-        if config_data[self._modulename][name] is None:
-            del config_data[self._modulename][name]
+        if config_data[module][name] is None:
+            del config_data[module][name]
         # remove the module container if it is empty
-        if not config_data[self._modulename]:
-            del config_data[self._modulename]
+        if not config_data[module]:
+            del config_data[module]
         # write the new config data to the config file
         with open(config_path, 'w') as config_file:
             json.dump(config_data, config_file, indent=4)
@@ -911,7 +914,7 @@ class Framework(cmd.Cmd):
     def _do_options_set(self, params):
         '''Sets a current context option'''
         option, value = self._parse_params(params)
-        if not option and value:
+        if not (option and value):
             self._help_options_set()
             return
         name = option.upper()
@@ -1297,11 +1300,11 @@ class Framework(cmd.Cmd):
 
     def _help_options_set(self):
         print(getattr(self, '_do_options_set').__doc__)
-        print(f"{os.linesep}Usage: set <option> <value>{os.linesep}")
+        print(f"{os.linesep}Usage: options set <option> <value>{os.linesep}")
 
     def _help_options_unset(self):
         print(getattr(self, '_do_options_unset').__doc__)
-        print(f"{os.linesep}Usage: unset <option>{os.linesep}")
+        print(f"{os.linesep}Usage: options unset <option>{os.linesep}")
 
     def help_keys(self):
         print(getattr(self, 'do_keys').__doc__)

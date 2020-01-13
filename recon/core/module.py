@@ -221,6 +221,32 @@ class BaseModule(framework.Framework):
         '''Shows the global context options'''
         self._list_options(self._global_options)
 
+    def _do_goptions_set(self, params):
+        '''Sets a global context option'''
+        option, value = self._parse_params(params)
+        if not (option and value):
+            self._help_goptions_set()
+            return
+        name = option.upper()
+        if name in self._global_options:
+            self._global_options[name] = value
+            print(f"{name} => {value}")
+            self._save_config(name, 'base', self._global_options)
+        else:
+            self.error('Invalid option name.')
+
+    def _do_goptions_unset(self, params):
+        '''Unsets a global context option'''
+        option, value = self._parse_params(params)
+        if not option:
+            self._help_goptions_unset()
+            return
+        name = option.upper()
+        if name in self._global_options:
+            self._do_goptions_set(' '.join([name, 'None']))
+        else:
+            self.error('Invalid option name.')
+
     def _do_modules_load(self, params):
         '''Loads a module'''
         if not params:
@@ -347,8 +373,16 @@ class BaseModule(framework.Framework):
     #==================================================
 
     def help_goptions(self):
-        print(getattr(self, 'do_options').__doc__)
-        print(f"{os.linesep}Usage: goptions <list>{os.linesep}")
+        print(getattr(self, 'do_goptions').__doc__)
+        print(f"{os.linesep}Usage: goptions <{'|'.join(self._parse_subcommands('goptions'))}> [...]{os.linesep}")
+
+    def _help_goptions_set(self):
+        print(getattr(self, '_do_goptions_set').__doc__)
+        print(f"{os.linesep}Usage: goptions set <option> <value>{os.linesep}")
+
+    def _help_goptions_unset(self):
+        print(getattr(self, '_do_goptions_unset').__doc__)
+        print(f"{os.linesep}Usage: goptions unset <option>{os.linesep}")
 
     #==================================================
     # COMPLETE METHODS
@@ -363,6 +397,10 @@ class BaseModule(framework.Framework):
 
     def _complete_goptions_list(self, text, *ignored):
         return []
+
+    def _complete_goptions_set(self, text, *ignored):
+        return [x for x in self._global_options if x.startswith(text.upper())]
+    _complete_goptions_unset = _complete_goptions_set
 
     def complete_reload(self, text, *ignored):
         return []
