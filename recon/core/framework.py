@@ -914,10 +914,11 @@ class Framework(cmd.Cmd):
         if not option and value:
             self._help_options_set()
             return
-        if option in self.options:
-            self.options[option] = value
-            print(f"{option} => {value}")
-            self._save_config(option)
+        name = option.upper()
+        if name in self.options:
+            self.options[name] = value
+            print(f"{name} => {value}")
+            self._save_config(name)
         else:
             self.error('Invalid option name.')
 
@@ -927,8 +928,9 @@ class Framework(cmd.Cmd):
         if not option:
             self._help_options_unset()
             return
-        if option in self.options:
-            self._do_options_set(' '.join([option, 'None']))
+        name = option.upper()
+        if name in self.options:
+            self._do_options_set(' '.join([name, 'None']))
         else:
             self.error('Invalid option name.')
 
