@@ -20,6 +20,24 @@ class BaseValidator(object):
             raise ValidationException(value, self.validator)
 
 
+class CompanyValidator(BaseValidator):
+
+    def __init__(self):
+        regex = (
+            r".*"
+        )
+        super(CompanyValidator, self).__init__(regex, 'company')
+
+
+class CoordinateValidator(BaseValidator):
+
+    def __init__(self):
+        regex = (
+            r".*"
+        )
+        super(CoordinateValidator, self).__init__(regex, 'coordinate')
+
+
 class DomainValidator(BaseValidator):
 
     def __init__(self):
@@ -27,6 +45,53 @@ class DomainValidator(BaseValidator):
             r"(?=^.{4,253}\.?$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}\.?$)"
         )
         super(DomainValidator, self).__init__(regex, 'domain')
+
+
+class EmailValidator(BaseValidator):
+
+    def __init__(self):
+        regex = (
+            r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"
+            r"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9]"
+            r"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+        )
+        super(EmailValidator, self).__init__(regex, 'email')
+
+
+class HashValidator(BaseValidator):
+
+    def __init__(self):
+        regex = (
+            r".*"
+        )
+        super(HashValidator, self).__init__(regex, 'hash')
+
+
+class HostValidator(BaseValidator):
+
+    def __init__(self):
+        regex = (
+            r".*"
+        )
+        super(HostValidator, self).__init__(regex, 'host')
+
+
+class IPAddressValidator(BaseValidator):
+
+    def __init__(self):
+        regex = (
+            r".*"
+        )
+        super(IPAddressValidator, self).__init__(regex, 'IP address')
+
+
+class NetblockValidator(BaseValidator):
+
+    def __init__(self):
+        regex = (
+            r".*"
+        )
+        super(NetblockValidator, self).__init__(regex, 'netblock')
 
 
 class UrlValidator(BaseValidator):
@@ -50,14 +115,3 @@ class UrlValidator(BaseValidator):
             r"(?:/?|[/?]\S+)$"
         )
         super(UrlValidator, self).__init__(regex, 'url')
-
-
-class EmailValidator(BaseValidator):
-
-    def __init__(self):
-        regex = (
-            r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"
-            r"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9]"
-            r"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-        )
-        super(EmailValidator, self).__init__(regex, 'email')
