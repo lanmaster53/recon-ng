@@ -1,4 +1,5 @@
 from flask import Flask, cli, render_template
+from flask_cors import CORS
 from flasgger import Swagger
 from recon.core import base
 from recon.core.constants import BANNER_WEB
@@ -35,12 +36,13 @@ SWAGGER = {
 WORKSPACE = recon.workspace.split('/')[-1]
 print((f" * Workspace initialized: {WORKSPACE}"))
 
-def create_app():
+def create_app(cors_origin='*'):
 
     # setting the static_url_path to blank serves static files from the web root
     app = Flask(__name__, static_url_path='')
     app.config.from_object(__name__)
 
+    CORS(app, resources={r"^/api/*": {"origins": cors_origin}})
     Swagger(app, template_file='definitions.yaml')
 
     app.redis = Redis.from_url(app.config['REDIS_URL'])
