@@ -328,6 +328,7 @@ class BaseModule(framework.Framework):
         self._validate_options()
         self._validate_input()
         self._summary_counts = {}
+        self._inserted_data = {}
         pre = self.module_pre()
         params = [pre] if pre is not None else []
         # provide input if a default query is specified in the module

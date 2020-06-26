@@ -117,6 +117,7 @@ class Framework(cmd.Cmd):
     _record = None
     _spool = None
     _summary_counts = {}
+    _inserted_data = {}
 
     def __init__(self, params):
         cmd.Cmd.__init__(self)
@@ -636,6 +637,11 @@ class Framework(cmd.Cmd):
         else:
             query = f"INSERT INTO `{table}` (`{columns_str}`) SELECT {placeholder_str} WHERE NOT EXISTS(SELECT * FROM `{table}` WHERE {unique_columns_str})"
         values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
+
+        # record data for inclusion in task info
+        if table not in self._inserted_data:
+            self._inserted_data[table] = []
+        self._inserted_data[table].append(data)
 
         # query the database
         rowcount = self.query(query, values)

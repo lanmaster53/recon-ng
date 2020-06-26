@@ -1,8 +1,10 @@
+import traceback
 from flask import Blueprint, current_app, request, abort
 from flask_restful import Resource, Api
 from recon.core.web import recon, tasks
 from recon.core.web.utils import columnize
 from recon.core.web.constants import EXPORTS, REPORTS
+from recon.core.tasks import run_module_sync
 
 resources = Blueprint('resources', __name__, url_prefix='/api')
 api = Api()
@@ -56,15 +58,29 @@ class TaskList(Resource):
                     - task
         '''
         path = request.json.get('path')
+        options = request.json.get('options')
+        sync = request.args.get('sync') is not None
+
         if not path or path not in recon._loaded_modules:
             abort(404)
-        job = current_app.task_queue.enqueue('recon.core.tasks.run_module', current_app.config['WORKSPACE'], path)
-        tid = job.get_id()
-        status = job.get_status()
-        tasks.add_task(tid, status)
-        return {
-            'task': tid,
-        }, 201
+
+        if sync:
+            try:
+                return run_module_sync(current_app.config['WORKSPACE'], path, options), 200
+            except Exception as e:
+                return {
+                    'type': str(type(e)),
+                    'message': str(e),
+                    'traceback': traceback.format_exc(),
+                }, 500
+        else:
+            job = current_app.task_queue.enqueue('recon.core.tasks.run_module_async', current_app.config['WORKSPACE'], path, options)
+            tid = job.get_id()
+            status = job.get_status()
+            tasks.add_task(tid, status)
+            return {
+                'task': tid,
+            }, 201
 
 api.add_resource(TaskList, '/tasks/')
 
