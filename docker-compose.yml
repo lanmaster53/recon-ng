@@ -3,7 +3,8 @@ version: '3.7'
 services:
 
     web:
-        build: .
+        build:
+            context: .
         image: recon-ng
         container_name: recon-ng
         ports:
@@ -27,6 +28,7 @@ services:
             - REDIS_URL=redis://redis:6379/0
         depends_on:
             - redis
+            - web
 
     redis:
         image: redis
