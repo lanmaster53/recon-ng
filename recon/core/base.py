@@ -411,11 +411,12 @@ class Recon(framework.Framework):
             # add status to index for each module
             for module in self._module_index:
                 status = 'not installed'
-                if module['path'] in self._loaded_category.get('disabled', []):
+                path = os.path.sep.join([self.marketplace_name, module['path']])
+                if path in self._loaded_category.get('disabled', []):
                     status = 'disabled'
-                elif module['path'] in self._loaded_modules.keys():
+                elif path in self._loaded_modules.keys():
                     status = 'installed'
-                    loaded = self._loaded_modules[module['path']]
+                    loaded = self._loaded_modules[path]
                     if loaded.meta['version'] != module['version']:
                         status = 'outdated'
                 module['status'] = status
@@ -593,7 +594,6 @@ class Recon(framework.Framework):
             self.error("Error, no such marketplace '{}'".format(params))
         else:
             self._fetch_module_index()
-            self._update_module_index()
             self._do_modules_reload('')
 
     def _do_marketplace_refresh(self, params):
