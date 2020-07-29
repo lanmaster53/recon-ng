@@ -581,21 +581,6 @@ class Recon(framework.Framework):
         else:
             self.help_marketplace()
 
-    def _do_marketplace_set(self, params):
-        found = False
-        for marketplace in self._marketplace_index['marketplaces']:
-            if marketplace['name'] == params:
-                found = True
-                self.repo_url = marketplace['url']
-                self.marketplace_name = marketplace['name']
-                parts = self.mod_path.split(os.path.sep)
-                self.mod_path = os.path.sep.join(parts[:-1] + [marketplace['name']])
-        if not found:
-            self.error("Error, no such marketplace '{}'".format(params))
-        else:
-            self._fetch_module_index()
-            self._do_modules_reload('')
-
     def _do_marketplace_refresh(self, params):
         '''Refreshes the marketplace index'''
         self._fetch_module_index()
@@ -625,6 +610,21 @@ class Recon(framework.Framework):
             self.error('No modules found.')
             self._help_marketplace_search()
 
+    def _do_marketplace_set(self, params):
+        found = False
+        for marketplace in self._marketplace_index['marketplaces']:
+            if marketplace['name'] == params:
+                found = True
+                self.repo_url = marketplace['url']
+                self.marketplace_name = marketplace['name']
+                parts = self.mod_path.split(os.path.sep)
+                self.mod_path = os.path.sep.join(parts[:-1] + [marketplace['name']])
+        if not found:
+            self.error("Error, no such marketplace '{}'".format(params))
+        else:
+            self._fetch_module_index()
+            self._do_modules_reload('')
+
     def _do_marketplace_info(self, params):
         '''Shows detailed information about available modules'''
         if not params:
@@ -633,7 +633,7 @@ class Recon(framework.Framework):
         modules = [m for m in self._module_index if params in m['path'] or params == 'all']
         if modules:
             for module in modules:
-                rows = []
+                rows = [('marketplace', self.marketplace_name)]
                 for key in ('path', 'name', 'author', 'version', 'last_updated', 'description', 'required_keys', 'dependencies', 'files', 'status'):
                     row = (key, module[key])
                     rows.append(row)
