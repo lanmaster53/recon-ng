@@ -585,7 +585,7 @@ class Recon(framework.Framework):
         '''Refreshes the marketplace index'''
         self._fetch_module_index()
         self._update_module_index()
-        self.output('Marketplace index refreshed.')
+        self.output("Marketplace index refreshed for '{}'.".format(self.marketplace_name))
 
     def _do_marketplace_search(self, params):
         '''Searches marketplace modules'''
@@ -596,8 +596,8 @@ class Recon(framework.Framework):
         if modules:
             rows = []
             for module in sorted(modules, key=lambda m: m['path']):
-                row = []
-                for key in ('path', 'version', 'status', 'last_updated'):
+                row = [os.path.sep.join([self.marketplace_name, module['path']])]
+                for key in ('version', 'status', 'last_updated'):
                     row.append(module[key])
                 row.append('*' if module['dependencies'] else '')
                 row.append('*' if module['required_keys'] else '')
