@@ -1,4 +1,5 @@
 from flask import Flask, cli, render_template
+from flask_cors import CORS
 from flasgger import Swagger
 from recon.core import base
 from recon.core.constants import BANNER_WEB
@@ -41,6 +42,7 @@ def create_app():
     app = Flask(__name__, static_url_path='')
     app.config.from_object(__name__)
 
+    CORS(app)
     Swagger(app, template_file='definitions.yaml')
 
     app.redis = Redis.from_url(app.config['REDIS_URL'])

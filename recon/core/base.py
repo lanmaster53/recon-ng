@@ -340,7 +340,7 @@ class Recon(framework.Framework):
         dirpath = os.path.sep.join(path.split(os.path.sep)[:-1])
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
-        with open(path, 'w') as outfile:
+        with open(path, 'w', encoding='UTF-8') as outfile:
             outfile.write(content)
 
     def _remove_empty_dirs(self, base_path):
@@ -374,7 +374,7 @@ class Recon(framework.Framework):
         # load module index from local copy
         path = os.path.join(self.home_path, 'modules.yml')
         if os.path.exists(path):
-            with open(path, 'r') as infile:
+            with open(path, 'r', encoding='UTF-8') as infile:
                 self._module_index = yaml.safe_load(infile)
             # add status to index for each module
             for module in self._module_index:
@@ -424,7 +424,7 @@ class Recon(framework.Framework):
         except:
             self.error(f"Module installation failed: {path}")
             raise
-        abs_path = os.path.join(self.mod_path, rel_path)
+        abs_path = os.path.normpath(os.path.join(self.mod_path, rel_path))
         downloads[abs_path] = resp.text
         # install the module
         for abs_path, content in downloads.items():
@@ -434,7 +434,7 @@ class Recon(framework.Framework):
     def _remove_module(self, path):
         # remove the module
         rel_path = '.'.join([path, 'py'])
-        abs_path = os.path.join(self.mod_path, rel_path)
+        abs_path = os.path.normpath(os.path.join(self.mod_path, rel_path))
         os.remove(abs_path)
         # remove supporting data files
         files = self._get_module_from_index(path).get('files', [])
@@ -462,11 +462,11 @@ class Recon(framework.Framework):
 
     def _load_module(self, dirpath, filename):
         mod_name = filename.split('.')[0]
-        mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
-        mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
+        mod_category = re.search('/modules/([^/]*)', dirpath.replace('\\','/')).group(1)
+        mod_dispname = '/'.join(re.split('/modules/', dirpath.replace('\\','/'))[-1].split('/') + [mod_name])
         mod_loadname = mod_dispname.replace('/', '_')
         mod_loadpath = os.path.join(dirpath, filename)
-        mod_file = open(mod_loadpath)
+        mod_file = open(mod_loadpath, encoding='UTF-8')
         try:
             # import the module into memory
             mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
@@ -528,7 +528,7 @@ class Recon(framework.Framework):
             print(markup)
             # write to file if index name provided
             if file_name:
-                with open(file_name, 'w') as outfile:
+                with open(file_name, 'w', encoding='UTF-8') as outfile:
                     outfile.write(markup)
                 self.output('Module index created.')
         else:
