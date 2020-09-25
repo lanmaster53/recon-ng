@@ -1,10 +1,10 @@
-FROM python:3.7-alpine
+FROM python:3.7-alpine AS recon-ng
 
 RUN mkdir -p /recon-ng
 
 WORKDIR /recon-ng
 
-ADD ./REQUIREMENTS /recon-ng/REQUIREMENTS
+COPY ./REQUIREMENTS /recon-ng/REQUIREMENTS
 
 RUN apk add --no-cache --virtual .build-deps gcc libc-dev libxslt-dev &&\
     apk add --no-cache libxslt &&\

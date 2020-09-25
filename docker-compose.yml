@@ -27,6 +27,7 @@ services:
             - REDIS_URL=redis://redis:6379/0
         depends_on:
             - redis
+            - web
 
     redis:
         image: redis
