@@ -111,7 +111,7 @@ class BaseModule(framework.Framework):
 
     def cidr_to_list(self, string):
         import ipaddress
-        return [str(ip) for ip in ipaddress.ip_network(string)]
+        return [str(ip).strip() for ip in ipaddress.ip_network(string)]
 
     def hosts_to_domains(self, hosts, exclusions=[]):
         domains = []
