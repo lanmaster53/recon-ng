@@ -1,5 +1,5 @@
 from requests.exceptions import Timeout
-import html.parser
+import html
 import http.cookiejar
 import io
 import os
@@ -92,12 +92,7 @@ class BaseModule(framework.Framework):
 
     def html_unescape(self, s):
         '''Unescapes HTML markup and returns an unescaped string.'''
-        h = html.parser.HTMLParser()
-        return h.unescape(s)
-        #p = htmllib.HTMLParser(None)
-        #p.save_bgn()
-        #p.feed(s)
-        #return p.save_end()
+        return html.unescape(s)
 
     def html_escape(self, s):
         escapes = {
