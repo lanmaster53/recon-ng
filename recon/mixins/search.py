@@ -82,7 +82,7 @@ class GoogleAPIMixin(object):
 class BingAPIMixin(object):
 
     def search_bing_api(self, query, limit=0):
-        url = 'https://api.cognitive.microsoft.com/bing/v7.0/search'
+        url = 'https://api.bing.microsoft.com/v7.0/search'
         payload = {'q': query, 'count': 50, 'offset': 0, 'responseFilter': 'WebPages'}
         headers = {'Ocp-Apim-Subscription-Key': self.get_key('bing_api')}
         results = []
