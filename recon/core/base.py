@@ -48,7 +48,17 @@ builtins.print = spool_print
 
 class Recon(framework.Framework):
 
-    repo_url = 'https://raw.githubusercontent.com/lanmaster53/recon-ng-modules/master/'
+    _default_marketplaces_file = {
+        'marketplaces': [
+            {
+                'name': 'default',
+                'url': 'https://raw.githubusercontent.com/lanmaster53/recon-ng-modules/master/'
+            }
+        ]
+    }
+
+    marketplace_name = None
+    repo_url = None
 
     def __init__(self, check=True, analytics=True, marketplace=True, accessible=False):
         framework.Framework.__init__(self, 'base')
@@ -98,8 +108,27 @@ class Recon(framework.Framework):
             os.makedirs(self.home_path)
         # initialize keys database
         self._query_keys('CREATE TABLE IF NOT EXISTS keys (name TEXT PRIMARY KEY, value TEXT)')
+        # initialize default marketplace if none exist
+        self._init_marketplaces()
         # initialize module index
         self._fetch_module_index()
+
+    def _init_marketplaces(self):
+        marketplaces_index_file = os.path.sep.join([self.home_path, 'marketplaces.yml'])
+        if not os.path.exists(marketplaces_index_file):
+            with open(marketplaces_index_file, 'w') as marketplaces_file:
+                yaml_out = yaml.safe_dump(self._default_marketplaces_file)
+                marketplaces_file.write(yaml_out)
+        # Always set the marketplace to the default, user's can change within
+        # CLI if desired using "marketplace set" which also forces a re-load
+        # of all modules.
+        with open(marketplaces_index_file, 'r') as marketplaces_file:
+            self._marketplace_index = yaml.safe_load(marketplaces_file)
+            for marketplace in self._marketplace_index['marketplaces']:
+                if marketplace['name'] == 'default':
+                    self.repo_url = marketplace['url']
+                    self.marketplace_name = marketplace['name']
+        self.mod_path = os.path.sep.join([self.mod_path, self.marketplace_name])
 
     def _check_version(self):
         if self._check:
@@ -362,7 +391,10 @@ class Recon(framework.Framework):
                 #self.print_exception()
                 return
             content = resp.text
-            path = os.path.join(self.home_path, 'modules.yml')
+            marketplace_base = os.path.sep.join([self.home_path, self.marketplace_name])
+            path = os.path.sep.join([marketplace_base, 'modules.yml'])
+            if not os.path.exists(marketplace_base):
+                os.mkdir(marketplace_base)
             self._write_local_file(path, content)
         else:
             self.alert('Marketplace disabled.')
@@ -372,18 +404,19 @@ class Recon(framework.Framework):
         # initialize module index
         self._module_index = []
         # load module index from local copy
-        path = os.path.join(self.home_path, 'modules.yml')
+        path = os.path.sep.join([self.home_path, self.marketplace_name, 'modules.yml'])
         if os.path.exists(path):
             with open(path, 'r') as infile:
                 self._module_index = yaml.safe_load(infile)
             # add status to index for each module
             for module in self._module_index:
                 status = 'not installed'
-                if module['path'] in self._loaded_category.get('disabled', []):
+                path = os.path.sep.join([self.marketplace_name, module['path']])
+                if path in self._loaded_category.get('disabled', []):
                     status = 'disabled'
-                elif module['path'] in self._loaded_modules.keys():
+                elif path in self._loaded_modules.keys():
                     status = 'installed'
-                    loaded = self._loaded_modules[module['path']]
+                    loaded = self._loaded_modules[path]
                     if loaded.meta['version'] != module['version']:
                         status = 'outdated'
                 module['status'] = status
@@ -552,7 +585,7 @@ class Recon(framework.Framework):
         '''Refreshes the marketplace index'''
         self._fetch_module_index()
         self._update_module_index()
-        self.output('Marketplace index refreshed.')
+        self.output("Marketplace index refreshed for '{}'.".format(self.marketplace_name))
 
     def _do_marketplace_search(self, params):
         '''Searches marketplace modules'''
@@ -563,8 +596,8 @@ class Recon(framework.Framework):
         if modules:
             rows = []
             for module in sorted(modules, key=lambda m: m['path']):
-                row = []
-                for key in ('path', 'version', 'status', 'last_updated'):
+                row = [os.path.sep.join([self.marketplace_name, module['path']])]
+                for key in ('version', 'status', 'last_updated'):
                     row.append(module[key])
                 row.append('*' if module['dependencies'] else '')
                 row.append('*' if module['required_keys'] else '')
@@ -577,6 +610,21 @@ class Recon(framework.Framework):
             self.error('No modules found.')
             self._help_marketplace_search()
 
+    def _do_marketplace_set(self, params):
+        found = False
+        for marketplace in self._marketplace_index['marketplaces']:
+            if marketplace['name'] == params:
+                found = True
+                self.repo_url = marketplace['url']
+                self.marketplace_name = marketplace['name']
+                parts = self.mod_path.split(os.path.sep)
+                self.mod_path = os.path.sep.join(parts[:-1] + [marketplace['name']])
+        if not found:
+            self.error("Error, no such marketplace '{}'".format(params))
+        else:
+            self._fetch_module_index()
+            self._do_modules_reload('')
+
     def _do_marketplace_info(self, params):
         '''Shows detailed information about available modules'''
         if not params:
@@ -585,7 +633,7 @@ class Recon(framework.Framework):
         modules = [m for m in self._module_index if params in m['path'] or params == 'all']
         if modules:
             for module in modules:
-                rows = []
+                rows = [('marketplace', self.marketplace_name)]
                 for key in ('path', 'name', 'author', 'version', 'last_updated', 'description', 'required_keys', 'dependencies', 'files', 'status'):
                     row = (key, module[key])
                     rows.append(row)
