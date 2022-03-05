@@ -105,18 +105,16 @@ class Recon(framework.Framework):
         if self._check:
             pattern = r"'(\d+\.\d+\.\d+[^']*)'"
             remote = 0
-            local = 0
             try:
                 remote = re.search(pattern, self.request('GET', 'https://raw.githubusercontent.com/lanmaster53/recon-ng/master/VERSION').text).group(1)
-                local = re.search(pattern, open('VERSION').read()).group(1)
             except Exception as e:
                 self.error(f"Version check failed ({type(e).__name__}).")
                 #self.print_exception()
-            if remote != local:
+            if remote != __version__:
                 self.alert('Your version of Recon-ng does not match the latest release.')
                 self.alert('Please consider updating before further use.')
                 self.output(f"Remote version:  {remote}")
-                self.output(f"Local version:   {local}")
+                self.output(f"Local version:   {__version__}")
         else:
             self.alert('Version check disabled.')
 
