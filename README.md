@@ -14,7 +14,7 @@ Recon-ng is a completely modular framework and makes it easy for even the newest
 
 <br>
 
-[![Practical Security Services](https://www.lanmaster53.com/static/images/pages/company/banner.png)](http://www.practisec.com)
+[![Practical Security Services](https://www.practisec.com/static/images/imgs/sticky-logo.png)](http://www.practisec.com)
 
 ## Donations
 
