@@ -30,7 +30,7 @@ def xmlify(rows):
     return Response(xml, mimetype='text/xml')
 
 def listify(rows):
-    '''Expects a list of dictionaries and returns a continous list of
+    '''Expects a list of dictionaries and returns a continuous list of
     values from all of the provided columns.'''
     columns = {}
     for row in rows:
