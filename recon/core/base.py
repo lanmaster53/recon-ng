@@ -181,7 +181,7 @@ class Recon(framework.Framework):
             'Don\'t you think if that worked the numbers would at least be in order?',
             'Reserving that option for the next-NEXT generation of the framework.',
             'You\'ve clearly got the wrong framework. Attempting to start SET...',
-            '1980 called. They want there menu driven UI back.',
+            '1980 called. They want their menu driven UI back.',
         ]
         print(random.choice(eggs))
         return
