@@ -3,7 +3,10 @@ version: '3.7'
 services:
 
     web:
-        build: .
+        build:
+          context: .
+          dockerfile: Dockerfile
+          target: recon-ng
         image: recon-ng
         container_name: recon-ng
         ports:
@@ -18,6 +21,10 @@ services:
             - redis
 
     worker:
+        build:
+          context: .
+          dockerfile: Dockerfile
+          target: recon-ng
         image: recon-ng
         command: rq worker -u redis://redis:6379/0 recon-tasks
         volumes:
