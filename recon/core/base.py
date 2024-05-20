@@ -4,7 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urljoin
 import errno
-import imp
+import importlib.util
+import importlib.machinery
 import json
 import os
 import random
@@ -183,6 +184,15 @@ class Recon(framework.Framework):
         ]
         print(random.choice(eggs))
         return
+
+    def _load_source(self, modname, filename):
+        loader = importlib.machinery.SourceFileLoader(modname, filename)
+        spec = importlib.util.spec_from_file_location(modname, filename, loader=loader)
+        module = importlib.util.module_from_spec(spec)
+        # cache the module in sys.modules
+        sys.modules[module.__name__] = module
+        loader.exec_module(module)
+        return module
 
     #==================================================
     # WORKSPACE METHODS
@@ -464,11 +474,9 @@ class Recon(framework.Framework):
         mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
         mod_loadname = mod_dispname.replace('/', '_')
         mod_loadpath = os.path.join(dirpath, filename)
-        mod_file = open(mod_loadpath)
         try:
             # import the module into memory
-            mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
-            __import__(mod_loadname)
+            mod = self._load_source(mod_loadname, mod_loadpath)
             # add the module to the framework's loaded modules
             self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
             self._categorize_module(mod_category, mod_dispname)
