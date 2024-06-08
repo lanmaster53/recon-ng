@@ -165,6 +165,7 @@ class Framework(cmd.Cmd):
             sys.stdin = sys.__stdin__
             Framework._script = 0
             Framework._load = 0
+            print('')
             return
         if cmd is None:
             return self.default(line)
