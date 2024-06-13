@@ -19,7 +19,8 @@ from recon.core import framework
 from recon.core.constants import BANNER, BANNER_SMALL
 
 # set the __version__ variable based on the VERSION file
-exec(open(os.path.join(Path(os.path.abspath(__file__)).parents[2], 'VERSION')).read())
+with open(os.path.join(Path(os.path.abspath(__file__)).parents[2], 'VERSION'), 'r', encoding='utf-8') as file:
+    exec(file.read())
 
 # using stdout to spool causes tab complete issues
 # therefore, override print function
@@ -140,30 +141,31 @@ class Recon(framework.Framework):
             self.alert('No modules enabled/installed.')
         print('')
 
+    import uuid
+
     def _send_analytics(self, cd):
         if self._analytics:
             try:
                 cid_path = os.path.join(self.home_path, '.cid')
                 if not os.path.exists(cid_path):
                     # create the cid and file
-                    import uuid
-                    with open(cid_path, 'w') as fp:
+                    with open(cid_path, 'w', encoding='utf-8') as fp:
                         fp.write(self.to_unicode_str(uuid.uuid4()))
-                with open(cid_path) as fp:
+                with open(cid_path, 'r', encoding='utf-8') as fp:
                     cid = fp.read().strip()
                 params = {
-                        'v': 1,
-                        'tid': 'UA-52269615-2',
-                        'cid': cid,
-                        't': 'screenview',
-                        'an': 'Recon-ng',
-                        'av': __version__,
-                        'cd': cd
-                        }
+                    'v': 1,
+                    'tid': 'UA-52269615-2',
+                    'cid': cid,
+                    't': 'screenview',
+                    'an': 'Recon-ng',
+                    'av': __version__,
+                    'cd': cd
+                }
                 self.request('GET', 'https://www.google-analytics.com/collect', params=params)
             except Exception as e:
                 self.debug(f"Analytics failed ({type(e).__name__}).")
-                #self.print_exception()
+                # self.print_exception()
                 return
         else:
             self.debug('Analytics disabled.')
@@ -338,7 +340,7 @@ class Recon(framework.Framework):
         dirpath = os.path.sep.join(path.split(os.path.sep)[:-1])
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
-        with open(path, 'w') as outfile:
+        with open(path, 'w', encoding='utf-8') as outfile:
             outfile.write(content)
 
     def _remove_empty_dirs(self, base_path):
@@ -372,7 +374,7 @@ class Recon(framework.Framework):
         # load module index from local copy
         path = os.path.join(self.home_path, 'modules.yml')
         if os.path.exists(path):
-            with open(path, 'r') as infile:
+            with open(path, 'r', encoding='utf-8') as infile:
                 self._module_index = yaml.safe_load(infile)
             # add status to index for each module
             for module in self._module_index:
@@ -464,26 +466,26 @@ class Recon(framework.Framework):
         mod_dispname = '/'.join(re.split('/modules/', dirpath)[-1].split('/') + [mod_name])
         mod_loadname = mod_dispname.replace('/', '_')
         mod_loadpath = os.path.join(dirpath, filename)
-        mod_file = open(mod_loadpath)
-        try:
-            # import the module into memory
-            mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
-            __import__(mod_loadname)
-            # add the module to the framework's loaded modules
-            self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
-            self._categorize_module(mod_category, mod_dispname)
-            # return indication of success to support module reload
-            return True
-        except ImportError as e:
-            # notify the user of missing dependencies
-            self.error(f"Module '{mod_dispname}' disabled. Dependency required: '{self.to_unicode_str(e)[16:]}'")
-        except:
-            # notify the user of errors
-            self.print_exception()
-            self.error(f"Module '{mod_dispname}' disabled.")
-        # remove the module from the framework's loaded modules
-        self._loaded_modules.pop(mod_dispname, None)
-        self._categorize_module('disabled', mod_dispname)
+        with open(mod_loadpath, 'r', encoding='utf-8') as mod_file:
+            try:
+                # import the module into memory
+                mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
+                __import__(mod_loadname)
+                # add the module to the framework's loaded modules
+                self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
+                self._categorize_module(mod_category, mod_dispname)
+                # return indication of success to support module reload
+                return True
+            except ImportError as e:
+                # notify the user of missing dependencies
+                self.error(f"Module '{mod_dispname}' disabled. Dependency required: '{self.to_unicode_str(e)[16:]}'")
+            except:
+                # notify the user of errors
+                self.print_exception()
+                self.error(f"Module '{mod_dispname}' disabled.")
+            # remove the module from the framework's loaded modules
+            self._loaded_modules.pop(mod_dispname, None)
+            self._categorize_module('disabled', mod_dispname)
 
     def _categorize_module(self, category, module):
         if not category in self._loaded_category:
@@ -522,11 +524,11 @@ class Recon(framework.Framework):
             yaml_obj['required_keys'] = module.meta.get('required_keys', [])
             yaml_objs.append(yaml_obj)
         if yaml_objs:
-            markup = yaml.safe_dump(yaml_objs)
+            markup = yaml.safe_dump(yaml_objs, encoding='utf-8')
             print(markup)
             # write to file if index name provided
             if file_name:
-                with open(file_name, 'w') as outfile:
+                with open(file_name, 'w', encoding='utf-8') as outfile:
                     outfile.write(markup)
                 self.output('Module index created.')
         else:
