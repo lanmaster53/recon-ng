@@ -231,9 +231,8 @@ class Framework(cmd.Cmd):
 
     def _is_writeable(self, filename):
         try:
-            fp = open(filename, 'a')
-            fp.close()
-            return True
+            with open(filename, 'a', encoding='utf-8') as fp:
+                return True
         except IOError:
             return False
 
@@ -694,9 +693,9 @@ class Framework(cmd.Cmd):
         # don't bother loading if a config file doesn't exist
         if os.path.exists(config_path):
             # retrieve saved config data
-            with open(config_path) as config_file:
+            with open(config_path, 'r', encoding='utf-8') as config_file:
                 try:
-                    config_data = json.loads(config_file.read())
+                    config_data = json.load(config_file)
                 except ValueError:
                     # file is corrupt, nothing to load, exit gracefully
                     pass
@@ -706,36 +705,45 @@ class Framework(cmd.Cmd):
                         try:
                             self.options[key] = config_data[self._modulename][key]
                         except KeyError:
-                            # invalid key, contnue to load valid keys
+                            # invalid key, continue to load valid keys
                             continue
 
     def _save_config(self, name, module=None, options=None):
         config_path = os.path.join(self.workspace, 'config.dat')
+
         # create a config file if one doesn't exist
-        open(config_path, 'a').close()
+        with open(config_path, 'a', encoding='utf-8') as config_file:
+            pass
+
         # retrieve saved config data
-        with open(config_path) as config_file:
+        with open(config_path, 'r', encoding='utf-8') as config_file:
             try:
                 config_data = json.loads(config_file.read())
             except ValueError:
                 # file is empty or corrupt, nothing to load
                 config_data = {}
+
         # override implicit defaults if specified
         module = module or self._modulename
         options = options or self.options
+
         # create a container for the current module
         if module not in config_data:
             config_data[module] = {}
+
         # set the new option value in the config
         config_data[module][name] = options[name]
+
         # remove the option if it has been unset
         if config_data[module][name] is None:
             del config_data[module][name]
+
         # remove the module container if it is empty
         if not config_data[module]:
             del config_data[module]
+
         # write the new config data to the config file
-        with open(config_path, 'w') as config_file:
+        with open(config_path, 'w', encoding='utf-8') as config_file:
             json.dump(config_data, config_file, indent=4)
 
     #==================================================
@@ -1210,8 +1218,9 @@ class Framework(cmd.Cmd):
         if os.path.exists(params):
             # works even when called before Recon.start due
             # to stdin waiting for the iteractive prompt
-            sys.stdin = open(params)
-            Framework._script = 1
+            with open(params, 'r', encoding='utf-8') as script_file:
+                sys.stdin = script_file
+                Framework._script = 1
         else:
             self.error(f"Script file '{params}' not found.")
 

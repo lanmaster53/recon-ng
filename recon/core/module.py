@@ -65,15 +65,15 @@ class BaseModule(framework.Framework):
     def _parse_frontmatter(self):
         rel_path = '.'.join([self._modulename, 'py'])
         abs_path = os.path.join(self.mod_path, rel_path)
-        with open(abs_path) as fp:
+        with open(abs_path, 'r', encoding='utf-8') as fp:
             state = False
             yaml_src = ''
             for line in fp:
-                 if line == '---\n':
-                      state = not state
-                      continue
-                 if state:
-                      yaml_src += line
+                if line == '---\n':
+                    state = not state
+                    continue
+                if state:
+                    yaml_src += line
         return yaml.safe_load(yaml_src) or {}
 
     def _migrate_key(self, key):
@@ -162,11 +162,12 @@ class BaseModule(framework.Framework):
                 sources = []
             elif len(results[0]) > 1:
                 sources = [x[:len(x)] for x in results]
-                #raise framework.FrameworkException('Too many columns of data as source input.')
+                # raise framework.FrameworkException('Too many columns of data as source input.')
             else:
                 sources = [x[0] for x in results]
         elif os.path.exists(params):
-            sources = open(params).read().split()
+            with open(params, 'r', encoding='utf-8') as file:
+                sources = file.read().split()
         else:
             sources = [params]
         if not sources:
