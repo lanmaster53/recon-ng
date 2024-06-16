@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+
+from recon.scripts.web import main
+
+main()
