@@ -10,5 +10,5 @@ parser.add_argument('--port', default=5000, help="port to bind the web server to
 args = parser.parse_args()
 
 app = create_app()
-if __name__ == '__main__':
+def main():
     app.run(host=args.host, port=args.port)

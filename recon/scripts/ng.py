@@ -44,15 +44,16 @@ def recon_ui(args):
     except KeyboardInterrupt:
         print('')
 
-description = f"%(prog)s - {base.__author__}"
-parser = argparse.ArgumentParser(description=description)
-parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
-parser.add_argument('-r', help='load commands from a resource file', metavar='filename', dest='script_file', action='store')
-parser.add_argument('--no-version', help='disable version check', dest='check', default=True, action='store_false')
-parser.add_argument('--no-analytics', help='disable analytics reporting', dest='analytics', default=True, action='store_false')
-parser.add_argument('--no-marketplace', help='disable remote module management', dest='marketplace', default=True, action='store_false')
-parser.add_argument('--stealth', help='disable all passive requests (--no-*)', dest='stealth', default=False, action='store_true')
-parser.add_argument('--accessible', help='Use accessible outputs when available', dest='accessible', default=False, action='store_true')
-parser.add_argument('--version', help='displays the current version', action='version', version=base.__version__)
-args = parser.parse_args()
-recon_ui(args)
+def main():
+    description = f"%(prog)s - {base.__author__}"
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('-w', help='load/create a workspace', metavar='workspace', dest='workspace', action='store')
+    parser.add_argument('-r', help='load commands from a resource file', metavar='filename', dest='script_file', action='store')
+    parser.add_argument('--no-version', help='disable version check', dest='check', default=True, action='store_false')
+    parser.add_argument('--no-analytics', help='disable analytics reporting', dest='analytics', default=True, action='store_false')
+    parser.add_argument('--no-marketplace', help='disable remote module management', dest='marketplace', default=True, action='store_false')
+    parser.add_argument('--stealth', help='disable all passive requests (--no-*)', dest='stealth', default=False, action='store_true')
+    parser.add_argument('--accessible', help='Use accessible outputs when available', dest='accessible', default=False, action='store_true')
+    parser.add_argument('--version', help='displays the current version', action='version', version=base.__version__)
+    args = parser.parse_args()
+    recon_ui(args)
