@@ -17,9 +17,7 @@ import builtins
 # import framework libs
 from recon.core import framework
 from recon.core.constants import BANNER, BANNER_SMALL
-
-# set the __version__ variable based on the VERSION file
-exec(open(os.path.join(Path(os.path.abspath(__file__)).parents[2], 'VERSION')).read())
+from recon._version import __version__
 
 # using stdout to spool causes tab complete issues
 # therefore, override print function
