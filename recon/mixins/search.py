@@ -73,8 +73,9 @@ class GoogleAPIMixin(object):
             if limit == cnt:
                 break
             # check for more pages
-            if not 'nextPage' in resp.json()['queries']:
+            if not 'queries' in resp.json() or not 'nextPage' in resp.json()['queries']:
                 break
+            #TODO we should probably handle quota exceeded here
             payload['start'] = resp.json()['queries']['nextPage'][0]['startIndex']
         return results
 
