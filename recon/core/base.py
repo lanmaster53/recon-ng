@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urljoin
 import errno
-import imp
+from importlib.machinery import SourceFileLoader
 import json
 import os
 import random
@@ -467,7 +467,7 @@ class Recon(framework.Framework):
         mod_file = open(mod_loadpath)
         try:
             # import the module into memory
-            mod = imp.load_source(mod_loadname, mod_loadpath, mod_file)
+            mod = SourceFileLoader(mod_loadname, mod_loadpath).load_module()
             __import__(mod_loadname)
             # add the module to the framework's loaded modules
             self._loaded_modules[mod_dispname] = sys.modules[mod_loadname].Module(mod_dispname)
