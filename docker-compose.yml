@@ -8,7 +8,7 @@ services:
         container_name: recon-ng
         ports:
             - '5000:5000'
-        command: ./recon-web --host 0.0.0.0
+        command: python3 ./recon-web --host 0.0.0.0
         volumes:
             - .:/recon-ng
             - ~/.recon-ng:/root/.recon-ng
