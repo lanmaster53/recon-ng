@@ -3,9 +3,9 @@ from flask import current_app, Response, jsonify, send_file, stream_with_context
 from io import StringIO
 from io import BytesIO
 from recon.core.web.utils import add_worksheet, is_url
+import csv
 import os
 import requests
-import unicodecsv as csv
 import xlsxwriter
 
 def _jsonify(rows):

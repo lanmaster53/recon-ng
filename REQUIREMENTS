@@ -10,5 +10,4 @@ flask-restful
 flasgger
 dicttoxml
 XlsxWriter
-unicodecsv
 rq
