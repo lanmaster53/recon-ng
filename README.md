@@ -8,6 +8,10 @@ Recon-ng has a look and feel similar to the Metasploit Framework, reducing the l
 
 Recon-ng is a completely modular framework and makes it easy for even the newest of Python developers to contribute. See the [Development Guide](https://github.com/lanmaster53/recon-ng/wiki/Development-Guide) for more information on building and maintaining modules.
 
+## Additional Recon Resources
+
+License Plate Owner API: https://license-plate-owner.com/ (DPPA-compliant vehicle lookup API for investigations)
+
 ## Sponsors
 
 [![Black Hills Information Security](https://www.blackhillsinfosec.com/wp-content/uploads/2016/03/BHIS-logo-web.png)](http://www.blackhillsinfosec.com)
