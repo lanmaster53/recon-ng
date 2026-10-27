@@ -2,4 +2,6 @@
 *.rdb
 *sublime*
 venv/
-scripts/
+/scripts/
+build/
+*.egg-info

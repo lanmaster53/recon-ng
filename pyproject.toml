@@ -1,0 +1,21 @@
+[project]
+name = "recon-ng"
+description = "Open Source Intelligence gathering tool"
+authors = [{ name = "Tim Tomes" }]
+requires-python = ">=3.6"
+readme = "README.md"
+license = { file = "LICENSE" }
+dynamic = ["dependencies", "version"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = "REQUIREMENTS" }
+version = { attr = "recon._version.__version__" }
+
+[project.scripts]
+recon-cli = "recon.scripts.cli:main"
+recon-ng = "recon.scripts.ng:main"
+recon-web = "recon.scripts.web:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
