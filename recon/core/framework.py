@@ -15,6 +15,17 @@ import sys
 import traceback
 
 #=================================================
+# MODIFICATION NOTICE (GNU GPLv3 section 5(a))
+#=================================================
+# This file has been modified from the upstream recon-ng sources.
+# Modified: 2026-11-06 (branch bugfix/integer-table-widths).
+# Change: Framework.table() now derives the per-column share of the extra
+# title width with integer floor division instead of true division, which
+# yields a float on Python 3 and made the separator string multiplication
+# in the same block raise TypeError.
+
+
+#=================================================
 # SUPPORT CLASSES
 #=================================================
 
@@ -324,7 +335,7 @@ class Framework(cmd.Cmd):
         tdata_len = sum(lens) + (3*(cols-1))
         diff = title_len - tdata_len
         if diff > 0:
-            diff_per = diff / cols
+            diff_per = diff // cols
             lens = [x+diff_per for x in lens]
             diff_mod = diff % cols
             for x in range(0, diff_mod):
